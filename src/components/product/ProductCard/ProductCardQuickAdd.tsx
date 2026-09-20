@@ -39,7 +39,7 @@ export function ProductCardQuickAdd({
       }}
     >
       {pending ? (
-        <LoaderCircle className="quick-add-spinner" aria-hidden="true" />
+        <LoaderCircle aria-hidden="true" />
       ) : (
         <Plus aria-hidden="true" />
       )}
