@@ -42,7 +42,8 @@
     "test:admin:db": "node --conditions=react-server --import tsx --test tests/admin-db.test.ts",
     "test:admin:http": "node --conditions=react-server --import tsx --test tests/admin-http.test.ts",
     "emails:process": "node --conditions=react-server --import tsx scripts/process-emails.ts",
-    "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts"
+    "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts",
+    "dev:stripe": "node scripts/dev-stripe.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
