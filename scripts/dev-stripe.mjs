@@ -94,6 +94,7 @@ function handleLine(value) {
 
   if (secret && !configured) {
     writeWebhookSecret(secret);
+    process.env.STRIPE_WEBHOOK_SECRET = secret;
     configured = true;
     startNext();
     return;
