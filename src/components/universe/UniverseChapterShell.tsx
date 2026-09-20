@@ -32,7 +32,7 @@ export function UniverseChapterShell({
   const previous = index > 0 ? universeChapters[index - 1] : null;
   const next =
     index < universeChapters.length - 1 ? universeChapters[index + 1] : null;
-  const chapter = universeChapters[index];
+  const chapter = universeChapters[index]!;
 
   return (
     <main id="contenu" className={styles.main}>
