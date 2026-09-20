@@ -7,7 +7,7 @@ const groups = [
   {
     title: 'Caldera',
     links: [
-      { label: 'À propos', href: '/#univers' },
+      { label: 'Notre univers', href: '/univers' },
       { label: 'Notre sélection', href: '/#selection' },
     ],
   },
