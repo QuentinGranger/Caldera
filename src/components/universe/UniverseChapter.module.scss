@@ -1,0 +1,374 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.main {
+  min-width: 0;
+  overflow: hidden;
+  background: v.$color-background;
+}
+
+.hero {
+  position: relative;
+  min-height: 490px;
+  display: grid;
+  isolation: isolate;
+  color: v.$color-text-on-dark;
+  background: v.$color-green-dark;
+}
+
+.heroImage {
+  z-index: -3;
+  object-fit: cover;
+}
+
+.heroShade {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(90deg, rgb(3 24 18 / 92%) 0%, rgb(3 24 18 / 67%) 52%, rgb(3 24 18 / 34%) 100%),
+    linear-gradient(0deg, rgb(0 42 31 / 65%), transparent 48%);
+}
+
+.heroInner {
+  display: flex;
+  min-height: 490px;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-block: clamp(4.5rem, 9vw, 7rem) 3rem;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 2.3rem;
+  color: rgb(251 244 223 / 66%);
+  font-size: 0.62rem;
+
+  a {
+    color: v.$color-gold-light;
+    text-decoration: none;
+  }
+}
+
+.chapterNumber {
+  color: v.$color-gold-light;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 56rem;
+  margin: 0.55rem 0 1rem;
+  color: v.$color-cream;
+  font: 400 clamp(3rem, 7vw, 6.2rem)/0.9 v.$font-heading;
+  letter-spacing: -0.04em;
+}
+
+.heroLead {
+  max-width: 42rem;
+  color: rgb(251 244 223 / 82%);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.reading {
+  padding-block: clamp(3.5rem, 7vw, 7rem);
+}
+
+.readingGrid {
+  display: grid;
+  gap: 3rem;
+  align-items: start;
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: 18rem minmax(0, 46rem);
+    justify-content: space-between;
+    gap: 5rem;
+  }
+}
+
+.chapterNav {
+  display: none;
+
+  @include m.from(v.$breakpoint-desktop) {
+    position: sticky;
+    top: 2rem;
+    display: block;
+  }
+
+  ol {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    border-top: 1px solid v.$color-border;
+  }
+
+  li {
+    border-bottom: 1px solid v.$color-border;
+  }
+
+  li a {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding-block: 0.95rem;
+    color: v.$color-text;
+    text-decoration: none;
+
+    > span:first-child {
+      color: v.$color-text-muted;
+      font: 500 0.82rem/1 v.$font-heading;
+    }
+
+    > span:last-child {
+      display: grid;
+      gap: 0.15rem;
+    }
+
+    strong {
+      font-size: 0.72rem;
+    }
+
+    small {
+      color: v.$color-text-muted;
+      font-size: 0.57rem;
+      line-height: 1.45;
+    }
+
+    &[aria-current='page'] {
+      color: v.$color-green;
+
+      > span:first-child {
+        color: v.$color-gold;
+      }
+    }
+  }
+}
+
+.backToIndex {
+  display: inline-flex;
+  color: v.$color-green-dark;
+  border-bottom: 1px solid v.$color-gold;
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.article {
+  min-width: 0;
+
+  > section + section {
+    margin-top: clamp(4rem, 8vw, 6rem);
+    padding-top: clamp(3rem, 6vw, 5rem);
+    border-top: 1px solid v.$color-border;
+  }
+
+  h2 {
+    max-width: 42rem;
+    margin: 0 0 1.3rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.35rem, 4.5vw, 3.8rem)/0.98 v.$font-heading;
+    letter-spacing: -0.03em;
+  }
+
+  h3 {
+    margin: 2.7rem 0 0.4rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(1.7rem, 3vw, 2.45rem)/1 v.$font-heading;
+  }
+
+  h4 {
+    margin: 0 0 1rem;
+    color: v.$color-gold;
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  p {
+    max-width: 43rem;
+    margin-top: 1rem;
+    color: v.$color-text-muted;
+    font-size: 0.84rem;
+    line-height: 1.95;
+  }
+
+  strong {
+    color: v.$color-text;
+  }
+
+  blockquote {
+    max-width: 43rem;
+    margin: 2.5rem 0;
+    padding: 1.5rem 0 1.5rem 1.5rem;
+    color: v.$color-green-dark;
+    border-left: 2px solid v.$color-gold;
+    font: 400 clamp(1.6rem, 3vw, 2.25rem)/1.25 v.$font-heading;
+  }
+}
+
+.intro {
+  max-width: 43rem;
+  margin-bottom: 2rem;
+  color: v.$color-text !important;
+  font: 400 clamp(1.35rem, 2.2vw, 1.7rem)/1.45 v.$font-heading !important;
+}
+
+.shortBeat {
+  margin-block: 1.8rem !important;
+  color: v.$color-green-dark !important;
+  font: 500 1.15rem/1.5 v.$font-heading !important;
+}
+
+.questionList {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 43rem;
+  margin: 1.8rem 0;
+  padding: 1rem 1.2rem;
+  background: v.$color-background-secondary;
+  border-left: 2px solid v.$color-gold;
+
+  p {
+    margin: 0;
+    color: v.$color-green-dark;
+    font-weight: 800;
+  }
+}
+
+.territoryJump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 2rem 0 3rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 0.75rem;
+    color: v.$color-green-dark;
+    background: v.$color-surface;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-pill;
+    font-size: 0.62rem;
+    font-weight: 750;
+    text-decoration: none;
+
+    &:hover {
+      border-color: v.$color-gold;
+    }
+  }
+}
+
+.territory {
+  scroll-margin-top: 2rem;
+  padding-block: 2.4rem;
+
+  + .territory {
+    border-top: 1px solid v.$color-border;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: 2.7rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 1rem;
+  }
+
+  .roman {
+    display: grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    color: v.$color-green-dark;
+    background: v.$color-gold-light;
+    border-radius: 50%;
+    font: 600 0.9rem/1 v.$font-heading;
+  }
+
+  h3 {
+    margin: 0;
+  }
+
+  h4 {
+    grid-column: 2;
+    margin: 0.3rem 0 0;
+  }
+}
+
+.maxim {
+  margin: 2rem 0 !important;
+  color: v.$color-green-dark !important;
+  font: 500 clamp(1.35rem, 2.7vw, 1.85rem)/1.35 v.$font-heading !important;
+}
+
+.pager {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: clamp(4rem, 8vw, 7rem);
+  padding-top: 1.5rem;
+  border-top: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 76px;
+    padding: 0.9rem 1rem;
+    color: v.$color-text;
+    background: v.$color-surface;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-medium;
+    text-decoration: none;
+
+    span {
+      display: grid;
+      gap: 0.15rem;
+    }
+
+    small {
+      color: v.$color-text-muted;
+      font-size: 0.57rem;
+    }
+
+    strong {
+      color: v.$color-green-dark;
+      font-size: 0.74rem;
+    }
+
+    &:hover {
+      border-color: v.$color-gold;
+    }
+  }
+}
+
+.next {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+@media (max-width: 479px) {
+  .hero,
+  .heroInner {
+    min-height: 430px;
+  }
+
+  .heroInner {
+    padding-bottom: 2rem;
+  }
+
+  .article p {
+    font-size: 0.8rem;
+  }
+}
