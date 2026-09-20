@@ -7,6 +7,7 @@ import styles from './Checkout.module.scss';
 
 export function CheckoutSummary({ view }: { view: CheckoutView }) {
   const shippingIsFree = view.shippingAmount === '0.00';
+  const itemLabel = view.cart.itemCount > 1 ? 'articles' : 'article';
 
   return (
     <aside
@@ -16,17 +17,25 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
     >
       <div className={styles.summaryHeader}>
         <div>
-          <span className={styles.summaryEyebrow}>RÉCAPITULATIF</span>
-          <h2>Votre commande</h2>
+          <span className={styles.summaryEyebrow}>VOTRE COMMANDE</span>
+          <h2>Récapitulatif</h2>
+          <p className={styles.summaryCount}>
+            {view.cart.itemCount} {itemLabel}
+          </p>
         </div>
-        <Link href="/panier">Modifier</Link>
+        <Link href="/panier">Modifier le panier</Link>
       </div>
 
       <ul className={styles.summaryItems}>
         {view.cart.items.map((item) => (
           <li key={item.id} className={styles.summaryItem}>
             <div className={styles.summaryMedia}>
-              <Image src={item.image} alt="" width={72} height={88} />
+              <Image
+                src={item.image}
+                alt={item.imageAlt}
+                width={76}
+                height={96}
+              />
               <span
                 className={styles.quantityBadge}
                 aria-label={`Quantité : ${item.quantity}`}
@@ -39,6 +48,8 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
               <strong>{item.name}</strong>
               <span className={styles.summaryMeta}>
                 {languageLabels[item.language]}
+                <span aria-hidden="true"> · </span>
+                {formatPrice(item.price)} / unité
               </span>
               {item.preorder && (
                 <span className={styles.summaryTag}>Précommande</span>
@@ -52,33 +63,43 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
         ))}
       </ul>
 
-      <dl className={styles.summaryTotals}>
-        <div>
-          <dt>Sous-total</dt>
-          <dd>{formatPrice(view.cart.subtotal)}</dd>
-        </div>
+      <div className={styles.summaryReceipt}>
+        <dl className={styles.summaryTotals}>
+          <div>
+            <dt>Sous-total</dt>
+            <dd>{formatPrice(view.cart.subtotal)}</dd>
+          </div>
 
-        <div>
-          <dt>Livraison</dt>
-          <dd className={shippingIsFree ? styles.freeShipping : undefined}>
-            {view.shippingAmount === null
-              ? 'À sélectionner'
-              : shippingIsFree
-                ? 'Offerte'
-                : formatPrice(view.shippingAmount)}
-          </dd>
-        </div>
+          <div>
+            <dt>Livraison</dt>
+            <dd className={shippingIsFree ? styles.freeShipping : undefined}>
+              {view.shippingAmount === null
+                ? 'À sélectionner'
+                : shippingIsFree
+                  ? 'Offerte'
+                  : formatPrice(view.shippingAmount)}
+            </dd>
+          </div>
 
-        <div className={styles.summaryTotal}>
-          <dt>
-            {view.total === null ? 'Total provisoire' : 'Total'}
-            {view.total === null && <small>Livraison à ajouter</small>}
-          </dt>
-          <dd>
-            {formatPrice(view.total === null ? view.cart.subtotal : view.total)}
-          </dd>
+          <div className={styles.summaryTotal}>
+            <dt>
+              {view.total === null ? 'Total provisoire' : 'Total'}
+              {view.total === null && <small>hors livraison</small>}
+            </dt>
+            <dd>
+              {formatPrice(view.total === null ? view.cart.subtotal : view.total)}
+            </dd>
+          </div>
+        </dl>
+
+        <div className={styles.summaryAssurance}>
+          <span aria-hidden="true">✓</span>
+          <p>
+            Prix et disponibilité vérifiés avant le paiement. Les articles ne
+            sont réservés qu’à la validation de la commande.
+          </p>
         </div>
-      </dl>
+      </div>
 
       {view.methods.some((method) => method.isDevelopment) && (
         <p className={styles.demo}>
@@ -86,14 +107,6 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
           ne constituent pas une offre commerciale.
         </p>
       )}
-
-      <div className={styles.summaryAssurance}>
-        <span aria-hidden="true">✓</span>
-        <p>
-          Prix et disponibilités revérifiés à chaque étape. La sélection seule
-          ne réserve pas les articles.
-        </p>
-      </div>
     </aside>
   );
 }
