@@ -1,0 +1,130 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: v.$color-green-dark;
+  color: v.$color-text-on-dark;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, #002c23ed 0%, #002c23b5 44%, #00251a32 100%),
+      linear-gradient(0deg, #002c23b0, transparent 50%);
+  }
+}
+.image {
+  object-fit: cover;
+  object-position: center 53%;
+  z-index: -2;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .image {
+    transition: transform 900ms cubic-bezier(0.2, 0.65, 0.3, 1);
+  }
+
+  .hero:hover .image {
+    transform: scale(1.035);
+  }
+}
+.inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 600px;
+  padding-block: 4rem 1.5rem;
+  @include m.from(v.$breakpoint-tablet) {
+    min-height: 640px;
+    padding-top: 5rem;
+  }
+}
+.content {
+  max-width: 750px;
+  h1 {
+    font-size: clamp(3.5rem, 5.8vw, 5.7rem);
+    font-weight: 500;
+    line-height: 1.01;
+    letter-spacing: -0.035em;
+    margin-block: 1.65rem;
+    em {
+      font-weight: 400;
+      color: v.$color-gold-light;
+    }
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: v.$color-gold-light;
+  span {
+    width: 2rem;
+    height: 1px;
+    background: currentColor;
+  }
+}
+.description {
+  color: #e2e7d9;
+  font-size: 0.9rem;
+  line-height: 1.85;
+  max-width: 27rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem 2rem;
+  margin-top: 2rem;
+}
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.73rem;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid #d7d9c88c;
+  &:hover {
+    color: v.$color-gold;
+  }
+}
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid v.$color-border-on-dark;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: #e2e7d9;
+  a,
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  span {
+    display: none;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    span {
+      display: inline-flex;
+    }
+  }
+}
+@media (max-width: 47.99rem) {
+  .hero::after {
+    background: linear-gradient(90deg, #002c23ed, #002c2399);
+  }
+  .desktopBreak {
+    display: none;
+  }
+  .inner {
+    min-height: 610px;
+  }
+}

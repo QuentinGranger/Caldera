@@ -1,0 +1,75 @@
+@use '../abstracts/variables' as v;
+
+html {
+  color-scheme: light;
+  background: v.$color-background;
+  scroll-behavior: smooth;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-width: 20rem;
+  min-height: 100vh;
+  min-height: 100svh;
+  color: v.$color-text;
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+main {
+  flex: 1;
+}
+
+.storefront-chrome {
+  display: contents;
+}
+
+// The 404 is a standalone landscape, including for notFound() in nested routes.
+// CSS applies on the server-rendered markup, without a client effect or a flash.
+body:has([data-caldera-not-found]) .storefront-chrome {
+  display: none;
+}
+
+section[id],
+a[id] {
+  scroll-margin-top: 1.5rem;
+}
+
+:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 5px;
+}
+
+::selection {
+  color: v.$color-green-dark;
+  background: v.$color-gold-light;
+}
+
+.skip-link {
+  position: fixed;
+  top: v.$space-4;
+  left: v.$space-4;
+  z-index: v.$z-index-skip-link;
+  padding: v.$space-3 v.$space-4;
+  transform: translateY(calc(-100% - 2rem));
+  color: v.$color-green-dark;
+  background: v.$color-cream;
+  border-radius: v.$radius-small;
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

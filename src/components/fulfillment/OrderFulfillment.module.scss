@@ -1,0 +1,45 @@
+@use '../../styles/abstracts/variables' as v;
+.panel {
+  margin-top: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid v.$color-border;
+  background: v.$color-surface;
+  border-radius: v.$radius-medium;
+  h2 {
+    font-size: 1.8rem;
+  }
+  a {
+    display: inline-block;
+    margin-block: 1rem;
+    padding: 0.8rem 1.2rem;
+    background: v.$color-green-dark;
+    color: #fff;
+    border-radius: v.$radius-small;
+  }
+}
+.status {
+  font-weight: 700;
+  margin-block: 0.8rem;
+}
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1.25rem;
+  margin-block: 1.5rem;
+  list-style: none;
+  padding: 0;
+  li {
+    border-left: 2px solid v.$color-gold;
+    padding-left: 0.8rem;
+  }
+  time {
+    display: block;
+    font-size: 0.8rem;
+    color: v.$color-text-muted;
+    margin-top: 0.4rem;
+  }
+}
+.note {
+  font-size: 0.85rem;
+  color: v.$color-text-muted;
+}

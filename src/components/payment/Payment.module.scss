@@ -1,0 +1,115 @@
+@use '@/styles/abstracts/variables' as v;
+.main {
+  padding: clamp(2rem, 6vw, 5rem) 0;
+  min-height: 65vh;
+}
+.heading {
+  max-width: 48rem;
+  margin-bottom: 2.5rem;
+  h1 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    margin: 0.5rem 0 1rem;
+  }
+  p {
+    margin-bottom: 0.75rem;
+  }
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  color: v.$color-green;
+}
+.grid {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+  @media (min-width: 1200px) {
+    grid-template-columns: 1.2fr 1fr;
+    gap: 3rem;
+  }
+}
+.panel {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: v.$color-surface;
+  border: 1px solid rgba(0, 60, 45, 0.15);
+  border-radius: 0.5rem;
+  h2 {
+    font-size: 1.7rem;
+    margin-bottom: 1.25rem;
+  }
+  > p {
+    margin: 1rem 0;
+  }
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.feedback {
+  margin: 1rem 0;
+  overflow-wrap: anywhere;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  li {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 60, 45, 0.12);
+  }
+  img {
+    object-fit: contain;
+    width: 64px;
+    height: 80px;
+  }
+  small {
+    display: block;
+    color: v.$color-text-muted;
+    margin-top: 0.25rem;
+  }
+  @media (max-width: 420px) {
+    li {
+      grid-template-columns: 48px 1fr;
+    }
+    img {
+      width: 48px;
+    }
+    .linePrice {
+      grid-column: 2;
+    }
+  }
+}
+.totals {
+  margin: 1.5rem 0;
+  > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0.75rem 0;
+  }
+  dd {
+    margin: 0;
+  }
+}
+.total {
+  font-weight: 700;
+  font-size: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 60, 45, 0.15);
+}
+.address {
+  font-style: normal;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.note {
+  font-size: 0.85rem;
+  color: v.$color-text-muted;
+}

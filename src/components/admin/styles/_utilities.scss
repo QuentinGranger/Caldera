@@ -1,0 +1,160 @@
+@use '../tokens' as t;
+
+.dialog {
+  border: 2px solid t.$ink;
+  border-radius: 4px;
+  padding: 1.5rem;
+  color: t.$ink;
+  background: t.$surface;
+  width: min(90vw, 32rem);
+  max-height: 85dvh;
+  overflow-y: auto;
+  margin: auto;
+  box-shadow: 6px 6px 0 #171426;
+  &::backdrop {
+    background: #18132699;
+  }
+  h2 {
+    font-family: t.$mono;
+  }
+  p {
+    margin-block: 1rem;
+  }
+}
+.mobileButton {
+  display: none !important;
+}
+.mobileNav {
+  .navigation {
+    margin-top: 1.5rem;
+  }
+  .navGroup > p {
+    margin-block: 0;
+  }
+}
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100svh;
+  max-width: 29rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+  .brand {
+    justify-content: center;
+    margin-bottom: 2.25rem;
+  }
+  .card {
+    border: 2px solid t.$ink;
+    box-shadow: 6px 6px 0 t.$ink;
+    padding: 2rem;
+  }
+  h1 {
+    margin-bottom: 0.75rem;
+  }
+  .loginIntro {
+    color: t.$muted;
+    margin-bottom: 1.75rem;
+  }
+  .actions button {
+    width: 100%;
+  }
+  > p {
+    text-align: center;
+    font-size: 0.75rem;
+  }
+}
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  img {
+    display: block;
+    object-fit: contain;
+    width: 100%;
+    background: #eeebf4;
+    margin-bottom: 1rem;
+  }
+}
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid t.$border;
+  a {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    &:hover {
+      background: t.$surface;
+      text-decoration: none;
+    }
+    &[aria-current] {
+      color: t.$purple-dark;
+      background: t.$lavender;
+      border-color: t.$purple;
+    }
+  }
+}
+.audit {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.78rem;
+  li {
+    position: relative;
+    padding: 0 0 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px dashed t.$border;
+    &::before {
+      position: absolute;
+      left: 0;
+      top: 0.4rem;
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: t.$purple;
+    }
+  }
+  code {
+    display: block;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: #eeebf4;
+  }
+}
+.auditScroll {
+  max-height: 30rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  padding-block: 3rem;
+  color: t.$muted;
+  svg {
+    color: t.$purple;
+  }
+  a {
+    color: t.$purple-dark;
+    text-decoration: underline;
+  }
+}
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

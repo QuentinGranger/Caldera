@@ -1,0 +1,87 @@
+@use '@/styles/abstracts/variables' as v;
+.item {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 1rem;
+  padding-block: 1.5rem;
+  border-bottom: 1px solid v.$color-border;
+}
+.image {
+  position: relative;
+  aspect-ratio: 0.85;
+  align-self: start;
+  background: v.$color-background-secondary;
+  border-radius: v.$radius-small;
+  img {
+    object-fit: contain;
+    padding: 0.35rem;
+  }
+}
+.body {
+  min-width: 0;
+}
+.name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+.language,
+.unit {
+  color: v.$color-text-muted;
+  font-size: 0.75rem;
+  margin-block: 0.4rem;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+.remove,
+.adjust {
+  background: transparent;
+  color: v.$color-text;
+  border: 0;
+  min-height: 44px;
+  padding: 0;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+}
+.issue {
+  color: v.$color-danger;
+  font-size: 0.8rem;
+  margin-block: 0.5rem;
+}
+.adjust {
+  font-weight: 700;
+}
+.total {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  strong {
+    font-size: 0.9rem;
+  }
+}
+@media (min-width: v.$breakpoint-tablet) {
+  .item {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+}

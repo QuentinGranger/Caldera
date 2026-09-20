@@ -1,0 +1,108 @@
+@use '../../../styles/abstracts/variables' as v;
+.gallery {
+  min-width: 0;
+}
+.main {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid v.$color-border;
+  background: v.$color-surface;
+  cursor: zoom-in;
+  color: v.$color-text;
+  img {
+    object-fit: contain;
+    padding: clamp(1.2rem, 4vw, 3rem);
+    transition: transform v.$transition-base;
+  }
+  @media (hover: hover) {
+    &:hover img {
+      transform: scale(1.025);
+    }
+  }
+}
+.zoom {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  background: v.$color-surface;
+  padding: 0.5rem;
+}
+.thumbnails {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 1rem 0.3rem 0.5rem;
+  button {
+    position: relative;
+    width: 80px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+    border: 1px solid v.$color-border;
+    background: v.$color-surface;
+    cursor: pointer;
+  }
+  [aria-pressed='true'] {
+    border: 2px solid v.$color-green;
+  }
+  img {
+    object-fit: contain;
+    padding: 0.5rem;
+  }
+}
+.caption {
+  font-size: 0.65rem;
+  line-height: 1.6;
+  color: v.$color-text-muted;
+  margin: 0.75rem 0;
+}
+.lightbox {
+  width: min(95vw, 1000px);
+  max-height: 95svh;
+  padding: 1rem;
+  border: 0;
+  margin: auto;
+  background: v.$color-surface;
+  color: v.$color-text;
+  &::backdrop {
+    background: rgb(7 28 23 / 80%);
+  }
+}
+.expanded {
+  position: relative;
+  height: 75svh;
+  max-height: 850px;
+  img {
+    object-fit: contain;
+    padding: 2rem 0.5rem;
+  }
+}
+.close {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  z-index: 1;
+}
+.close,
+.controls button {
+  display: grid;
+  place-items: center;
+  background: v.$color-surface;
+  color: v.$color-text;
+  border: 1px solid v.$color-border;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+}

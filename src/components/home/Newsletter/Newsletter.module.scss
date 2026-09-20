@@ -1,0 +1,94 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.section {
+  @include m.section;
+  background: v.$color-green-dark;
+  color: v.$color-text-on-dark;
+  overflow: hidden;
+}
+.grid {
+  position: relative;
+  display: grid;
+  align-items: center;
+  gap: 2rem;
+  > div,
+  form {
+    position: relative;
+    z-index: 1;
+  }
+  h2 {
+    font-size: clamp(2.5rem, 3.2vw, 3.3rem);
+    margin-block: 0.8rem 1rem;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+.description {
+  color: v.$color-muted-on-dark;
+  font-size: 0.8rem;
+}
+.form {
+  label {
+    display: block;
+    margin-bottom: 0.7rem;
+    font-size: 0.68rem;
+  }
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  input {
+    min-width: 0;
+    flex: 1;
+    width: 100%;
+    min-height: 3.2rem;
+    border: 1px solid #ffffff66;
+    border-radius: v.$radius-small;
+    padding: 0.8rem 1rem;
+    background: #002b20;
+    color: v.$color-text-on-dark;
+    font-size: 0.8rem;
+    &::placeholder {
+      color: v.$color-muted-on-dark;
+    }
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    flex-direction: row;
+    gap: 0;
+    input {
+      border-right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    button {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      padding-inline: 1rem;
+    }
+  }
+}
+.note {
+  font-size: 0.59rem;
+  margin-top: 0.8rem;
+  color: v.$color-muted-on-dark;
+}
+.feedback {
+  min-height: 2.3rem;
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  color: v.$color-gold-light;
+}
+.compass {
+  position: absolute;
+  right: -9rem;
+  top: -4rem;
+  opacity: 0.055;
+  pointer-events: none;
+}

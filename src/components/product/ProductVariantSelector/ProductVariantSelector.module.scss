@@ -1,0 +1,52 @@
+@use '../../../styles/abstracts/variables' as v;
+.selector {
+  border: 0;
+  padding: 0;
+  margin: 1.5rem 0;
+  min-width: 0;
+  legend {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  > div {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+  }
+}
+.option {
+  position: relative;
+  cursor: pointer;
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid v.$color-border;
+    background: v.$color-surface;
+    transition: border-color v.$transition-fast;
+  }
+  strong {
+    font-size: 0.8rem;
+  }
+  small {
+    font-size: 0.65rem;
+    color: v.$color-text-muted;
+  }
+  input:checked + span {
+    border-color: v.$color-green;
+    background: #e7ede5;
+    box-shadow: inset 0 0 0 1px v.$color-green;
+  }
+  input:focus-visible + span {
+    outline: 3px solid v.$color-green;
+    outline-offset: 3px;
+  }
+}

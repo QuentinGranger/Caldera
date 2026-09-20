@@ -1,0 +1,43 @@
+@use '@/styles/abstracts/variables' as v;
+.summary {
+  background: v.$color-green-dark;
+  color: v.$color-cream;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: v.$radius-small;
+  h2 {
+    font-family: v.$font-heading;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  dl > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  dd {
+    font-weight: 700;
+  }
+  p {
+    font-size: 0.75rem;
+    line-height: 1.8;
+    margin-block: 0.9rem;
+  }
+  button {
+    width: 100%;
+    margin-top: 0.7rem;
+    background: v.$color-gold;
+    color: v.$color-ink;
+    &:disabled {
+      opacity: 0.7;
+    }
+  }
+  .warning {
+    padding-block: 1rem;
+    border-block: 1px solid v.$color-border-on-dark;
+    color: v.$color-gold-light;
+  }
+  .note {
+    color: v.$color-muted-on-dark;
+  }
+}

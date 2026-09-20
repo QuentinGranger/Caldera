@@ -1,0 +1,80 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.section {
+  padding-bottom: clamp(3.5rem, 6vw, 6rem);
+}
+.grid {
+  display: grid;
+  gap: 1.5rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.card {
+  position: relative;
+  min-height: 310px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  &:hover img {
+    transform: rotate(-5deg) scale(1.04);
+  }
+}
+.copy {
+  position: relative;
+  z-index: 1;
+  width: 64%;
+  p {
+    @include m.eyebrow;
+    font-size: 0.5rem;
+    max-width: 13rem;
+  }
+  h3 {
+    font-size: clamp(2.1rem, 2.8vw, 2.9rem);
+    margin-block: 1.2rem 1.5rem;
+  }
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.62rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid currentColor;
+  }
+}
+.image {
+  position: absolute;
+  right: -1rem;
+  top: 2rem;
+  width: 45%;
+  height: calc(100% - 4rem);
+  img {
+    object-fit: contain;
+    transform: rotate(-5deg);
+    transition: transform v.$transition-base;
+    mix-blend-mode: multiply;
+  }
+}
+.prismatic {
+  background: #e9dfc5;
+}
+.accessories {
+  background: #d4ddce;
+}
+@media (min-width: 48rem) and (max-width: 74.99rem) {
+  .card {
+    padding: 1.4rem;
+    min-height: 360px;
+    align-items: start;
+  }
+  .copy {
+    width: 100%;
+  }
+  .image {
+    top: auto;
+    bottom: -1rem;
+    height: 180px;
+    opacity: 0.6;
+  }
+}

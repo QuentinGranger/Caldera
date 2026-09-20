@@ -1,0 +1,42 @@
+@use '../../../styles/abstracts/variables' as v;
+.quantity {
+  label {
+    display: block;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  > div {
+    display: inline-flex;
+    border: 1px solid v.$color-border;
+    background: v.$color-surface;
+  }
+  button,
+  input {
+    height: 46px;
+    border: 0;
+    background: transparent;
+    color: v.$color-text;
+    text-align: center;
+  }
+  button {
+    width: 42px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  input {
+    width: 50px;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+  }
+  button:disabled,
+  input:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}

@@ -1,0 +1,45 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.header {
+  position: relative;
+  z-index: v.$z-index-header;
+  background: #002f22;
+  color: v.$color-text-on-dark;
+  border-bottom: 1px solid v.$color-border-on-dark;
+}
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-height: 86px;
+  width: calc(100% - 1rem);
+  @include m.from(v.$breakpoint-tablet) {
+    width: min(100% - 3rem, v.$container-width);
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    min-height: 108px;
+    gap: 1.5rem;
+  }
+}
+.brand {
+  display: block;
+  width: 160px;
+  flex-shrink: 1;
+  @include m.from(v.$breakpoint-mobile) {
+    width: 210px;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    width: 240px;
+  }
+}
+.actions {
+  display: flex;
+  gap: 0;
+}
+.actions .desktop {
+  display: none;
+  @include m.from(v.$breakpoint-desktop) {
+    display: inline-grid;
+  }
+}

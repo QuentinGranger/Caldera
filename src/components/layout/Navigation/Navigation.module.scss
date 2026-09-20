@@ -1,0 +1,36 @@
+@use '../../../styles/abstracts/variables' as v;
+.navigation {
+  display: none;
+  @media (min-width: 75rem) {
+    display: block;
+  }
+  ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: clamp(1rem, 1.5vw, 1.7rem);
+  }
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    position: relative;
+    min-height: 44px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    &::after {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: v.$color-gold;
+      content: '';
+      transition: width v.$transition-base;
+    }
+    &:hover::after {
+      width: 100%;
+    }
+  }
+}

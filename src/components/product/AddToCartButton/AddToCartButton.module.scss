@@ -1,0 +1,16 @@
+@use '../../../styles/abstracts/variables' as v;
+.action {
+  flex: 1;
+  min-width: min(100%, 220px);
+  p {
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: v.$color-text-muted;
+    margin-top: 0.75rem;
+  }
+}
+.button {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+}

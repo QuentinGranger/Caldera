@@ -1,0 +1,95 @@
+@use '../../../styles/abstracts/variables' as v;
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 315px;
+  padding: 1.5rem;
+  overflow: hidden;
+  transition: transform v.$transition-base;
+  &:hover {
+    transform: translateY(-4px);
+    .visual img {
+      transform: rotate(-5deg) scale(1.06);
+    }
+  }
+}
+.number {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  opacity: 0.7;
+}
+.visual {
+  position: relative;
+  width: 100%;
+  height: 190px;
+  margin-block: 0.7rem;
+  img {
+    object-fit: contain;
+    padding: 0.8rem 1.5rem;
+    transform: rotate(-5deg);
+    transition: transform v.$transition-base;
+    filter: drop-shadow(0 10px 12px #071c1726);
+  }
+}
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-top: auto;
+  h3 {
+    font-size: 1.9rem;
+  }
+  p {
+    font-size: 0.6rem;
+    margin-top: 0.4rem;
+    opacity: 0.8;
+  }
+}
+.arrow {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.forest {
+  background: #214d3d;
+  color: v.$color-text-on-dark;
+}
+.sand {
+  background: #e9dfc5;
+}
+.clay {
+  background: #d8bb9f;
+}
+.sage {
+  background: #d4ddce;
+}
+@media (max-width: 47.99rem) {
+  .card {
+    min-height: 265px;
+    padding: 1rem;
+  }
+  .visual {
+    height: 150px;
+    img {
+      padding: 0.7rem;
+    }
+  }
+  .bottom h3 {
+    font-size: 1.6rem;
+  }
+  .bottom p {
+    display: none;
+  }
+  .arrow {
+    width: 24px;
+    height: 24px;
+  }
+}

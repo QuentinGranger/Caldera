@@ -1,0 +1,25 @@
+@use '../../../styles/abstracts/variables' as v;
+.button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  transition: background v.$transition-fast;
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.5;
+  }
+  &:hover:enabled {
+    background: #bca46a24;
+  }
+  &:disabled {
+    opacity: 0.65;
+  }
+}

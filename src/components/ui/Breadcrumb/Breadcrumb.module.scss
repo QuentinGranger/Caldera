@@ -1,0 +1,25 @@
+@use '../../../styles/abstracts/variables' as v;
+.breadcrumb {
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+  margin-bottom: 2rem;
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  a:hover {
+    color: v.$color-green;
+    text-decoration: underline;
+  }
+  [aria-current] {
+    color: v.$color-text;
+  }
+}

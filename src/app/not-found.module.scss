@@ -1,0 +1,404 @@
+@use '../styles/abstracts/variables' as v;
+
+.scene {
+  --zero-size: clamp(12rem, 29svh, 19rem);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100svh;
+  overflow: clip;
+  padding: clamp(1.5rem, 5svh, 3rem) 1.5rem clamp(2rem, 8svh, 5rem);
+  background: v.$color-ink;
+  color: v.$color-cream;
+  text-align: center;
+
+  h1 {
+    max-width: 68rem;
+    font-size: clamp(2rem, 3.5vw, 3.75rem);
+    font-weight: 600;
+    line-height: 1.12;
+    color: #f8df97;
+    text-shadow: 0 2px 14px #001d17c9;
+  }
+
+  a:focus-visible {
+    outline: 3px solid v.$color-cream;
+    outline-offset: 8px;
+  }
+}
+
+.landscape,
+.shade,
+.mist {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.landscape {
+  z-index: -3;
+  // The dragon is part of the supplied image: no cut-out, duplicate or repaint.
+  transform-origin: 76% 38%;
+  animation: landscape-drift 32s ease-in-out infinite alternate;
+}
+
+.background {
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+.shade {
+  z-index: -2;
+  // A local emerald scrim keeps the sunset and foreground at the edges intact.
+  background:
+    radial-gradient(
+      ellipse 43% 70% at 50% 28%,
+      #002d25b8 0%,
+      #00281f85 48%,
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      #071c171a,
+      transparent 25%,
+      #071c1726 80%,
+      #071c174d
+    );
+}
+
+.mist {
+  z-index: -1;
+  inset: 56% -12% 9%;
+  opacity: 0.16;
+  background:
+    radial-gradient(ellipse 34% 12% at 33% 46%, #f7e9be70, transparent 100%),
+    radial-gradient(ellipse 30% 10% at 66% 68%, #f7e9be60, transparent 100%);
+  animation: mist-drift 27s ease-in-out infinite alternate;
+}
+
+.brand {
+  position: relative;
+  display: block;
+  flex: none;
+  width: clamp(18rem, 26vw, 27rem);
+  aspect-ratio: 1188 / 350;
+  overflow: hidden;
+  margin-bottom: clamp(1.25rem, 3svh, 2rem);
+}
+
+.wordmark {
+  // Display the existing wordmark from the horizontal logo at its original ratio.
+  // Only transparent margins and the separate crest are outside this viewport.
+  position: absolute;
+  width: 149.327%;
+  max-width: none;
+  height: auto;
+  left: -46.465%;
+  top: -75.714%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.errorCode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: clamp(0.4rem, 1.3svh, 0.85rem);
+  line-height: 1;
+  user-select: none;
+}
+
+.digit {
+  width: calc(var(--zero-size) * 0.64);
+  flex: none;
+  font-family: v.$font-heading;
+  font-variant-numeric: lining-nums;
+  font-size: calc(var(--zero-size) * 1.35);
+  font-weight: 600;
+  line-height: 0.74;
+  color: #f6d783;
+  background: linear-gradient(
+    145deg,
+    #fff0b9 5%,
+    #f9e09a 40%,
+    #e8bd60 74%,
+    #ffe5a0
+  );
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 8px #00231945);
+  transform: translateY(-0.025em);
+}
+
+.zero {
+  width: var(--zero-size);
+  height: var(--zero-size);
+  flex: none;
+  object-fit: contain;
+  margin-inline: -0.65rem;
+}
+
+.flourish {
+  position: relative;
+  width: clamp(3rem, 9vw, 9rem);
+  height: 2px;
+  margin-inline: clamp(1rem, 2vw, 2rem);
+  background: linear-gradient(90deg, transparent, v.$color-gold-light);
+
+  &::after {
+    position: absolute;
+    content: '';
+    right: -1.1rem;
+    top: 50%;
+    width: 0.85rem;
+    height: 1.6rem;
+    background: v.$color-gold-light;
+    clip-path: polygon(
+      50% 0,
+      64% 38%,
+      100% 50%,
+      64% 62%,
+      50% 100%,
+      36% 62%,
+      0 50%,
+      36% 38%
+    );
+    transform: translateY(-50%);
+  }
+
+  &:last-child {
+    transform: rotate(180deg);
+  }
+}
+
+.description {
+  margin-top: clamp(0.6rem, 1.5svh, 1rem);
+  font-family: v.$font-heading;
+  font-size: clamp(1.25rem, 1.9vw, 2rem);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  text-wrap: balance;
+  text-shadow: 0 2px 10px #001d17;
+}
+
+.returnLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: 3.75rem;
+  margin-top: clamp(1.25rem, 3svh, 2rem);
+  padding: 0.5rem 2.75rem;
+  border: 1px solid #f9df97;
+  border-radius: v.$radius-pill;
+  box-shadow:
+    inset 0 0 0 3px #123e2f,
+    inset 0 0 0 5px #f5d88b,
+    0 5px 20px #00181038;
+  background: linear-gradient(115deg, #edbd5c, #ffe5a0 52%, #f0c668);
+  color: #092d20;
+  font-family: v.$font-heading;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+  transition:
+    transform v.$transition-base,
+    box-shadow v.$transition-base;
+
+  svg {
+    flex: none;
+    transition: transform v.$transition-base;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        inset 0 0 0 3px #123e2f,
+        inset 0 0 0 5px #fff0bb,
+        0 8px 25px #00181066;
+      svg {
+        transform: translateX(3px);
+      }
+    }
+  }
+}
+
+.signature {
+  margin-top: clamp(1.5rem, 3svh, 2rem);
+  color: v.$color-gold-light;
+  text-shadow: 0 2px 8px #001d17;
+
+  p {
+    margin-top: 0.45rem;
+    font-family: v.$font-heading;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+}
+
+.compass {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+
+  span {
+    width: 5.25rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, v.$color-gold);
+    &:last-child {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+@keyframes landscape-drift {
+  from {
+    transform: scale(1.005);
+  }
+  to {
+    transform: scale(1.022) translate3d(-0.2%, 0.1%, 0);
+  }
+}
+
+@keyframes mist-drift {
+  from {
+    transform: translate3d(-2%, 0, 0);
+    opacity: 0.1;
+  }
+  to {
+    transform: translate3d(2%, -1%, 0);
+    opacity: 0.2;
+  }
+}
+
+@media (max-width: 74.99rem) {
+  .scene h1 {
+    font-size: clamp(2rem, 4.3vw, 3.25rem);
+  }
+  .flourish {
+    width: 3.5rem;
+    margin-inline: 1.25rem;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .scene {
+    --zero-size: clamp(7.5rem, 39vw, 13rem);
+    padding: max(2rem, env(safe-area-inset-top)) 1.25rem
+      max(2rem, env(safe-area-inset-bottom));
+    justify-content: center;
+    h1 {
+      max-width: 25rem;
+      font-size: clamp(1.9rem, 7.5vw, 2.75rem);
+      line-height: 1.12;
+    }
+  }
+  .background {
+    object-position: 65% 50%;
+  }
+  .shade {
+    background: linear-gradient(
+      180deg,
+      #00281f66,
+      #002d2599 38%,
+      #00271f99 65%,
+      #071c1740
+    );
+  }
+  .brand {
+    width: clamp(14rem, 64vw, 19rem);
+    margin-bottom: clamp(2rem, 6svh, 3.5rem);
+  }
+  .flourish {
+    display: none;
+  }
+  .zero {
+    margin-inline: -0.35rem;
+  }
+  .errorCode {
+    margin-bottom: 1.5rem;
+  }
+  .description {
+    max-width: 22rem;
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    letter-spacing: 0.055em;
+  }
+  .returnLink {
+    width: min(100%, 20rem);
+    margin-top: 1.75rem;
+    padding-inline: 1.25rem;
+    font-size: 1.6rem;
+  }
+  .signature {
+    margin-top: 2rem;
+    p {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+    }
+  }
+}
+
+@media (min-width: 48rem) and (max-height: 46rem) {
+  .scene {
+    --zero-size: clamp(8rem, 27svh, 12rem);
+    padding-block: 1.25rem;
+  }
+  .brand {
+    width: 16rem;
+    margin-bottom: 0.65rem;
+  }
+  .scene h1 {
+    font-size: clamp(1.75rem, 3.3vw, 2.5rem);
+  }
+  .description {
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+  }
+  .returnLink {
+    min-height: 3.25rem;
+    margin-top: 1rem;
+    font-size: 1.5rem;
+  }
+  .signature {
+    margin-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landscape,
+  .mist {
+    animation: none;
+    transform: none;
+  }
+  .returnLink,
+  .returnLink svg {
+    transition: none;
+  }
+  .returnLink:hover,
+  .returnLink:hover svg {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .digit {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+  .returnLink {
+    border: 2px solid ButtonText;
+  }
+}

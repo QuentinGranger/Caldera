@@ -1,0 +1,50 @@
+@use '../../../styles/abstracts/variables' as v;
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  min-height: 3.2rem;
+  padding: 0.85rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: v.$radius-small;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition:
+    background v.$transition-fast,
+    transform v.$transition-fast;
+  text-align: center;
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+  &:hover:enabled,
+  &:is(a):hover {
+    transform: translateY(-2px);
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.primary {
+  background: v.$color-green-dark;
+  color: v.$color-text-on-dark;
+  &:hover {
+    background: v.$color-green;
+  }
+}
+.gold {
+  background: v.$color-gold;
+  color: v.$color-ink;
+  &:hover {
+    background: v.$color-gold-light;
+  }
+}
+.outline {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+  &:hover {
+    background: #ffffff0d;
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "name": "les-terres-de-caldera",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "npm": ">=11"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "prisma generate && next build --webpack",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "prisma generate && next typegen && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "test:catalog": "node --conditions=react-server --import tsx --test tests/catalog.test.ts tests/catalog-filters.test.ts",
+    "test:catalog:db": "node --conditions=react-server --import tsx --test tests/catalog-db.test.ts tests/catalog-navigation-db.test.ts",
+    "test:catalog:http": "node --conditions=react-server --import tsx --test tests/catalog-http.test.ts tests/catalog-navigation-http.test.ts",
+    "test:product": "node --conditions=react-server --import tsx --test tests/product.test.ts",
+    "test:product:db": "node --conditions=react-server --import tsx --test tests/product-db.test.ts",
+    "test:product:http": "node --conditions=react-server --import tsx --test tests/product-http.test.ts",
+    "test:cart:db": "node --conditions=react-server --import tsx --test tests/cart-db.test.ts",
+    "test:cart:http": "node --conditions=react-server --import tsx --test tests/cart-http.test.ts",
+    "test:checkout": "node --conditions=react-server --import tsx --test tests/checkout.test.ts",
+    "test:checkout:db": "node --conditions=react-server --import tsx --test tests/checkout-db.test.ts",
+    "test:checkout:http": "node --conditions=react-server --import tsx --test tests/checkout-http.test.ts",
+    "stock:expire": "node --conditions=react-server --import tsx scripts/expire-reservations.ts",
+    "test:payments": "node --conditions=react-server --import tsx --test tests/payments.test.ts",
+    "test:payments:db": "node --conditions=react-server --import tsx --test tests/payments-db.test.ts",
+    "test:payments:http": "node --conditions=react-server --import tsx --test tests/payments-http.test.ts",
+    "stripe:listen": "node scripts/stripe-listen.mjs",
+    "test:stripe:sandbox": "node --conditions=react-server --import tsx scripts/test-stripe-sandbox.ts",
+    "admin:create": "node --conditions=react-server --import tsx scripts/create-admin.ts",
+    "test:admin:db": "node --conditions=react-server --import tsx --test tests/admin-db.test.ts",
+    "test:admin:http": "node --conditions=react-server --import tsx --test tests/admin-http.test.ts",
+    "emails:process": "node --conditions=react-server --import tsx scripts/process-emails.ts",
+    "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "@stripe/react-stripe-js": "6.10.0",
+    "@stripe/stripe-js": "9.16.0",
+    "better-auth": "1.7.5",
+    "dotenv": "18.0.1",
+    "lucide-react": "1.47.0",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1",
+    "sharp": "0.35.4",
+    "stripe": "22.6.2"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "prisma": {
+      "mysql2": "3.24.4"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.5",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.8",
+    "prisma": "7.10.0",
+    "sass": "1.104.1",
+    "tsx": "4.23.13",
+    "typescript": "6.0.3"
+  }
+}

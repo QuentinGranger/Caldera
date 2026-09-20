@@ -1,0 +1,32 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  h2 {
+    font-size: clamp(2.3rem, 3.5vw, 3.25rem);
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  margin-bottom: 0.65rem;
+}
+.description {
+  max-width: 35rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+.link {
+  display: inline-flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding-block: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-bottom: 1px solid v.$color-gold;
+}

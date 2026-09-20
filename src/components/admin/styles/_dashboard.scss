@@ -1,0 +1,132 @@
+@use '../tokens' as t;
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat {
+  display: block;
+  position: relative;
+  padding: 1.25rem;
+  border: 1px solid t.$ink;
+  border-radius: 3px;
+  background: t.$surface;
+  box-shadow: 3px 3px 0 t.$ink;
+  color: t.$ink;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+  &:hover {
+    text-decoration: none !important;
+    transform: translateY(-2px);
+    box-shadow: 3px 5px 0 t.$ink;
+  }
+  strong {
+    display: block;
+    font: 700 clamp(2rem, 3vw, 2.8rem) t.$mono;
+    letter-spacing: -0.08em;
+    margin-block: 0.6rem;
+  }
+  small {
+    font-size: 0.7rem;
+  }
+}
+.statLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  svg {
+    flex: none;
+  }
+}
+.lavender {
+  background: t.$lavender;
+}
+.cyan {
+  background: t.$cyan;
+}
+.lime {
+  background: t.$lime;
+}
+.peach {
+  background: t.$peach;
+}
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+.quickLink {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid t.$border;
+  background: t.$surface;
+  border-radius: 4px;
+  color: t.$ink;
+  font-weight: 700;
+  font-size: 0.8rem;
+  svg {
+    color: t.$purple;
+    flex: none;
+  }
+  &:hover {
+    border-color: t.$purple;
+    text-decoration: none !important;
+    background: t.$lavender;
+  }
+}
+.attentionList {
+  display: grid;
+  gap: 0.5rem;
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem;
+    border: 1px solid t.$border;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    &:hover {
+      background: t.$lavender;
+      text-decoration: none;
+    }
+    strong {
+      font-family: t.$mono;
+      font-size: 1.1rem;
+    }
+  }
+}
+.metricList {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px dashed t.$border;
+    padding-block: 0.55rem;
+  }
+  dt {
+    font-size: 0.8rem;
+  }
+  dd {
+    margin: 0;
+    font: 700 0.9rem t.$mono;
+  }
+}
+.total {
+  font: 700 clamp(1.5rem, 2.5vw, 2rem) t.$mono;
+  letter-spacing: -0.045em;
+  margin-bottom: 0.5rem;
+}

@@ -1,0 +1,26 @@
+@use '../../../styles/abstracts/variables' as v;
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.6rem;
+  border-radius: 2px;
+  font-size: 0.57rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1.4;
+}
+.new {
+  background: v.$color-green-dark;
+  color: v.$color-text-on-dark;
+}
+.preorder {
+  background: v.$color-cream;
+  color: v.$color-green-dark;
+}
+.limited {
+  background: #f1ddcd;
+  color: #793819;
+}
+.sold-out {
+  background: #e0e1dc;
+  color: #484c46;
+}

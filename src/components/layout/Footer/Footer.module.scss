@@ -1,0 +1,83 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.footer {
+  background: v.$color-ink;
+  color: v.$color-text-on-dark;
+  padding-top: 3.5rem;
+}
+.top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem 1.5rem;
+  padding-bottom: 3.5rem;
+  h2 {
+    @include m.eyebrow;
+    font-family: v.$font-body;
+    color: v.$color-gold;
+  }
+  ul {
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    margin-bottom: 0.55rem;
+    font-size: 0.75rem;
+    color: v.$color-muted-on-dark;
+  }
+  li a,
+  li span {
+    display: inline-block;
+    padding-block: 0.25rem;
+  }
+  a:hover {
+    color: v.$color-gold;
+  }
+  span[aria-disabled] {
+    opacity: 0.65;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: 2fr repeat(4, 1fr);
+    gap: 3rem;
+  }
+}
+.brand {
+  grid-column: 1 / -1;
+  img {
+    width: 230px;
+  }
+  p {
+    font-family: v.$font-heading;
+    font-size: 1.6rem;
+    line-height: 1.2;
+    margin-top: 1rem;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-column: auto;
+  }
+}
+.backTop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+  font-size: 0.65rem;
+  color: v.$color-gold;
+}
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem 2rem;
+  border-top: 1px solid v.$color-border-on-dark;
+  padding-block: 1.5rem;
+  color: v.$color-muted-on-dark;
+  font-size: 0.6rem;
+  span {
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}

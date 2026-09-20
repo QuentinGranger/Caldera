@@ -1,0 +1,43 @@
+@use '../../../styles/abstracts/variables' as v;
+.dialog {
+  margin: auto;
+  border: 1px solid v.$color-border;
+  padding: 1.5rem;
+  width: min(100% - 2rem, 36rem);
+  background: v.$color-surface;
+  color: v.$color-text;
+  &::backdrop {
+    background: rgb(7 28 23 / 65%);
+  }
+  label {
+    font-size: 0.8rem;
+  }
+  button {
+    border: 0;
+    background: none;
+    padding: 0.65rem;
+    cursor: pointer;
+  }
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  h2 {
+    font-size: 1.8rem;
+  }
+}
+.field {
+  display: flex;
+  border: 1px solid v.$color-border;
+  margin-top: 0.5rem;
+  input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.8rem;
+    border: 0;
+    background: transparent;
+  }
+}

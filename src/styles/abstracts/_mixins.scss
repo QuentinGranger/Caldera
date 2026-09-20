@@ -1,0 +1,22 @@
+@use 'variables' as v;
+@mixin from($breakpoint) {
+  @media (min-width: $breakpoint) {
+    @content;
+  }
+}
+@mixin container {
+  width: min(100% - 2 * v.$space-6, v.$container-width);
+  margin-inline: auto;
+  @include from(v.$breakpoint-tablet) {
+    width: min(100% - 2 * v.$space-12, v.$container-width);
+  }
+}
+@mixin section {
+  padding-block: clamp(3.5rem, 6vw, 6rem);
+}
+@mixin eyebrow {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+}

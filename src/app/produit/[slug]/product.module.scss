@@ -1,0 +1,38 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.main {
+  padding-block: 2rem 5rem;
+}
+.hero {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: clamp(2rem, 4vw, 4rem);
+  }
+}
+.info {
+  min-width: 0;
+  h1 {
+    font-size: clamp(2.25rem, 3.5vw, 3.75rem);
+    line-height: 1.06;
+    margin: 0.7rem 0 1rem;
+    overflow-wrap: anywhere;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+}
+.setLink {
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.summary {
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: v.$color-text-muted;
+  margin-top: 1rem;
+}

@@ -1,0 +1,175 @@
+@use '../tokens' as t;
+
+.shell {
+  display: grid;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.75rem 1rem;
+  background: t.$surface;
+  border-right: 2px solid t.$ink;
+}
+.brand {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  color: t.$ink;
+  font-family: t.$mono;
+  line-height: 1.2;
+  padding-inline: 0.35rem;
+  text-decoration: none !important;
+  strong {
+    display: block;
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+  }
+  small {
+    font-size: 0.61rem;
+    letter-spacing: 0.16em;
+    margin-top: 0.4rem;
+  }
+}
+.brandIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.8rem;
+  height: 2.8rem;
+  color: #fff;
+  background: t.$purple;
+  border: 2px solid t.$ink;
+  box-shadow: 3px 3px 0 t.$ink;
+}
+.navigation {
+  display: grid;
+  gap: 1.6rem;
+}
+.navGroup {
+  display: grid;
+  gap: 0.4rem;
+  > p {
+    padding-inline: 0.75rem;
+    margin-bottom: 0.25rem;
+    color: t.$muted;
+    font-family: t.$mono;
+    font-size: 0.65rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+}
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-weight: 600;
+  color: #55516c;
+  &:hover {
+    background: #f5f1fd;
+    text-decoration: none !important;
+  }
+  &[aria-current='page'] {
+    background: t.$lavender;
+    color: t.$purple-dark;
+    border-color: t.$ink;
+    box-shadow: 3px 3px 0 t.$ink;
+  }
+  svg {
+    flex: none;
+  }
+  span {
+    flex: 1;
+  }
+}
+.navActive {
+  width: 0.35rem;
+  height: 0.35rem;
+  background: currentColor;
+}
+.sidebarFoot {
+  margin-top: auto;
+  padding: 1rem 0.65rem 0;
+  border-top: 1px dashed t.$border;
+  color: t.$muted;
+  font-size: 0.7rem;
+  p {
+    font-family: t.$mono;
+    font-size: 0.65rem;
+    margin-bottom: 0.3rem;
+  }
+}
+.workspace {
+  min-width: 0;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 2rem;
+  background: t.$surface;
+  border-bottom: 1px solid t.$ink;
+}
+.topbarLeft,
+.userMenu {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+.userInfo {
+  max-width: 12rem;
+  strong {
+    display: block;
+    font-size: 0.8rem;
+  }
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.68rem;
+  }
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex: none;
+  background: t.$cyan;
+  border: 1px solid t.$ink;
+  font: 700 0.8rem t.$mono;
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.73rem;
+  color: t.$muted;
+  a {
+    color: t.$purple-dark;
+  }
+  span[aria-current] {
+    color: t.$ink;
+    font-weight: 600;
+  }
+}
+.content {
+  padding: 2rem clamp(1.25rem, 3vw, 3rem) 3rem;
+  max-width: 100rem;
+  margin-inline: auto;
+}
