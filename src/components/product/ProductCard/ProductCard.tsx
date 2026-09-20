@@ -75,7 +75,7 @@ export function ProductCard({
           <ProductCardQuickAdd
             className={styles.add}
             productName={product.name}
-            variantId={product.quickAddVariantId}
+            variantId={product.quickAddVariantId ?? null}
             unavailable={product.availability === 'OUT_OF_STOCK'}
           />
         </div>
