@@ -15,8 +15,8 @@ export default function RoutePage() {
       title="La Route des Cinq"
       kicker="Chemins"
       lead="Il ne s’agit pas d’une route unique, mais d’un réseau vivant de pistes, de ponts, de relais et de passages qui change avec le terrain et ceux qui l’empruntent."
-      image="/assets/images/editorial/foret.png"
-      imageAlt="Chemin traversant les paysages de Caldera"
+      image="/assets/images/RouteCinq.png"
+      imageAlt="Vue panoramique de la Route des Cinq reliant forêts, reliefs volcaniques et rivages"
     >
       <section>
         <h2>Un réseau, pas une route</h2>
