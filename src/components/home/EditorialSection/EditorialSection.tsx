@@ -43,7 +43,7 @@ export function EditorialSection() {
             Un refuge pour les curieux, les amoureux des belles illustrations et
             les collectionneurs de toujours.
           </p>
-          <Link href="#collections">
+          <Link href="/univers">
             Poursuivre l’exploration{' '}
             <ArrowUpRight size={17} aria-hidden="true" />
           </Link>
