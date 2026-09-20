@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { UniverseChapterShell } from '@/components/universe/UniverseChapterShell';
 import styles from '@/components/universe/UniverseChapter.module.scss';
 
@@ -15,8 +16,8 @@ export default function OriginsPage() {
       title="Là où la terre s’est ouverte"
       kicker="Origines"
       lead="Personne ne sait exactement quand le sommet s’est effondré. On sait seulement qu’après cette nuit, l’horizon n’a plus jamais eu la même forme."
-      image="/assets/images/editorial/hero-banner.png"
-      imageAlt="Volcan et reliefs des Terres de Caldera"
+      image="/assets/images/PremiersExplorateurs.png"
+      imageAlt="Premiers explorateurs descendant vers la Caldera au coucher du soleil"
     >
       <section>
         <h2>Le Grand Effondrement</h2>
@@ -30,6 +31,18 @@ export default function OriginsPage() {
           nuit, laissant derrière elle une immense dépression ceinturée de
           falaises abruptes.
         </p>
+        <figure className={styles.loreVisual}>
+          <Image
+            src="/assets/images/GrandEffondrement.png"
+            alt="Vue panoramique de la Caldera après le Grand Effondrement"
+            fill
+            sizes="(min-width: 75rem) 46rem, 100vw"
+          />
+          <figcaption>
+            Vue depuis la couronne rocheuse : le bassin central, ses lacs, ses
+            falaises et les premières zones encore actives.
+          </figcaption>
+        </figure>
         <p>
           Au fond du bassin, la terre resta chaude. Des lacs se formèrent entre
           les coulées refroidies. Des rivières descendirent des hauteurs et
