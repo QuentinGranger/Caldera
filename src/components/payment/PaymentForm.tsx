@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -218,11 +218,55 @@ function ConfirmForm({
   );
 }
 
-export function CancelPayment({ publicId }: { publicId: string }) {
-  const [pending, setPending] = useState(false),
-    [message, setMessage] = useState('');
+export function CancelPayment({
+  publicId,
+  auto = false,
+}: {
+  publicId: string;
+  auto?: boolean;
+}) {
+  const [pending, setPending] = useState(auto),
+    [message, setMessage] = useState(
+      auto ? 'Nettoyage de la tentative expirée…' : '',
+    );
   const busy = useRef(false),
+    autoStarted = useRef(false),
     router = useRouter();
+
+  const cancel = useCallback(async () => {
+    if (busy.current) return;
+
+    busy.current = true;
+    setPending(true);
+    setMessage(auto ? 'Nettoyage de la tentative expirée…' : '');
+
+    try {
+      const result = await cancelPaymentAction(publicId);
+      setMessage(result.message);
+
+      if (result.success) {
+        router.replace(result.href);
+        router.refresh();
+        return;
+      }
+
+      if (result.terminal && result.href) {
+        router.replace(result.href);
+        router.refresh();
+      }
+    } catch {
+      setMessage('Impossible de vérifier l’annulation. Réessayez.');
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
+  }, [auto, publicId, router]);
+
+  useEffect(() => {
+    if (!auto || autoStarted.current) return;
+    autoStarted.current = true;
+    void cancel();
+  }, [auto, cancel]);
 
   return (
     <div>
@@ -230,32 +274,13 @@ export function CancelPayment({ publicId }: { publicId: string }) {
         type="button"
         variant="outline"
         disabled={pending}
-        onClick={async () => {
-          if (busy.current) return;
-          busy.current = true;
-          setPending(true);
-
-          try {
-            const result = await cancelPaymentAction(publicId);
-            setMessage(result.message);
-
-            if (result.success) {
-              router.push(result.href);
-              return;
-            }
-
-            if (result.terminal && result.href) {
-              router.push(result.href);
-            }
-          } catch {
-            setMessage('Impossible de vérifier l’annulation. Réessayez.');
-          } finally {
-            busy.current = false;
-            setPending(false);
-          }
-        }}
+        onClick={cancel}
       >
-        {pending ? 'Vérification…' : 'Annuler cette tentative'}
+        {pending
+          ? auto
+            ? 'Nettoyage…'
+            : 'Vérification…'
+          : 'Annuler cette tentative'}
       </Button>
       <p role="status">{message}</p>
     </div>
