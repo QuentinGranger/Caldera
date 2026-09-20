@@ -1,7 +1,5 @@
 import { getCartCookie } from '@/lib/cart/cartCookie';
-import { getOwnedOrder } from '@/lib/orders/queries';
-import { stripeGateway } from '@/lib/stripe/stripe';
-import { reconcilePaymentIntent } from '@/lib/payments/events';
+import { reconcileOwnedOrder } from '@/lib/payments/reconcile';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,29 +9,10 @@ export async function GET(
 ) {
   const publicId = (await params).publicId;
   const token = await getCartCookie();
-  let order = await getOwnedOrder(publicId, token);
 
-  if (
-    order &&
-    ['PENDING_PAYMENT', 'PAYMENT_FAILED', 'PAYMENT_PROCESSING'].includes(
-      order.status,
-    ) &&
-    order.payment?.providerPaymentIntentId &&
-    order.reservations.length > 0 &&
-    order.reservations.every(
-      (reservation) => reservation.expiresAt <= new Date(),
-    )
-  ) {
-    try {
-      const intent = await stripeGateway.retrieve(
-        order.payment.providerPaymentIntentId,
-      );
-      await reconcilePaymentIntent(intent);
-      order = await getOwnedOrder(publicId, token);
-    } catch {
-      // Keep the last known DB state; the webhook/manual retry can reconcile later.
-    }
-  }
+  const order = await reconcileOwnedOrder(publicId, token, {
+    minIntervalMs: 5000,
+  });
 
   return Response.json(
     order ? { status: order.status } : { error: 'Commande introuvable' },
