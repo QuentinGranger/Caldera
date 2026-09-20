@@ -68,6 +68,7 @@ export function toCatalogProduct(
     tags?: Row['tags'];
     variants: Pick<
       Row['variants'][number],
+      | 'id'
       | 'sku'
       | 'price'
       | 'compareAtPrice'
@@ -86,6 +87,15 @@ export function toCatalogProduct(
   );
   const availability = getAvailability(product.preorder, product.variants);
   const badge = getProductBadge(availability, product.newArrival);
+  const quickAddVariant =
+    [...product.variants]
+      .filter((variant) => variant.isActive && availableQuantity(variant) > 0)
+      .sort(
+        (a, b) =>
+          a.price.comparedTo(b.price) ||
+          Number(b.isDefault) - Number(a.isDefault) ||
+          a.sku.localeCompare(b.sku),
+      )[0] ?? null;
   return {
     id: product.id,
     name: product.name,
@@ -97,6 +107,7 @@ export function toCatalogProduct(
     imageAlt: image.alt,
     ...getPricing(product.variants),
     availability,
+    quickAddVariantId: quickAddVariant?.id ?? null,
     ...(badge ? { badge } : {}),
   };
 }

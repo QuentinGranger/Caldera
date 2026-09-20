@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Plus } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
+import { ProductCardQuickAdd } from './ProductCardQuickAdd';
 import type { CatalogProduct } from '@/types/product';
 import { formatPrice } from '@/utils/formatPrice';
 import styles from './ProductCard.module.scss';
@@ -71,17 +72,12 @@ export function ProductCard({
               </>
             )}
           </div>
-          <IconButton
+          <ProductCardQuickAdd
             className={styles.add}
-            disabled
-            label={
-              product.badge === 'sold-out'
-                ? `${product.name} — indisponible`
-                : `Ajouter ${product.name} au panier — bientôt disponible`
-            }
-          >
-            <Plus aria-hidden="true" />
-          </IconButton>
+            productName={product.name}
+            variantId={product.quickAddVariantId ?? null}
+            unavailable={product.availability === 'OUT_OF_STOCK'}
+          />
         </div>
       </div>
     </article>

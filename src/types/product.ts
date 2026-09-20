@@ -15,5 +15,6 @@ export type CatalogProduct = {
   image: string;
   imageAlt: string;
   availability: Availability;
+  quickAddVariantId?: string | null;
   badge?: ProductBadgeKind;
 };
