@@ -113,3 +113,271 @@
   font-size: 0.85rem;
   color: v.$color-text-muted;
 }
+
+
+.orderSummary {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.15rem, 2.6vw, 1.65rem);
+  color: v.$color-text-on-dark;
+  background: v.$color-green-dark;
+  border-color: rgb(244 217 133 / 24%);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 26px 70px rgb(7 28 23 / 14%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0.75rem 0.75rem auto auto;
+    width: 4.5rem;
+    height: 4.5rem;
+    pointer-events: none;
+    border-top: 1px solid rgb(244 217 133 / 16%);
+    border-right: 1px solid rgb(244 217 133 / 16%);
+    border-radius: 0 0.35rem 0 0;
+  }
+
+  h2 {
+    margin: 0.2rem 0 0;
+    color: v.$color-text-on-dark;
+    font: 500 clamp(1.9rem, 3vw, 2.35rem)/0.95 v.$font-heading;
+    letter-spacing: -0.025em;
+  }
+}
+
+.orderSummaryHeader {
+  position: relative;
+  z-index: 1;
+  padding: 0.2rem 0.15rem 1.15rem;
+
+  p {
+    margin: 0.55rem 0 0;
+    color: v.$color-muted-on-dark;
+    font-size: 0.68rem;
+  }
+}
+
+.orderSummaryEyebrow {
+  display: block;
+  color: v.$color-gold-light;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.2em;
+}
+
+.orderSummaryList {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  max-height: 39vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem 0.15rem 0.95rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(244 217 133 / 30%) transparent;
+
+  li {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr) auto;
+    gap: 0.85rem;
+    align-items: center;
+    min-height: 94px;
+    padding: 0.72rem;
+    background: rgb(255 255 255 / 4.5%);
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: v.$radius-medium;
+  }
+}
+
+.orderSummaryMedia {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 80px;
+  padding: 0.35rem;
+  background: linear-gradient(145deg, #fffdf8, #eee8da);
+  border-radius: 0.4rem;
+  box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.orderQuantityBadge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  display: grid;
+  place-items: center;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding-inline: 0.32rem;
+  color: v.$color-green-dark;
+  background: v.$color-gold-light;
+  border: 2px solid v.$color-green-dark;
+  border-radius: v.$radius-pill;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.orderSummaryProduct {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+
+  strong {
+    color: v.$color-text-on-dark;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    margin: 0;
+    color: v.$color-muted-on-dark;
+    font-size: 0.64rem;
+    line-height: 1.45;
+  }
+}
+
+.orderSummaryLinePrice {
+  color: v.$color-text-on-dark;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.orderReceipt {
+  position: relative;
+  margin-top: 0.2rem;
+  padding: 1rem;
+  color: v.$color-text;
+  background: v.$color-surface;
+  border: 1px solid rgb(232 194 97 / 28%);
+  border-radius: 0.65rem;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 10%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 1rem;
+    right: 1rem;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, v.$color-gold, transparent);
+    opacity: 0.8;
+  }
+}
+
+.orderSummaryTotals {
+  margin: 0;
+
+  > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.36rem;
+    font-size: 0.75rem;
+  }
+
+  dt {
+    color: v.$color-text-muted;
+  }
+
+  dd {
+    margin: 0;
+    color: v.$color-text;
+    font-weight: 750;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.orderFreeShipping {
+  color: v.$color-green !important;
+}
+
+.orderSummaryTotal {
+  margin-top: 0.7rem;
+  padding-top: 0.95rem !important;
+  border-top: 1px solid v.$color-border;
+
+  dt {
+    color: v.$color-green-dark;
+    font-size: 0.88rem;
+    font-weight: 850;
+  }
+
+  dd {
+    color: v.$color-green-dark;
+    font: 850 1.55rem/1 v.$font-body;
+    letter-spacing: -0.04em;
+  }
+}
+
+.orderDelivery {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed v.$color-border;
+
+  > div {
+    display: grid;
+    gap: 0.18rem;
+
+    span {
+      color: v.$color-text-muted;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    strong {
+      color: v.$color-green-dark;
+      font-size: 0.76rem;
+    }
+  }
+
+  address {
+    display: grid;
+    gap: 0.16rem;
+    margin: 0;
+    color: v.$color-text-muted;
+    font-size: 0.68rem;
+    font-style: normal;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+
+    strong {
+      color: v.$color-text;
+      font-size: 0.72rem;
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .orderSummaryList li {
+    grid-template-columns: 58px minmax(0, 1fr);
+    min-height: 84px;
+  }
+
+  .orderSummaryMedia {
+    width: 58px;
+    height: 70px;
+  }
+
+  .orderSummaryLinePrice {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
