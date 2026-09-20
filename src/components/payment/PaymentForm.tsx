@@ -38,13 +38,33 @@ export function PaymentForm({
   expiresAt: string;
 }) {
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const router = useRouter();
+
+  const applyResult = useCallback(
+    (value: PaymentResult) => {
+      if (
+        !value.success &&
+        'terminal' in value &&
+        value.terminal &&
+        'href' in value &&
+        value.href
+      ) {
+        router.replace(value.href);
+        router.refresh();
+        return;
+      }
+
+      setResult(value);
+    },
+    [router],
+  );
 
   useEffect(() => {
     let active = true;
 
     retryPaymentAction(publicId)
       .then((value) => {
-        if (active) setResult(value);
+        if (active) applyResult(value);
       })
       .catch(() => {
         if (active)
@@ -59,13 +79,13 @@ export function PaymentForm({
     return () => {
       active = false;
     };
-  }, [publicId]);
+  }, [publicId, applyResult]);
 
   async function retry() {
     setResult(null);
 
     try {
-      setResult(await retryPaymentAction(publicId));
+      applyResult(await retryPaymentAction(publicId));
     } catch {
       setResult({
         success: false,

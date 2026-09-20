@@ -134,21 +134,33 @@ export async function retryPaymentAction(publicId: unknown) {
     const order = await requireOwnedOrder(publicId, await getCartCookie());
 
     if (order.status === 'PAID')
-      return unavailable('Cette commande est déjà payée.', false, false);
+      return {
+        ...unavailable('Cette commande est déjà payée.', false, false),
+        terminal: true as const,
+        href: `/commande/${order.publicId}`,
+      };
 
     if (['CANCELLED', 'EXPIRED'].includes(order.status))
-      return unavailable(
-        'Cette tentative de paiement est terminée.',
-        false,
-        false,
-      );
+      return {
+        ...unavailable(
+          'Cette tentative de paiement est terminée.',
+          false,
+          false,
+        ),
+        terminal: true as const,
+        href: '/checkout',
+      };
 
     if (['PAYMENT_PROCESSING', 'PAYMENT_REVIEW'].includes(order.status))
-      return unavailable(
-        'Ce paiement est déjà en cours de traitement. Consultez la commande pour connaître son statut.',
-        false,
-        false,
-      );
+      return {
+        ...unavailable(
+          'Ce paiement est déjà en cours de traitement. Consultez la commande pour connaître son statut.',
+          false,
+          false,
+        ),
+        terminal: true as const,
+        href: `/commande/${order.publicId}`,
+      };
 
     if (!['PENDING_PAYMENT', 'PAYMENT_FAILED'].includes(order.status))
       return unavailable(
@@ -168,24 +180,47 @@ export async function retryPaymentAction(publicId: unknown) {
     }
 
     const intent = await ensureIntent(order.id);
-    await paymentPreflight(order.id);
 
     if (
-      ['processing', 'succeeded', 'requires_capture'].includes(intent.status)
+      ['processing', 'succeeded', 'requires_capture', 'canceled'].includes(
+        intent.status,
+      )
     ) {
-      return unavailable(
-        'Ce paiement est déjà en cours de traitement. Consultez la commande pour connaître son statut.',
-        false,
-        false,
+      retryLog(
+        `retryPaymentAction: reconciling Stripe PaymentIntent ${intent.id} (${intent.status})`,
       );
+
+      await reconcilePaymentIntent(intent);
+      const current = await currentOrder(order.id);
+      revalidatePath('/', 'layout');
+
+      if (['CANCELLED', 'EXPIRED'].includes(current.status)) {
+        return {
+          ...unavailable(
+            'Cette tentative Stripe est terminée. Votre panier peut être repris.',
+            false,
+            false,
+          ),
+          terminal: true as const,
+          href: '/checkout',
+        };
+      }
+
+      const message =
+        current.status === 'PAID'
+          ? 'Paiement confirmé. Votre commande est maintenant synchronisée.'
+          : current.status === 'PAYMENT_REVIEW'
+            ? 'Le paiement a été reçu mais nécessite une vérification.'
+            : 'Le paiement est en cours de traitement chez Stripe.';
+
+      return {
+        ...unavailable(message, false, false),
+        terminal: true as const,
+        href: `/commande/${order.publicId}`,
+      };
     }
 
-    if (intent.status === 'canceled')
-      return unavailable(
-        'Cette tentative Stripe a été annulée.',
-        false,
-        false,
-      );
+    await paymentPreflight(order.id);
 
     const result = payableResult(order.publicId, intent);
     if (result.success)
