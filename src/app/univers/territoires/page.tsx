@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { UniverseChapterShell } from '@/components/universe/UniverseChapterShell';
 import styles from '@/components/universe/UniverseChapter.module.scss';
 
@@ -15,8 +16,8 @@ export default function TerritoriesPage() {
       title="Les cinq territoires"
       kicker="Cartographie"
       lead="Autour du cratère, cinq régions ont développé leurs propres paysages, leurs propres dangers et leurs propres façons d’explorer."
-      image="/assets/images/editorial/mountains.jpg"
-      imageAlt="Reliefs montagneux évoquant les territoires de Caldera"
+      image="/assets/images/GrandEffondrement.png"
+      imageAlt="Vue générale de la Caldera, de ses falaises, de ses lacs et de ses terres volcaniques"
     >
       <section>
         <h2>Les cinq territoires</h2>
@@ -49,6 +50,15 @@ export default function TerritoriesPage() {
               <h4>Le cœur des terres</h4>
             </div>
           </header>
+          <figure className={styles.territoryVisual}>
+            <Image
+              src="/assets/images/GrandEffondrement.png"
+              alt="Grande vue du bassin central de la Caldera"
+              fill
+              sizes="(min-width: 75rem) 46rem, 100vw"
+            />
+            <figcaption>La Caldera — le cœur des terres.</figcaption>
+          </figure>
           <p>
             Au centre du monde connu s’étend l’immense bassin qui donna son nom à
             toutes les terres environnantes.
@@ -93,6 +103,15 @@ export default function TerritoriesPage() {
               <h4>La roche garde la mémoire</h4>
             </div>
           </header>
+          <figure className={styles.territoryVisual}>
+            <Image
+              src="/assets/images/TerresBraise.png"
+              alt="Plateaux volcaniques noirs et rougeoyants des Terres de Braise"
+              fill
+              sizes="(min-width: 75rem) 46rem, 100vw"
+            />
+            <figcaption>Les Terres de Braise — la roche garde la mémoire.</figcaption>
+          </figure>
           <p>
             À l’est de la Caldera s’étendent des plateaux noirs traversés de
             fractures rouges, de fumerolles et d’anciennes rivières de lave.
@@ -135,6 +154,16 @@ export default function TerritoriesPage() {
               <h4>Tout ne demande pas à être découvert</h4>
             </div>
           </header>
+          <figure className={styles.territoryVisual}>
+            <Image
+              src="/assets/images/ForetsAnciennes.png"
+              alt="Forêt ancienne humide et brumeuse de Caldera avec une faune mimétique"
+              fill
+              sizes="(min-width: 75rem) 46rem, 100vw"
+              className={styles.territoryImagePortrait}
+            />
+            <figcaption>Les Forêts anciennes — tout ne demande pas à être découvert.</figcaption>
+          </figure>
           <p>
             À l’ouest commencent les grandes forêts, plus anciennes que les
             premières cartes conservées aux Archives.
@@ -178,6 +207,15 @@ export default function TerritoriesPage() {
               <h4>Certaines recherches prennent du temps</h4>
             </div>
           </header>
+          <figure className={styles.territoryVisual}>
+            <Image
+              src="/assets/images/HautesTerres.png"
+              alt="Plateaux froids et falaises des Hautes Terres de Caldera"
+              fill
+              sizes="(min-width: 75rem) 46rem, 100vw"
+            />
+            <figcaption>Les Hautes Terres — certaines recherches prennent du temps.</figcaption>
+          </figure>
           <p>
             Au nord, les chemins quittent progressivement les arbres et montent
             jusqu’aux plateaux balayés par le vent.
@@ -218,6 +256,15 @@ export default function TerritoriesPage() {
               <h4>Là où le monde arrive à Caldera</h4>
             </div>
           </header>
+          <figure className={styles.territoryVisual}>
+            <Image
+              src="/assets/images/Rivages.png"
+              alt="Village côtier et embarcations des Rivages de Caldera"
+              fill
+              sizes="(min-width: 75rem) 46rem, 100vw"
+            />
+            <figcaption>Les Rivages — là où le monde arrive à Caldera.</figcaption>
+          </figure>
           <p>
             Au sud, les falaises volcaniques s’ouvrent sur l’océan et laissent
             place à une succession de criques, de plages noires et de petits

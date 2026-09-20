@@ -15,8 +15,8 @@ export default function ArchivesPage() {
       title="Les Archives des Explorateurs"
       kicker="Mémoire"
       lead="Suspendues au-dessus des brumes, les Archives sont à la fois un refuge, un observatoire, une bibliothèque et le lieu où Caldera apprend à se souvenir."
-      image="/assets/images/editorial/foret.png"
-      imageAlt="Chemin forestier dans l’univers de Caldera"
+      image="/assets/images/ArchiveExplorateurs.png"
+      imageAlt="Archives des Explorateurs construites sur une falaise dominant la Caldera"
     >
       <section>
         <h2>Un lieu pour conserver ce qui revient</h2>

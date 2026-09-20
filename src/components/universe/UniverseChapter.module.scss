@@ -225,6 +225,53 @@
   font: 500 1.15rem/1.5 v.$font-heading !important;
 }
 
+.loreVisual,
+.territoryVisual {
+  position: relative;
+  width: 100%;
+  margin: 2rem 0 2.4rem;
+  overflow: hidden;
+  background: v.$color-green-dark;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  box-shadow: 0 16px 36px rgb(7 28 23 / 10%);
+
+  img {
+    object-fit: cover;
+  }
+
+  figcaption {
+    position: absolute;
+    z-index: 1;
+    right: 0.8rem;
+    bottom: 0.8rem;
+    left: 0.8rem;
+    width: fit-content;
+    max-width: calc(100% - 1.6rem);
+    padding: 0.45rem 0.65rem;
+    color: v.$color-cream;
+    background: rgb(7 28 23 / 72%);
+    border: 1px solid rgb(255 255 255 / 10%);
+    font-size: 0.55rem;
+    line-height: 1.45;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(8px);
+  }
+}
+
+.loreVisual {
+  aspect-ratio: 16 / 9;
+}
+
+.territoryVisual {
+  aspect-ratio: 16 / 9;
+  margin-top: 1.5rem;
+}
+
+.territoryImagePortrait {
+  object-position: center 42%;
+}
+
 .questionList {
   display: grid;
   gap: 0.55rem;
