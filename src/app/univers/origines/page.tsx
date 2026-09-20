@@ -5,7 +5,7 @@ import styles from '@/components/universe/UniverseChapter.module.scss';
 export const metadata: Metadata = {
   title: 'Origines | L’univers de Caldera',
   description:
-    'Le Grand Effondrement, la naissance de la Caldera et les premiers explorateurs.',
+    'Le Grand Effondrement, la naissance du bassin de Caldera et les premiers explorateurs qui ouvrirent ses chemins.',
 };
 
 export default function OriginsPage() {
@@ -14,36 +14,72 @@ export default function OriginsPage() {
       slug="origines"
       title="Là où la terre s’est ouverte"
       kicker="Origines"
-      lead="Personne ne sait exactement quand le sommet s’est effondré. C’est pourtant de cette cicatrice qu’est né tout le reste."
+      lead="Personne ne sait exactement quand le sommet s’est effondré. On sait seulement qu’après cette nuit, l’horizon n’a plus jamais eu la même forme."
       image="/assets/images/editorial/hero-banner.png"
       imageAlt="Volcan et reliefs des Terres de Caldera"
     >
       <section>
-        <h2>Là où la terre s’est ouverte</h2>
+        <h2>Le Grand Effondrement</h2>
         <p className={styles.intro}>
-          Personne ne sait exactement quand le sommet s’est effondré.
-        </p>
-        <p>
           Les plus anciens récits parlent d’une montagne si vaste qu’elle
-          dominait autrefois l’horizon tout entier. Puis vint ce que les
-          chroniques nomment aujourd’hui <strong>le Grand Effondrement</strong>.
-        </p>
-        <p className={styles.shortBeat}>La montagne disparut en une nuit.</p>
-        <p>
-          À sa place demeura une immense dépression encerclée de falaises, de
-          forêts et de terres volcaniques encore chaudes :{' '}
-          <strong>la Caldera</strong>.
+          dominait autrefois l’horizon tout entier.
         </p>
         <p>
-          Pendant des générations, les brumes, les cendres et les reliefs
-          instables rendirent son centre presque inaccessible. Les populations
-          s’installèrent autour de cette cicatrice, sans réellement savoir ce
-          qu’elle contenait.
+          Puis vint ce que les chroniques nomment aujourd’hui{' '}
+          <strong>le Grand Effondrement</strong>. La montagne disparut en une
+          nuit, laissant derrière elle une immense dépression ceinturée de
+          falaises abruptes.
+        </p>
+        <p>
+          Au fond du bassin, la terre resta chaude. Des lacs se formèrent entre
+          les coulées refroidies. Des rivières descendirent des hauteurs et
+          devinrent des cascades. Les forêts reprirent les pentes tandis que les
+          brumes s’accumulaient dans les vallées.
         </p>
         <p className={styles.shortBeat}>
-          Puis les premiers chemins furent ouverts.
+          Cette cicatrice devint <strong>la Caldera</strong>.
         </p>
-        <p>Et avec eux commencèrent les explorations.</p>
+        <p>
+          Pendant des générations, son centre demeura presque inaccessible. Les
+          cendres dissimulaient les passages, les parois s’effondraient encore
+          et certains reliefs disparaissaient entièrement sous les nuages.
+        </p>
+        <p>
+          Les populations s’installèrent d’abord sur les rebords, là où l’on
+          pouvait observer le bassin sans avoir à y descendre.
+        </p>
+        <p>
+          C’est de ces hauteurs que furent signalées les premières grandes
+          créatures ailées. Elles utilisaient les courants chauds qui remontaient
+          du cratère pour longer les falaises. Elles étaient rares, difficiles à
+          approcher et déjà présentes dans les récits les plus anciens.
+        </p>
+      </section>
+
+      <section>
+        <h2>Les premiers chemins</h2>
+        <p className={styles.intro}>
+          Les premières expéditions ne cherchèrent pas à conquérir Caldera. Elles
+          cherchèrent d’abord à comprendre comment y entrer.
+        </p>
+        <p>
+          Les explorateurs suivirent les rebords de la couronne rocheuse,
+          repérèrent les pentes praticables et descendirent progressivement vers
+          le centre.
+        </p>
+        <p>
+          Ils découvrirent parfois des marches taillées dans la pierre, des
+          passages interrompus ou des traces de voies plus anciennes que leurs
+          propres cartes.
+        </p>
+        <p>
+          Personne ne sut déterminer avec certitude qui les avait tracées ni
+          quand elles avaient été abandonnées.
+        </p>
+        <p className={styles.shortBeat}>
+          Puis les premiers chemins continus furent ouverts.
+        </p>
+        <p>Et avec eux commencèrent les explorations de Caldera.</p>
       </section>
 
       <section>
@@ -57,11 +93,14 @@ export default function OriginsPage() {
           collectionneurs ou simplement curieux.
         </p>
         <p>Ils partirent parce que les cartes de Caldera étaient encore vides.</p>
-        <p>Certains revinrent avec des pierres étranges.</p>
-        <p>D’autres avec des objets trouvés sur d’anciens chemins.</p>
         <p>
-          Certains ne rapportèrent qu’un dessin, une plume, quelques notes ou le
-          souvenir d’un paysage qu’ils n’étaient pas certains de pouvoir
+          Certains revinrent avec des pierres étranges ou des fragments trouvés
+          dans les couches de cendre.
+        </p>
+        <p>
+          D’autres rapportèrent des plantes inconnues, des objets retrouvés sur
+          d’anciens chemins, des croquis de créatures aperçues au loin ou de
+          simples notes sur un passage qu’ils n’étaient pas certains de pouvoir
           retrouver.
         </p>
         <p>Peu à peu, une habitude apparut.</p>
@@ -72,6 +111,7 @@ export default function OriginsPage() {
         <div className={styles.questionList}>
           <p>Où avait-elle été trouvée ?</p>
           <p>Qui l’avait rapportée ?</p>
+          <p>Quel chemin avait permis de l’atteindre ?</p>
           <p>Pourquoi méritait-elle d’être gardée ?</p>
         </div>
         <p>Ces récits furent d’abord consignés dans des carnets personnels.</p>
