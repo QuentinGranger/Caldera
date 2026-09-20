@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,16 +13,21 @@ import { loadStripe } from '@stripe/stripe-js/pure';
 import { Button } from '@/components/ui/Button/Button';
 import {
   checkPaymentAction,
-  loadPaymentAction,
+  retryPaymentAction,
   cancelPaymentAction,
 } from '@/lib/payments/actions';
 import { formatPrice } from '@/utils/formatPrice';
 import styles from './Payment.module.scss';
+
 const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 let stripePromise: ReturnType<typeof loadStripe> | undefined;
+
 function getBrowserStripe() {
   return (stripePromise ??= loadStripe(key!));
 }
+
+type PaymentResult = Awaited<ReturnType<typeof retryPaymentAction>>;
+
 export function PaymentForm({
   publicId,
   amount,
@@ -31,13 +37,12 @@ export function PaymentForm({
   amount: string;
   expiresAt: string;
 }) {
-  const [result, setResult] = useState<Awaited<
-    ReturnType<typeof loadPaymentAction>
-  > | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const [result, setResult] = useState<PaymentResult | null>(null);
+
   useEffect(() => {
     let active = true;
-    loadPaymentAction(publicId)
+
+    retryPaymentAction(publicId)
       .then((value) => {
         if (active) setResult(value);
       })
@@ -45,33 +50,50 @@ export function PaymentForm({
         if (active)
           setResult({
             success: false,
+            retryable: true,
             message: 'Impossible de joindre le paiement. Réessayez.',
           });
       });
+
     return () => {
       active = false;
     };
-  }, [publicId, attempt]);
+  }, [publicId]);
+
+  async function retry() {
+    setResult(null);
+
+    try {
+      setResult(await retryPaymentAction(publicId));
+    } catch {
+      setResult({
+        success: false,
+        retryable: true,
+        message: 'Impossible de joindre le paiement. Réessayez.',
+      });
+    }
+  }
+
   return (
     <section className={styles.panel}>
       <h2>Paiement sécurisé</h2>
       <p className={styles.note}>
         Environnement de test Stripe · Aucun débit réel.
       </p>
+
       {!result && <p role="status">Préparation du paiement…</p>}
+
       {result && !result.success && (
         <>
           <p role="alert">{result.message}</p>
-          <Button
-            onClick={() => {
-              setResult(null);
-              setAttempt((n) => n + 1);
-            }}
-          >
-            Réessayer
-          </Button>
+          {result.retryable && (
+            <Button type="button" onClick={retry}>
+              Réessayer
+            </Button>
+          )}
         </>
       )}
+
       {result?.success && key?.startsWith('pk_test_') && (
         <Elements
           stripe={getBrowserStripe()}
@@ -99,6 +121,7 @@ export function PaymentForm({
           />
         </Elements>
       )}
+
       <div className={styles.actions}>
         <CancelPayment publicId={publicId} />
         <Link href={`/commande/${publicId}`}>Consulter le statut</Link>
@@ -106,6 +129,7 @@ export function PaymentForm({
     </section>
   );
 }
+
 function ConfirmForm({
   publicId,
   amount,
@@ -124,12 +148,14 @@ function ConfirmForm({
     [message, setMessage] = useState(''),
     [expired, setExpired] = useState(false),
     [ready, setReady] = useState(false);
+
   useEffect(() => {
     const tick = () => setExpired(Date.now() >= Date.parse(expiresAt));
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [expiresAt]);
+
   return (
     <form
       onSubmit={async (event) => {
@@ -138,16 +164,19 @@ function ConfirmForm({
         busy.current = true;
         setPending(true);
         setMessage('');
+
         try {
           const check = await checkPaymentAction(publicId);
           if (!check.success) {
             setMessage(check.message);
             return;
           }
+
           const { error } = await stripe.confirmPayment({
             elements,
             confirmParams: { return_url: returnUrl },
           });
+
           setMessage(
             error.type === 'card_error' || error.type === 'validation_error'
               ? error.message || 'Vérifiez vos informations de paiement.'
@@ -170,11 +199,13 @@ function ConfirmForm({
         }
         options={{ layout: 'tabs' }}
       />
+
       <p role="alert" className={styles.feedback}>
         {expired
           ? 'La durée de réservation est écoulée. Annulez cette tentative pour recommencer.'
           : message}
       </p>
+
       <Button
         type="submit"
         disabled={!stripe || !elements || !ready || pending || expired}
@@ -184,20 +215,24 @@ function ConfirmForm({
     </form>
   );
 }
+
 export function CancelPayment({ publicId }: { publicId: string }) {
   const [pending, setPending] = useState(false),
     [message, setMessage] = useState('');
   const busy = useRef(false),
     router = useRouter();
+
   return (
     <div>
       <Button
+        type="button"
         variant="outline"
         disabled={pending}
         onClick={async () => {
           if (busy.current) return;
           busy.current = true;
           setPending(true);
+
           try {
             const result = await cancelPaymentAction(publicId);
             setMessage(result.message);
