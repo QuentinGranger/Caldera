@@ -30,10 +30,19 @@ function retryLog(message: string) {
   if (process.env.NODE_ENV !== 'production') console.info(message);
 }
 
-function unavailable(message: string, retryable = false) {
+function cancelLog(message: string) {
+  if (process.env.NODE_ENV !== 'production') console.info(message);
+}
+
+function unavailable(
+  message: string,
+  retryable = false,
+  cancelable = true,
+) {
   return {
     success: false as const,
     retryable,
+    cancelable,
     message,
   };
 }
@@ -45,11 +54,14 @@ function payableResult(
   if (!intent.client_secret || !payableIntentStatuses.has(intent.status)) {
     return unavailable(
       'Ce paiement est en cours de traitement. Consultez la commande pour connaître son statut.',
+      false,
+      false,
     );
   }
 
   return {
     success: true as const,
+    cancelable: true,
     clientSecret: intent.client_secret,
     returnUrl: paymentReturnUrl(publicId),
     message: '',
@@ -87,6 +99,7 @@ export async function loadPaymentAction(publicId: unknown) {
       return unavailable(
         'Le paiement n’est pas encore initialisé. Réessayez pour ouvrir le formulaire sécurisé.',
         true,
+        true,
       );
     }
 
@@ -99,6 +112,7 @@ export async function loadPaymentAction(publicId: unknown) {
     return {
       success: false as const,
       retryable: true,
+      cancelable: true,
       message: friendly(error),
     };
   }
@@ -119,18 +133,28 @@ export async function retryPaymentAction(publicId: unknown) {
     const order = await requireOwnedOrder(publicId, await getCartCookie());
 
     if (order.status === 'PAID')
-      return unavailable('Cette commande est déjà payée.');
+      return unavailable('Cette commande est déjà payée.', false, false);
 
     if (['CANCELLED', 'EXPIRED'].includes(order.status))
-      return unavailable('Cette tentative de paiement est terminée.');
+      return unavailable(
+        'Cette tentative de paiement est terminée.',
+        false,
+        false,
+      );
 
     if (['PAYMENT_PROCESSING', 'PAYMENT_REVIEW'].includes(order.status))
       return unavailable(
         'Ce paiement est déjà en cours de traitement. Consultez la commande pour connaître son statut.',
+        false,
+        false,
       );
 
     if (!['PENDING_PAYMENT', 'PAYMENT_FAILED'].includes(order.status))
-      return unavailable('Cette tentative ne peut plus être payée.');
+      return unavailable(
+        'Cette tentative ne peut plus être payée.',
+        false,
+        false,
+      );
 
     await paymentPreflight(order.id);
 
@@ -150,11 +174,17 @@ export async function retryPaymentAction(publicId: unknown) {
     ) {
       return unavailable(
         'Ce paiement est déjà en cours de traitement. Consultez la commande pour connaître son statut.',
+        false,
+        false,
       );
     }
 
     if (intent.status === 'canceled')
-      return unavailable('Cette tentative Stripe a été annulée.');
+      return unavailable(
+        'Cette tentative Stripe a été annulée.',
+        false,
+        false,
+      );
 
     const result = payableResult(order.publicId, intent);
     if (result.success)
@@ -167,6 +197,7 @@ export async function retryPaymentAction(publicId: unknown) {
     return {
       success: false as const,
       retryable: true,
+      cancelable: true,
       message: friendly(error),
     };
   }
@@ -183,20 +214,86 @@ export async function checkPaymentAction(publicId: unknown) {
 }
 
 export async function cancelPaymentAction(publicId: unknown) {
+  cancelLog('cancelPaymentAction: started');
+
   try {
     const order = await requireOwnedOrder(publicId, await getCartCookie());
-    await cancelOrder(order.id);
+
+    if (order.payment?.providerPaymentIntentId) {
+      cancelLog(
+        `cancelPaymentAction: existing Stripe PaymentIntent ${order.payment.providerPaymentIntentId}`,
+      );
+    }
+
+    const outcome = await cancelOrder(order.id);
     const current = await currentOrder(order.id);
     revalidatePath('/', 'layout');
-    if (!['CANCELLED', 'EXPIRED'].includes(current.status))
-      throw new OrderError(
-        'Le paiement est déjà en traitement ou confirmé. Attendez sa confirmation.',
+
+    if (outcome.kind === 'cancelled') {
+      cancelLog('cancelPaymentAction: cancelled');
+      return {
+        success: true as const,
+        href: '/checkout',
+        message: 'La tentative est annulée. Votre panier est conservé.',
+      };
+    }
+
+    if (outcome.kind === 'in_flight') {
+      cancelLog(
+        `cancelPaymentAction: cannot cancel Stripe PaymentIntent with status ${outcome.intentStatus}`,
       );
+
+      const message =
+        outcome.intentStatus === 'succeeded'
+          ? 'Le paiement a déjà été confirmé par Stripe et ne peut plus être annulé depuis cette page. Consultez la commande.'
+          : 'Le paiement est déjà en cours de traitement chez Stripe et ne peut plus être annulé pour le moment. Consultez la commande.';
+
+      return {
+        success: false as const,
+        terminal: true,
+        href: `/commande/${order.publicId}`,
+        message,
+      };
+    }
+
+    if (
+      outcome.kind === 'already_terminal' ||
+      ['PAID', 'PAYMENT_REVIEW'].includes(current.status)
+    ) {
+      cancelLog(
+        `cancelPaymentAction: order already terminal with status ${current.status}`,
+      );
+      return {
+        success: false as const,
+        terminal: true,
+        href: `/commande/${order.publicId}`,
+        message:
+          current.status === 'PAID'
+            ? 'Cette commande est déjà payée et ne peut plus être annulée depuis cette page.'
+            : 'Cette commande nécessite une vérification avant toute annulation.',
+      };
+    }
+
+    if (['CANCELLED', 'EXPIRED'].includes(current.status)) {
+      cancelLog('cancelPaymentAction: already cancelled');
+      return {
+        success: true as const,
+        href: '/checkout',
+        message: 'La tentative est déjà annulée. Votre panier est conservé.',
+      };
+    }
+
     return {
-      success: true,
-      message: 'La tentative est annulée. Votre panier est conservé.',
+      success: false as const,
+      terminal: false,
+      message:
+        'L’annulation n’a pas pu être confirmée. Réessayez dans quelques instants.',
     };
   } catch (error) {
-    return { success: false, message: friendly(error) };
+    return {
+      success: false as const,
+      terminal: false,
+      message: friendly(error),
+    };
   }
 }

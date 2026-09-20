@@ -51,6 +51,7 @@ export function PaymentForm({
           setResult({
             success: false,
             retryable: true,
+            cancelable: true,
             message: 'Impossible de joindre le paiement. Réessayez.',
           });
       });
@@ -69,6 +70,7 @@ export function PaymentForm({
       setResult({
         success: false,
         retryable: true,
+        cancelable: true,
         message: 'Impossible de joindre le paiement. Réessayez.',
       });
     }
@@ -123,7 +125,7 @@ export function PaymentForm({
       )}
 
       <div className={styles.actions}>
-        <CancelPayment publicId={publicId} />
+        {result?.cancelable !== false && <CancelPayment publicId={publicId} />}
         <Link href={`/commande/${publicId}`}>Consulter le statut</Link>
       </div>
     </section>
@@ -236,7 +238,15 @@ export function CancelPayment({ publicId }: { publicId: string }) {
           try {
             const result = await cancelPaymentAction(publicId);
             setMessage(result.message);
-            if (result.success) router.push('/checkout');
+
+            if (result.success) {
+              router.push(result.href);
+              return;
+            }
+
+            if (result.terminal && result.href) {
+              router.push(result.href);
+            }
           } catch {
             setMessage('Impossible de vérifier l’annulation. Réessayez.');
           } finally {
