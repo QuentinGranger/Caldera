@@ -100,8 +100,7 @@ export default function TerritoriesPage() {
           <p>
             La terre y porte encore les marques les plus visibles du Grand
             Effondrement. Certaines zones sont froides depuis des siècles ;
-            d’autres dégagent toujours assez de chaleur pour déformer l’air au
-           -dessus de la roche.
+            d’autres dégagent toujours assez de chaleur pour déformer l’air au-dessus de la roche.
           </p>
           <p>
             Le vent soulève une poussière sombre qui peut recouvrir un chemin en
