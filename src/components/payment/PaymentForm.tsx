@@ -40,21 +40,24 @@ export function PaymentForm({
   const [result, setResult] = useState<PaymentResult | null>(null);
   const router = useRouter();
 
-  function applyResult(value: PaymentResult) {
-    if (
-      !value.success &&
-      'terminal' in value &&
-      value.terminal &&
-      'href' in value &&
-      value.href
-    ) {
-      router.replace(value.href);
-      router.refresh();
-      return;
-    }
+  const applyResult = useCallback(
+    (value: PaymentResult) => {
+      if (
+        !value.success &&
+        'terminal' in value &&
+        value.terminal &&
+        'href' in value &&
+        value.href
+      ) {
+        router.replace(value.href);
+        router.refresh();
+        return;
+      }
 
-    setResult(value);
-  }
+      setResult(value);
+    },
+    [router],
+  );
 
   useEffect(() => {
     let active = true;
@@ -76,7 +79,7 @@ export function PaymentForm({
     return () => {
       active = false;
     };
-  }, [publicId, router]);
+  }, [publicId, applyResult]);
 
   async function retry() {
     setResult(null);
