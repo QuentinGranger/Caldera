@@ -16,6 +16,12 @@ export async function POST(request: Request) {
       secret,
     );
   } catch {
+    console.error(
+      JSON.stringify({
+        scope: 'payments',
+        action: 'webhook_signature_invalid',
+      }),
+    );
     return Response.json({ error: 'Signature invalide' }, { status: 400 });
   }
   if (event.livemode)
