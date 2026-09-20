@@ -1,0 +1,444 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.main {
+  min-width: 0;
+  overflow: hidden;
+  background: v.$color-background;
+}
+
+.hero {
+  position: relative;
+  min-height: min(820px, 82vh);
+  display: grid;
+  color: v.$color-text-on-dark;
+  background: v.$color-green-dark;
+  isolation: isolate;
+}
+
+.heroImage {
+  object-fit: cover;
+  object-position: center 45%;
+  z-index: -3;
+}
+
+.heroShade {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(90deg, rgb(2 22 17 / 88%) 0%, rgb(2 22 17 / 56%) 48%, rgb(2 22 17 / 22%) 100%),
+    linear-gradient(0deg, rgb(0 35 27 / 70%) 0%, transparent 42%);
+}
+
+.heroInner {
+  min-height: min(820px, 82vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-block: clamp(5rem, 10vw, 8rem) 2.2rem;
+}
+
+.heroCopy {
+  max-width: 52rem;
+
+  h1 {
+    margin: 0.75rem 0 1.4rem;
+    color: v.$color-cream;
+    font: 400 clamp(3.6rem, 8vw, 7.4rem)/0.82 v.$font-heading;
+    letter-spacing: -0.045em;
+
+    em {
+      color: v.$color-gold-light;
+      font-weight: 400;
+    }
+  }
+}
+
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+
+.heroLead {
+  max-width: 42rem;
+  color: rgb(251 244 223 / 84%);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  line-height: 1.8;
+}
+
+.heroAnchor {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: clamp(3rem, 8vh, 6rem);
+  padding-bottom: 0.55rem;
+  color: v.$color-cream;
+  border-bottom: 1px solid rgb(244 217 133 / 62%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.origin {
+  @include m.section;
+}
+
+.originGrid {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    gap: 6rem;
+  }
+}
+
+.originVisual {
+  position: relative;
+  min-height: 430px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: v.$color-green-dark;
+
+  img {
+    object-fit: cover;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgb(7 28 23 / 52%), transparent 48%);
+    pointer-events: none;
+  }
+
+  > span {
+    position: absolute;
+    z-index: 1;
+    left: 1.2rem;
+    bottom: 1.2rem;
+    padding: 0.5rem 0.7rem;
+    color: v.$color-cream;
+    background: rgb(7 28 23 / 68%);
+    font-size: 0.55rem;
+    font-weight: 750;
+    letter-spacing: 0.18em;
+  }
+}
+
+.originCopy {
+  h2 {
+    max-width: 34rem;
+    margin: 0.9rem 0 1.5rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.7rem, 5vw, 4.6rem)/0.96 v.$font-heading;
+    letter-spacing: -0.035em;
+  }
+
+  > p:not(.eyebrow, .lead) {
+    max-width: 34rem;
+    margin-top: 1rem;
+    color: v.$color-text-muted;
+    font-size: 0.82rem;
+    line-height: 1.85;
+  }
+}
+
+.lead {
+  max-width: 34rem;
+  color: v.$color-text;
+  font: 400 clamp(1.35rem, 2.1vw, 1.8rem)/1.3 v.$font-heading;
+}
+
+.territories {
+  padding-block: clamp(4rem, 8vw, 7rem);
+  color: v.$color-text-on-dark;
+  background:
+    radial-gradient(circle at 20% 0%, rgb(232 194 97 / 8%), transparent 26%),
+    v.$color-green-dark;
+}
+
+.sectionHead {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+
+  h2 {
+    max-width: 44rem;
+    margin-top: 0.7rem;
+    color: v.$color-cream;
+    font: 500 clamp(2.6rem, 5vw, 4.5rem)/0.98 v.$font-heading;
+    letter-spacing: -0.035em;
+  }
+
+  > p {
+    max-width: 31rem;
+    align-self: end;
+    color: v.$color-muted-on-dark;
+    font-size: 0.78rem;
+    line-height: 1.8;
+  }
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.7fr);
+    align-items: end;
+  }
+}
+
+.territoryGrid {
+  display: grid;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.territoryCard {
+  min-height: 325px;
+  padding: 1.5rem 1.2rem 1.8rem;
+  border-bottom: 1px solid rgb(255 255 255 / 14%);
+  transition:
+    background v.$transition-base,
+    transform v.$transition-base;
+
+  @include m.from(v.$breakpoint-tablet) {
+    border-right: 1px solid rgb(255 255 255 / 14%);
+  }
+
+  &:hover {
+    background: rgb(255 255 255 / 4%);
+  }
+
+  > p:first-of-type {
+    margin-top: 2.4rem;
+    color: v.$color-gold-light;
+    font-size: 0.56rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin-top: 0.45rem;
+    color: v.$color-text-on-dark;
+    font: 500 1.8rem/1 v.$font-heading;
+  }
+}
+
+.territoryTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: v.$color-gold-light;
+
+  span {
+    font: 500 1.05rem/1 v.$font-heading;
+  }
+}
+
+.territoryRule {
+  width: 2rem;
+  height: 1px;
+  margin: 1.1rem 0;
+  background: v.$color-gold;
+}
+
+.territoryText {
+  color: v.$color-muted-on-dark;
+  font-size: 0.72rem;
+  line-height: 1.75;
+}
+
+.archive {
+  @include m.section;
+}
+
+.archiveGrid {
+  display: grid;
+  gap: 2.5rem;
+  align-items: stretch;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    gap: 5rem;
+  }
+}
+
+.archiveCopy {
+  align-self: center;
+
+  > svg {
+    margin-bottom: 1.4rem;
+    color: v.$color-green;
+  }
+
+  h2 {
+    max-width: 32rem;
+    margin: 0.75rem 0 1.4rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.7rem, 5vw, 4.2rem)/0.97 v.$font-heading;
+    letter-spacing: -0.035em;
+  }
+
+  > p:not(.eyebrow, .archiveLead) {
+    max-width: 31rem;
+    margin-top: 1rem;
+    color: v.$color-text-muted;
+    font-size: 0.8rem;
+    line-height: 1.85;
+  }
+
+  > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 1.8rem;
+    padding-bottom: 0.5rem;
+    color: v.$color-green-dark;
+    border-bottom: 1px solid v.$color-gold;
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-decoration: none;
+  }
+}
+
+.archiveLead {
+  max-width: 31rem;
+  color: v.$color-text;
+  font: 400 1.35rem/1.4 v.$font-heading;
+}
+
+.archiveVisual {
+  position: relative;
+  min-height: 440px;
+  overflow: hidden;
+  background: v.$color-green-dark;
+
+  img {
+    object-fit: cover;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgb(7 28 23 / 58%), transparent 48%);
+    pointer-events: none;
+  }
+}
+
+.archiveStamp {
+  position: absolute;
+  z-index: 1;
+  left: 1.2rem;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: v.$color-cream;
+
+  span {
+    font-size: 0.55rem;
+    font-weight: 750;
+    letter-spacing: 0.16em;
+  }
+}
+
+.manifesto {
+  padding-block: clamp(4.5rem, 9vw, 8rem);
+  color: v.$color-text-on-dark;
+  background: v.$color-ink;
+}
+
+.manifestoInner {
+  text-align: center;
+
+  blockquote {
+    max-width: 62rem;
+    margin: 1.3rem auto 0;
+    color: v.$color-cream;
+    font: 400 clamp(2.4rem, 5vw, 4.8rem)/1.02 v.$font-heading;
+    letter-spacing: -0.035em;
+  }
+}
+
+.manifestoActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 1.8rem;
+  margin-top: 2.5rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 44px;
+    color: v.$color-cream;
+    font-size: 0.7rem;
+    font-weight: 750;
+    text-decoration: none;
+  }
+
+  a:first-child {
+    padding: 0.8rem 1.1rem;
+    color: v.$color-green-dark;
+    background: v.$color-gold-light;
+    border: 1px solid v.$color-gold-light;
+    border-radius: v.$radius-small;
+  }
+
+  a:last-child {
+    border-bottom: 1px solid rgb(244 217 133 / 50%);
+  }
+}
+
+.legalNote {
+  max-width: 42rem;
+  margin: 3.5rem auto 0;
+  color: rgb(190 203 192 / 64%);
+  font-size: 0.6rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 479px) {
+  .hero {
+    min-height: 720px;
+  }
+
+  .heroInner {
+    min-height: 720px;
+  }
+
+  .heroCopy h1 {
+    font-size: clamp(3.4rem, 17vw, 5rem);
+  }
+
+  .originVisual,
+  .archiveVisual {
+    min-height: 360px;
+  }
+
+  .territoryCard {
+    min-height: auto;
+  }
+
+  .manifestoInner blockquote br {
+    display: none;
+  }
+}
