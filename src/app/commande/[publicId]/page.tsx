@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCartCookie } from '@/lib/cart/cartCookie';
 import { getCustomerOrder } from '@/lib/orders/queries';
+import { reconcileOwnedOrder } from '@/lib/payments/reconcile';
 import { Container } from '@/components/ui/Container/Container';
 import { OrderSummary } from '@/components/payment/OrderSummary';
 import { OrderStatusRefresh } from '@/components/payment/OrderStatusRefresh';
@@ -52,11 +53,18 @@ export default async function OrderPage({
   searchParams: Promise<{ access?: string }>;
 }) {
   const { publicId } = await params;
-  const order = await getCustomerOrder(
-    publicId,
-    await getCartCookie(),
-    (await searchParams).access,
-  );
+  const token = await getCartCookie();
+
+  let order = await reconcileOwnedOrder(publicId, token, { force: true });
+
+  if (!order) {
+    order = await getCustomerOrder(
+      publicId,
+      token,
+      (await searchParams).access,
+    );
+  }
+
   if (!order) notFound();
   const [title, description] = copy[order.status];
   return (
