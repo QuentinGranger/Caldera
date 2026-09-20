@@ -8,6 +8,7 @@ import styles from './Checkout.module.scss';
 export function CheckoutSummary({ view }: { view: CheckoutView }) {
   const shippingIsFree = view.shippingAmount === '0.00';
   const itemLabel = view.cart.itemCount > 1 ? 'articles' : 'article';
+  const selectedMethod = view.selectedMethod;
 
   return (
     <aside
@@ -15,16 +16,16 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
       className={styles.summary}
       aria-label="Récapitulatif de votre commande"
     >
-      <div className={styles.summaryHeader}>
+      <header className={styles.summaryHeader}>
         <div>
-          <span className={styles.summaryEyebrow}>VOTRE COMMANDE</span>
-          <h2>Récapitulatif</h2>
+          <span className={styles.summaryEyebrow}>RÉCAPITULATIF</span>
+          <h2>Votre commande</h2>
           <p className={styles.summaryCount}>
             {view.cart.itemCount} {itemLabel}
           </p>
         </div>
-        <Link href="/panier">Modifier le panier</Link>
-      </div>
+        <Link href="/panier">Modifier</Link>
+      </header>
 
       <ul className={styles.summaryItems}>
         {view.cart.items.map((item) => (
@@ -33,8 +34,8 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
               <Image
                 src={item.image}
                 alt={item.imageAlt}
-                width={76}
-                height={96}
+                width={80}
+                height={100}
               />
               <span
                 className={styles.quantityBadge}
@@ -63,13 +64,25 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
         ))}
       </ul>
 
-      <div className={styles.summaryReceipt}>
+      {selectedMethod && (
+        <div className={styles.summaryShipping}>
+          <div>
+            <span className={styles.summaryShippingLabel}>EXPÉDITION</span>
+            <strong>{selectedMethod.name}</strong>
+            {selectedMethod.description && <p>{selectedMethod.description}</p>}
+          </div>
+          <strong className={shippingIsFree ? styles.freeShipping : undefined}>
+            {shippingIsFree ? 'Offerte' : formatPrice(selectedMethod.amount)}
+          </strong>
+        </div>
+      )}
+
+      <div className={styles.summaryBottom}>
         <dl className={styles.summaryTotals}>
           <div>
             <dt>Sous-total</dt>
             <dd>{formatPrice(view.cart.subtotal)}</dd>
           </div>
-
           <div>
             <dt>Livraison</dt>
             <dd className={shippingIsFree ? styles.freeShipping : undefined}>
@@ -80,25 +93,28 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
                   : formatPrice(view.shippingAmount)}
             </dd>
           </div>
-
-          <div className={styles.summaryTotal}>
-            <dt>
-              {view.total === null ? 'Total provisoire' : 'Total'}
-              {view.total === null && <small>hors livraison</small>}
-            </dt>
-            <dd>
-              {formatPrice(view.total === null ? view.cart.subtotal : view.total)}
-            </dd>
-          </div>
         </dl>
 
-        <div className={styles.summaryAssurance}>
-          <span aria-hidden="true">✓</span>
-          <p>
-            Prix et disponibilité vérifiés avant le paiement. Les articles ne
-            sont réservés qu’à la validation de la commande.
-          </p>
+        <div className={styles.summaryGrandTotal}>
+          <div>
+            <span>
+              {view.total === null ? 'TOTAL PROVISOIRE' : 'MONTANT À RÉGLER'}
+            </span>
+            <small>
+              {view.total === null
+                ? 'Livraison non incluse'
+                : 'Toutes taxes comprises'}
+            </small>
+          </div>
+          <strong>
+            {formatPrice(view.total === null ? view.cart.subtotal : view.total)}
+          </strong>
         </div>
+
+        <p className={styles.summaryAssurance}>
+          Prix et disponibilité revérifiés avant le paiement. Les articles sont
+          réservés à la validation de la commande.
+        </p>
       </div>
 
       {view.methods.some((method) => method.isDevelopment) && (
