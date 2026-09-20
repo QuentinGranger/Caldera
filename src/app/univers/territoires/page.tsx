@@ -14,16 +14,23 @@ export default function TerritoriesPage() {
       slug="territoires"
       title="Les cinq territoires"
       kicker="Cartographie"
-      lead="Autour du cratère, cinq régions ont façonné cinq manières d’explorer, de chercher et de collectionner."
+      lead="Autour du cratère, cinq régions ont développé leurs propres paysages, leurs propres dangers et leurs propres façons d’explorer."
       image="/assets/images/editorial/mountains.jpg"
       imageAlt="Reliefs montagneux évoquant les territoires de Caldera"
     >
       <section>
         <h2>Les cinq territoires</h2>
         <p className={styles.intro}>
-          Les anciennes cartes divisent les terres en cinq grands territoires,
-          chacun marqué par son paysage, ses routes et sa manière de raconter la
-          découverte.
+          Les cartes anciennes représentaient ces régions comme cinq mondes
+          séparés. Les explorateurs ont fini par comprendre qu’elles formaient
+          un seul territoire vivant, relié par l’eau, le vent, les migrations et
+          les routes humaines.
+        </p>
+        <p>
+          Chaque région possède sa propre matière, son propre climat et sa propre
+          manière de mettre les voyageurs à l’épreuve. C’est aussi pour cette
+          raison que les découvertes rapportées aux Archives portent toujours la
+          trace du lieu où elles ont été trouvées.
         </p>
 
         <nav className={styles.territoryJump} aria-label="Aller à un territoire">
@@ -43,24 +50,39 @@ export default function TerritoriesPage() {
             </div>
           </header>
           <p>
-            Au centre du monde connu s’étend l’immense cratère qui donna son nom
-            à toutes les terres environnantes.
+            Au centre du monde connu s’étend l’immense bassin qui donna son nom à
+            toutes les terres environnantes.
           </p>
           <p>
-            Ses falaises forment une couronne de roche sombre autour d’une
-            vallée où se croisent rivières, brumes et anciennes coulées
-            volcaniques.
-          </p>
-          <p>C’est ici que furent fondées les Archives des Explorateurs.</p>
-          <p>
-            Toutes les grandes routes finissent, tôt ou tard, par revenir vers
-            la Caldera.
+            Ses falaises forment une couronne de roche sombre autour d’un relief
+            complexe de lacs, d’îlots volcaniques, de rivières et d’anciennes
+            coulées aujourd’hui recouvertes par endroits de végétation.
           </p>
           <p>
-            On dit que l’on peut parcourir le monde entier sans comprendre ce
-            que l’on cherche.
+            Les cascades qui descendent des hauteurs alimentent le bassin tandis
+            que la chaleur du sous-sol entretient des nappes de brume presque
+            permanentes.
           </p>
-          <p>Mais qu’une fois revenu ici, on sait enfin pourquoi on était parti.</p>
+          <p>
+            Les grands dragons des falaises sont parfois visibles au-dessus du
+            cratère. Ils utilisent les courants thermiques pour parcourir de
+            longues distances sans presque battre des ailes. Les Archives
+            consignent leurs passages, mais aucune tentative sérieuse de les
+            domestiquer n’a jamais abouti.
+          </p>
+          <p>
+            C’est ici que furent fondées les Archives des Explorateurs et que se
+            croisent aujourd’hui les principales routes.
+          </p>
+          <p className={styles.maxim}>
+            Toutes les grandes routes finissent, tôt ou tard, par revenir vers la
+            Caldera.
+          </p>
+          <p>
+            On dit que l’on peut parcourir le monde entier sans comprendre ce que
+            l’on cherche. Mais qu’une fois revenu ici, on sait enfin pourquoi on
+            était parti.
+          </p>
         </section>
 
         <section id="braise" className={styles.territory}>
@@ -73,24 +95,35 @@ export default function TerritoriesPage() {
           </header>
           <p>
             À l’est de la Caldera s’étendent des plateaux noirs traversés de
-            veines rougeoyantes.
+            fractures rouges, de fumerolles et d’anciennes rivières de lave.
           </p>
-          <p>La terre y porte encore les marques du Grand Effondrement.</p>
           <p>
-            Le vent soulève parfois une poussière sombre qui recouvre les anciens
-            chemins en quelques heures. Certaines routes disparaissent pendant
-            des années avant d’être découvertes de nouveau.
+            La terre y porte encore les marques les plus visibles du Grand
+            Effondrement. Certaines zones sont froides depuis des siècles ;
+            d’autres dégagent toujours assez de chaleur pour déformer l’air au-dessus de la roche.
           </p>
-          <p>Les explorateurs y recherchent ce qui a résisté au temps.</p>
           <p>
-            Les objets provenant des Terres de Braise sont souvent associés aux
-            découvertes les plus improbables : fragments oubliés, pièces que
-            l’on croyait perdues ou trésors retrouvés là où personne ne pensait
-            encore chercher.
+            Le vent soulève une poussière sombre qui peut recouvrir un chemin en
+            quelques heures. À l’inverse, une tempête suffit parfois à dégager
+            un passage ou un fragment resté enfoui pendant des années.
           </p>
-          <p>Ici, la rareté ne se mesure pas seulement au nombre.</p>
+          <p className={styles.shortBeat}>
+            Dans les Terres de Braise, ce qui disparaît n’est pas toujours perdu.
+            Les cendres cachent autant qu’elles révèlent.
+          </p>
+          <p>
+            Une faune lourde et cuirassée vit sur les plateaux les plus chauds.
+            Certaines espèces se confondent presque avec le basalte lorsqu’elles
+            restent immobiles.
+          </p>
+          <p>
+            Les explorateurs y recherchent surtout ce qui a résisté au temps :
+            fragments oubliés, pièces que l’on croyait perdues ou objets
+            retrouvés là où personne ne pensait encore chercher.
+          </p>
           <p className={styles.maxim}>
-            Elle se mesure à la difficulté du chemin parcouru pour la trouver.
+            Ici, la rareté se mesure aussi à la difficulté du chemin parcouru
+            pour la trouver.
           </p>
         </section>
 
@@ -102,18 +135,26 @@ export default function TerritoriesPage() {
               <h4>Tout ne demande pas à être découvert</h4>
             </div>
           </header>
-          <p>À l’ouest commencent les grandes forêts.</p>
           <p>
-            Elles existaient avant les premières cartes et semblent parfois
-            ignorer les frontières tracées par les hommes.
+            À l’ouest commencent les grandes forêts, plus anciennes que les
+            premières cartes conservées aux Archives.
           </p>
           <p>
-            Sous leur canopée, les sentiers changent, les pierres disparaissent
-            sous les racines et certains repères ne figurent sur aucun registre.
+            Sous leur canopée, l’humidité ne disparaît presque jamais. La mousse
+            recouvre les troncs, les racines déplacent lentement les pierres et
+            les chemins sont régulièrement repris par la végétation.
           </p>
           <p>
             Les explorateurs disent qu’on ne traverse jamais deux fois exactement
-            la même forêt.
+            la même forêt. Un sentier praticable une saison peut être fermé
+            l’année suivante par un arbre tombé, une crue ou plusieurs mètres de
+            fougères.
+          </p>
+          <p>
+            La faune elle-même semble faite pour disparaître dans le paysage.
+            Certaines petites espèces portent sur leur pelage des mousses,
+            lichens et feuilles qui les rendent presque invisibles tant qu’elles
+            restent immobiles.
           </p>
           <p>C’est le territoire de la curiosité.</p>
           <p>Celui des découvertes inattendues.</p>
@@ -126,7 +167,6 @@ export default function TerritoriesPage() {
             Les Archivistes possèdent encore des dizaines de cartes incomplètes
             de ces forêts.
           </p>
-          <p>Certaines comportent simplement cette annotation :</p>
           <blockquote>« À poursuivre. »</blockquote>
         </section>
 
@@ -138,26 +178,31 @@ export default function TerritoriesPage() {
               <h4>Certaines recherches prennent du temps</h4>
             </div>
           </header>
-          <p>Au nord, les chemins montent jusqu’aux crêtes.</p>
           <p>
-            L’air y devient froid, la végétation rare et les distances difficiles
-            à estimer.
+            Au nord, les chemins quittent progressivement les arbres et montent
+            jusqu’aux plateaux balayés par le vent.
           </p>
           <p>
-            Depuis les sommets, on distingue parfois simultanément les forêts,
-            les terres volcaniques et les reflets de l’océan.
-          </p>
-          <p>Mais atteindre ces points demande du temps.</p>
-          <p>
-            Les Hautes Terres sont devenues le symbole des longues recherches.
+            L’air y devient froid, la végétation basse et les distances
+            difficiles à estimer. Les falaises s’interrompent brutalement dans
+            les nuages et certains cols ne sont praticables qu’une partie de
+            l’année.
           </p>
           <p>
-            Celles que l’on poursuit pendant des semaines, des mois ou des
-            années.
+            Les voyageurs y utilisent des relais espacés, des balises de pierre
+            et, sur les plateaux les plus ouverts, de grands chariots à voile
+            capables de profiter des vents réguliers pour transporter du
+            matériel sur de longues distances.
           </p>
           <p>
-            Les explorateurs qui y voyagent répètent souvent une autre maxime des
-            Archives :
+            C’est aussi depuis ces hauteurs que les cartographes peuvent
+            comparer plusieurs régions d’un seul regard. Beaucoup de cartes
+            commencées dans les vallées sont corrigées ici.
+          </p>
+          <p>
+            Les Hautes Terres sont devenues le symbole des recherches longues :
+            celles que l’on poursuit pendant des semaines, des mois ou parfois
+            des années.
           </p>
           <blockquote>
             « Tout ce qui est rare n’est pas précieux. Tout ce qui est précieux
@@ -173,10 +218,16 @@ export default function TerritoriesPage() {
               <h4>Là où le monde arrive à Caldera</h4>
             </div>
           </header>
-          <p>Au sud, les terres rencontrent l’océan.</p>
           <p>
-            Les premiers ports y furent construits bien avant que l’intérieur de
-            Caldera ne soit entièrement cartographié.
+            Au sud, les falaises volcaniques s’ouvrent sur l’océan et laissent
+            place à une succession de criques, de plages noires et de petits
+            ports.
+          </p>
+          <p>
+            Les communautés côtières y naviguaient bien avant que l’intérieur de
+            Caldera ne soit entièrement cartographié. Leurs embarcations légères
+            reliaient déjà les baies, les îlots et les caps lorsque les routes
+            terrestres n’étaient encore que des lignes incertaines.
           </p>
           <p>
             Depuis toujours, voyageurs, marchandises, récits et objets venus
@@ -184,13 +235,14 @@ export default function TerritoriesPage() {
           </p>
           <p>
             Certaines découvertes parcourent des milliers de kilomètres avant
-            d’entrer dans les Archives.
+            d’entrer dans les Archives. D’autres quittent Caldera par les mêmes
+            routes pour rejoindre de nouveaux collectionneurs.
           </p>
           <p>
-            D’autres quittent Caldera par les mêmes routes pour rejoindre de
-            nouveaux collectionneurs.
+            Les ports sont donc autant des lieux d’échange que des lieux de
+            récit. On y apprend souvent l’existence d’un objet, d’une route ou
+            d’un territoire avant même de pouvoir le placer sur une carte.
           </p>
-          <p>Les Rivages rappellent ainsi une chose essentielle :</p>
           <p className={styles.maxim}>
             Aucune collection ne se construit entièrement seule.
           </p>

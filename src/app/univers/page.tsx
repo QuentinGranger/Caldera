@@ -9,7 +9,7 @@ import styles from './page.module.scss';
 export const metadata: Metadata = {
   title: 'Les Terres de Caldera | Univers & chroniques',
   description:
-    'Entrez dans les chroniques des Terres de Caldera et découvrez ses origines, ses Archives, ses cinq territoires et ses routes encore inconnues.',
+    'Découvrez les Terres de Caldera : un monde né du Grand Effondrement, cinq territoires, des Archives et des routes encore incomplètes.',
   robots: { index: true, follow: true },
 };
 
@@ -34,9 +34,9 @@ export default function UniversePage() {
             s’est <em>ouverte.</em>
           </h1>
           <p className={styles.heroLead}>
-            Personne ne sait exactement quand le sommet s’est effondré. Depuis,
-            les cartes se remplissent lentement de routes, d’archives et
-            d’histoires rapportées par ceux qui ont choisi d’explorer.
+            Un ancien sommet s’est effondré. À sa place est né un monde de
+            falaises, de brumes, de forêts, de terres volcaniques et de routes
+            que personne n’a encore fini de tracer.
           </p>
           <Link className={styles.primaryCta} href="/univers/origines">
             Commencer par les origines
@@ -49,16 +49,22 @@ export default function UniversePage() {
         <Container className={styles.introGrid}>
           <div>
             <p className={styles.eyebrow}>LES CHRONIQUES</p>
-            <h2>Un monde à lire comme une carte.</h2>
+            <h2>Un monde construit autour de la découverte.</h2>
           </div>
           <div>
             <p>
-              Pour rendre le lore agréable à découvrir, l’histoire est organisée
-              en cinq chroniques courtes plutôt qu’en une seule longue page.
+              La Caldera n’est pas un simple cratère. C’est un bassin immense,
+              habitable et encore instable, encerclé par cinq territoires que
+              des générations d’explorateurs ont appris à relier.
             </p>
             <p>
-              Vous pouvez les lire dans l’ordre ou entrer directement dans le
-              chapitre qui vous intéresse.
+              On y voyage pour cartographier, observer, échanger, retrouver ce
+              que l’on croyait perdu ou simplement rapporter la trace d’un lieu
+              que personne n’avait encore décrit.
+            </p>
+            <p>
+              Dans ce monde, un trésor n’est pas défini par son prix. Il l’est
+              par l’histoire que quelqu’un a choisi de conserver avec lui.
             </p>
           </div>
         </Container>
@@ -69,7 +75,7 @@ export default function UniversePage() {
           <div className={styles.chapterHeading}>
             <Compass size={26} strokeWidth={1.2} aria-hidden="true" />
             <div>
-              <p className={styles.eyebrow}>SOMMAIRE</p>
+              <p className={styles.eyebrow}>SOMMAIRE DES ARCHIVES</p>
               <h2 id="chapters-title">Choisir une chronique</h2>
             </div>
           </div>

@@ -5,7 +5,7 @@ export const universeChapters = [
     title: 'Origines',
     label: 'Là où la terre s’est ouverte',
     description:
-      'Le Grand Effondrement, la naissance de la Caldera et ceux qui ouvrirent les premiers chemins.',
+      'Le Grand Effondrement, les premières descentes vers le cratère et ceux qui tracèrent les premiers chemins à travers les brumes.',
   },
   {
     slug: 'archives',
@@ -13,7 +13,7 @@ export const universeChapters = [
     title: 'Les Archives',
     label: 'Ce qui mérite d’être gardé',
     description:
-      'L’origine des Archives des Explorateurs et de la tradition qui relie chaque découverte à son histoire.',
+      'Un observatoire, une bibliothèque et un centre de cartographie où chaque découverte est conservée avec l’histoire de son voyage.',
   },
   {
     slug: 'territoires',
@@ -21,7 +21,7 @@ export const universeChapters = [
     title: 'Les cinq territoires',
     label: 'Une terre, cinq façons d’explorer',
     description:
-      'La Caldera, les Terres de Braise, les Forêts anciennes, les Hautes Terres et les Rivages.',
+      'Le cœur de la Caldera, les terres volcaniques, les forêts anciennes, les hauts plateaux et les rivages ouverts sur le large.',
   },
   {
     slug: 'route-des-cinq',
@@ -29,7 +29,7 @@ export const universeChapters = [
     title: 'La Route des Cinq',
     label: 'Il n’existe pas de parcours idéal',
     description:
-      'Le réseau mouvant de chemins qui relie les régions et que chaque explorateur parcourt à sa manière.',
+      'Ponts, sentiers, relais et pistes forment un réseau vivant qui relie les régions et change avec ceux qui l’empruntent.',
   },
   {
     slug: 'horizons',
@@ -37,7 +37,7 @@ export const universeChapters = [
     title: 'Horizons inconnus',
     label: 'Une carte ne devrait jamais être terminée',
     description:
-      'Les espaces encore blancs des cartes et l’esprit qui donne son sens aux Terres de Caldera.',
+      'Les zones blanches, les routes interrompues et les signes encore inexpliqués qui empêchent Caldera de devenir un monde entièrement connu.',
   },
 ] as const;
 
