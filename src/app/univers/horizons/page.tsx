@@ -15,8 +15,8 @@ export default function HorizonsPage() {
       title="Horizons inconnus"
       kicker="Dernières pages"
       lead="Les Archivistes laissent volontairement certaines zones blanches. À Caldera, une carte terminée signifierait qu’il ne reste plus rien à découvrir."
-      image="/assets/images/editorial/mountains.jpg"
-      imageAlt="Hautes terres brumeuses de Caldera"
+      image="/assets/images/HautesTerres.png"
+      imageAlt="Hautes Terres de Caldera couvertes de neige, de vent et de brume"
     >
       <section>
         <h2>Ce que les Archives ne savent pas</h2>
