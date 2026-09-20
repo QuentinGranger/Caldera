@@ -18,7 +18,7 @@ export default function UniversePage() {
     <main id="contenu" className={styles.main}>
       <section className={styles.hero} aria-labelledby="universe-title">
         <Image
-          src="/assets/images/editorial/hero-banner.png"
+          src="/assets/images/RouteCinq.png"
           alt=""
           fill
           preload
