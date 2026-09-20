@@ -14,6 +14,7 @@ import {
 import { validateIntent } from './validation';
 import { ensureIntent, paymentPreflight } from './intents';
 import { cancelOrder, currentOrder } from './cancel';
+import { reconcilePaymentIntent } from './events';
 
 const payableIntentStatuses = new Set([
   'requires_payment_method',
@@ -226,7 +227,7 @@ export async function cancelPaymentAction(publicId: unknown) {
     }
 
     const outcome = await cancelOrder(order.id);
-    const current = await currentOrder(order.id);
+    let current = await currentOrder(order.id);
     revalidatePath('/', 'layout');
 
     if (outcome.kind === 'cancelled') {
@@ -243,10 +244,23 @@ export async function cancelPaymentAction(publicId: unknown) {
         `cancelPaymentAction: cannot cancel Stripe PaymentIntent with status ${outcome.intentStatus}`,
       );
 
+      if (order.payment?.providerPaymentIntentId) {
+        const intent = await stripeGateway.retrieve(
+          order.payment.providerPaymentIntentId,
+        );
+        await reconcilePaymentIntent(intent);
+        current = await currentOrder(order.id);
+        revalidatePath('/', 'layout');
+      }
+
       const message =
-        outcome.intentStatus === 'succeeded'
-          ? 'Le paiement a déjà été confirmé par Stripe et ne peut plus être annulé depuis cette page. Consultez la commande.'
-          : 'Le paiement est déjà en cours de traitement chez Stripe et ne peut plus être annulé pour le moment. Consultez la commande.';
+        current.status === 'PAID'
+          ? 'Le paiement a déjà été confirmé par Stripe. La commande est maintenant synchronisée.'
+          : current.status === 'PAYMENT_PROCESSING'
+            ? 'Le paiement est en cours de traitement chez Stripe. La commande est maintenant synchronisée.'
+            : current.status === 'PAYMENT_REVIEW'
+              ? 'Le paiement nécessite une vérification avant toute autre action.'
+              : 'Le paiement ne peut plus être annulé depuis cette page. Consultez la commande.';
 
       return {
         success: false as const,
