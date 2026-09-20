@@ -72,7 +72,7 @@ export default function UniversePage() {
           src="/assets/images/editorial/hero-banner.png"
           alt=""
           fill
-          priority
+          preload
           sizes="100vw"
           className={styles.heroImage}
         />
