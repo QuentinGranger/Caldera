@@ -16,8 +16,8 @@ export function OrderSummary({ order }: { order: OrderRecord }) {
     >
       <header className={styles.orderSummaryHeader}>
         <div>
-          <span className={styles.orderSummaryEyebrow}>VOTRE COMMANDE</span>
-          <h2>Récapitulatif</h2>
+          <span className={styles.orderSummaryEyebrow}>RÉCAPITULATIF</span>
+          <h2>Votre commande</h2>
           <p>
             {itemCount} {itemLabel}
           </p>
@@ -31,8 +31,8 @@ export function OrderSummary({ order }: { order: OrderRecord }) {
               <Image
                 src={item.imageUrl}
                 alt={item.productName}
-                width={76}
-                height={96}
+                width={80}
+                height={100}
               />
               <span
                 className={styles.orderQuantityBadge}
@@ -56,7 +56,19 @@ export function OrderSummary({ order }: { order: OrderRecord }) {
         ))}
       </ul>
 
-      <div className={styles.orderReceipt}>
+      <div className={styles.orderShipping}>
+        <div>
+          <span>EXPÉDITION</span>
+          <strong>{order.shippingMethodName}</strong>
+        </div>
+        <strong className={shippingIsFree ? styles.orderFreeShipping : undefined}>
+          {shippingIsFree
+            ? 'Offerte'
+            : formatPrice(order.shippingAmount.toFixed(2))}
+        </strong>
+      </div>
+
+      <div className={styles.orderBottom}>
         <dl className={styles.orderSummaryTotals}>
           <div>
             <dt>Sous-total</dt>
@@ -70,19 +82,19 @@ export function OrderSummary({ order }: { order: OrderRecord }) {
                 : formatPrice(order.shippingAmount.toFixed(2))}
             </dd>
           </div>
-          <div className={styles.orderSummaryTotal}>
-            <dt>Total</dt>
-            <dd>{formatPrice(order.totalAmount.toFixed(2))}</dd>
-          </div>
         </dl>
 
-        <div className={styles.orderDelivery}>
+        <div className={styles.orderGrandTotal}>
           <div>
-            <span>Livraison</span>
-            <strong>{order.shippingMethodName}</strong>
+            <span>MONTANT À RÉGLER</span>
+            <small>Toutes taxes comprises</small>
           </div>
+          <strong>{formatPrice(order.totalAmount.toFixed(2))}</strong>
+        </div>
 
-          {shipping && (
+        {shipping && (
+          <div className={styles.orderAddressBlock}>
+            <span>ADRESSE DE LIVRAISON</span>
             <address>
               <strong>
                 {shipping.firstName} {shipping.lastName}
@@ -95,8 +107,8 @@ export function OrderSummary({ order }: { order: OrderRecord }) {
               </span>
               <span>{shipping.countryCode}</span>
             </address>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
