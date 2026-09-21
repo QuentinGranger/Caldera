@@ -4,12 +4,32 @@
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
-  padding: 0.55rem 1rem;
-  background: v.$color-cream;
+  min-height: 38px;
+  padding: 0.5rem 1rem;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(232 194 97 / 15%),
+      transparent 18% 82%,
+      rgb(232 194 97 / 15%)
+    ),
+    v.$color-cream;
   color: v.$color-green-dark;
-  font-size: 0.625rem;
-  letter-spacing: 0.055em;
+  border-bottom: 1px solid rgb(0 60 45 / 12%);
+  font-size: clamp(0.66rem, 0.9vw, 0.76rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-align: center;
+
+  svg {
+    flex-shrink: 0;
+    stroke-width: 1.8;
+  }
+
+  p {
+    margin: 0;
+  }
+
   span {
     display: none;
   }

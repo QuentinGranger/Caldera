@@ -26,9 +26,9 @@ const groups = [
   {
     title: 'Aide',
     links: [
-      { label: 'Livraison' },
-      { label: 'FAQ' },
-      { label: 'Contact', href: '/contact' },
+      { label: 'Livraison', href: '/livraison' },
+      { label: 'FAQ', href: '/faq' },
+      { label: 'Contact', href: '/faq#besoin-aide' },
     ],
   },
   {
@@ -92,7 +92,7 @@ export function Footer() {
             © {new Date().getFullYear()} Les Terres de Caldera ·{' '}
             <Link href={PRODUCTION_SITE_URL}>{PRODUCTION_HOST}</Link>
           </p>
-          <p>Boutique en préparation · Produits et prix de démonstration</p>
+          <p>Boutique indépendante · Cartes et produits de collection</p>
           <span>Explorez. Collectionnez.</span>
         </div>
       </Container>

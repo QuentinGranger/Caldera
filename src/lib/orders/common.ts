@@ -11,7 +11,12 @@ export const openOrderStatuses = [
   'PAYMENT_REVIEW',
 ] as const;
 export const orderInclude = {
-  shipments: { where: { isPrimary: true }, orderBy: { createdAt: 'asc' } },
+  shipments: {
+    where: { isPrimary: true },
+    orderBy: { createdAt: 'asc' },
+    include: { trackingEvents: { orderBy: { occurredAt: 'desc' } } },
+  },
+  pickupPoint: true,
   payment: true,
   items: { orderBy: { id: 'asc' } },
   addresses: true,

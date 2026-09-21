@@ -9,6 +9,10 @@ import { Header } from '@/components/layout/Header/Header';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
+import { WishlistProvider } from '@/components/wishlist/WishlistProvider';
+import { getCurrentCustomer } from '@/lib/auth/customer/session';
+import { getWishlistProductIds } from '@/lib/wishlist/data';
+
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 
 import './globals.scss';
@@ -36,21 +40,31 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  const [cart, customer] = await Promise.all([getCart(), getCurrentCustomer()]);
+  const wishlistProductIds = customer
+    ? await getWishlistProductIds(customer.id)
+    : [];
+
   return (
     <html lang="fr" className={`${headingFont.variable} ${bodyFont.variable}`}>
       <body>
         <a className="skip-link" href="#contenu">
           Aller au contenu
         </a>
-        <CartProvider cart={await getCart()}>
-          <StorefrontOnly>
-            <AnnouncementBar />
-            <Header />
-          </StorefrontOnly>
-          {children}
-          <StorefrontOnly>
-            <Footer />
-          </StorefrontOnly>
+        <CartProvider cart={cart}>
+          <WishlistProvider
+            authenticated={Boolean(customer)}
+            initialProductIds={wishlistProductIds}
+          >
+            <StorefrontOnly>
+              <AnnouncementBar />
+              <Header customer={customer} />
+            </StorefrontOnly>
+            {children}
+            <StorefrontOnly>
+              <Footer />
+            </StorefrontOnly>
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

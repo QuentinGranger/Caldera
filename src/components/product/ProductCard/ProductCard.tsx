@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
-import { IconButton } from '@/components/ui/IconButton/IconButton';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
+import { ProductFavorite } from './ProductFavorite';
 import { ProductCardQuickAdd } from './ProductCardQuickAdd';
 import type { CatalogProduct } from '@/types/product';
 import { formatPrice } from '@/utils/formatPrice';
@@ -20,13 +19,11 @@ export function ProductCard({
         <div className={styles.badge}>
           {product.badge && <ProductBadge kind={product.badge} />}
         </div>
-        <IconButton
+        <ProductFavorite
           className={styles.favorite}
-          label={`Ajouter ${product.name} aux favoris — bientôt disponible`}
-          disabled
-        >
-          <Heart aria-hidden="true" />
-        </IconButton>
+          productId={product.id}
+          productName={product.name}
+        />
         <Link
           href={`/produit/${product.slug}`}
           aria-label={`Découvrir ${product.name}`}

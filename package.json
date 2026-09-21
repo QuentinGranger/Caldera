@@ -43,6 +43,8 @@
     "test:admin:http": "node --conditions=react-server --import tsx --test tests/admin-http.test.ts",
     "emails:process": "node --conditions=react-server --import tsx scripts/process-emails.ts",
     "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts",
+    "test:shipping": "node --conditions=react-server --import tsx --test tests/mondial-relay.test.ts",
+    "test:newsletter:db": "node --conditions=react-server --import tsx --test tests/newsletter-db.test.ts",
     "dev:stripe": "node scripts/dev-stripe.mjs"
   },
   "dependencies": {
@@ -52,6 +54,7 @@
     "@stripe/stripe-js": "9.16.0",
     "better-auth": "1.7.5",
     "dotenv": "18.0.1",
+    "fast-xml-parser": "^5.2.5",
     "lucide-react": "1.47.0",
     "next": "16.3.5",
     "react": "19.3.0",

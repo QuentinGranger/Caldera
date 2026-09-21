@@ -96,6 +96,8 @@ test('facturation distincte, pays et formats postaux', () => {
 test('livraison Decimal : juste sous le seuil, égalité, au-dessus et méthode invalide', () => {
   const rule: ShippingRule = {
     id: 'test',
+    code: 'TEST',
+    type: 'HOME_DELIVERY',
     name: 'Test',
     description: null,
     isActive: true,

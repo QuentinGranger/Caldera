@@ -2,35 +2,68 @@
 .navigation {
   display: none;
   @media (min-width: 75rem) {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-self: center;
+    width: 100%;
+    min-width: 0;
   }
   ul {
     display: flex;
+    align-items: center;
+    justify-content: center;
     list-style: none;
     padding: 0;
     margin: 0;
-    gap: clamp(1rem, 1.5vw, 1.7rem);
+    width: 100%;
+    gap: clamp(0.55rem, 1.15vw, 1.35rem);
   }
   a {
     display: flex;
     align-items: center;
     gap: 0.3rem;
     position: relative;
-    min-height: 44px;
-    font-size: 0.72rem;
+    min-height: 46px;
+    padding: 0.5rem 0.15rem;
+    color: rgb(251 244 223 / 90%);
+    font-size: clamp(0.76rem, 0.86vw, 0.92rem);
+    font-weight: 560;
+    letter-spacing: 0.01em;
     white-space: nowrap;
+    transition: color v.$transition-fast;
     &::after {
       position: absolute;
-      bottom: 2px;
+      bottom: 1px;
       left: 0;
       width: 0;
-      height: 1px;
+      height: 2px;
+      border-radius: v.$radius-pill;
       background: v.$color-gold;
       content: '';
-      transition: width v.$transition-base;
+      transform: translateX(-50%);
+      transition:
+        width v.$transition-base,
+        left v.$transition-base;
     }
-    &:hover::after {
-      width: 100%;
+    &:hover {
+      color: v.$color-gold-light;
+
+      &::after {
+        left: 50%;
+        width: 70%;
+      }
+    }
+    &[aria-current='page'] {
+      color: v.$color-gold-light;
+      &::after {
+        left: 50%;
+        width: 70%;
+      }
+    }
+    &:focus-visible {
+      border-radius: v.$radius-small;
+      outline: 2px solid v.$color-gold-light;
+      outline-offset: 3px;
     }
   }
 }

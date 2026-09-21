@@ -1,6 +1,9 @@
 import 'server-only';
 import Stripe from 'stripe';
 import { OrderError } from '@/lib/orders/common';
+
+export const calderaPaymentMethods = ['card', 'paypal', 'klarna'] as const;
+
 let client: Stripe | undefined;
 export function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -45,6 +48,10 @@ export interface PaymentGateway {
       amount: number;
       currency: string;
       metadata: { orderId: string; orderNumber: string };
+      automatic_payment_methods?: { enabled: true };
+      allowed_payment_method_types?: Array<
+        (typeof calderaPaymentMethods)[number]
+      >;
     },
     key: string,
   ): Promise<Intent>;

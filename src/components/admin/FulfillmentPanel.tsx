@@ -7,6 +7,8 @@ import {
   shipmentAction,
   correctTrackingAction,
   retryEmailAction,
+  createMondialRelayShipmentAction,
+  syncMondialRelayTrackingAction,
 } from '@/lib/fulfillment/actions';
 import { canRetryEmail, MAX_EMAIL_ATTEMPTS } from '@/lib/email/processor';
 import { AdminForm } from './AdminForm';
@@ -158,20 +160,69 @@ export function FulfillmentPanel({ order }: { order: Order }) {
               Expédiée le : {formatDate(shipment.shippedAt)} · Livrée le :{' '}
               {formatDate(shipment.deliveredAt)}
             </p>
+            {shipment.providerStatus && (
+              <p>Statut transporteur : {shipment.providerStatus}</p>
+            )}
+            {shipment.providerLabelUrl && (
+              <p>
+                <Link
+                  href={`/admin/commandes/${order.id}/etiquette`}
+                  target="_blank"
+                >
+                  Ouvrir l’étiquette officielle ↗
+                </Link>
+              </p>
+            )}
+            {shipment.carrierCode === 'MONDIAL_RELAY' &&
+              shipment.providerShipmentId && (
+                <AdminForm
+                  action={syncMondialRelayTrackingAction}
+                  submit="Synchroniser le suivi"
+                >
+                  <Hidden name="shipmentId" value={shipment.id} />
+                </AdminForm>
+              )}
+            {shipment.trackingEvents.length > 0 && (
+              <ol className={styles.audit}>
+                {shipment.trackingEvents.map((event) => (
+                  <li key={event.id}>
+                    <strong>{event.label}</strong>
+                    <small>
+                      {event.location ? `${event.location} · ` : ''}
+                      {formatDate(event.occurredAt)}
+                    </small>
+                  </li>
+                ))}
+              </ol>
+            )}
           </>
         ) : (
           <p>Aucune expédition créée.</p>
         )}
-        {allowed && order.fulfillmentStatus === 'READY_TO_SHIP' && (
-          <details open={!shipment}>
-            <summary>
-              {shipment
-                ? 'Modifier le brouillon d’expédition'
-                : 'Créer l’expédition'}
-            </summary>
-            <ShipmentForm order={order} />
-          </details>
-        )}
+        {allowed &&
+          order.fulfillmentStatus === 'READY_TO_SHIP' &&
+          order.shippingMethodCode === 'MONDIAL_RELAY_PICKUP' &&
+          !shipment && (
+            <AdminForm
+              action={createMondialRelayShipmentAction}
+              submit="Créer l’expédition Mondial Relay"
+              confirm="Créer maintenant l’expédition et son étiquette chez Mondial Relay ?"
+            >
+              <Hidden name="orderId" value={order.id} />
+            </AdminForm>
+          )}
+        {allowed &&
+          order.fulfillmentStatus === 'READY_TO_SHIP' &&
+          order.shippingMethodCode !== 'MONDIAL_RELAY_PICKUP' && (
+            <details open={!shipment}>
+              <summary>
+                {shipment
+                  ? 'Modifier le brouillon d’expédition'
+                  : 'Créer l’expédition'}
+              </summary>
+              <ShipmentForm order={order} />
+            </details>
+          )}
         {allowed &&
           shipment &&
           ['SHIPPED', 'DELIVERED'].includes(shipment.status) && (

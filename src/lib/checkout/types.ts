@@ -22,12 +22,29 @@ export type ContactValues = {
 export type CountryView = { code: string; name: string };
 export type ShippingMethodView = {
   id: string;
+  code: string;
+  type: 'HOME_DELIVERY' | 'EXPRESS' | 'PICKUP';
   name: string;
   description: string | null;
   amount: string;
   estimatedMinDays: number | null;
   estimatedMaxDays: number | null;
   isDevelopment: boolean;
+};
+export type CheckoutPickupPointView = {
+  provider: string;
+  pointId: string;
+  type: 'RELAY_POINT' | 'LOCKER' | 'UNKNOWN';
+  name: string;
+  address1: string;
+  address2: string | null;
+  postalCode: string;
+  city: string;
+  countryCode: string;
+  latitude: string | null;
+  longitude: string | null;
+  distanceM: number | null;
+  openingHours: Record<string, string[]> | null;
 };
 export type CheckoutView = {
   sessionId: string | null;
@@ -36,6 +53,7 @@ export type CheckoutView = {
   countries: CountryView[];
   methods: ShippingMethodView[];
   selectedMethod: ShippingMethodView | null;
+  pickupPoint: CheckoutPickupPointView | null;
   cart: CartView;
   shippingAmount: string | null;
   total: string | null;

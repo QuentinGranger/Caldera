@@ -1,0 +1,14 @@
+@use '../../../styles/abstracts/variables' as v;
+
+.active {
+  color: v.$color-green-dark;
+  background: rgb(244 217 133 / 78%);
+
+  svg {
+    fill: currentColor;
+  }
+}
+
+.pending {
+  opacity: 0.62;
+}

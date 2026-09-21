@@ -1,0 +1,316 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+.main {
+  background:
+    linear-gradient(rgb(246 241 228 / 94%), rgb(246 241 228 / 98%)),
+    radial-gradient(circle at 75% 8%, rgb(232 194 97 / 28%), transparent 32%);
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: v.$color-text-on-dark;
+  background:
+    radial-gradient(circle at 77% 30%, rgb(232 194 97 / 18%), transparent 24%),
+    linear-gradient(125deg, v.$color-green-dark, #00261c 72%);
+  border-bottom: 1px solid rgb(232 194 97 / 32%);
+}
+
+.heroInner {
+  position: relative;
+  min-height: clamp(25rem, 47vw, 38rem);
+  display: flex;
+  align-items: center;
+  padding-block: clamp(4.5rem, 10vw, 8rem);
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 1;
+  max-width: 54rem;
+
+  h1 {
+    max-width: 13ch;
+    margin: 0.7rem 0 1.4rem;
+    color: v.$color-cream;
+    font: 500 clamp(3.7rem, 9vw, 7.8rem) / 0.82 v.$font-heading;
+    letter-spacing: -0.055em;
+  }
+}
+
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+
+.intro {
+  max-width: 44rem;
+  margin: 0;
+  color: v.$color-muted-on-dark;
+  font-size: clamp(0.82rem, 1.4vw, 1rem);
+  line-height: 1.8;
+}
+
+.compass {
+  position: absolute;
+  right: clamp(-8rem, -2vw, -2rem);
+  width: clamp(20rem, 43vw, 39rem);
+  height: auto;
+  color: v.$color-gold;
+  opacity: 0.09;
+  stroke-width: 0.45;
+  transform: rotate(8deg);
+}
+
+.layout {
+  display: grid;
+  gap: clamp(3rem, 7vw, 7rem);
+  padding-block: clamp(4rem, 9vw, 8rem);
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(13rem, 0.27fr) minmax(0, 0.73fr);
+    align-items: start;
+  }
+}
+
+.aside {
+  display: none;
+
+  @include m.from(v.$breakpoint-desktop) {
+    display: block;
+    position: sticky;
+    top: 8.5rem;
+  }
+
+  nav > p {
+    margin: 0 0 1.2rem;
+    color: v.$color-green-dark;
+    font-size: 0.63rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid v.$color-border;
+  }
+
+  li {
+    border-bottom: 1px solid v.$color-border;
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.65rem;
+    align-items: center;
+    padding-block: 0.72rem;
+    color: v.$color-text-muted;
+    font-size: 0.67rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition:
+      color v.$transition-fast,
+      padding-left v.$transition-fast;
+
+    span {
+      color: v.$color-gold;
+      font: 600 0.62rem / 1 v.$font-body;
+    }
+
+    &:hover,
+    &:focus-visible {
+      padding-left: 0.35rem;
+      color: v.$color-green-dark;
+    }
+  }
+}
+
+.content {
+  min-width: 0;
+}
+
+.section {
+  scroll-margin-top: 9rem;
+  padding-bottom: clamp(3.5rem, 8vw, 6.5rem);
+
+  & + & {
+    padding-top: clamp(0.5rem, 2vw, 1.5rem);
+  }
+}
+
+.sectionHeading {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1rem, 3vw, 2rem);
+  align-items: end;
+  margin-bottom: clamp(1.3rem, 3vw, 2.2rem);
+
+  > span {
+    padding-bottom: 0.45rem;
+    color: v.$color-gold;
+    font: 500 clamp(1.9rem, 4vw, 3rem) / 1 v.$font-heading;
+  }
+
+  p {
+    margin: 0 0 0.35rem;
+    color: v.$color-green;
+    font-size: 0.59rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin: 0;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.3rem, 5vw, 4rem) / 0.95 v.$font-heading;
+    letter-spacing: -0.03em;
+  }
+}
+
+.questions {
+  border-top: 1px solid v.$color-border;
+}
+
+.question {
+  border-bottom: 1px solid v.$color-border;
+
+  summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: clamp(1.1rem, 3vw, 1.55rem) 0;
+    color: v.$color-green-dark;
+    font-size: clamp(0.79rem, 1.35vw, 0.94rem);
+    font-weight: 750;
+    line-height: 1.5;
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      color: v.$color-gold;
+      transition: transform v.$transition-base;
+    }
+
+    &:hover {
+      color: v.$color-green;
+    }
+  }
+
+  &[open] {
+    summary svg {
+      transform: rotate(180deg);
+    }
+
+    .answer {
+      animation: reveal-answer 280ms ease-out both;
+    }
+  }
+}
+
+.answer {
+  max-width: 47rem;
+  padding: 0 3.5rem clamp(1.25rem, 3vw, 1.8rem) 0;
+  color: v.$color-text-muted;
+  font-size: clamp(0.73rem, 1.25vw, 0.84rem);
+  line-height: 1.85;
+
+  p {
+    margin: 0;
+
+    & + p {
+      margin-top: 0.7rem;
+    }
+  }
+}
+
+.help {
+  scroll-margin-top: 9rem;
+  display: grid;
+  gap: 2rem;
+  align-items: end;
+  padding: clamp(2rem, 5vw, 4rem);
+  color: v.$color-text-on-dark;
+  background:
+    radial-gradient(circle at 92% 12%, rgb(232 194 97 / 16%), transparent 35%),
+    v.$color-green-dark;
+  border: 1px solid rgb(232 194 97 / 35%);
+  border-radius: v.$radius-small;
+  box-shadow: v.$shadow-soft;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  h2 {
+    margin: 0.45rem 0 0.8rem;
+    color: v.$color-cream;
+    font: 500 clamp(2.8rem, 6vw, 4.8rem) / 0.9 v.$font-heading;
+  }
+
+  p:last-child {
+    max-width: 42rem;
+    margin: 0;
+    color: v.$color-muted-on-dark;
+    font-size: 0.78rem;
+    line-height: 1.75;
+  }
+}
+
+.helpLink {
+  display: inline-flex;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  color: v.$color-green-dark;
+  background: v.$color-gold;
+  border: 1px solid v.$color-gold;
+  border-radius: v.$radius-small;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition:
+    background v.$transition-fast,
+    transform v.$transition-fast;
+
+  svg {
+    width: 1rem;
+  }
+
+  &:hover {
+    background: v.$color-gold-light;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes reveal-answer {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .question[open] .answer {
+    animation: none;
+  }
+}

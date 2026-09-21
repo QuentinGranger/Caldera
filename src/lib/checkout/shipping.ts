@@ -3,6 +3,8 @@ import { Prisma } from '@/generated/prisma/client';
 import { CheckoutError } from './schemas';
 export type ShippingRule = {
   id: string;
+  code: string;
+  type: 'HOME_DELIVERY' | 'EXPRESS' | 'PICKUP';
   name: string;
   description: string | null;
   isActive: boolean;
@@ -46,6 +48,8 @@ export function getAvailableShippingMethods(
     )
     .map((method) => ({
       id: method.id,
+      code: method.code,
+      type: method.type,
       name: method.name,
       description: method.description,
       amount: calculateShipping(method, countryCode, subtotal).toFixed(2),

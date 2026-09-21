@@ -6,6 +6,7 @@ import { cartTokenHash } from '@/lib/cart/identity';
 
 export const checkoutInclude = {
   addresses: true,
+  pickupPoint: true,
 } satisfies Prisma.CheckoutSessionInclude;
 export type CheckoutRecord = Prisma.CheckoutSessionGetPayload<{
   include: typeof checkoutInclude;

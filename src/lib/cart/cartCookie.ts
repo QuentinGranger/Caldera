@@ -13,3 +13,7 @@ export async function setCartCookie(token: string) {
     maxAge: CART_LIFETIME_SECONDS,
   });
 }
+
+export async function clearCartCookie() {
+  (await cookies()).delete(CART_COOKIE_NAME);
+}

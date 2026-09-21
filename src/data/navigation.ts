@@ -5,4 +5,5 @@ export const navigation = [
   { label: 'Cartes', href: '/categorie/cartes' },
   { label: 'Accessoires', href: '/categorie/accessoires' },
   { label: 'Collections', href: '/extensions' },
+  { label: 'Univers', href: '/univers' },
 ];

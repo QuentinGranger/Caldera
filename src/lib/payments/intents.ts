@@ -7,7 +7,11 @@ import {
   orderLog,
   transaction,
 } from '@/lib/orders/common';
-import { stripeGateway, type PaymentGateway } from '@/lib/stripe/stripe';
+import {
+  calderaPaymentMethods,
+  stripeGateway,
+  type PaymentGateway,
+} from '@/lib/stripe/stripe';
 import { toStripeAmount } from '@/lib/stripe/amount';
 import { validateIntent } from './validation';
 
@@ -52,6 +56,10 @@ export async function ensureIntent(
           amount: toStripeAmount(order.totalAmount),
           currency: order.currency.toLowerCase(),
           metadata: { orderId: order.id, orderNumber: order.orderNumber },
+          automatic_payment_methods: { enabled: true },
+          // Apple Pay et Google Pay sont des wallets de carte : Stripe les
+          // propose lorsque le navigateur, le domaine et le client sont éligibles.
+          allowed_payment_method_types: [...calderaPaymentMethods],
         },
         `caldera:order:${order.id}:v1`,
       );

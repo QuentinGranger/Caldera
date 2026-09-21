@@ -37,6 +37,16 @@ export function CheckoutReview({ view }: { view: CheckoutView }) {
             ? 'Offerte'
             : formatPrice(view.shippingAmount ?? '0')}
         </p>
+        {view.pickupPoint && (
+          <div className={styles.reviewPickup}>
+            <strong>{view.pickupPoint.name}</strong>
+            <span>{view.pickupPoint.address1}</span>
+            <span>
+              {view.pickupPoint.postalCode} {view.pickupPoint.city}
+            </span>
+            <small>Point de retrait n° {view.pickupPoint.pointId}</small>
+          </div>
+        )}
         <Link href="/checkout?step=shipping">
           Modifier le mode de livraison
         </Link>

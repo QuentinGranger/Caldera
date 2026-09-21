@@ -14,11 +14,6 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-.demo {
-  color: v.$color-text-muted;
-  font-size: 0.62rem;
-  margin-top: 1.5rem;
-}
 .selection {
   @include m.section;
   background: v.$color-green-dark;

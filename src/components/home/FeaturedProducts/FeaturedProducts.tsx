@@ -71,10 +71,6 @@ export function FeaturedProducts({ products, editorial = false }: Props) {
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-        <p className={styles.demo}>
-          Aperçu de la boutique · Produits, prix et disponibilités présentés à
-          titre de démonstration.
-        </p>
       </Container>
     </section>
   );

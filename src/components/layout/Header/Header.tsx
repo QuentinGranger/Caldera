@@ -3,16 +3,17 @@ import { CartButton } from '@/components/cart/CartButton';
 import Link from 'next/link';
 import { Heart, UserRound } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
-import { IconButton } from '@/components/ui/IconButton/IconButton';
 import { Navigation } from '@/components/layout/Navigation/Navigation';
 import { MobileNavigation } from '@/components/layout/MobileNavigation/MobileNavigation';
 import styles from './Header.module.scss';
 import { HeaderSearch } from '@/components/layout/HeaderSearch/HeaderSearch';
-export function Header() {
+import type { CustomerView } from '@/lib/auth/customer/session';
+import { HeaderChrome } from './HeaderChrome';
+export function Header({ customer }: { customer: CustomerView | null }) {
   return (
-    <header className={styles.header}>
+    <HeaderChrome>
       <Container className={styles.inner}>
-        <MobileNavigation />
+        <MobileNavigation isAuthenticated={Boolean(customer)} />
         <Link
           href="/"
           className={styles.brand}
@@ -23,7 +24,7 @@ export function Header() {
             alt="Les Terres de Caldera"
             width={1774}
             height={887}
-            sizes="(min-width: 1200px) 240px, (min-width: 480px) 210px, 160px"
+            sizes="(min-width: 1200px) 340px, (min-width: 480px) 320px, 168px"
             preload
           />
         </Link>
@@ -34,23 +35,25 @@ export function Header() {
           aria-label="Services de la boutique"
         >
           <HeaderSearch />
-          <IconButton
-            className={styles.desktop}
-            label="Compte — bientôt disponible"
-            disabled
+          <Link
+            className={`${styles.actionItem} ${styles.accountLink} ${styles.desktop}`}
+            href={customer ? '/compte' : '/connexion'}
+            aria-label={customer ? 'Mon compte' : 'Se connecter'}
           >
             <UserRound aria-hidden="true" />
-          </IconButton>
-          <IconButton
-            className={styles.desktop}
-            label="Favoris — bientôt disponibles"
-            disabled
-          >
-            <Heart aria-hidden="true" />
-          </IconButton>
+          </Link>
+          {customer && (
+            <Link
+              className={`${styles.actionItem} ${styles.desktop}`}
+              href="/compte/favoris"
+              aria-label="Mes favoris"
+            >
+              <Heart aria-hidden="true" />
+            </Link>
+          )}
           <CartButton />
         </div>
       </Container>
-    </header>
+    </HeaderChrome>
   );
 }

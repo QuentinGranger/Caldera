@@ -6,6 +6,10 @@ import { AdminError, id, whitelist } from '@/lib/admin/validation';
 import type { AdminActionState } from '@/lib/admin/action-types';
 import { retryEmail, safelyProcessEmails } from '@/lib/email/processor';
 import { saveShipment, transitionFulfillment } from './service';
+import {
+  createMondialRelayShipment,
+  syncMondialRelayTracking,
+} from './mondialRelay';
 function refresh(orderId: string) {
   revalidatePath(`/admin/commandes/${orderId}`);
   revalidatePath('/admin/commandes');
@@ -49,6 +53,48 @@ export async function shipmentAction(
       success: true,
       message: 'Brouillon d’expédition enregistré. Aucun email envoyé.',
     };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
+export async function createMondialRelayShipmentAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    whitelist(form, ['orderId']);
+    const shipment = await createMondialRelayShipment(
+      admin.id,
+      id(form, 'orderId')!,
+    );
+    if (!shipment)
+      throw new AdminError('Expédition Mondial Relay introuvable.');
+    refresh(shipment.orderId);
+    return {
+      success: true,
+      message: 'Expédition Mondial Relay créée. L’étiquette est disponible.',
+    };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
+export async function syncMondialRelayTrackingAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    whitelist(form, ['shipmentId']);
+    const shipment = await syncMondialRelayTracking(
+      admin.id,
+      id(form, 'shipmentId')!,
+      true,
+    );
+    refresh(shipment.orderId);
+    return { success: true, message: 'Suivi Mondial Relay synchronisé.' };
   } catch (error) {
     return failed(error);
   }

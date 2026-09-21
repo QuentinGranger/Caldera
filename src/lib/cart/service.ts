@@ -10,6 +10,7 @@ import {
   validateId,
   validateQuantity,
 } from './validation';
+import { getCurrentCustomer } from '@/lib/auth/customer/session';
 
 type Mutation =
   | { kind: 'add'; variantId: unknown; quantity: unknown }
@@ -35,6 +36,7 @@ export async function mutateCart(
       : undefined;
   const tokenHash = cartTokenHash(token);
   const replacementToken = newCartToken();
+  const currentCustomer = await getCurrentCustomer();
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
       return await getPrisma().$transaction(
@@ -42,7 +44,12 @@ export async function mutateCart(
           let cart = tokenHash
             ? await tx.cart.findUnique({
                 where: { tokenHash },
-                select: { id: true, status: true, expiresAt: true },
+                select: {
+                  id: true,
+                  status: true,
+                  expiresAt: true,
+                  customerId: true,
+                },
               })
             : null;
           let resultToken = token;
@@ -63,16 +70,27 @@ export async function mutateCart(
             cart = await tx.cart.create({
               data: {
                 tokenHash: cartTokenHash(replacementToken)!,
+                customerId: currentCustomer?.id,
                 expiresAt: cartExpiry(),
               },
-              select: { id: true, status: true, expiresAt: true },
+              select: {
+                id: true,
+                status: true,
+                expiresAt: true,
+                customerId: true,
+              },
             });
             resultToken = replacementToken;
           }
           // Every mutation writes this row: competing operations on one cart serialize.
           await tx.cart.update({
             where: { id: cart.id },
-            data: { expiresAt: cartExpiry() },
+            data: {
+              expiresAt: cartExpiry(),
+              ...(currentCustomer && !cart.customerId
+                ? { customerId: currentCustomer.id }
+                : {}),
+            },
           });
           const paymentOrder = await tx.order.findFirst({
             where: {

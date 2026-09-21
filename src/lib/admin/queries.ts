@@ -339,7 +339,12 @@ export async function getAdminOrder(id: string) {
       items: { orderBy: { id: 'asc' } },
       addresses: true,
       payment: true,
-      shipments: { where: { isPrimary: true }, orderBy: { createdAt: 'asc' } },
+      shipments: {
+        where: { isPrimary: true },
+        orderBy: { createdAt: 'asc' },
+        include: { trackingEvents: { orderBy: { occurredAt: 'desc' } } },
+      },
+      pickupPoint: true,
       emails: {
         orderBy: { createdAt: 'asc' },
         select: {
@@ -374,6 +379,8 @@ export async function getAdminOrder(id: string) {
           'SHIPMENT_CREATED',
           'SHIPMENT_UPDATED',
           'SHIPMENT_TRACKING_UPDATED',
+          'MONDIAL_RELAY_SHIPMENT_CREATED',
+          'MONDIAL_RELAY_TRACKING_SYNCED',
         ],
       },
     },

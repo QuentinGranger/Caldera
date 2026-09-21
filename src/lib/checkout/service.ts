@@ -5,12 +5,19 @@ import { cartTokenHash } from '@/lib/cart/identity';
 import { readCheckout } from './queries';
 import { getCheckoutSummary, validateCheckout } from './validation';
 import { CheckoutError, parseContact, parseId } from './schemas';
+import { getCurrentCustomer } from '@/lib/auth/customer/session';
+import type { PickupPoint } from '@/lib/shipping/types';
 
 const CHECKOUT_LIFETIME_MS = 24 * 60 * 60 * 1000;
 type Mutation =
   | { kind: 'start' | 'sync' }
   | { kind: 'contact'; sessionId: unknown; contact: unknown }
   | { kind: 'shipping'; sessionId: unknown; methodId: unknown }
+  | {
+      kind: 'pickup';
+      sessionId: unknown;
+      pickupPoint: PickupPoint;
+    }
   | { kind: 'prepare'; sessionId: unknown };
 export async function mutateCheckout(
   token: string | undefined,
@@ -18,6 +25,7 @@ export async function mutateCheckout(
 ) {
   const hash = cartTokenHash(token);
   if (!hash) throw new CheckoutError('Votre panier est introuvable.');
+  const currentCustomer = await getCurrentCustomer();
   const sessionId =
     'sessionId' in mutation ? parseId(mutation.sessionId) : null;
   const methodId =
@@ -109,17 +117,76 @@ export async function mutateCheckout(
                 where: { id: session.id },
                 data: { status: 'EXPIRED', readyFingerprint: null },
               });
-            if (!session || expired)
+            if (!session || expired) {
+              const defaultShipping = currentCustomer
+                ? await tx.customerAddress.findFirst({
+                    where: {
+                      customerId: currentCustomer.id,
+                      isDefaultShipping: true,
+                    },
+                  })
+                : null;
+              const defaultBilling = currentCustomer
+                ? await tx.customerAddress.findFirst({
+                    where: {
+                      customerId: currentCustomer.id,
+                      isDefaultBilling: true,
+                    },
+                  })
+                : null;
               session = await tx.checkoutSession.create({
                 data: {
                   cartId: data.cart.id,
+                  email: currentCustomer?.email,
+                  phone: currentCustomer?.phone,
+                  ...(defaultShipping
+                    ? {
+                        addresses: {
+                          create: [
+                            {
+                              role: 'SHIPPING',
+                              firstName: defaultShipping.firstName,
+                              lastName: defaultShipping.lastName,
+                              company: defaultShipping.company,
+                              addressLine1: defaultShipping.addressLine1,
+                              addressLine2: defaultShipping.addressLine2,
+                              postalCode: defaultShipping.postalCode,
+                              city: defaultShipping.city,
+                              region: defaultShipping.region,
+                              countryCode: defaultShipping.countryCode,
+                              phone: defaultShipping.phone,
+                            },
+                            ...(defaultBilling &&
+                            defaultBilling.id !== defaultShipping.id
+                              ? [
+                                  {
+                                    role: 'BILLING' as const,
+                                    firstName: defaultBilling.firstName,
+                                    lastName: defaultBilling.lastName,
+                                    company: defaultBilling.company,
+                                    addressLine1: defaultBilling.addressLine1,
+                                    addressLine2: defaultBilling.addressLine2,
+                                    postalCode: defaultBilling.postalCode,
+                                    city: defaultBilling.city,
+                                    region: defaultBilling.region,
+                                    countryCode: defaultBilling.countryCode,
+                                    phone: defaultBilling.phone,
+                                  },
+                                ]
+                              : []),
+                          ],
+                        },
+                      }
+                    : {}),
                   expiresAt: new Date(Date.now() + CHECKOUT_LIFETIME_MS),
                 },
-                include: { addresses: true },
+                include: { addresses: true, pickupPoint: true },
               });
-            return !data.session || expired
-              ? ('contact' as const)
-              : view.requiredStep;
+              return !data.session || expired
+                ? ('contact' as const)
+                : view.requiredStep;
+            }
+            return view.requiredStep;
           }
           if (!session || expired)
             throw new CheckoutError(
@@ -140,6 +207,9 @@ export async function mutateCheckout(
                 readyFingerprint: null,
                 shippingMethodId: null,
                 shippingAmount: null,
+                ...(session.pickupPoint
+                  ? { pickupPoint: { delete: true } }
+                  : {}),
               },
             });
             for (const role of ['SHIPPING', 'BILLING'] as const) {
@@ -175,9 +245,67 @@ export async function mutateCheckout(
                 shippingAmount: method.amount,
                 status: 'IN_PROGRESS',
                 readyFingerprint: null,
+                ...(method.code !== 'MONDIAL_RELAY_PICKUP' &&
+                session.pickupPoint
+                  ? { pickupPoint: { delete: true } }
+                  : {}),
               },
             });
             return 'review' as const;
+          }
+          if (mutation.kind === 'pickup') {
+            if (
+              view.selectedMethod?.code !== 'MONDIAL_RELAY_PICKUP' ||
+              mutation.pickupPoint.countryCode !==
+                view.contact.shipping.countryCode
+            )
+              throw new CheckoutError(
+                'Sélectionnez d’abord la livraison Mondial Relay pour cette destination.',
+              );
+            const point = mutation.pickupPoint;
+            await tx.checkoutSession.update({
+              where: { id: session.id },
+              data: {
+                status: 'IN_PROGRESS',
+                readyFingerprint: null,
+                pickupPoint: {
+                  upsert: {
+                    create: {
+                      provider: point.provider,
+                      pointId: point.id,
+                      type: point.type,
+                      name: point.name,
+                      address1: point.address1,
+                      address2: point.address2,
+                      postalCode: point.postalCode,
+                      city: point.city,
+                      countryCode: point.countryCode,
+                      latitude: point.latitude,
+                      longitude: point.longitude,
+                      distanceM: point.distanceM,
+                      openingHours: point.openingHours ?? undefined,
+                    },
+                    update: {
+                      provider: point.provider,
+                      pointId: point.id,
+                      type: point.type,
+                      name: point.name,
+                      address1: point.address1,
+                      address2: point.address2,
+                      postalCode: point.postalCode,
+                      city: point.city,
+                      countryCode: point.countryCode,
+                      latitude: point.latitude,
+                      longitude: point.longitude,
+                      distanceM: point.distanceM,
+                      openingHours: point.openingHours ?? undefined,
+                      selectedAt: new Date(),
+                    },
+                  },
+                },
+              },
+            });
+            return 'shipping' as const;
           }
           const { view: validated, fingerprint } = validateCheckout(data);
           await tx.checkoutSession.update({

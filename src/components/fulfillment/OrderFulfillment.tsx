@@ -9,6 +9,13 @@ type Tracking = {
   trackingUrl: string | null;
   shippedAt: Date | null;
   deliveredAt: Date | null;
+  providerStatus: string | null;
+  trackingEvents: {
+    id: string;
+    label: string;
+    location: string | null;
+    occurredAt: Date | null;
+  }[];
 };
 export function OrderFulfillment({
   order,
@@ -22,6 +29,14 @@ export function OrderFulfillment({
     shippedAt: Date | null;
     deliveredAt: Date | null;
     shipments: Tracking[];
+    pickupPoint: {
+      pointId: string;
+      name: string;
+      address1: string;
+      address2: string | null;
+      postalCode: string;
+      city: string;
+    } | null;
   };
 }) {
   if (order.status !== 'PAID') return null;
@@ -70,6 +85,36 @@ export function OrderFulfillment({
               Suivre mon colis ↗
             </a>
           )}
+          {shipment.providerStatus && <p>{shipment.providerStatus}</p>}
+          {shipment.trackingEvents.length > 0 && (
+            <ol className={styles.events}>
+              {shipment.trackingEvents.map((event) => (
+                <li key={event.id}>
+                  <strong>{event.label}</strong>
+                  {event.location && <span>{event.location}</span>}
+                  {event.occurredAt && (
+                    <time dateTime={event.occurredAt.toISOString()}>
+                      {formatDate(event.occurredAt)}
+                    </time>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+      {order.pickupPoint && (
+        <div className={styles.pickup}>
+          <h3>Votre point de retrait</h3>
+          <strong>{order.pickupPoint.name}</strong>
+          <span>{order.pickupPoint.address1}</span>
+          {order.pickupPoint.address2 && (
+            <span>{order.pickupPoint.address2}</span>
+          )}
+          <span>
+            {order.pickupPoint.postalCode} {order.pickupPoint.city}
+          </span>
+          <small>Point n° {order.pickupPoint.pointId}</small>
         </div>
       )}
       <p className={styles.note}>

@@ -70,7 +70,35 @@ export function buildCatalogWhere(
         { name: { contains, mode: 'insensitive' } },
         { shortDescription: { contains, mode: 'insensitive' } },
         { slug: { contains, mode: 'insensitive' } },
-        { tcgSet: { name: { contains, mode: 'insensitive' } } },
+        {
+          category: {
+            OR: [
+              { name: { contains, mode: 'insensitive' } },
+              { slug: { contains, mode: 'insensitive' } },
+            ],
+          },
+        },
+        {
+          tcgSet: {
+            OR: [
+              { name: { contains, mode: 'insensitive' } },
+              { slug: { contains, mode: 'insensitive' } },
+              { code: { contains, mode: 'insensitive' } },
+              { series: { contains, mode: 'insensitive' } },
+            ],
+          },
+        },
+        {
+          variants: {
+            some: {
+              isActive: true,
+              OR: [
+                { sku: { contains, mode: 'insensitive' } },
+                { barcode: { contains, mode: 'insensitive' } },
+              ],
+            },
+          },
+        },
       ],
     });
   }
@@ -110,6 +138,7 @@ export async function getCatalogProducts(
     variants: {
       where: variant,
       select: {
+        id: true,
         sku: true,
         price: true,
         compareAtPrice: true,

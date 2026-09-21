@@ -1,6 +1,6 @@
 # Les Terres de Caldera
 
-Storefront Next.js / PostgreSQL pour une boutique de collection Pokémon TCG. **Phase 8 : commandes, paiement Stripe TEST et réservations atomiques**, alimenté par un seed de développement explicitement fictif. La direction artistique SCSS de la phase 2 est conservée.
+Storefront Next.js / PostgreSQL pour une boutique de collection Pokémon TCG. **Phase 11 : espace client, commandes, paiement Stripe TEST et réservations atomiques**, alimenté par un seed de développement explicitement fictif. La direction artistique SCSS de la phase 2 est conservée.
 
 Le [compte rendu de phase 8](docs/phase-8.md) détaille les commandes, paiements et tests ; le [plan Stripe](docs/stripe-integration-plan.md) couvre Payments, Tax et Invoicing. Le [compte rendu de phase 7](docs/phase-7.md) détaille le checkout et ses validations. Le [compte rendu de phase 6](docs/phase-6.md) détaille le panier et ses tests. Le [compte rendu de phase 5](docs/phase-5.md) détaille les fichiers et les validations. Le [document de phase 4](docs/phase-4.md) décrit la navigation du catalogue. Le [document de phase 3](docs/phase-3.md) décrit la mise en place du modèle de données. Le [document de phase 2](docs/phase-2.md) reste un historique de cette étape.
 
@@ -244,6 +244,22 @@ Les tests HTTP couvrent la sélection par URL, le HTML des contrôles, les capac
 
 ## Vérifications
 
+## Comptes clients
+
+La phase 11 ajoute un espace client indépendant de l’administration :
+
+Les migrations additives `20260920221159_customer_accounts`, `20260920223342_customer_login_rate_limit` et `20260920223918_customer_email_outbox` créent `Customer`, `CustomerSession`, `CustomerAuthToken`, `CustomerAddress`, la file `CustomerEmailDelivery` et le compteur de tentatives, puis ajoutent les relations nullable `Order.customerId` et `Cart.customerId`. Elles ne suppriment aucune donnée guest et ne cascade jamais la suppression d’un client vers les commandes.
+
+- `/inscription`, `/connexion`, `/mot-de-passe-oublie` et `/reinitialiser-mot-de-passe` utilisent une session serveur `HttpOnly` (`caldera_customer_session`) et un mot de passe dérivé avec `scrypt` ; aucun secret n’est placé dans `localStorage`.
+- Les emails de vérification, de changement d’adresse et de réinitialisation sont placés dans `CustomerEmailDelivery`, puis envoyés par le worker `npm run emails:process` via les clés Resend déjà documentées par `EMAILS_ENABLED`, `EMAIL_PROVIDER_API_KEY`, `EMAIL_FROM` et `EMAIL_TEST_RECIPIENT`. Les tokens sont aléatoires, hashés en base, à usage unique et expirent.
+- `/compte`, `/compte/profil`, `/compte/adresses`, `/compte/commandes` et `/compte/securite` sont rendus à la demande, protégés par la session client et marqués `noindex`. Les autorisations sont toujours contrôlées côté serveur avec l’ID de la session ; les IDs transmis par le navigateur ne servent jamais d’autorisation.
+- `CustomerAddress` est distinct d’`OrderAddress`. Une adresse peut être définie par défaut pour la livraison et/ou la facturation ; la mise à jour de ces marqueurs est transactionnelle. Les snapshots d’une commande passée ne changent jamais.
+- Les connexions sont limitées par fenêtres persistées (globalement et par empreinte d’adresse email) afin de ralentir les tentatives répétées sans exposer l’existence d’un compte.
+- `Order.customerId` et `Cart.customerId` sont nullable afin de préserver les commandes et paniers invités. Une commande invitée ne peut être rattachée qu’après vérification de l’email, avec une mise à jour limitée aux commandes sans client dont l’email correspond sans distinction de casse.
+- À la connexion, le panier invité et le panier actif du client sont fusionnés dans une transaction. Les lignes identiques sont additionnées puis limitées à la disponibilité et à `MAX_CART_ITEM_QUANTITY`; un seul panier actif est conservé et le cookie reste HTTP-only. Le checkout invité reste disponible et les adresses par défaut d’un client sont proposées comme valeurs initiales, modifiables avant paiement.
+
+Les fonctionnalités wishlist, fidélité, SAV, retours, factures et authentification sociale ne font pas partie de cette phase.
+
 ```bash
 npm run lint
 npm run typecheck
@@ -399,7 +415,7 @@ stripe listen --events payment_intent.succeeded,payment_intent.processing,paymen
 
 Copier le secret `whsec_` affiché par cette commande dans `STRIPE_WEBHOOK_SECRET`, puis redémarrer Next.js. Le secret CLI est propre à cette écoute : ne pas le confondre avec celui d’un endpoint Dashboard. Le webhook est obligatoire. Le serveur vérifie la signature sur le corps brut, refuse le mode live et relit l’état du PaymentIntent avant traitement. Réponse 400 pour signature invalide, 500 pour traitement à réessayer, 200 pour succès ou doublon. Les appels réseau Stripe restent hors transaction SQL.
 
-Parcours : ajouter un article disponible → `/checkout` → coordonnées → livraison → récapitulatif → « Continuer vers le paiement » → `/checkout/paiement/[publicId]` → Payment Element → `confirmPayment` → `/commande/[publicId]`. Le Payment Element gère données bancaires et authentification 3DS ; aucun champ bancaire maison ni donnée carte enregistrée. Moyens de paiement dynamiques selon le Dashboard ; Apple Pay / Google Pay dépendent de la configuration et ne sont pas déclarés testés.
+Parcours : ajouter un article disponible → `/checkout` → coordonnées → livraison → récapitulatif → « Continuer vers le paiement » → `/checkout/paiement/[publicId]` → Payment Element → `confirmPayment` → `/commande/[publicId]`. Les méthodes autorisées par Caldera sont la carte bancaire, PayPal et Klarna ; Apple Pay et Google Pay peuvent être proposés en tant que wallets de carte si le domaine, le navigateur et le client sont éligibles. Bancontact, Amazon Pay, MB WAY, Satispay, EPS et les autres moyens dynamiques sont exclus de chaque PaymentIntent. Aucun champ bancaire maison ni donnée carte enregistrée.
 
 `Order.checkoutSessionId` unique empêche plusieurs commandes par session. Le numéro `CAL-année-20 caractères hexadécimaux` utilise 80 bits aléatoires et une contrainte UNIQUE, sans compteur concurrent. `publicId` utilise 256 bits aléatoires. L’accès exige également le cookie du panier propriétaire, y compris après conversion. **Après suppression/remplacement de ce cookie (notamment un nouvel ajout après achat), l’ancienne URL devient inaccessible dans ce navigateur** ; l’historique client / un lien d’accès durable sont hors périmètre.
 
@@ -632,7 +648,7 @@ Le détail `/admin/commandes/[id]` expose seulement l’action suivante autoris�
 
 `Order` possède 0..n `Shipment`, mais l’interface traite un seul colis principal, protégé par un index unique partiel. Statuts : `DRAFT`, `SHIPPED`, `DELIVERED`. Les dates d’expédition et livraison sont écrites uniquement lors de leurs transitions ; celles de préparation sont conservées sur la commande. Il n’y a pas de moteur d’envois partiels.
 
-Transporteurs centralisés : Colissimo, Mondial Relay, Chronopost, UPS, DHL, Autre. **Aucune API transporteur connectée.** Le numéro est une chaîne trimée, limitée à 100 caractères ; les zéros initiaux sont conservés. Les transporteurs prédéfinis exigent un suivi. Pour un envoi réellement non suivi, choisir Autre, donner son nom et décocher Envoi suivi : pas de numéro ni de faux lien. L’URL est saisie manuellement, validée HTTP(S), sans identifiants ; aucun format de lien n’est inventé.
+Transporteurs centralisés : Colissimo, Mondial Relay, Chronopost, UPS, DHL, Autre. Mondial Relay dispose désormais d’une intégration dédiée pour le choix du point, la création de l’expédition, l’étiquette et le suivi. Les autres transporteurs restent manuels. Le numéro est une chaîne trimée, limitée à 100 caractères ; les zéros initiaux sont conservés.
 
 Un brouillon reste modifiable avec détection de version concurrente. Après expédition, seule l’action explicite **Corriger le suivi**, avec motif obligatoire, modifie les données de suivi et produit un audit ; elle ne change pas `shippedAt`, ne crée aucun second email et ne réécrit pas le snapshot de l’email original. Le client voit les informations corrigées sur sa page de commande.
 
@@ -656,3 +672,5 @@ npm run test:payments:http
 ```
 
 Recette et inventaire exact des fichiers : [docs/phase-10.md](docs/phase-10.md). Les tests email utilisent un fournisseur simulé : aucun email Resend réel n’a été envoyé. Restent la configuration du fournisseur, la réception sur une adresse choisie, la vérification visuelle desktop/mobile et l’aperçu d’impression dans un navigateur. Ne pas lancer `next dev` pendant `next build`.
+
+Configuration, architecture et recette Mondial Relay : [docs/mondial-relay.md](docs/mondial-relay.md).

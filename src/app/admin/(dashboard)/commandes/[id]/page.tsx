@@ -134,6 +134,28 @@ export default async function OrderAdminPage({
         </small>
       </section>
       <FulfillmentPanel order={order} />
+      {order.pickupPoint && (
+        <section className={styles.card}>
+          <h2>Point de retrait Mondial Relay</h2>
+          <p>
+            <strong>{order.pickupPoint.name}</strong> · n°{' '}
+            {order.pickupPoint.pointId}
+          </p>
+          <address>
+            {order.pickupPoint.address1}
+            {order.pickupPoint.address2 && (
+              <>
+                <br />
+                {order.pickupPoint.address2}
+              </>
+            )}
+            <br />
+            {order.pickupPoint.postalCode} {order.pickupPoint.city}
+            <br />
+            {order.pickupPoint.countryCode}
+          </address>
+        </section>
+      )}
       <div className={styles.grid}>
         {order.addresses.map((address) => (
           <section className={styles.card} key={address.id}>

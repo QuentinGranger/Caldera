@@ -56,6 +56,7 @@ export function checkoutFingerprint(data: CheckoutData, view: CheckoutView) {
           issue: i.issue,
         })),
         shipping: view.selectedMethod,
+        pickupPoint: view.pickupPoint,
         methodVersion: data.methods.find(
           (m) => m.id === view.selectedMethod?.id,
         )?.updatedAt,
@@ -98,6 +99,27 @@ export function getCheckoutSummary(data: CheckoutData): CheckoutView {
   const selectedMethod =
     methods.find((method) => method.id === session?.shippingMethodId) ?? null;
   const shippingAmount = selectedMethod?.amount ?? null;
+  const pickupPoint =
+    selectedMethod?.code === 'MONDIAL_RELAY_PICKUP' && session?.pickupPoint
+      ? {
+          provider: session.pickupPoint.provider,
+          pointId: session.pickupPoint.pointId,
+          type: session.pickupPoint.type,
+          name: session.pickupPoint.name,
+          address1: session.pickupPoint.address1,
+          address2: session.pickupPoint.address2,
+          postalCode: session.pickupPoint.postalCode,
+          city: session.pickupPoint.city,
+          countryCode: session.pickupPoint.countryCode,
+          latitude: session.pickupPoint.latitude?.toString() ?? null,
+          longitude: session.pickupPoint.longitude?.toString() ?? null,
+          distanceM: session.pickupPoint.distanceM,
+          openingHours: session.pickupPoint.openingHours as Record<
+            string,
+            string[]
+          > | null,
+        }
+      : null;
   const view: CheckoutView = {
     sessionId: session?.id ?? null,
     status: expired ? 'EXPIRED' : 'IN_PROGRESS',
@@ -105,6 +127,7 @@ export function getCheckoutSummary(data: CheckoutData): CheckoutView {
     countries,
     methods,
     selectedMethod,
+    pickupPoint,
     cart,
     shippingAmount,
     total:
@@ -113,7 +136,9 @@ export function getCheckoutSummary(data: CheckoutData): CheckoutView {
       ? 'contact'
       : !selectedMethod
         ? 'shipping'
-        : 'review',
+        : selectedMethod.code === 'MONDIAL_RELAY_PICKUP' && !pickupPoint
+          ? 'shipping'
+          : 'review',
     blocked,
     notice: blocked
       ? 'Votre panier a changé depuis le début de votre commande. Vérifiez votre panier avant de poursuivre.'
@@ -157,5 +182,7 @@ export function validateCheckout(data: CheckoutData) {
   );
   if (!view.selectedMethod)
     throw new CheckoutError('Choisissez un mode de livraison disponible.');
+  if (view.selectedMethod.code === 'MONDIAL_RELAY_PICKUP' && !view.pickupPoint)
+    throw new CheckoutError('Choisissez un Point Relais® ou un Locker.');
   return { view, fingerprint: checkoutFingerprint(data, view) };
 }

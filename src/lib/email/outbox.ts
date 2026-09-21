@@ -16,6 +16,7 @@ export async function enqueueOrderEmail(
       items: { orderBy: { id: 'asc' } },
       addresses: true,
       shipments: { where: { isPrimary: true } },
+      pickupPoint: true,
     },
   });
   if (order.status !== 'PAID' || order.payment?.status !== 'SUCCEEDED')
@@ -62,6 +63,18 @@ export async function enqueueOrderEmail(
             trackingUrl: shipment.trackingUrl,
           }
         : null,
+    pickupPoint: order.pickupPoint
+      ? {
+          pointId: order.pickupPoint.pointId,
+          name: order.pickupPoint.name,
+          address: [
+            order.pickupPoint.address1,
+            order.pickupPoint.address2,
+            `${order.pickupPoint.postalCode} ${order.pickupPoint.city}`,
+            order.pickupPoint.countryCode,
+          ].filter((line): line is string => Boolean(line)),
+        }
+      : null,
   };
   return tx.emailDelivery.create({
     data: { orderId, type, recipient: order.email, snapshot },

@@ -1,0 +1,410 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+.main {
+  background: v.$color-background;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: v.$color-text-on-dark;
+  background:
+    radial-gradient(circle at 78% 22%, rgb(232 194 97 / 19%), transparent 28%),
+    linear-gradient(125deg, v.$color-green-dark, #00261c 70%);
+  border-bottom: 1px solid rgb(232 194 97 / 30%);
+}
+
+.heroInner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: clamp(25rem, 48vw, 38rem);
+  padding-block: clamp(4.5rem, 10vw, 8rem);
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 2;
+  max-width: 48rem;
+
+  h1 {
+    margin: 0.7rem 0 1.3rem;
+    color: v.$color-cream;
+    font: 500 clamp(4.2rem, 11vw, 8.5rem) / 0.8 v.$font-heading;
+    letter-spacing: -0.055em;
+  }
+
+  > p:last-child {
+    max-width: 42rem;
+    margin: 0;
+    color: v.$color-muted-on-dark;
+    font-size: clamp(0.82rem, 1.4vw, 1rem);
+    line-height: 1.85;
+  }
+}
+
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+
+.route,
+.compass {
+  position: absolute;
+  color: v.$color-gold;
+  pointer-events: none;
+}
+
+.route {
+  right: clamp(2rem, 10vw, 10rem);
+  width: clamp(15rem, 30vw, 27rem);
+  height: auto;
+  opacity: 0.085;
+  stroke-width: 0.55;
+  transform: rotate(-8deg);
+}
+
+.compass {
+  right: -6rem;
+  bottom: -8rem;
+  width: clamp(17rem, 31vw, 29rem);
+  height: auto;
+  opacity: 0.055;
+  stroke-width: 0.5;
+}
+
+.content {
+  padding-block: clamp(4rem, 9vw, 8rem);
+}
+
+.sectionHeading {
+  max-width: 48rem;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+
+  h2 {
+    margin: 0.55rem 0 0.8rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.8rem, 6vw, 5rem) / 0.9 v.$font-heading;
+    letter-spacing: -0.035em;
+  }
+
+  > p:last-child {
+    margin: 0;
+    color: v.$color-text-muted;
+    font-size: 0.78rem;
+    line-height: 1.75;
+  }
+}
+
+.methods,
+.journey {
+  padding-bottom: clamp(5rem, 10vw, 9rem);
+}
+
+.methodGrid {
+  display: grid;
+  gap: 1rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.methodCard {
+  position: relative;
+  min-width: 0;
+  padding: clamp(1.6rem, 4vw, 3rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-top: 3px solid v.$color-gold;
+  box-shadow: v.$shadow-soft;
+
+  h3 {
+    max-width: 17ch;
+    margin: 0.6rem 0 0.9rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2rem, 4vw, 3rem) / 0.95 v.$font-heading;
+  }
+
+  > p:not(.methodNumber, .delay) {
+    color: v.$color-text-muted;
+    font-size: 0.76rem;
+    line-height: 1.7;
+  }
+
+  ul {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1.5rem 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    color: v.$color-text;
+    font-size: 0.7rem;
+    line-height: 1.5;
+
+    svg {
+      flex: 0 0 auto;
+      width: 1rem;
+      color: v.$color-green-secondary;
+    }
+  }
+}
+
+.methodIcon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1.5rem;
+  color: v.$color-gold;
+  background: v.$color-green-dark;
+  border-radius: 50%;
+
+  svg {
+    width: 1.35rem;
+  }
+}
+
+.methodNumber {
+  margin: 0;
+  color: v.$color-green-secondary;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.delay {
+  margin: 0;
+  padding-top: 1.15rem;
+  color: v.$color-green-dark;
+  border-top: 1px solid v.$color-border;
+  font-size: 0.68rem;
+}
+
+.journey {
+  counter-reset: journey;
+}
+
+.journeyGrid {
+  display: grid;
+  border-top: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  article {
+    position: relative;
+    padding: clamp(1.5rem, 4vw, 2.7rem) clamp(0rem, 3vw, 2rem);
+    border-bottom: 1px solid v.$color-border;
+
+    @include m.from(v.$breakpoint-tablet) {
+      border-right: 1px solid v.$color-border;
+
+      &:last-child {
+        border-right: 0;
+      }
+    }
+
+    > span {
+      display: block;
+      color: v.$color-gold;
+      font: 500 2rem / 1 v.$font-heading;
+    }
+
+    > svg {
+      width: 1.55rem;
+      margin-block: 1.7rem 1rem;
+      color: v.$color-green-secondary;
+      stroke-width: 1.4;
+    }
+
+    h3 {
+      margin: 0 0 1rem;
+      color: v.$color-green-dark;
+      font: 500 1.85rem / 1 v.$font-heading;
+    }
+
+    p {
+      color: v.$color-text-muted;
+      font-size: 0.7rem;
+      line-height: 1.75;
+    }
+  }
+}
+
+.infoGrid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: clamp(4rem, 8vw, 7rem);
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+.infoCard {
+  padding: clamp(1.6rem, 4vw, 3rem);
+  background: v.$color-background-secondary;
+  border: 1px solid v.$color-border;
+
+  > svg {
+    width: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: v.$color-green-secondary;
+    stroke-width: 1.35;
+  }
+
+  h2 {
+    margin: 0.45rem 0 1rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.2rem, 4vw, 3.2rem) / 0.95 v.$font-heading;
+  }
+
+  p,
+  li,
+  > strong {
+    color: v.$color-text-muted;
+    font-size: 0.72rem;
+    line-height: 1.75;
+  }
+
+  ul {
+    padding-left: 1.2rem;
+  }
+
+  > strong {
+    color: v.$color-green-dark;
+  }
+}
+
+.issue {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: clamp(4rem, 8vw, 7rem);
+  padding: clamp(1.8rem, 5vw, 4rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  box-shadow: v.$shadow-soft;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  h2 {
+    max-width: 20ch;
+    margin: 0.5rem 0 1rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.4rem, 5vw, 4rem) / 0.92 v.$font-heading;
+  }
+
+  p:not(.eyebrow) {
+    max-width: 48rem;
+    color: v.$color-text-muted;
+    font-size: 0.74rem;
+    line-height: 1.8;
+  }
+
+  a {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.8rem;
+    color: v.$color-green;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+
+    svg {
+      width: 1rem;
+    }
+  }
+}
+
+.issueIcon {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  color: v.$color-gold;
+  background: v.$color-green-dark;
+  border-radius: 50%;
+
+  svg {
+    width: 1.8rem;
+  }
+}
+
+.zone {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+  padding: clamp(2rem, 5vw, 4rem);
+  color: v.$color-text-on-dark;
+  background:
+    radial-gradient(circle at 88% 10%, rgb(232 194 97 / 16%), transparent 30%),
+    v.$color-green-dark;
+  border: 1px solid rgb(232 194 97 / 34%);
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 2.5rem;
+  }
+
+  > svg {
+    width: 2.5rem;
+    color: v.$color-gold;
+    stroke-width: 1.2;
+  }
+
+  h2 {
+    margin: 0.4rem 0 0.65rem;
+    color: v.$color-cream;
+    font: 500 clamp(2.4rem, 5vw, 4rem) / 0.9 v.$font-heading;
+  }
+
+  p:last-child {
+    max-width: 45rem;
+    margin: 0;
+    color: v.$color-muted-on-dark;
+    font-size: 0.72rem;
+    line-height: 1.75;
+  }
+
+  a {
+    display: inline-flex;
+    gap: 0.55rem;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0.7rem 1rem;
+    color: v.$color-green-dark;
+    background: v.$color-gold;
+    border-radius: v.$radius-small;
+    font-size: 0.67rem;
+    font-weight: 800;
+    text-decoration: none;
+
+    svg {
+      width: 1rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .methodCard,
+  .issue,
+  .zone {
+    scroll-behavior: auto;
+  }
+}

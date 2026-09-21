@@ -33,8 +33,7 @@
   color: v.$color-gold;
 }
 
-.mainLinks,
-.universeLinks {
+.mainLinks {
   padding: 0;
   list-style: none;
 }
@@ -59,82 +58,6 @@
   }
 }
 
-.universeGroup {
-  padding-bottom: 0.4rem;
-}
-
-.universeHeading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-
-  h2 {
-    margin-top: 0.25rem;
-    color: v.$color-cream;
-    font: 500 2rem/1 v.$font-heading;
-  }
-}
-
-.allUniverse {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 40px;
-  padding-bottom: 0.2rem;
-  color: v.$color-gold-light;
-  border-bottom: 1px solid rgb(244 217 133 / 48%);
-  font-size: 0.64rem;
-  font-weight: 750;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.universeLinks {
-  margin: 1rem 0 0;
-  border-top: 1px solid v.$color-border-on-dark;
-
-  li {
-    border-bottom: 1px solid v.$color-border-on-dark;
-  }
-
-  a {
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    gap: 0.75rem;
-    align-items: center;
-    min-height: 68px;
-    padding-block: 0.7rem;
-    color: v.$color-text-on-dark;
-    text-decoration: none;
-  }
-}
-
-.chapterNumber {
-  color: v.$color-gold-light;
-  font: 500 0.85rem/1 v.$font-heading;
-}
-
-.chapterCopy {
-  display: grid;
-  gap: 0.12rem;
-
-  strong {
-    color: v.$color-cream;
-    font-size: 0.78rem;
-  }
-
-  small {
-    color: v.$color-muted-on-dark;
-    font-size: 0.57rem;
-    line-height: 1.4;
-  }
-}
-
-.universeLinks a > svg {
-  color: v.$color-gold-light;
-}
-
 .signature {
   display: block;
   margin-top: 1.8rem;
@@ -149,9 +72,5 @@
 
   .mainLinks a {
     font-size: 1.4rem;
-  }
-
-  .universeHeading h2 {
-    font-size: 1.8rem;
   }
 }

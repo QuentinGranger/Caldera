@@ -1,13 +1,16 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Menu, X } from 'lucide-react';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { navigation } from '@/data/navigation';
-import { universeChapters } from '@/data/universe';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import styles from './MobileNavigation.module.scss';
 
-export function MobileNavigation() {
+export function MobileNavigation({
+  isAuthenticated = false,
+}: {
+  isAuthenticated?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -79,44 +82,23 @@ export function MobileNavigation() {
                 </Link>
               </li>
             ))}
-          </ul>
-        </section>
-
-        <section
-          className={`${styles.group} ${styles.universeGroup}`}
-          aria-labelledby="mobile-universe-heading"
-        >
-          <div className={styles.universeHeading}>
-            <div>
-              <p className={styles.eyebrow}>Explorer Caldera</p>
-              <h2 id="mobile-universe-heading">Univers</h2>
-            </div>
-            <Link
-              href="/univers"
-              className={styles.allUniverse}
-              onClick={() => setOpen(false)}
-            >
-              Tout voir
-              <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          </div>
-
-          <ul className={styles.universeLinks}>
-            {universeChapters.map((chapter) => (
-              <li key={chapter.slug}>
-                <Link
-                  href={`/univers/${chapter.slug}`}
-                  onClick={() => setOpen(false)}
-                >
-                  <span className={styles.chapterNumber}>{chapter.number}</span>
-                  <span className={styles.chapterCopy}>
-                    <strong>{chapter.title}</strong>
-                    <small>{chapter.label}</small>
-                  </span>
-                  <ArrowUpRight size={15} aria-hidden="true" />
+            <li>
+              <Link
+                href={isAuthenticated ? '/compte' : '/connexion'}
+                onClick={() => setOpen(false)}
+              >
+                {isAuthenticated ? 'Mon compte' : 'Connexion'}
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </Link>
+            </li>
+            {isAuthenticated && (
+              <li>
+                <Link href="/compte/favoris" onClick={() => setOpen(false)}>
+                  Mes favoris
+                  <ArrowUpRight size={17} aria-hidden="true" />
                 </Link>
               </li>
-            ))}
+            )}
           </ul>
         </section>
 

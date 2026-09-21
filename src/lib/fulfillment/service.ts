@@ -72,6 +72,14 @@ export async function transitionFulfillment(adminId: string, form: FormData) {
         throw new AdminError(
           'Transporteur et numéro de suivi requis pour cet envoi suivi.',
         );
+      if (
+        next === 'SHIPPED' &&
+        shipment.carrierCode === 'MONDIAL_RELAY' &&
+        !shipment.providerShipmentId
+      )
+        throw new AdminError(
+          'Créez d’abord l’expédition officielle Mondial Relay.',
+        );
       await tx.shipment.update({
         where: { id: shipment.id },
         data: {

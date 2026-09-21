@@ -260,6 +260,21 @@ async function main() {
   }
   for (const method of [
     {
+      code: 'MONDIAL_RELAY_PICKUP',
+      name: 'Mondial Relay — Point Relais® ou Locker',
+      type: 'PICKUP' as const,
+      price: '0.00',
+      freeFromAmount: null,
+      estimatedMinDays: null,
+      estimatedMaxDays: null,
+      sortOrder: 0,
+      countries: ['FR'],
+      isActive: false,
+      isDevelopment: false,
+      description:
+        'À configurer avec le tarif et les délais de votre contrat avant activation.',
+    },
+    {
       code: 'DEV-STANDARD',
       name: '[Démo] Livraison standard',
       type: 'HOME_DELIVERY' as const,
@@ -267,8 +282,12 @@ async function main() {
       freeFromAmount: '150.00',
       estimatedMinDays: 2,
       estimatedMaxDays: 4,
-      sortOrder: 0,
+      sortOrder: 10,
       countries: ['FR', 'BE'],
+      isActive: true,
+      isDevelopment: true,
+      description:
+        'Tarif et délai de démonstration, sans contrat transporteur.',
     },
     {
       code: 'DEV-EXPRESS',
@@ -278,8 +297,12 @@ async function main() {
       freeFromAmount: null,
       estimatedMinDays: 1,
       estimatedMaxDays: 2,
-      sortOrder: 1,
+      sortOrder: 20,
       countries: ['FR'],
+      isActive: true,
+      isDevelopment: true,
+      description:
+        'Tarif et délai de démonstration, sans contrat transporteur.',
     },
   ]) {
     const { countries, ...fields } = method;
@@ -288,9 +311,6 @@ async function main() {
       update: {},
       create: {
         ...fields,
-        description:
-          'Tarif et délai de démonstration, sans contrat transporteur.',
-        isDevelopment: true,
         countries: { connect: countries.map((code) => ({ code })) },
       },
     });

@@ -61,6 +61,18 @@ export default async function PackingSlipPage({
           {address.countryCode}
         </address>
       )}
+      {order.pickupPoint && (
+        <section>
+          <h2>Point de retrait</h2>
+          <p>
+            {order.pickupPoint.name} — {order.pickupPoint.pointId}
+            <br />
+            {order.pickupPoint.address1}
+            <br />
+            {order.pickupPoint.postalCode} {order.pickupPoint.city}
+          </p>
+        </section>
+      )}
       <div className={styles.tableWrapper}>
         <table>
           <caption>Articles à préparer</caption>

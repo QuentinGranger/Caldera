@@ -13,6 +13,7 @@ import {
   STORE_CURRENCY,
 } from './common';
 import { toStripeAmount } from '@/lib/stripe/amount';
+import { getCurrentCustomer } from '@/lib/auth/customer/session';
 
 export async function prepareOrder(
   token: string | undefined,
@@ -21,6 +22,7 @@ export async function prepareOrder(
   const sessionId = parseId(rawSessionId),
     hash = cartTokenHash(token);
   if (!hash) throw new OrderError('Votre panier est introuvable.');
+  const customer = await getCurrentCustomer();
   return transaction(async (tx) => {
     const cart = await tx.cart.findUnique({ where: { tokenHash: hash } });
     if (!cart) throw new OrderError('Votre panier est introuvable.');
@@ -85,6 +87,7 @@ export async function prepareOrder(
         publicId: randomBytes(32).toString('hex'),
         orderNumber: `CAL-${new Date().getUTCFullYear()}-${randomBytes(10).toString('hex').toUpperCase()}`,
         checkoutSessionId: sessionId,
+        customerId: customer?.id,
         email: contact.email,
         phone: contact.phone || null,
         currency: STORE_CURRENCY,
@@ -116,6 +119,28 @@ export async function prepareOrder(
             },
           ],
         },
+        ...(view.pickupPoint
+          ? {
+              pickupPoint: {
+                create: {
+                  provider: view.pickupPoint.provider,
+                  pointId: view.pickupPoint.pointId,
+                  type: view.pickupPoint.type,
+                  name: view.pickupPoint.name,
+                  address1: view.pickupPoint.address1,
+                  address2: view.pickupPoint.address2,
+                  postalCode: view.pickupPoint.postalCode,
+                  city: view.pickupPoint.city,
+                  countryCode: view.pickupPoint.countryCode,
+                  latitude: view.pickupPoint.latitude,
+                  longitude: view.pickupPoint.longitude,
+                  distanceM: view.pickupPoint.distanceM,
+                  openingHours: view.pickupPoint.openingHours ?? undefined,
+                  selectedAt: data.session.pickupPoint!.selectedAt,
+                },
+              },
+            }
+          : {}),
         reservations: {
           create: data.cart.items.map((i) => ({
             variantId: i.variantId,

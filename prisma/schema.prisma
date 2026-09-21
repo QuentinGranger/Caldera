@@ -65,6 +65,7 @@ model Product {
   images           ProductImage[]
   tags             Tag[]
   orderItems       OrderItem[]
+  wishlistItems    WishlistItem[]
 
   @@index([status])
   @@index([productType])
@@ -163,17 +164,20 @@ enum CartStatus {
 }
 
 model Cart {
-  id        String            @id @default(uuid()) @db.Uuid
-  tokenHash String            @unique @db.Char(64)
-  status    CartStatus        @default(ACTIVE)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  expiresAt DateTime
-  items     CartItem[]
-  checkouts CheckoutSession[]
+  id         String            @id @default(uuid()) @db.Uuid
+  tokenHash  String            @unique @db.Char(64)
+  customerId String?           @db.Uuid
+  customer   Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  status     CartStatus        @default(ACTIVE)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  expiresAt  DateTime
+  items      CartItem[]
+  checkouts  CheckoutSession[]
 
   @@index([status])
   @@index([expiresAt])
+  @@index([customerId, status])
 }
 
 model CartItem {
@@ -205,29 +209,60 @@ enum CheckoutAddressRole {
 enum ShippingMethodType {
   HOME_DELIVERY
   EXPRESS
+  PICKUP
 }
 
 model CheckoutSession {
-  id               String            @id @default(uuid()) @db.Uuid
-  cartId           String            @db.Uuid
-  cart             Cart              @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  status           CheckoutStatus    @default(IN_PROGRESS)
+  id               String               @id @default(uuid()) @db.Uuid
+  cartId           String               @db.Uuid
+  cart             Cart                 @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  status           CheckoutStatus       @default(IN_PROGRESS)
   email            String?
   phone            String?
-  billingSame      Boolean           @default(true)
-  shippingMethodId String?           @db.Uuid
-  shippingMethod   ShippingMethod?   @relation(fields: [shippingMethodId], references: [id], onDelete: Restrict)
-  shippingAmount   Decimal?          @db.Decimal(10, 2)
-  readyFingerprint String?           @db.Char(64)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  billingSame      Boolean              @default(true)
+  shippingMethodId String?              @db.Uuid
+  shippingMethod   ShippingMethod?      @relation(fields: [shippingMethodId], references: [id], onDelete: Restrict)
+  shippingAmount   Decimal?             @db.Decimal(10, 2)
+  readyFingerprint String?              @db.Char(64)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
   expiresAt        DateTime
   addresses        CheckoutAddress[]
+  pickupPoint      CheckoutPickupPoint?
   order            Order?
 
   @@index([cartId, status])
   @@index([expiresAt])
   @@index([shippingMethodId])
+}
+
+enum PickupPointType {
+  RELAY_POINT
+  LOCKER
+  UNKNOWN
+}
+
+model CheckoutPickupPoint {
+  id           String          @id @default(uuid()) @db.Uuid
+  checkoutId   String          @unique @db.Uuid
+  checkout     CheckoutSession @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+  provider     String
+  pointId      String
+  type         PickupPointType @default(UNKNOWN)
+  name         String
+  address1     String
+  address2     String?
+  postalCode   String
+  city         String
+  countryCode  String          @db.Char(2)
+  latitude     Decimal?        @db.Decimal(10, 7)
+  longitude    Decimal?        @db.Decimal(10, 7)
+  distanceM    Int?
+  openingHours Json?
+  selectedAt   DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([provider, pointId])
 }
 
 model CheckoutAddress {
@@ -314,6 +349,8 @@ model Order {
   publicId             String             @unique @db.Char(64)
   orderNumber          String             @unique
   status               OrderStatus        @default(PENDING_PAYMENT)
+  customerId           String?            @db.Uuid
+  customer             Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
   email                String
   phone                String?
   currency             String             @db.Char(3)
@@ -338,12 +375,37 @@ model Order {
   cancelledAt          DateTime?
   items                OrderItem[]
   addresses            OrderAddress[]
+  pickupPoint          OrderPickupPoint?
   payment              Payment?
   reservations         StockReservation[]
 
   @@index([status])
   @@index([fulfillmentStatus, paidAt])
   @@index([shippedAt])
+  @@index([customerId, createdAt])
+}
+
+model OrderPickupPoint {
+  id           String          @id @default(uuid()) @db.Uuid
+  orderId      String          @unique @db.Uuid
+  order        Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  provider     String
+  pointId      String
+  type         PickupPointType @default(UNKNOWN)
+  name         String
+  address1     String
+  address2     String?
+  postalCode   String
+  city         String
+  countryCode  String          @db.Char(2)
+  latitude     Decimal?        @db.Decimal(10, 7)
+  longitude    Decimal?        @db.Decimal(10, 7)
+  distanceM    Int?
+  openingHours Json?
+  selectedAt   DateTime
+  createdAt    DateTime        @default(now())
+
+  @@index([provider, pointId])
 }
 
 model OrderItem {
@@ -560,6 +622,159 @@ enum EmailType {
   ORDER_SHIPPED
 }
 
+enum CustomerTokenType {
+  EMAIL_VERIFICATION
+  EMAIL_CHANGE
+  PASSWORD_RESET
+}
+
+enum CustomerEmailType {
+  EMAIL_VERIFICATION
+  EMAIL_CHANGE
+  PASSWORD_RESET
+}
+
+enum NewsletterStatus {
+  ACTIVE
+  UNSUBSCRIBED
+}
+
+model NewsletterSubscriber {
+  id               String           @id @default(uuid()) @db.Uuid
+  email            String           @unique
+  status           NewsletterStatus @default(ACTIVE)
+  source           String           @default("homepage")
+  consentAt        DateTime
+  unsubscribedAt   DateTime?
+  unsubscribeToken String           @unique @db.Char(64)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model Customer {
+  id              String                  @id @default(uuid()) @db.Uuid
+  email           String                  @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phone           String?
+  isActive        Boolean                 @default(true)
+  pendingEmail    String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  lastLoginAt     DateTime?
+  sessions        CustomerSession[]
+  tokens          CustomerAuthToken[]
+  addresses       CustomerAddress[]
+  orders          Order[]
+  carts           Cart[]
+  emailDeliveries CustomerEmailDelivery[]
+  wishlistItems   WishlistItem[]
+
+  @@index([isActive])
+}
+
+model WishlistItem {
+  customerId String   @db.Uuid
+  productId  String   @db.Uuid
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([customerId, productId])
+  @@index([customerId, createdAt])
+  @@index([productId])
+}
+
+model CustomerSession {
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String   @db.Uuid
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique @db.Char(64)
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+model CustomerLoginAttempt {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
+
+model CustomerAuthToken {
+  id         String            @id @default(uuid()) @db.Uuid
+  customerId String            @db.Uuid
+  customer   Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String            @unique @db.Char(64)
+  type       CustomerTokenType
+  email      String?
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime          @default(now())
+
+  @@index([customerId, type])
+  @@index([expiresAt])
+}
+
+model CustomerEmailDelivery {
+  id                String            @id @default(uuid()) @db.Uuid
+  customerId        String            @db.Uuid
+  customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type              CustomerEmailType
+  recipient         String
+  subject           String
+  html              String            @db.Text
+  text              String            @db.Text
+  provider          String            @default("resend")
+  providerMessageId String?
+  status            EmailStatus       @default(PENDING)
+  attemptCount      Int               @default(0)
+  nextAttemptAt     DateTime          @default(now())
+  leaseUntil        DateTime?
+  leaseToken        String?           @db.Uuid
+  retryBlocked      Boolean           @default(false)
+  lastError         String?
+  sentAt            DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([leaseUntil])
+  @@index([customerId, type])
+}
+
+model CustomerAddress {
+  id                String   @id @default(uuid()) @db.Uuid
+  customerId        String   @db.Uuid
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label             String
+  firstName         String
+  lastName          String
+  company           String?
+  addressLine1      String
+  addressLine2      String?
+  postalCode        String
+  city              String
+  region            String?
+  countryCode       String   @db.Char(2)
+  phone             String?
+  isDefaultShipping Boolean  @default(false)
+  isDefaultBilling  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([customerId])
+}
+
 enum EmailStatus {
   PENDING
   SENDING
@@ -568,24 +783,45 @@ enum EmailStatus {
 }
 
 model Shipment {
-  id             String         @id @default(uuid()) @db.Uuid
-  orderId        String         @db.Uuid
-  order          Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  isPrimary      Boolean        @default(true)
-  status         ShipmentStatus @default(DRAFT)
-  carrierCode    String
-  carrierName    String
-  hasTracking    Boolean        @default(true)
-  trackingNumber String?
-  trackingUrl    String?
-  shippedAt      DateTime?
-  deliveredAt    DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                 String          @id @default(uuid()) @db.Uuid
+  orderId            String          @db.Uuid
+  order              Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  isPrimary          Boolean         @default(true)
+  status             ShipmentStatus  @default(DRAFT)
+  carrierCode        String
+  carrierName        String
+  hasTracking        Boolean         @default(true)
+  trackingNumber     String?
+  trackingUrl        String?
+  providerShipmentId String?         @unique
+  providerLabelUrl   String?
+  providerStatus     String?
+  idempotencyKey     String?         @unique
+  weightGrams        Int?
+  lastTrackedAt      DateTime?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  trackingEvents     TrackingEvent[]
 
   @@index([orderId])
   @@index([status])
   @@index([trackingNumber])
+}
+
+model TrackingEvent {
+  id          String    @id @default(uuid()) @db.Uuid
+  shipmentId  String    @db.Uuid
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  providerKey String
+  label       String
+  location    String?
+  occurredAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([shipmentId, providerKey])
+  @@index([shipmentId, occurredAt])
 }
 
 model EmailDelivery {

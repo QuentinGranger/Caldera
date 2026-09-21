@@ -43,3 +43,37 @@
   font-size: 0.85rem;
   color: v.$color-text-muted;
 }
+.pickup {
+  display: grid;
+  gap: 0.25rem;
+  margin-block: 1.5rem;
+  padding: 1rem;
+  border-left: 3px solid v.$color-gold;
+  background: v.$color-background-secondary;
+  h3 {
+    font: 1.35rem v.$font-heading;
+  }
+  span,
+  small {
+    font-size: 0.85rem;
+    color: v.$color-text-muted;
+  }
+}
+.events {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  li {
+    display: grid;
+    gap: 0.2rem;
+    padding-left: 0.8rem;
+    border-left: 2px solid v.$color-gold;
+  }
+  span,
+  time {
+    color: v.$color-text-muted;
+    font-size: 0.78rem;
+  }
+}

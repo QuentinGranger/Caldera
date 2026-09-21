@@ -9,6 +9,7 @@ import type { CheckoutView } from '@/lib/checkout/types';
 import { ShippingMethodCard } from './ShippingMethodCard';
 import { useCheckoutAction } from './useCheckoutAction';
 import styles from './Checkout.module.scss';
+import { PickupPointSelector } from './PickupPointSelector';
 export function CheckoutShipping({ view }: { view: CheckoutView }) {
   const { pending, result, execute } = useCheckoutAction();
   return (
@@ -42,6 +43,16 @@ export function CheckoutShipping({ view }: { view: CheckoutView }) {
             }
           />
         ))}
+        {view.selectedMethod?.code === 'MONDIAL_RELAY_PICKUP' &&
+          view.sessionId && (
+            <PickupPointSelector
+              sessionId={view.sessionId}
+              countryCode={view.contact.shipping.countryCode}
+              initialPostalCode={view.contact.shipping.postalCode}
+              initialCity={view.contact.shipping.city}
+              selected={view.pickupPoint}
+            />
+          )}
         {!view.methods.length && (
           <p role="status" className={styles.notice}>
             Nous ne proposons actuellement aucun mode de livraison pour cette
@@ -54,7 +65,15 @@ export function CheckoutShipping({ view }: { view: CheckoutView }) {
       </p>
       <div className={styles.actions}>
         <Link href="/checkout?step=contact">Modifier les coordonnées</Link>
-        <Button type="submit" disabled={pending || !view.selectedMethod}>
+        <Button
+          type="submit"
+          disabled={
+            pending ||
+            !view.selectedMethod ||
+            (view.selectedMethod.code === 'MONDIAL_RELAY_PICKUP' &&
+              !view.pickupPoint)
+          }
+        >
           {pending ? 'Enregistrement…' : 'Vérifier mon récapitulatif'}
         </Button>
       </div>

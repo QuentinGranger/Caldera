@@ -1,0 +1,389 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.main {
+  min-height: 70vh;
+  padding-block: clamp(3rem, 7vw, 6rem);
+  background: v.$color-background;
+}
+
+.shell {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: clamp(2.5rem, 6vw, 6rem);
+  }
+}
+
+.sidebar {
+  padding: 1.25rem;
+  background: v.$color-cream;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-small;
+}
+
+.sidebarTitle {
+  margin: 0 0 1rem;
+  color: v.$color-green-dark;
+  font: 500 1.9rem/1 v.$font-heading;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.sidebar a,
+.sidebar button {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.5rem 0.65rem;
+  color: v.$color-text-muted;
+  background: transparent;
+  border: 0;
+  font: 700 0.65rem/1.3 v.$font-body;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sidebar a:hover,
+.sidebar a[aria-current='page'],
+.sidebar button:hover {
+  color: v.$color-green-dark;
+  background: rgb(0 60 45 / 8%);
+}
+
+.content {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  color: v.$color-green;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin-bottom: 2rem;
+}
+
+.heading h1 {
+  margin: 0.55rem 0 0.7rem;
+  color: v.$color-green-dark;
+  font: 500 clamp(2.8rem, 6vw, 5rem)/0.95 v.$font-heading;
+  letter-spacing: -0.035em;
+}
+
+.heading p:last-child {
+  max-width: 38rem;
+  margin: 0;
+  color: v.$color-text-muted;
+  font-size: 0.83rem;
+  line-height: 1.8;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.wishlistGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 2rem);
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-small;
+}
+
+.card h2,
+.card h3 {
+  margin: 0;
+  color: v.$color-green-dark;
+  font: 500 2rem/1 v.$font-heading;
+}
+
+.card p {
+  color: v.$color-text-muted;
+  font-size: 0.77rem;
+  line-height: 1.75;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+.button,
+.card button[type='submit'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  color: v.$color-cream;
+  background: v.$color-green-dark;
+  border: 1px solid v.$color-green-dark;
+  border-radius: v.$radius-small;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover,
+.card button[type='submit']:hover {
+  background: v.$color-green;
+}
+
+.buttonOutline {
+  color: v.$color-green-dark;
+  background: transparent;
+}
+
+.buttonOutline:hover {
+  color: v.$color-cream;
+}
+
+.dangerButton {
+  background: #8f2f24;
+  border-color: #8f2f24;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+}
+
+.fields {
+  display: grid;
+  gap: 1rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  color: v.$color-green-dark;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.7rem 0.75rem;
+  color: v.$color-text;
+  background: #fffdf7;
+  border: 1px solid v.$color-border;
+  border-radius: 2px;
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.field textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.button:focus-visible,
+.card button:focus-visible,
+.sidebar a:focus-visible,
+.sidebar button:focus-visible {
+  outline: 2px solid v.$color-gold;
+  outline-offset: 3px;
+}
+
+.check {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  color: v.$color-text-muted;
+  font-size: 0.7rem;
+}
+
+.check input {
+  accent-color: v.$color-green;
+}
+
+.message {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  color: v.$color-green-dark;
+  background: rgb(0 80 59 / 8%);
+  border-left: 2px solid v.$color-gold;
+  font-size: 0.72rem;
+}
+
+.error {
+  color: #8f2f24;
+  background: #fff0ec;
+  border-left-color: #cf4e24;
+}
+
+.auth {
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+.auth .card {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.auth h1 {
+  margin: 0.45rem 0 1rem;
+  color: v.$color-green-dark;
+  font: 500 clamp(2.7rem, 7vw, 4.4rem)/0.92 v.$font-heading;
+}
+
+.authLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.68rem;
+}
+
+.authLinks a,
+.textLink {
+  color: v.$color-green;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.addressList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.addressItem {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid v.$color-border;
+  background: #fffdf7;
+}
+
+.addressItem strong {
+  color: v.$color-green-dark;
+  font-size: 0.78rem;
+}
+
+.addressItem address {
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+  font-style: normal;
+  line-height: 1.65;
+}
+
+.muted {
+  color: v.$color-text-muted;
+  font-size: 0.76rem;
+}
+
+.orders {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.orders th,
+.orders td {
+  padding: 0.85rem 0.55rem;
+  border-bottom: 1px solid v.$color-border;
+  text-align: left;
+  vertical-align: top;
+}
+
+.orders th {
+  color: v.$color-text-muted;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.orders a {
+  color: v.$color-green;
+  font-weight: 800;
+}
+
+.status {
+  color: v.$color-green-dark;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.detailGrid {
+  display: grid;
+  gap: 1rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
+  }
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid v.$color-border;
+  font-size: 0.76rem;
+}
+
+.line small {
+  color: v.$color-text-muted;
+}
+
+@media (max-width: 767px) {
+  .orders th:nth-child(3),
+  .orders td:nth-child(3) {
+    display: none;
+  }
+}

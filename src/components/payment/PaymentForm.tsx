@@ -100,7 +100,11 @@ export function PaymentForm({
     <section className={styles.panel}>
       <h2>Paiement sécurisé</h2>
       <p className={styles.note}>
-        Environnement de test Stripe · Aucun débit réel.
+        Carte bancaire, PayPal, Klarna, Apple Pay et Google Pay selon
+        disponibilité.
+      </p>
+      <p className={styles.provider}>
+        Paiement traité par Stripe · Environnement de test, aucun débit réel.
       </p>
 
       {!result && <p role="status">Préparation du paiement…</p>}
