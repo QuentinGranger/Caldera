@@ -117,8 +117,8 @@ export default function FaqPage() {
                 répondre rapidement.
               </p>
             </div>
-            <Link href="/" className={styles.helpLink}>
-              Retour à la boutique
+            <Link href="/contact" className={styles.helpLink}>
+              Nous contacter
               <MoveUpRight aria-hidden="true" />
             </Link>
           </section>
