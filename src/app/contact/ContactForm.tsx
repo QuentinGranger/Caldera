@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
 import styles from './contact.module.scss';
