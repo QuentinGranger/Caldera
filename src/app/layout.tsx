@@ -9,6 +9,7 @@ import { Header } from '@/components/layout/Header/Header';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
+import { PRODUCTION_SITE_URL } from '@/lib/site';
 
 import './globals.scss';
 
@@ -26,6 +27,7 @@ const bodyFont = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(PRODUCTION_SITE_URL),
   title: 'Les Terres de Caldera',
   description:
     "Boutique spécialisée dans l'univers Pokémon et les cartes à collectionner.",
