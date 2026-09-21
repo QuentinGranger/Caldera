@@ -99,9 +99,9 @@ export function serializeCart(cart: CartRecord | null): CartView {
 export async function getCartByToken(token?: string): Promise<CartView> {
   const tokenHash = cartTokenHash(token);
   if (!tokenHash) return emptyCart();
-  const cart = await getPrisma().$transaction(
-    (tx) => tx.cart.findUnique({ where: { tokenHash }, select: cartSelect }),
-    { isolationLevel: 'RepeatableRead' },
-  );
+  const cart = await getPrisma().cart.findUnique({
+    where: { tokenHash },
+    select: cartSelect,
+  });
   return serializeCart(cart);
 }
