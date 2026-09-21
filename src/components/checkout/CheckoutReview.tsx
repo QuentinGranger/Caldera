@@ -79,6 +79,10 @@ export function CheckoutReview({ view }: { view: CheckoutView }) {
           disabled={view.status !== 'READY_FOR_PAYMENT'}
         />
         <p>
+          En poursuivant vers le paiement, vous reconnaissez avoir pris
+          connaissance et accepter les <Link href="/cgv">Conditions Générales de Vente</Link>.
+        </p>
+        <p>
           Votre sélection sera réservée pendant 20 minutes au passage au
           paiement.
         </p>
