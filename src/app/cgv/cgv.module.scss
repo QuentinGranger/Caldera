@@ -1,0 +1,247 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+.main {
+  background: v.$color-background;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: v.$color-text-on-dark;
+  background:
+    radial-gradient(circle at 80% 12%, rgb(232 194 97 / 17%), transparent 28rem),
+    linear-gradient(135deg, v.$color-ink, v.$color-green-dark);
+  border-bottom: 1px solid v.$color-border-on-dark;
+}
+
+.hero::after {
+  position: absolute;
+  inset: auto -8% -9rem 42%;
+  height: 18rem;
+  content: '';
+  border: 1px solid rgb(232 194 97 / 18%);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  padding-block: clamp(4.5rem, 8vw, 7.5rem);
+}
+
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+
+.hero h1 {
+  max-width: 58rem;
+  margin: 0.8rem 0 0;
+  font-family: v.$font-heading;
+  font-size: clamp(2.8rem, 7vw, 5.8rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+
+.brand {
+  margin-top: 1.5rem;
+  color: v.$color-muted-on-dark;
+  font-size: clamp(1rem, 2vw, 1.1rem);
+}
+
+.version {
+  display: inline-flex;
+  margin-top: 1rem;
+  padding: 0.48rem 0.7rem;
+  color: v.$color-gold-light;
+  background: rgb(255 255 255 / 5%);
+  border: 1px solid v.$color-border-on-dark;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.content {
+  @include m.section;
+}
+
+.layout {
+  display: grid;
+  gap: 2.5rem;
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(13rem, 0.32fr) minmax(0, 1fr);
+    gap: clamp(3rem, 6vw, 6rem);
+    align-items: start;
+  }
+}
+
+.summary {
+  padding: 1.15rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  box-shadow: v.$shadow-soft;
+
+  @include m.from(v.$breakpoint-desktop) {
+    position: sticky;
+    top: 6.5rem;
+    max-height: calc(100vh - 8rem);
+    overflow: auto;
+  }
+}
+
+.summaryTitle {
+  margin: 0 0 0.8rem;
+  color: v.$color-text;
+  font-family: v.$font-heading;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.summary ol {
+  display: grid;
+  gap: 0.12rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary a {
+  display: block;
+  padding: 0.38rem 0.45rem;
+  color: v.$color-text-muted;
+  border-radius: v.$radius-small;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  transition:
+    color v.$transition-fast,
+    background v.$transition-fast;
+}
+
+.summary a:hover {
+  color: v.$color-green-dark;
+  background: rgb(11 102 80 / 7%);
+}
+
+.document {
+  min-width: 0;
+}
+
+.article {
+  scroll-margin-top: 7rem;
+  padding: clamp(1.3rem, 3vw, 2.2rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  box-shadow: v.$shadow-soft;
+}
+
+.article + .article {
+  margin-top: 1.2rem;
+}
+
+.article h2 {
+  margin: 0;
+  color: v.$color-text;
+  font-family: v.$font-heading;
+  font-size: clamp(1.65rem, 4vw, 2.35rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.article h3 {
+  margin: 1.8rem 0 0.7rem;
+  color: v.$color-green-dark;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.article p,
+.article li,
+.address {
+  color: v.$color-text-muted;
+  font-size: 0.9rem;
+  line-height: 1.78;
+}
+
+.article p {
+  margin: 0.9rem 0 0;
+}
+
+.article ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.9rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.article strong {
+  color: v.$color-text;
+}
+
+.article a {
+  color: v.$color-green-secondary;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+.address {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  background: v.$color-background;
+  border-left: 3px solid v.$color-green-secondary;
+  border-radius: 0 v.$radius-small v.$radius-small 0;
+  font-style: normal;
+}
+
+.warning {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  color: v.$color-text;
+  background: rgb(232 194 97 / 12%);
+  border: 1px solid rgb(167 125 28 / 26%);
+  border-radius: v.$radius-small;
+}
+
+.warning p {
+  margin-top: 0.35rem;
+  color: inherit;
+}
+
+.warning p:first-child {
+  margin-top: 0;
+}
+
+.formTemplate {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  background: v.$color-background;
+  border: 1px dashed v.$color-border;
+  border-radius: v.$radius-small;
+}
+
+.formTemplate p:first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 40rem) {
+  .article {
+    padding: 1.15rem;
+  }
+
+  .article p,
+  .article li,
+  .address {
+    font-size: 0.84rem;
+  }
+}
