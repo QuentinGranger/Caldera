@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
+import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from './Footer.module.scss';
 const groups = [
   {
@@ -24,7 +25,11 @@ const groups = [
   },
   {
     title: 'Aide',
-    links: [{ label: 'Livraison' }, { label: 'FAQ' }, { label: 'Contact' }],
+    links: [
+      { label: 'Livraison' },
+      { label: 'FAQ' },
+      { label: 'Contact', href: '/contact' },
+    ],
   },
   {
     title: 'Légal',
@@ -83,7 +88,10 @@ export function Footer() {
           ))}
         </div>
         <div className={styles.bottom}>
-          <p>© {new Date().getFullYear()} Les Terres de Caldera</p>
+          <p>
+            © {new Date().getFullYear()} Les Terres de Caldera ·{' '}
+            <Link href={PRODUCTION_SITE_URL}>{PRODUCTION_HOST}</Link>
+          </p>
           <p>Boutique en préparation · Produits et prix de démonstration</p>
           <span>Explorez. Collectionnez.</span>
         </div>
