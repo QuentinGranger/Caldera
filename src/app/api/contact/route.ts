@@ -106,7 +106,7 @@ export async function POST(request: Request) {
   if (
     name.length < 2 ||
     !emailPattern.test(email) ||
-    !(topic in topics) ||
+    !Object.hasOwn(topics, topic) ||
     message.length < 10
   ) {
     return NextResponse.json(
