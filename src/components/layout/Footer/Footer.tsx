@@ -28,7 +28,7 @@ const groups = [
     links: [
       { label: 'Livraison', href: '/livraison' },
       { label: 'FAQ', href: '/faq' },
-      { label: 'Contact', href: '/faq#besoin-aide' },
+      { label: 'Contact', href: '/contact' },
     ],
   },
   {
