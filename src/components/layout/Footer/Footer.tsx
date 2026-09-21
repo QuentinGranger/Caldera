@@ -34,7 +34,7 @@ const groups = [
   {
     title: 'Légal',
     links: [
-      { label: 'Mentions légales' },
+      { label: 'Mentions légales', href: '/mentions-legales' },
       { label: 'CGV', href: '/cgv' },
       { label: 'Confidentialité' },
     ],
