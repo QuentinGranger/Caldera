@@ -100,7 +100,8 @@ export default function CgvPage() {
               </p>
               <address className={styles.address}>
                 <strong>CALDERA</strong>, société par actions simplifiée
-                unipersonnelle (SASU) au capital social de <strong>100 euros</strong>
+                unipersonnelle (SASU) au capital social de <strong>100 euros</strong>,
+                dont le siège social est situé :
                 <br />
                 74 rue Pierre Valdo
                 <br />
