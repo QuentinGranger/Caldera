@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ProductDetail } from '@/lib/catalog/queries';
+import { PRODUCTION_SITE_URL } from '@/lib/site';
 import { selectProductVariant } from './purchase';
 const availabilityUrls = {
   IN_STOCK: 'https://schema.org/InStock',
@@ -8,9 +9,8 @@ const availabilityUrls = {
   PREORDER: 'https://schema.org/PreOrder',
 } as const;
 function absoluteUrl(path: string): string | undefined {
-  if (!process.env.SITE_URL) return undefined;
   try {
-    const origin = new URL(process.env.SITE_URL);
+    const origin = new URL(process.env.SITE_URL || PRODUCTION_SITE_URL);
     if (!['https:', 'http:'].includes(origin.protocol)) return undefined;
     return new URL(path, origin.origin).href;
   } catch {

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PRODUCTION_SITE_URL } from '@/lib/site';
 import type { SearchParams } from './params';
 export function catalogMetadata(
   title: string,
@@ -7,13 +8,13 @@ export function catalogMetadata(
   params: SearchParams = {},
 ): Metadata {
   let canonical: string | undefined;
-  if (process.env.SITE_URL) {
+  {
     try {
-      const base = new URL(process.env.SITE_URL);
+      const base = new URL(process.env.SITE_URL || PRODUCTION_SITE_URL);
       if (['http:', 'https:'].includes(base.protocol))
         canonical = new URL(path, base.origin).href;
     } catch {
-      /* Domaine non configuré : ne pas inventer de canonical. */
+      /* URL invalide : ne pas produire de canonical erronée. */
     }
   }
   return {

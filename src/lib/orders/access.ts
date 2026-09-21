@@ -1,5 +1,6 @@
 import 'server-only';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { PRODUCTION_SITE_URL } from '@/lib/site';
 const ACCESS_DURATION = 180 * 86400;
 function secret() {
   const value = process.env.ORDER_ACCESS_SECRET;
@@ -9,7 +10,11 @@ function secret() {
 }
 export function appOrigin() {
   const url = new URL(
-    process.env.APP_URL || process.env.SITE_URL || 'http://localhost:3000',
+    process.env.APP_URL ||
+      process.env.SITE_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? PRODUCTION_SITE_URL
+        : 'http://localhost:3000'),
   );
   if (
     url.username ||

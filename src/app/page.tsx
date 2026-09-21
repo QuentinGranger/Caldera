@@ -19,7 +19,9 @@ export const metadata: Metadata = {
   title: 'Les Terres de Caldera — Pokémon & Cartes à collectionner',
   description:
     'Découvrez Les Terres de Caldera, une boutique dédiée aux cartes, coffrets et produits de collection Pokémon.',
+  alternates: { canonical: '/' },
   openGraph: {
+    url: '/',
     title: 'Les Terres de Caldera — Pokémon & Cartes à collectionner',
     description:
       'Cartes, coffrets et objets de collection sélectionnés pour les passionnés.',
