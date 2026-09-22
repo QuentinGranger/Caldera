@@ -14,6 +14,15 @@ function percent(value: number, total: number) {
   return total > 0 ? (value / total) * 100 : 0;
 }
 
+function signedMoney(form: FormData, key: string) {
+  const value = text(form, key, 20).replace(',', '.');
+  if (!/^-?\d{1,8}(\.\d{1,2})?$/.test(value))
+    throw new AdminError(
+      `Montant ${key} invalide : deux décimales maximum.`,
+    );
+  return new Prisma.Decimal(value);
+}
+
 export async function getBusinessPilotage() {
   await requireAdmin();
   const db = getPrisma();
@@ -179,10 +188,7 @@ export async function getBusinessPilotage() {
   };
 }
 
-export async function saveBusinessPilotage(
-  _adminId: string,
-  form: FormData,
-) {
+export async function saveBusinessPilotage(form: FormData) {
   whitelist(form, [
     'revenueTarget',
     'minimumMarginRate',
@@ -194,7 +200,7 @@ export async function saveBusinessPilotage(
   const revenueTarget = money(form, 'revenueTarget');
   const minimumMarginRate = money(form, 'minimumMarginRate');
   const maxStockBudget = money(form, 'maxStockBudget');
-  const cashBalance = money(form, 'cashBalance');
+  const cashBalance = signedMoney(form, 'cashBalance');
   const trackingStartDate = date(form, 'trackingStartDate');
   if (number(revenueTarget) <= 0)
     throw new AdminError("L'objectif de chiffre d'affaires doit être supérieur à 0 €.");
@@ -212,10 +218,6 @@ export async function saveBusinessPilotage(
         }),
     ),
   ];
-
-  // Force validation of an accidentally injected scalar field as well.
-  if (form.has('launchProductId') && !launchProductIds.length)
-    text(form, 'launchProductId');
 
   const db = getPrisma();
   return db.$transaction(async (tx) => {
