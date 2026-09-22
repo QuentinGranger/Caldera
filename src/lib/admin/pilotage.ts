@@ -197,9 +197,9 @@ export async function saveBusinessPilotage(form: FormData) {
     'trackingStartDate',
     'launchProductId',
   ]);
-  const revenueTarget = money(form, 'revenueTarget');
-  const minimumMarginRate = money(form, 'minimumMarginRate');
-  const maxStockBudget = money(form, 'maxStockBudget');
+  const revenueTarget = money(form, 'revenueTarget')!;
+  const minimumMarginRate = money(form, 'minimumMarginRate')!;
+  const maxStockBudget = money(form, 'maxStockBudget')!;
   const cashBalance = signedMoney(form, 'cashBalance');
   const trackingStartDate = date(form, 'trackingStartDate');
   if (number(revenueTarget) <= 0)
