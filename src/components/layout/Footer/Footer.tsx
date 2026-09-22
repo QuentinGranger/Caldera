@@ -71,7 +71,7 @@ export function Footer() {
               <ul>
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    {'href' in link ? (
+                    {link.href ? (
                       <Link href={link.href}>{link.label}</Link>
                     ) : (
                       <span
