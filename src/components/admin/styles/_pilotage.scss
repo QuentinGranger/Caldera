@@ -1,0 +1,166 @@
+@use '../tokens' as t;
+
+.pilotageKpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.pilotageKpi {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid t.$ink;
+  border-radius: 4px;
+  background: t.$surface;
+  box-shadow: 3px 3px 0 t.$ink;
+
+  > span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: t.$muted;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    svg {
+      color: t.$purple;
+      flex: none;
+    }
+  }
+
+  strong {
+    display: block;
+    margin: 0.65rem 0 0.35rem;
+    font: 700 clamp(1.35rem, 2vw, 2rem) t.$mono;
+    letter-spacing: -0.06em;
+  }
+
+  small {
+    display: block;
+    min-height: 2.2em;
+    color: t.$muted;
+    font-size: 0.68rem;
+    line-height: 1.45;
+  }
+
+  progress {
+    width: 100%;
+    height: 0.45rem;
+    margin-top: 0.75rem;
+    accent-color: t.$purple;
+  }
+}
+
+.pilotageAlerts {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 1.5rem;
+
+  .warning {
+    margin: 0;
+  }
+}
+
+.pilotageLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 0.7fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.launchProducts {
+  margin-top: 1.25rem !important;
+  padding: 1rem !important;
+  border: 1px solid t.$border !important;
+  border-radius: 4px;
+
+  legend {
+    padding-inline: 0.35rem;
+    font-weight: 800;
+  }
+}
+
+.launchProductGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.launchProductOption {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.7rem;
+  padding: 0.75rem;
+  border: 1px solid t.$border;
+  border-radius: 4px;
+  background: t.$surface;
+  cursor: pointer;
+
+  &:has(input:checked) {
+    border-color: t.$purple;
+    background: t.$lavender;
+  }
+
+  input {
+    width: auto !important;
+    margin-top: 0.15rem;
+    flex: none;
+  }
+
+  span {
+    min-width: 0;
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    font-size: 0.78rem;
+  }
+
+  small {
+    margin-top: 0.2rem;
+    color: t.$muted;
+    font-size: 0.67rem;
+  }
+}
+
+.pilotageNote {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed t.$border;
+  color: t.$muted;
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+.tableSubline {
+  display: block;
+  margin-top: 0.18rem;
+  color: t.$muted;
+  font-size: 0.66rem;
+}
+
+@media (max-width: 74.99rem) {
+  .pilotageKpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pilotageLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .pilotageKpis,
+  .launchProductGrid {
+    grid-template-columns: 1fr;
+  }
+}
