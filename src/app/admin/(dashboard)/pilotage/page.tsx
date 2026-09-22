@@ -259,8 +259,9 @@ export default async function PilotagePage() {
             Le CA exclut les frais de livraison. La rotation est un indicateur
             opérationnel basé sur le stock actuel, pas une rotation comptable sur
             stock moyen. La marge est une marge commerciale simplifiée sur les prix
-            enregistrés, avant frais Stripe, transport, TVA et autres charges. La
-            trésorerie reste manuelle tant qu’aucun compte bancaire n’est connecté.
+            enregistrés, hors frais Stripe, transport et autres charges, sans
+            retraitement comptable de TVA. La trésorerie reste manuelle tant
+            qu’aucun compte bancaire n’est connecté.
           </p>
         </aside>
       </div>
