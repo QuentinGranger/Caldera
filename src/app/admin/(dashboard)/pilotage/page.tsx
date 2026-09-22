@@ -185,7 +185,6 @@ export default async function PilotagePage() {
                 label="Trésorerie disponible (€)"
                 name="cashBalance"
                 type="number"
-                min="0"
                 step="0.01"
                 defaultValue={settings.cashBalance}
                 required
@@ -259,8 +258,9 @@ export default async function PilotagePage() {
           <p className={styles.pilotageNote}>
             Le CA exclut les frais de livraison. La rotation est un indicateur
             opérationnel basé sur le stock actuel, pas une rotation comptable sur
-            stock moyen. La trésorerie reste manuelle tant qu’aucun compte bancaire
-            n’est connecté.
+            stock moyen. La marge est une marge commerciale simplifiée sur les prix
+            enregistrés, avant frais Stripe, transport, TVA et autres charges. La
+            trésorerie reste manuelle tant qu’aucun compte bancaire n’est connecté.
           </p>
         </aside>
       </div>
