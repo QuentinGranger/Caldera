@@ -102,6 +102,7 @@ export async function prepareOrder(
             sku: item.variant.sku,
             language: item.variant.language,
             unitPrice: item.variant.price,
+            unitCost: item.variant.costPrice,
             quantity: item.quantity,
             lineTotal: item.variant.price.mul(item.quantity),
             imageUrl: view.cart.items.find((i) => i.id === item.id)!.image,
