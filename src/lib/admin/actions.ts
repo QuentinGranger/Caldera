@@ -260,7 +260,7 @@ export async function saveBusinessPilotageAction(
   _previous: AdminActionState,
   form: FormData,
 ): Promise<AdminActionState> {
-  const admin = await requireAdmin();
+  await requireAdmin();
   try {
     await saveBusinessPilotage(form);
     revalidatePath('/admin');
