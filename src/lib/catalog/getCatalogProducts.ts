@@ -110,6 +110,7 @@ export async function getCatalogProducts(
     variants: {
       where: variant,
       select: {
+        id: true,
         sku: true,
         price: true,
         compareAtPrice: true,
