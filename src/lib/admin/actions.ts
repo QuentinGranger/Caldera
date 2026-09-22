@@ -13,6 +13,7 @@ import { adjustStock } from './inventory';
 import { saveCategory, saveSet } from './taxonomy';
 import { editImage, uploadImage } from './images';
 import { cancelAdminOrder, saveOrderNote } from './orders';
+import { saveBusinessPilotage } from './pilotage';
 
 function failure(error: unknown): AdminActionState {
   if (error instanceof AdminError)
@@ -250,6 +251,24 @@ export async function cancelOrderAction(
     revalidatePath('/admin/commandes');
     await invalidateCatalog();
     return { success: true, message: 'Commande annulée.' };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function saveBusinessPilotageAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    await saveBusinessPilotage(admin.id, form);
+    revalidatePath('/admin');
+    revalidatePath('/admin/pilotage');
+    return {
+      success: true,
+      message: 'Modèle économique enregistré.',
+    };
   } catch (error) {
     return failure(error);
   }
