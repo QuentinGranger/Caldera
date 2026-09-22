@@ -14,6 +14,7 @@ export const cartVariantSelect = {
   sku: true,
   language: true,
   price: true,
+  costPrice: true,
   isActive: true,
   stockQuantity: true,
   reservedQuantity: true,

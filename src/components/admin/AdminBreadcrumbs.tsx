@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import styles from './Admin.module.scss';
 const sections: Record<string, string> = {
+  pilotage: 'Pilotage économique',
   produits: 'Produits',
   commandes: 'Commandes',
   stocks: 'Stocks',
