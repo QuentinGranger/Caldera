@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import {
+  BarChart3,
   Boxes,
   FolderTree,
   Layers3,
@@ -18,6 +19,7 @@ const groups = [
     label: 'Pilotage',
     links: [
       { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
+      { href: '/admin/pilotage', label: 'Pilotage économique', icon: BarChart3 },
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
     ],
