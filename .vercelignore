@@ -1,0 +1,7 @@
+# La production n'utilise que les variables définies dans Vercel.
+.env
+.env.*
+!.env.example
+
+# Identifiants et état gérés par le CLI Stripe Projects.
+.projects/
