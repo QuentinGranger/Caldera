@@ -537,13 +537,28 @@ Les snapshots `OrderItem`, les montants et les champs `Payment` ne sont jamais �
 
 ### Stockage des images
 
-Interface `ImageStorage` : upload / delete / getPublicUrl, implémentation locale sans fournisseur cloud. En développement : `.data/uploads`, ignoré par Git. Servies par `/media/[filename]`, avec nom UUID aléatoire, type WebP, `nosniff`, cache immutable. `next/image` optimise ces visuels.
+Interface `ImageStorage` : upload / delete / getPublicUrl. L’URL publique reste toujours `/media/<uuid>.webp`, quel que soit le support : les URLs déjà enregistrées en base restent valides. Servies par `/media/[filename]`, avec nom UUID aléatoire, type WebP, `nosniff`, cache immutable (navigateur et CDN). `next/image` optimise ces visuels. Le support est choisi à l’exécution :
 
-Validation serveur : taille **5 Mo**, extensions et MIME JPEG/PNG/WebP concordants, décodage réel, maximum **20 millions de pixels**, rejet des images animées. Sharp **0.35.4** réoriente, limite le visuel à 2400 × 2400, réencode en WebP et retire les metadata. La limite Next.js des Server Actions est 6 Mo pour permettre l’enveloppe multipart ; la limite image reste 5 Mo.
+1. **Vercel Blob privé** si `BLOB_STORE_ID` ou `BLOB_READ_WRITE_TOKEN` est défini : clé `media/<uuid>.webp`, lue uniquement par la route `/media` (le store n’est pas public).
+2. **Disque local** si `UPLOAD_DIR` est défini, ou hors production (`.data/uploads`, ignoré par Git).
+3. Sinon (production sans stockage) : l’upload est refusé avec un message explicite et `/media` répond **404**, jamais 500.
+
+Validation serveur : taille **5 Mo**, extensions et MIME JPEG/PNG/WebP concordants, décodage réel, maximum **20 millions de pixels**, rejet des images animées. Sharp **0.35.4** réoriente, limite le visuel à 2400 × 2400, réencode en WebP et retire les metadata. La limite Next.js des Server Actions est 6 Mo pour permettre l’enveloppe multipart ; la limite image reste 5 Mo. Sur Vercel, les Functions refusent tout corps de requête au-delà de 4,5 Mo avant l’exécution de l’action : le formulaire admin y bloque donc côté navigateur les fichiers de plus de **4 Mo** (5 Mo ailleurs).
 
 La galerie gère alt, ordre et image principale, avec index unique partiel PostgreSQL pour une seule principale. Retirer une image supprime son entrée de galerie mais **conserve le fichier immuable**, afin de protéger aussi les snapshots créés par un checkout concurrent. Aucun nettoyage automatique de fichiers anciens dans cette phase. L’adaptateur `delete` sert notamment à compenser un échec d’enregistrement après upload. Les assets de marque dans `/public/assets` ne sont jamais supprimés.
 
-En production, **configurer `UPLOAD_DIR` vers un volume persistant partagé entre les instances**, accessible au processus Node, et sauvegarder ce volume avec PostgreSQL. Sans cette variable, l’upload en production est refusé. Un disque éphémère/serverless n’est pas un stockage de production adapté. Aucun cloud n’a été provisionné.
+Production sur Vercel : le système de fichiers des Functions est éphémère, `UPLOAD_DIR` n’y est pas utilisable. Créer un store **Blob privé** (projet Vercel → Storage → Create → Blob → accès **Private**, ou `vercel blob create-store caldera-media --access private` avec la CLI ≥ 50.20) puis le connecter au projet pour Production (et Preview si souhaité). Vercel ajoute alors `BLOB_STORE_ID` et le SDK s’authentifie par OIDC à jetons courts : aucun secret longue durée à déclarer. Redéployer ensuite pour que les Functions voient la variable. Hébergement classique : `UPLOAD_DIR` vers un volume persistant partagé entre les instances, sauvegardé avec PostgreSQL.
+
+Reprise de fichiers existants : `npm run media:migrate` copie les `<uuid>.webp` de `UPLOAD_DIR` (ou `.data/uploads`, ou du dossier passé en argument) vers `media/<uuid>.webp` dans le store, sans écraser les blobs présents, afin que les anciennes URLs `/media/…` répondent. Hors Vercel, le script a besoin du jeton read-write du store (affiché dans son dashboard Vercel), à saisir dans votre propre terminal sans le coller dans un fichier suivi :
+
+```bash
+read -rs BLOB_READ_WRITE_TOKEN && export BLOB_READ_WRITE_TOKEN
+npm run media:migrate -- --dry-run
+npm run media:migrate
+npm run test:storage
+```
+
+`npm run test:storage` vérifie le choix du support, le 404 sans stockage et l’aller-retour disque ; avec `BLOB_READ_WRITE_TOKEN`, il fait aussi un aller-retour réel sur le store (image de test supprimée ensuite).
 
 ### Cache et vérifications
 

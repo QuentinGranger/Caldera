@@ -6,13 +6,19 @@ import {
 } from '@/lib/admin/actions';
 import { AdminForm } from './AdminForm';
 import { Check, Field, Hidden } from './AdminFields';
+import { ImageFileField } from './ImageFileField';
 import type { AdminProduct } from './ProductInformationForm';
 import styles from './Admin.module.scss';
+// Vercel Functions reject request bodies over 4.5 MB before the action runs.
+const upload = process.env.VERCEL
+  ? { maxBytes: 4 * 1024 * 1024, maxLabel: '4 Mo' }
+  : { maxBytes: 5 * 1024 * 1024, maxLabel: '5 Mo' };
 export function ImageManager({ product }: { product: AdminProduct }) {
   return (
     <>
       <p>
-        JPEG, PNG ou WebP · 5 Mo maximum. Les images sont réencodées en WebP.
+        JPEG, PNG ou WebP · {upload.maxLabel} maximum. Les images sont
+        réencodées en WebP.
       </p>
       <div className={styles.imageGrid}>
         {product.images.map((image) => (
@@ -71,13 +77,7 @@ export function ImageManager({ product }: { product: AdminProduct }) {
         <AdminForm action={uploadImageAction} submit="Téléverser">
           <Hidden name="productId" value={product.id} />
           <div className={styles.fields}>
-            <Field
-              label="Fichier image"
-              name="file"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              required
-            />
+            <ImageFileField {...upload} />
             <Field
               label="Texte alternatif"
               name="alt"

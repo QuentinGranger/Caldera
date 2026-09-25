@@ -10,7 +10,8 @@ export async function GET(
     headers: {
       'Content-Type': 'image/webp',
       'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      // Filenames are random UUIDs never overwritten: the CDN can keep them too.
+      'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
     },
   });
 }

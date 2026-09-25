@@ -42,6 +42,8 @@
     "test:admin:db": "node --conditions=react-server --import tsx --test tests/admin-db.test.ts",
     "test:admin:http": "node --conditions=react-server --import tsx --test tests/admin-http.test.ts",
     "emails:process": "node --conditions=react-server --import tsx scripts/process-emails.ts",
+    "media:migrate": "node --conditions=react-server --import tsx scripts/migrate-uploads-to-blob.ts",
+    "test:storage": "node --conditions=react-server --import tsx --test tests/storage.test.ts",
     "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts",
     "dev:stripe": "node scripts/dev-stripe.mjs"
   },
@@ -50,6 +52,7 @@
     "@prisma/client": "7.10.0",
     "@stripe/react-stripe-js": "6.10.0",
     "@stripe/stripe-js": "9.16.0",
+    "@vercel/blob": "2.8.0",
     "better-auth": "1.7.5",
     "dotenv": "18.0.1",
     "lucide-react": "1.47.0",
