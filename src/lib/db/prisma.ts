@@ -15,10 +15,13 @@ export function getPrisma(): PrismaClient {
 
   if (existingClient) return existingClient;
 
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString =
+    process.env.PRIMARY_DB_CONNECTION_STRING ?? process.env.DATABASE_URL;
 
   if (!connectionString) {
-    throw new Error('DATABASE_URL est manquante.');
+    throw new Error(
+      'PRIMARY_DB_CONNECTION_STRING ou DATABASE_URL est manquante.',
+    );
   }
 
   const adapter = new PrismaPg({
