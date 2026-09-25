@@ -15,12 +15,14 @@ export function getPrisma(): PrismaClient {
 
   if (existingClient) return existingClient;
 
+  // DATABASE_URL first: tests and scripts guard on its host, and a local .env
+  // also holds the Neon production URL. Vercel only defines the Neon variable.
   const connectionString =
-    process.env.PRIMARY_DB_CONNECTION_STRING ?? process.env.DATABASE_URL;
+    process.env.DATABASE_URL || process.env.PRIMARY_DB_CONNECTION_STRING;
 
   if (!connectionString) {
     throw new Error(
-      'PRIMARY_DB_CONNECTION_STRING ou DATABASE_URL est manquante.',
+      'DATABASE_URL ou PRIMARY_DB_CONNECTION_STRING est manquante.',
     );
   }
 

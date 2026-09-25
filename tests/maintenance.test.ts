@@ -8,6 +8,7 @@ import type { EmailProvider } from '../src/lib/email/provider';
 for (const key of [
   'CRON_SECRET',
   'DATABASE_URL',
+  'PRIMARY_DB_CONNECTION_STRING',
   'EMAILS_ENABLED',
   'EMAIL_FROM',
   'EMAIL_TEST_RECIPIENT',

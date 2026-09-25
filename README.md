@@ -493,7 +493,7 @@ npm run dev
 
 Un secret admin aléatoire a déjà été ajouté au `.env` local pendant cette phase, sans afficher sa valeur. Il reste à créer **votre** administrateur avec `npm run admin:create` : email, nom, mot de passe de 12 à 128 caractères saisi deux fois sans écho. Le script ne remplace pas un compte existant et ne conserve aucun mot de passe en clair. La base doit être joignable. Aucun administrateur de test n’est conservé.
 
-En déploiement, utiliser `npx prisma migrate deploy`, une origine `APP_URL` HTTPS correspondant au site et un `BETTER_AUTH_SECRET` propre à l’environnement. Ne pas réutiliser les secrets de développement. La rotation du secret invalide les cookies signés existants.
+En déploiement, appliquer les migrations sur la base Neon avec `DATABASE_URL= npm run db:deploy` : `DATABASE_URL` vide fait retomber Prisma sur `PRIMARY_DB_CONNECTION_STRING`, alors qu’en local `DATABASE_URL` reste prioritaire pour ne jamais viser la production par défaut. Utiliser aussi une origine `APP_URL` HTTPS correspondant au site et un `BETTER_AUTH_SECRET` propre à l’environnement. Ne pas réutiliser les secrets de développement. La rotation du secret invalide les cookies signés existants.
 
 ### Authentification et sessions
 
