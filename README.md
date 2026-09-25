@@ -371,7 +371,7 @@ Aucun navigateur connecté à l’outil lors de cette phase. Restent à vérifie
 
 ## Paiement Stripe (phase 8)
 
-Les clés restent absentes du dépôt. L’application refuse les clés live. Dans le Dashboard Stripe, choisir un sandbox de développement ; utiliser des clés du **même environnement**, de préférence une clé restreinte `rk_test_` autorisant création, lecture et annulation des PaymentIntents. Une clé serveur `sk_test_` fonctionne également. Ne jamais transmettre cette clé au navigateur ni la coller dans une conversation. Stockage local dans `.env` ignoré ; coffre de secrets de l’hébergeur pour un déploiement.
+Les clés restent absentes du dépôt. Le mode est déduit de `STRIPE_SECRET_KEY` : les clés live ne sont acceptées que par un build de production (`NODE_ENV=production`), avec une clé publique et des PaymentIntents / webhooks du même mode ; tout écart est refusé. En développement, choisir un sandbox Stripe ; utiliser des clés du **même environnement**, de préférence une clé restreinte `rk_test_` autorisant création, lecture et annulation des PaymentIntents. Une clé serveur `sk_test_` fonctionne également. Ne jamais transmettre cette clé au navigateur ni la coller dans une conversation. Stockage local dans `.env` ignoré ; coffre de secrets de l’hébergeur pour un déploiement.
 
 Renseigner les valeurs dans `.env` sans écraser DATABASE_URL :
 
@@ -382,7 +382,7 @@ STRIPE_WEBHOOK_SECRET=""
 APP_URL="http://localhost:3000"
 ```
 
-La clé publique commence par `pk_test_`. `APP_URL` est l’origine contrôlée du retour Stripe, avec repli sur `SITE_URL` ; HTTPS exigé sauf localhost. La clé publique est intégrée au build : **redémarrer en développement, reconstruire en production** après un changement. Les secrets serveur ne sont jamais renvoyés.
+La clé publique commence par `pk_test_` (ou `pk_live_` avec une clé serveur live). `APP_URL` est l’origine contrôlée du retour Stripe, avec repli sur `SITE_URL` ; HTTPS exigé sauf localhost, et toujours en live. La clé publique est intégrée au build : **redémarrer en développement, reconstruire en production** après un changement. Les secrets serveur ne sont jamais renvoyés.
 
 Pour le développement local, la commande suivante utilise la CLI Stripe officielle épinglée via npm, lit la clé TEST de `.env` et écrit automatiquement le secret de cette écoute dans le même fichier (valeurs masquées, permissions 0600). Elle remplace STRIPE_WEBHOOK_SECRET par le secret de l’écoute locale ; laisser le terminal ouvert :
 
@@ -397,7 +397,7 @@ stripe login
 stripe listen --events payment_intent.succeeded,payment_intent.processing,payment_intent.payment_failed,payment_intent.canceled,payment_intent.requires_action --forward-to localhost:3000/api/stripe/webhook
 ```
 
-Copier le secret `whsec_` affiché par cette commande dans `STRIPE_WEBHOOK_SECRET`, puis redémarrer Next.js. Le secret CLI est propre à cette écoute : ne pas le confondre avec celui d’un endpoint Dashboard. Le webhook est obligatoire. Le serveur vérifie la signature sur le corps brut, refuse le mode live et relit l’état du PaymentIntent avant traitement. Réponse 400 pour signature invalide, 500 pour traitement à réessayer, 200 pour succès ou doublon. Les appels réseau Stripe restent hors transaction SQL.
+Copier le secret `whsec_` affiché par cette commande dans `STRIPE_WEBHOOK_SECRET`, puis redémarrer Next.js. Le secret CLI est propre à cette écoute : ne pas le confondre avec celui d’un endpoint Dashboard. Le webhook est obligatoire. Le serveur vérifie la signature sur le corps brut, refuse un événement d’un autre mode que la clé serveur et relit l’état du PaymentIntent avant traitement. Réponse 400 pour signature invalide, 500 pour traitement à réessayer, 200 pour succès ou doublon. Les appels réseau Stripe restent hors transaction SQL.
 
 Parcours : ajouter un article disponible → `/checkout` → coordonnées → livraison → récapitulatif → « Continuer vers le paiement » → `/checkout/paiement/[publicId]` → Payment Element → `confirmPayment` → `/commande/[publicId]`. Le Payment Element gère données bancaires et authentification 3DS ; aucun champ bancaire maison ni donnée carte enregistrée. Moyens de paiement dynamiques selon le Dashboard ; Apple Pay / Google Pay dépendent de la configuration et ne sont pas déclarés testés.
 

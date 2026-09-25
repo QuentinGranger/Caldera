@@ -1,6 +1,6 @@
 import { after } from 'next/server';
 import { safelyProcessEmails } from '@/lib/email/processor';
-import { getStripe } from '@/lib/stripe/stripe';
+import { getStripe, stripeMode } from '@/lib/stripe/stripe';
 import { verifyWebhook } from '@/lib/stripe/webhook';
 import { paymentEvents, processPaymentEvent } from '@/lib/payments/events';
 export const runtime = 'nodejs';
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     );
     return Response.json({ error: 'Signature invalide' }, { status: 400 });
   }
-  if (event.livemode)
+  if (event.livemode !== (stripeMode() === 'live'))
     return Response.json({ error: 'Mode non pris en charge' }, { status: 400 });
   if (!paymentEvents.has(event.type)) return Response.json({ received: true });
   try {

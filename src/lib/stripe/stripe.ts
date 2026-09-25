@@ -2,19 +2,31 @@ import 'server-only';
 import Stripe from 'stripe';
 import { OrderError } from '@/lib/orders/common';
 let client: Stripe | undefined;
+/** Mode deduced from the server key; live is only accepted by a production build. */
+export function stripeMode(): 'test' | 'live' | null {
+  const mode = process.env.STRIPE_SECRET_KEY?.match(
+    /^(?:sk|rk)_(test|live)_/,
+  )?.[1];
+  if (mode === 'live' && process.env.NODE_ENV !== 'production') return null;
+  return mode === 'test' || mode === 'live' ? mode : null;
+}
 export function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || !/^(sk|rk)_test_/.test(key))
-    throw new OrderError('Le paiement de test n’est pas encore configuré.');
-  return (client ??= new Stripe(key, { maxNetworkRetries: 2, timeout: 15000 }));
+  if (!stripeMode())
+    throw new OrderError('Le paiement n’est pas encore configuré.');
+  return (client ??= new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    maxNetworkRetries: 2,
+    timeout: 15000,
+  }));
 }
 export function assertPaymentConfiguration() {
   getStripe();
   if (
-    !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_') ||
+    !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith(
+      `pk_${stripeMode()}_`,
+    ) ||
     !process.env.STRIPE_WEBHOOK_SECRET?.startsWith('whsec_')
   )
-    throw new OrderError('Le paiement de test n’est pas encore configuré.');
+    throw new OrderError('Le paiement n’est pas encore configuré.');
 }
 export function paymentReturnUrl(publicId: string) {
   const url = new URL(
@@ -23,7 +35,8 @@ export function paymentReturnUrl(publicId: string) {
   if (
     !['http:', 'https:'].includes(url.protocol) ||
     (url.protocol === 'http:' &&
-      !['localhost', '127.0.0.1'].includes(url.hostname))
+      (stripeMode() === 'live' ||
+        !['localhost', '127.0.0.1'].includes(url.hostname)))
   )
     throw new OrderError('L’adresse du site doit être configurée en HTTPS.');
   return new URL(`/commande/${publicId}`, url.origin).toString();

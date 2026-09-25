@@ -1,11 +1,11 @@
 import 'server-only';
-import type { Intent } from '@/lib/stripe/stripe';
+import { stripeMode, type Intent } from '@/lib/stripe/stripe';
 import { toStripeAmount } from '@/lib/stripe/amount';
 import { OrderError, type OrderRecord } from '@/lib/orders/common';
 export function validateIntent(order: OrderRecord, intent: Intent) {
   if (
     !order.payment ||
-    intent.livemode ||
+    intent.livemode !== (stripeMode() === 'live') ||
     intent.amount !== toStripeAmount(order.totalAmount) ||
     !order.payment.amount.equals(order.totalAmount) ||
     order.payment.currency !== order.currency ||

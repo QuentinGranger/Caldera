@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import Stripe from 'stripe';
 import { toStripeAmount } from '../src/lib/stripe/amount';
 import { verifyWebhook } from '../src/lib/stripe/webhook';
+import { stripeMode } from '../src/lib/stripe/stripe';
 import { availableQuantity } from '../src/lib/inventory/availability';
 test('EUR : centimes exacts, aucune troncature ni montant invalide', () => {
   assert.equal(toStripeAmount('59.90'), 5990);
@@ -34,4 +35,24 @@ test('signature Stripe officielle : valide, altérée, absente et trop ancienne'
       secret,
     ),
   );
+});
+test('mode Stripe : déduit de la clé serveur, live réservé au build de production', () => {
+  const env = process.env as Record<string, string | undefined>;
+  const saved = { key: env.STRIPE_SECRET_KEY, node: env.NODE_ENV };
+  try {
+    const mode = (key: string | undefined, node: string) => {
+      env.STRIPE_SECRET_KEY = key;
+      env.NODE_ENV = node;
+      return stripeMode();
+    };
+    assert.equal(mode('rk_test_x', 'development'), 'test');
+    assert.equal(mode('sk_test_x', 'production'), 'test');
+    assert.equal(mode('rk_live_x', 'production'), 'live');
+    assert.equal(mode('sk_live_x', 'development'), null);
+    assert.equal(mode('pk_live_x', 'production'), null);
+    assert.equal(mode(undefined, 'production'), null);
+  } finally {
+    env.STRIPE_SECRET_KEY = saved.key;
+    env.NODE_ENV = saved.node;
+  }
 });

@@ -99,9 +99,11 @@ export function PaymentForm({
   return (
     <section className={styles.panel}>
       <h2>Paiement sécurisé</h2>
-      <p className={styles.note}>
-        Environnement de test Stripe · Aucun débit réel.
-      </p>
+      {key?.startsWith('pk_test_') && (
+        <p className={styles.note}>
+          Environnement de test Stripe · Aucun débit réel.
+        </p>
+      )}
 
       {!result && <p role="status">Préparation du paiement…</p>}
 
@@ -116,7 +118,7 @@ export function PaymentForm({
         </>
       )}
 
-      {result?.success && key?.startsWith('pk_test_') && (
+      {result?.success && /^pk_(test|live)_/.test(key ?? '') && (
         <Elements
           stripe={getBrowserStripe()}
           options={{
