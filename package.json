@@ -45,6 +45,8 @@
     "media:migrate": "node --conditions=react-server --import tsx scripts/migrate-uploads-to-blob.ts",
     "test:storage": "node --conditions=react-server --import tsx --test tests/storage.test.ts",
     "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts",
+    "test:maintenance": "node --conditions=react-server --import tsx --test tests/maintenance.test.ts",
+    "test:maintenance:http": "node --conditions=react-server --import tsx --test tests/maintenance-http.test.ts",
     "dev:stripe": "node scripts/dev-stripe.mjs"
   },
   "dependencies": {

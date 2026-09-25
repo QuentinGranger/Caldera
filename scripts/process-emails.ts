@@ -1,13 +1,13 @@
 import 'dotenv/config';
 import { getPrisma } from '../src/lib/db/prisma';
-import { processPendingEmails } from '../src/lib/email/processor';
+import { runMaintenanceJob } from '../src/lib/maintenance/jobs';
 try {
-  console.info(await processPendingEmails({ limit: 50 }));
-} catch {
-  console.error(
-    'Traitement email indisponible. Vérifier la configuration et PostgreSQL.',
-  );
-  process.exitCode = 1;
+  if (!(await runMaintenanceJob('process-emails')).ok) {
+    console.error(
+      'Traitement email indisponible. Vérifier la configuration et PostgreSQL.',
+    );
+    process.exitCode = 1;
+  }
 } finally {
   await getPrisma().$disconnect();
 }

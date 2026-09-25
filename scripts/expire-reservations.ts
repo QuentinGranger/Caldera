@@ -1,10 +1,9 @@
 import 'dotenv/config';
-import { expireReservations } from '../src/lib/payments/cancel';
 import { getPrisma } from '../src/lib/db/prisma';
+import { runMaintenanceJob } from '../src/lib/maintenance/jobs';
 try {
-  const result = await expireReservations();
-  console.info(JSON.stringify(result));
-  if (result.failures) process.exitCode = 1;
+  if (!(await runMaintenanceJob('expire-reservations')).ok)
+    process.exitCode = 1;
 } finally {
   await getPrisma().$disconnect();
 }

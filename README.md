@@ -439,7 +439,7 @@ TTL centralisé : **20 minutes**. La date seule ne libère rien : un paiement pe
 npm run stock:expire
 ```
 
-Cette commande traite jusqu’à 100 commandes échues, les plus anciennement inspectées en premier. **Aucun cron n’est installé** : exécuter régulièrement en local et programmer cette commande chaque minute dans l’environnement de déploiement. Elle annule Stripe avant libération, conserve les réservations PROCESSING/SUCCEEDED en attendant le webhook, et réessaie les erreurs réseau au passage suivant. Si aucun appel Stripe n’a commencé, elle libère sous verrou sans réseau. Une création dont la réponse a été perdue est récupérée avec la même clé ; après 23 heures d’ambiguïté, PAYMENT_REVIEW évite de recréer un intent après expiration de l’idempotence Stripe. Cet incident nécessite une vérification humaine dans Stripe/DB, sans libération aveugle. Un succès sans réservations cohérentes produit également PAYMENT_REVIEW et Payment SUCCEEDED ; aucun remboursement automatique.
+Cette commande traite jusqu’à 100 commandes échues, les plus anciennement inspectées en premier. En local, l’exécuter régulièrement ; en production, la même logique tourne via la route planifiée `/api/cron/maintenance`, à déclencher chaque minute (voir [Tâches planifiées](#tâches-planifiées-production)). Elle annule Stripe avant libération, conserve les réservations PROCESSING/SUCCEEDED en attendant le webhook, et réessaie les erreurs réseau au passage suivant. Si aucun appel Stripe n’a commencé, elle libère sous verrou sans réseau. Une création dont la réponse a été perdue est récupérée avec la même clé ; après 23 heures d’ambiguïté, PAYMENT_REVIEW évite de recréer un intent après expiration de l’idempotence Stripe. Cet incident nécessite une vérification humaine dans Stripe/DB, sans libération aveugle. Un succès sans réservations cohérentes produit également PAYMENT_REVIEW et Payment SUCCEEDED ; aucun remboursement automatique.
 
 ### Tests du paiement
 
@@ -621,7 +621,7 @@ Maximum **5 tentatives**. Les échecs passent à `FAILED`, avec code contrôlé 
 npm run emails:process
 ```
 
-La commande traite au plus 50 emails par exécution et n’envoie rien avec `EMAILS_ENABLED=false`. Un traitement limité est aussi tenté avec `next/server.after` après le webhook et les actions logistiques/retry. **Aucun scheduler n’est installé** : en production, planifier cette commande côté hébergeur (par exemple chaque minute, avec accès aux mêmes secrets et à PostgreSQL) pour garantir la reprise des échecs sans attendre une autre commande. Aucune route cron publique ajoutée.
+La commande traite au plus 50 emails par exécution et n’envoie rien avec `EMAILS_ENABLED=false`. Un traitement limité est aussi tenté avec `next/server.after` après le webhook et les actions logistiques/retry. En production, la route protégée `/api/cron/maintenance` exécute la même logique (voir [Tâches planifiées](#tâches-planifiées-production)) et doit être déclenchée chaque minute pour garantir la reprise des échecs sans attendre une autre commande.
 
 Les aperçus `/admin/emails/[id]/preview` exigent une session admin, sont privés/no-store/noindex et interdisent les scripts. Avant tentative, ils rendent le snapshot ; après tentative, ils montrent exactement le HTML figé. L’outbox contient des données personnelles de commande : appliquer les protections et sauvegardes de la base, et éviter sa copie vers un environnement de test avec envois activés.
 
@@ -671,3 +671,30 @@ npm run test:payments:http
 ```
 
 Recette et inventaire exact des fichiers : [docs/phase-10.md](docs/phase-10.md). Les tests email utilisent un fournisseur simulé : aucun email Resend réel n’a été envoyé. Restent la configuration du fournisseur, la réception sur une adresse choisie, la vérification visuelle desktop/mobile et l’aperçu d’impression dans un navigateur. Ne pas lancer `next dev` pendant `next build`.
+
+## Tâches planifiées (production)
+
+`npm run stock:expire` et `npm run emails:process` partagent leur code avec la route `GET /api/cron/maintenance` (`src/lib/maintenance/`) : mêmes lots (100 commandes, 50 emails), mêmes garanties d’idempotence. La route :
+
+- exige `Authorization: Bearer <CRON_SECRET>` (comparaison à temps constant). Secret absent ou de moins de 16 caractères : **503** sans rien exécuter ; en-tête invalide : **401** ;
+- répond immédiatement **202** `Cache-Control: no-store`, puis exécute les deux tâches indépendamment via `after()` (`maxDuration` 60 s). Une panne de l’une n’empêche pas l’autre ;
+- journalise une ligne JSON par tâche : `{"scope":"maintenance","action":"job_completed"|"job_retry_needed"|"job_failed","job":…,"durationMs":…}` avec les compteurs ou un `code` contrôlé, jamais de message brut ni de secret.
+
+Une exécution manquée, dupliquée, concurrente ou interrompue est sans danger : verrous de commande, `FOR UPDATE SKIP LOCKED`, baux et clés d’idempotence Stripe/Resend existants. Le passage suivant reprend le travail restant.
+
+**Limite Vercel.** Le projet est sur le plan **Hobby** : un cron Vercel y tourne **au plus une fois par jour**, à ±59 min, et une expression plus fréquente fait **échouer le déploiement**. `vercel.json` déclare donc un passage quotidien (`0 4 * * *` UTC), filet de sécurité compatible Hobby. Il ne suffit pas : les réservations de 20 minutes doivent être libérées chaque minute. Deux options :
+
+1. **Plan Pro** : remplacer la planification par `* * * * *` dans `vercel.json` et redéployer. Précision à la minute, rien d’autre à héberger.
+2. **Planificateur externe** (sans changer de plan) : service capable d’un appel par minute avec en-tête personnalisé (par exemple cron-job.org), en `GET https://lesterresdecaldera.fr/api/cron/maintenance` avec `Authorization: Bearer <CRON_SECRET>`. Garder le cron quotidien Vercel en secours.
+
+Mise en place : générer `openssl rand -hex 32` et l’ajouter comme `CRON_SECRET` **uniquement en Production** dans Vercel (`vercel env add CRON_SECRET production`), puis redéployer. Les déploiements Preview sans secret répondent 503. Vercel ne rejoue pas un cron échoué et n’enregistre pas les réponses en cache/redirection : surveiller les logs `scope:"maintenance"`.
+
+```bash
+npm run test:maintenance
+npm run build
+# Terminal séparé : secret fictif exclusivement pour les tests HTTP
+CRON_SECRET=cron_local_http_test_only EMAILS_ENABLED=false npm run start -- --port 3001
+npm run test:maintenance:http
+```
+
+Le test HTTP crée une commande locale échue sans appel Stripe, vérifie 401/405/202, attend la libération du stock par `after()` puis nettoie ses fixtures. Il traite aussi les autres commandes échues de la base de développement, comme `npm run stock:expire`.
