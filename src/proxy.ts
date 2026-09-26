@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+// Sentry ingest host, derived from the public DSN: the browser posts errors there.
+function sentryOrigin() {
+  try {
+    return ` ${new URL(process.env.NEXT_PUBLIC_SENTRY_DSN ?? '').origin}`;
+  } catch {
+    return '';
+  }
+}
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const dev = process.env.NODE_ENV === 'development';
@@ -8,7 +16,7 @@ export function proxy(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://*.stripe.com https://*.link.com",
     "font-src 'self'",
-    `connect-src 'self' https://api.stripe.com https://*.js.stripe.com https://link.com https://*.link.com${dev ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
+    `connect-src 'self' https://api.stripe.com https://*.js.stripe.com https://link.com https://*.link.com${sentryOrigin()}${dev ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
     'frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://link.com https://*.link.com',
     "object-src 'none'",
     "base-uri 'self'",

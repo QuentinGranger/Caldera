@@ -66,7 +66,7 @@ export default function ConfidentialitePage() {
           <p className={styles.eyebrow}>Vie privée & données</p>
           <h1>Politique de confidentialité</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
-          <p className={styles.version}>Dernière mise à jour : 21 septembre 2026</p>
+          <p className={styles.version}>Dernière mise à jour : 26 septembre 2026</p>
         </Container>
       </section>
 
@@ -317,6 +317,24 @@ export default function ConfidentialitePage() {
                 publicitaire installé sur le site afin de suivre individuellement
                 les visiteurs à des fins de publicité.
               </p>
+
+              <h3>2.11 Supervision technique</h3>
+              <p>
+                Afin de détecter et corriger les erreurs techniques et de
+                mesurer les performances du site, CALDERA utilise{' '}
+                <strong>Sentry</strong> et{' '}
+                <strong>Vercel Speed Insights</strong>. Ces outils reçoivent des
+                informations techniques : page concernée, sans les paramètres de
+                son adresse, type de navigateur et d’appareil, temps de
+                chargement et, en cas d’erreur, son déroulé technique.
+              </p>
+              <p>
+                Le site est configuré pour ne transmettre à ces outils ni
+                cookies, ni coordonnées, ni liens personnels de consultation de
+                commande. Ils ne déposent pas de cookie et ne servent pas à la
+                publicité. Ce traitement repose sur l’intérêt légitime de CALDERA
+                à assurer la sécurité et le bon fonctionnement du site.
+              </p>
             </Section>
 
             <Section id="section-3" title="3. Finalités et bases juridiques">
@@ -453,8 +471,19 @@ export default function ConfidentialitePage() {
               <ul>
                 <li>l’hébergement et le déploiement du site ;</li>
                 <li>son infrastructure technique ;</li>
-                <li>Vercel Web Analytics lorsque cette fonctionnalité est activée.</li>
+                <li>Vercel Web Analytics lorsque cette fonctionnalité est activée ;</li>
+                <li>
+                  Vercel Speed Insights, pour mesurer les performances de
+                  chargement des pages.
+                </li>
               </ul>
+
+              <h3>Sentry</h3>
+              <p>
+                Sentry (Functional Software, Inc.) est utilisé pour la détection
+                des erreurs techniques et le suivi des performances du site,
+                dans les conditions décrites à l’article 2.11.
+              </p>
 
               <h3>Supabase</h3>
               <p>Supabase est utilisé notamment pour :</p>

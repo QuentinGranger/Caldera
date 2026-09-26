@@ -46,15 +46,18 @@
     "test:storage": "node --conditions=react-server --import tsx --test tests/storage.test.ts",
     "test:fulfillment:db": "node --conditions=react-server --import tsx --test tests/fulfillment-db.test.ts",
     "test:maintenance": "node --conditions=react-server --import tsx --test tests/maintenance.test.ts",
+    "test:monitoring": "node --conditions=react-server --import tsx --test tests/monitoring.test.ts",
     "test:maintenance:http": "node --conditions=react-server --import tsx --test tests/maintenance-http.test.ts",
     "dev:stripe": "node scripts/dev-stripe.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "@sentry/nextjs": "11.0.0",
     "@stripe/react-stripe-js": "6.10.0",
     "@stripe/stripe-js": "9.16.0",
     "@vercel/blob": "2.8.0",
+    "@vercel/speed-insights": "2.0.0",
     "better-auth": "1.7.5",
     "dotenv": "18.0.1",
     "lucide-react": "1.47.0",

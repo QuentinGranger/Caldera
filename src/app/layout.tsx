@@ -9,6 +9,7 @@ import { Header } from '@/components/layout/Header/Header';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
+import { SpeedInsights } from '@/components/monitoring/SpeedInsights';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 
 import './globals.scss';
@@ -50,6 +51,7 @@ export default async function RootLayout({
           {children}
           <StorefrontOnly>
             <Footer />
+            <SpeedInsights />
           </StorefrontOnly>
         </CartProvider>
       </body>

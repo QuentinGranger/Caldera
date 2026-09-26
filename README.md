@@ -207,7 +207,11 @@ Les tests HTTP vérifient le HTML, les routes, les états et les liens. Ils ne r
 
 ### SEO
 
-Les pages ont leurs metadata propres. Les URL contenant des paramètres de navigation portent `noindex, follow`. Un canonical vers le chemin de base est produit **uniquement si `SITE_URL` est configurée** avec l’origine réelle du site ; aucun domaine de production n’est inventé. Cette variable facultative est documentée dans `.env.example`. Aucune sitemap n’a été ajoutée à cette étape, faute de domaine de publication configuré.
+Les pages ont leurs metadata propres. Les URL contenant des paramètres de navigation portent `noindex, follow`. Un canonical vers le chemin de base est produit **uniquement si `SITE_URL` est configurée** avec l’origine réelle du site ; aucun domaine de production n’est inventé. Cette variable facultative est documentée dans `.env.example`.
+
+`/sitemap.xml` (`src/app/sitemap.ts`) est lu en base à chaque requête : pages éditoriales, catégories actives, extensions ayant des produits visibles et fiches produit visibles avec leurs images, selon les mêmes règles que les pages publiques (aucune URL listée ne répond 404). Les pages `noindex` (panier, checkout, commande, admin) n’y figurent pas.
+
+`/robots.txt` (`src/app/robots.ts`) autorise l’exploration et pointe vers la sitemap **uniquement sur `lesterresdecaldera.fr` et `www`**. Sur tout autre hôte (alias `*.vercel.app`, localhost), il interdit tout pour éviter un site dupliqué dans Google. Après la mise en ligne, déclarer `https://lesterresdecaldera.fr/sitemap.xml` dans Google Search Console.
 
 ## Fiche produit
 
@@ -698,3 +702,19 @@ npm run test:maintenance:http
 ```
 
 Le test HTTP crée une commande locale échue sans appel Stripe, vérifie 401/405/202, attend la libération du stock par `after()` puis nettoie ses fixtures. Il traite aussi les autres commandes échues de la base de développement, comme `npm run stock:expire`.
+
+## Supervision (erreurs et performances)
+
+**Sentry** (`@sentry/nextjs`) capture les erreurs serveur (`src/instrumentation.ts`, `onRequestError` : Server Components, Route Handlers, Server Actions, proxy) et navigateur (`src/instrumentation-client.ts`, `error.tsx`, `global-error.tsx`), et trace 10 % des requêtes pour les performances. **Vercel Speed Insights** mesure les Core Web Vitals des vrais visiteurs sur les pages boutique.
+
+- Sentry ne s’active qu’en build de production avec `NEXT_PUBLIC_SENTRY_DSN` (public, intégré au build). Sans DSN, rien n’est envoyé.
+- Aucune query string ne quitte le site (`src/lib/monitoring/scrub.ts`) : les liens de commande portent un jeton d’accès (`?access=`) et les retours Stripe un secret de PaymentIntent. Ni cookies, ni referer, ni `sendDefaultPii`, ni Session Replay.
+- La CSP autorise l’hôte d’ingestion Sentry déduit du DSN ; Speed Insights reste sur la même origine (`/_vercel/…`).
+- Source maps : générées et envoyées à Sentry uniquement si `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` et `SENTRY_PROJECT` sont définis au build, puis supprimées du build. Sans jeton, aucune source map n’est produite ni servie.
+
+Mise en place : projet Sentry (plan gratuit via `stripe projects add sentry/developer` puis `sentry/project`), `NEXT_PUBLIC_SENTRY_DSN` en Production dans Vercel (plus les trois variables de source maps si disponibles), activer Speed Insights dans l’onglet du projet Vercel, puis redéployer.
+
+```bash
+npm run test:monitoring
+```
+

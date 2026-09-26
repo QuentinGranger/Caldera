@@ -1,13 +1,20 @@
 'use client';
+import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
 import { Container } from '@/components/ui/Container/Container';
 import { Button } from '@/components/ui/Button/Button';
 import styles from '@/components/catalog/Catalog.module.scss';
 export default function ErrorPage({
+  error,
   retry,
 }: {
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  // Browser-side render errors; server ones already arrive through onRequestError.
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
   return (
     <main id="contenu" className={styles.main}>
       <Container>
