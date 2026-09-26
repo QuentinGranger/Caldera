@@ -709,7 +709,7 @@ Le test HTTP crée une commande locale échue sans appel Stripe, vérifie 401/40
 
 - Sentry ne s’active qu’en build de production avec `NEXT_PUBLIC_SENTRY_DSN` (public, intégré au build). Sans DSN, rien n’est envoyé.
 - Aucune query string ne quitte le site (`src/lib/monitoring/scrub.ts`) : les liens de commande portent un jeton d’accès (`?access=`) et les retours Stripe un secret de PaymentIntent. Ni cookies, ni referer, ni `sendDefaultPii`, ni Session Replay.
-- La CSP autorise l’hôte d’ingestion Sentry déduit du DSN ; Speed Insights reste sur la même origine (`/_vercel/…`).
+- La CSP autorise l’hôte d’ingestion Sentry déduit du DSN ; Speed Insights reste sur la même origine, via un chemin aléatoire fourni par Vercel (`NEXT_PUBLIC_VERCEL_OBSERVABILITY_BASEPATH`) pour échapper aux bloqueurs.
 - Source maps : générées et envoyées à Sentry uniquement si `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` et `SENTRY_PROJECT` sont définis au build, puis supprimées du build. Sans jeton, aucune source map n’est produite ni servie.
 
 Mise en place : compte Sentry créé directement sur sentry.io (plan gratuit Developer, région de données **EU**), projet de plateforme Next.js ; `NEXT_PUBLIC_SENTRY_DSN` en Production dans Vercel (plus `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` et `SENTRY_PROJECT` pour les source maps), activer Speed Insights dans l’onglet du projet Vercel, puis redéployer. Sentry n’est pas utilisable via Stripe Projects : la CLI ne résout pas ce fournisseur.
