@@ -2,45 +2,48 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
+import { getSiteNavigation, type NavLink } from '@/data/navigation';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from './Footer.module.scss';
-const groups = [
-  {
-    title: 'Caldera',
-    links: [
-      { label: 'Notre univers', href: '/univers' },
-      { label: 'Notre sélection', href: '/#selection' },
-    ],
-  },
-  {
-    title: 'Boutique',
-    links: [
-      { label: 'Pokémon', href: '/catalogue' },
-      { label: 'Scellés', href: '/categorie/scelles' },
-      { label: 'Cartes', href: '/categorie/cartes' },
-      { label: 'Accessoires', href: '/categorie/accessoires' },
-      { label: 'Précommandes', href: '/precommandes' },
-      { label: 'Extensions', href: '/extensions' },
-    ],
-  },
-  {
-    title: 'Aide',
-    links: [
-      { label: 'Livraison' },
-      { label: 'FAQ' },
-      { label: 'Contact', href: '/contact' },
-    ],
-  },
-  {
-    title: 'Légal',
-    links: [
-      { label: 'Mentions légales', href: '/mentions-legales' },
-      { label: 'CGV', href: '/cgv' },
-      { label: 'Confidentialité', href: '/confidentialite' },
-    ],
-  },
-];
-export function Footer() {
+export async function Footer() {
+  const navigation = await getSiteNavigation();
+  const groups: { title: string; links: NavLink[] }[] = [
+    {
+      title: 'Caldera',
+      links: [
+        { label: 'Notre univers', href: navigation.universe.href },
+        { label: 'Notre sélection', href: '/#selection' },
+      ],
+    },
+    {
+      title: 'Boutique',
+      links: [
+        ...(navigation.catalogue ? [navigation.catalogue] : []),
+        ...navigation.games.map(({ href, label }) => ({ href, label })),
+        ...navigation.familyHubs,
+        ...navigation.listings,
+        navigation.extensions,
+        navigation.calendar,
+      ],
+    },
+    {
+      title: 'Aide',
+      links: [
+        navigation.delivery,
+        navigation.guides,
+        navigation.glossary,
+        navigation.contact,
+      ],
+    },
+    {
+      title: 'Légal',
+      links: [
+        { label: 'Mentions légales', href: '/mentions-legales' },
+        { label: 'CGV', href: '/cgv' },
+        { label: 'Confidentialité', href: '/confidentialite' },
+      ],
+    },
+  ];
   return (
     <footer className={styles.footer}>
       <Container>
@@ -70,17 +73,8 @@ export function Footer() {
               <h2>{group.title}</h2>
               <ul>
                 {group.links.map((link) => (
-                  <li key={link.label}>
-                    {link.href ? (
-                      <Link href={link.href}>{link.label}</Link>
-                    ) : (
-                      <span
-                        aria-disabled="true"
-                        title="Page disponible à l’ouverture de la boutique"
-                      >
-                        {link.label}
-                      </span>
-                    )}
+                  <li key={link.href}>
+                    <Link href={link.href}>{link.label}</Link>
                   </li>
                 ))}
               </ul>

@@ -24,7 +24,12 @@ export type CartView = {
   subtotal: string;
   hasUnavailableItems: boolean;
 };
-export type CartActionResult = { success: boolean; message: string };
+/** Every cart action returns the cart read after it, applied by CartProvider. */
+export type CartActionResult = {
+  success: boolean;
+  message: string;
+  cart: CartView;
+};
 export const emptyCart = (): CartView => ({
   items: [],
   itemCount: 0,

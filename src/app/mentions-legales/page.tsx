@@ -1,25 +1,20 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { Container } from '@/components/ui/Container/Container';
+import {
+  editorialDecision,
+  editorialMetadata,
+} from '@/components/editorial/editorial';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from '../cgv/cgv.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Mentions légales | Les Terres de Caldera',
+export const metadata = editorialMetadata({
+  title: 'Mentions légales',
   description:
-    'Consultez les mentions légales de la boutique Les Terres de Caldera éditée par CALDERA.',
-  alternates: { canonical: '/mentions-legales' },
-  openGraph: {
-    title: 'Mentions légales | Les Terres de Caldera',
-    description:
-      'Informations légales relatives à CALDERA et au site Les Terres de Caldera.',
-    url: '/mentions-legales',
-    type: 'website',
-    locale: 'fr_FR',
-  },
-};
+    'Mentions légales des Terres de Caldera : éditeur CALDERA, hébergement, propriété intellectuelle, données personnelles et médiation de la consommation.',
+  decision: editorialDecision('/mentions-legales'),
+});
 
 const sections = [
   ['section-1', '1. Éditeur du site'],

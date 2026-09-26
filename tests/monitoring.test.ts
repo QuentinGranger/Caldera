@@ -95,3 +95,51 @@ test('SEO : origine publique issue de SITE_URL, repli production', () => {
     else process.env.SITE_URL = saved;
   }
 });
+test('SEO : www redirigé en 308 vers l’apex, chemin et query conservés', async () => {
+  const { NextRequest } = await import('next/server');
+  const { proxy } = await import('../src/proxy');
+  const request = (url: string, host = new URL(url).host) =>
+    new NextRequest(url, { headers: { host } });
+  const redirected = proxy(
+    request('https://www.lesterresdecaldera.fr/pokemon/etb?page=2&tri=1'),
+  );
+  assert.equal(redirected.status, 308);
+  assert.equal(
+    redirected.headers.get('location'),
+    'https://lesterresdecaldera.fr/pokemon/etb?page=2&tri=1',
+  );
+  assert.equal(
+    proxy(request('https://www.lesterresdecaldera.fr/')).headers.get(
+      'location',
+    ),
+    'https://lesterresdecaldera.fr/',
+  );
+  assert.equal(
+    proxy(
+      request(
+        'https://www.lesterresdecaldera.fr/robots.txt',
+        'WWW.LesTerresDeCaldera.fr:443',
+      ),
+    ).headers.get('location'),
+    'https://lesterresdecaldera.fr/robots.txt',
+  );
+  // A path starting with // never changes the redirect host.
+  const tricky = proxy(
+    request('https://www.lesterresdecaldera.fr//exemple.com/x'),
+  );
+  assert.equal(
+    new URL(tricky.headers.get('location')!).host,
+    'lesterresdecaldera.fr',
+  );
+  for (const url of [
+    'https://lesterresdecaldera.fr/pokemon',
+    'https://les-terres-de-caldera.vercel.app/pokemon',
+  ]) {
+    const response = proxy(request(url));
+    assert.equal(response.headers.get('location'), null, url);
+    assert.match(
+      response.headers.get('content-security-policy') ?? '',
+      /default-src 'self'/,
+    );
+  }
+});

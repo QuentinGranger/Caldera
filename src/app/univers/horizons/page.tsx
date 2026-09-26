@@ -1,12 +1,11 @@
-import type { Metadata } from 'next';
 import { UniverseChapterShell } from '@/components/universe/UniverseChapterShell';
+import { universeChapterMetadata } from '@/components/universe/metadata';
 import styles from '@/components/universe/UniverseChapter.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Horizons inconnus | L’univers de Caldera',
-  description:
-    'Les cartes incomplètes, les routes interrompues, les signes inexpliqués et l’esprit qui donne son sens aux Terres de Caldera.',
-};
+export const metadata = universeChapterMetadata(
+  'horizons',
+  'Les cartes incomplètes, les routes interrompues, les signes inexpliqués et l’esprit qui donne son sens aux Terres de Caldera.',
+);
 
 export default function HorizonsPage() {
   return (
@@ -15,8 +14,6 @@ export default function HorizonsPage() {
       title="Horizons inconnus"
       kicker="Dernières pages"
       lead="Les Archivistes laissent volontairement certaines zones blanches. À Caldera, une carte terminée signifierait qu’il ne reste plus rien à découvrir."
-      image="/assets/images/HautesTerres.png"
-      imageAlt="Hautes Terres de Caldera couvertes de neige, de vent et de brume"
     >
       <section>
         <h2>Ce que les Archives ne savent pas</h2>
@@ -105,8 +102,9 @@ export default function HorizonsPage() {
           toutes les découvertes que l’on a choisi de garder.
         </p>
         <blockquote>
-          Et tant qu’il restera une case vide, une route inconnue ou une histoire
-          encore à découvrir, les Terres de Caldera continueront de s’étendre.
+          Et tant qu’il restera une case vide, une route inconnue ou une
+          histoire encore à découvrir, les Terres de Caldera continueront de
+          s’étendre.
         </blockquote>
       </section>
     </UniverseChapterShell>

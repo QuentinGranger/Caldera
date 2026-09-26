@@ -6,53 +6,59 @@ import { EditorialSection } from '@/components/home/EditorialSection/EditorialSe
 import { Collections } from '@/components/home/Collections/Collections';
 import { RestockSection } from '@/components/home/RestockSection/RestockSection';
 import { Newsletter } from '@/components/home/Newsletter/Newsletter';
+import { getHomeData, homeCopy } from '@/components/home/homeData';
+import { DEFAULT_TITLE } from '@/components/layout/siteMetadata';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { getListingHub } from '@/components/catalog/listingHub';
 import { connection } from 'next/server';
 import {
   getNewProducts,
   getFeaturedProducts,
   getRestockedProducts,
-  getHomeCategories,
-  getCollections,
 } from '@/lib/catalog/queries';
+import { graph, organizationNode, websiteNode } from '@/lib/seo/jsonld';
+import { buildMetadata } from '@/lib/seo/metadata';
 import styles from './page.module.scss';
-export const metadata: Metadata = {
-  title: 'Les Terres de Caldera — Pokémon & Cartes à collectionner',
-  description:
-    'Découvrez Les Terres de Caldera, une boutique dédiée aux cartes, coffrets et produits de collection Pokémon.',
-  alternates: { canonical: '/' },
-  openGraph: {
-    url: '/',
-    title: 'Les Terres de Caldera — Pokémon & Cartes à collectionner',
-    description:
-      'Cartes, coffrets et objets de collection sélectionnés pour les passionnés.',
-    locale: 'fr_FR',
-    type: 'website',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await connection();
+  const hub = await getListingHub('catalogue');
+  return buildMetadata({
+    title: DEFAULT_TITLE,
+    absoluteTitle: true,
+    description: homeCopy(hub).description,
+    path: '/',
+    index: true,
+  });
+}
 export default async function HomePage() {
   await connection();
-  const [
-    newProducts,
-    selectedProducts,
-    restockProducts,
-    categories,
-    collections,
-  ] = await Promise.all([
-    getNewProducts(4),
-    getFeaturedProducts(2),
-    getRestockedProducts(3),
-    getHomeCategories(),
-    getCollections(),
-  ]);
+  const [home, newProducts, selectedProducts, restockProducts] =
+    await Promise.all([
+      getHomeData(),
+      getNewProducts(4),
+      getFeaturedProducts(2),
+      getRestockedProducts(3),
+    ]);
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
-      <Hero />
-      <CategoryGrid categories={categories} />
-      <FeaturedProducts products={newProducts} />
+      <JsonLd data={graph(organizationNode(), websiteNode())} />
+      <Hero
+        copy={home.copy}
+        links={home.links}
+        familiesAnchor={home.families.length > 0}
+      />
+      <CategoryGrid
+        families={home.families}
+        total={home.hub.stats.productCount}
+      />
+      <FeaturedProducts products={newProducts} link={home.links.nouveautes} />
       <FeaturedProducts products={selectedProducts} editorial />
       <EditorialSection />
-      <Collections collections={collections} />
-      <RestockSection products={restockProducts} />
+      <Collections collections={home.collections} />
+      <RestockSection
+        products={restockProducts}
+        link={home.links['en-stock']}
+      />
       <Newsletter />
     </main>
   );

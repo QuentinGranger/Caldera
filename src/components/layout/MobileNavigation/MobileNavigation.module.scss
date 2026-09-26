@@ -59,6 +59,27 @@
   }
 }
 
+.mainLinks .subLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.1rem;
+  margin: -0.35rem 0 0;
+  padding: 0 0 0.6rem;
+  list-style: none;
+
+  li {
+    border-bottom: 0;
+  }
+
+  a {
+    min-height: 40px;
+    padding-block: 0.5rem;
+    color: v.$color-muted-on-dark;
+    font-family: v.$font-body;
+    font-size: 0.72rem;
+  }
+}
+
 .universeGroup {
   padding-bottom: 0.4rem;
 }

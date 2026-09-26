@@ -1,13 +1,12 @@
-import type { Metadata } from 'next';
-import Image from 'next/image';
 import { UniverseChapterShell } from '@/components/universe/UniverseChapterShell';
+import { universeChapterMetadata } from '@/components/universe/metadata';
+import { UniverseFigure } from '@/components/universe/UniverseFigure';
 import styles from '@/components/universe/UniverseChapter.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Origines | L’univers de Caldera',
-  description:
-    'Le Grand Effondrement, la naissance du bassin de Caldera et les premiers explorateurs qui ouvrirent ses chemins.',
-};
+export const metadata = universeChapterMetadata(
+  'origines',
+  'Le Grand Effondrement, la naissance du bassin de Caldera et les premiers explorateurs qui ouvrirent ses chemins.',
+);
 
 export default function OriginsPage() {
   return (
@@ -16,8 +15,6 @@ export default function OriginsPage() {
       title="Là où la terre s’est ouverte"
       kicker="Origines"
       lead="Personne ne sait exactement quand le sommet s’est effondré. On sait seulement qu’après cette nuit, l’horizon n’a plus jamais eu la même forme."
-      image="/assets/images/PremiersExplorateurs.png"
-      imageAlt="Premiers explorateurs descendant vers la Caldera au coucher du soleil"
     >
       <section>
         <h2>Le Grand Effondrement</h2>
@@ -31,18 +28,12 @@ export default function OriginsPage() {
           nuit, laissant derrière elle une immense dépression ceinturée de
           falaises abruptes.
         </p>
-        <figure className={styles.loreVisual}>
-          <Image
-            src="/assets/images/GrandEffondrement.png"
-            alt="Vue panoramique de la Caldera après le Grand Effondrement"
-            fill
-            sizes="(min-width: 75rem) 46rem, 100vw"
-          />
-          <figcaption>
-            Vue depuis la couronne rocheuse : le bassin central, ses lacs, ses
-            falaises et les premières zones encore actives.
-          </figcaption>
-        </figure>
+        <UniverseFigure
+          src="/assets/images/GrandEffondrement.png"
+          alt="Vue panoramique de la Caldera après le Grand Effondrement"
+          caption="Vue depuis la couronne rocheuse : le bassin central, ses lacs, ses falaises et les premières zones encore actives."
+          className={styles.loreVisual}
+        />
         <p>
           Au fond du bassin, la terre resta chaude. Des lacs se formèrent entre
           les coulées refroidies. Des rivières descendirent des hauteurs et
@@ -63,17 +54,18 @@ export default function OriginsPage() {
         </p>
         <p>
           C’est de ces hauteurs que furent signalées les premières grandes
-          créatures ailées. Elles utilisaient les courants chauds qui remontaient
-          du cratère pour longer les falaises. Elles étaient rares, difficiles à
-          approcher et déjà présentes dans les récits les plus anciens.
+          créatures ailées. Elles utilisaient les courants chauds qui
+          remontaient du cratère pour longer les falaises. Elles étaient rares,
+          difficiles à approcher et déjà présentes dans les récits les plus
+          anciens.
         </p>
       </section>
 
       <section>
         <h2>Les premiers chemins</h2>
         <p className={styles.intro}>
-          Les premières expéditions ne cherchèrent pas à conquérir Caldera. Elles
-          cherchèrent d’abord à comprendre comment y entrer.
+          Les premières expéditions ne cherchèrent pas à conquérir Caldera.
+          Elles cherchèrent d’abord à comprendre comment y entrer.
         </p>
         <p>
           Les explorateurs suivirent les rebords de la couronne rocheuse,
@@ -105,7 +97,9 @@ export default function OriginsPage() {
           Ils étaient cartographes, voyageurs, naturalistes, marchands,
           collectionneurs ou simplement curieux.
         </p>
-        <p>Ils partirent parce que les cartes de Caldera étaient encore vides.</p>
+        <p>
+          Ils partirent parce que les cartes de Caldera étaient encore vides.
+        </p>
         <p>
           Certains revinrent avec des pierres étranges ou des fragments trouvés
           dans les couches de cendre.
@@ -130,7 +124,8 @@ export default function OriginsPage() {
         <p>Ces récits furent d’abord consignés dans des carnets personnels.</p>
         <p>Puis les carnets devinrent des registres.</p>
         <p>
-          Et les registres devinrent les <strong>Archives des Explorateurs</strong>.
+          Et les registres devinrent les{' '}
+          <strong>Archives des Explorateurs</strong>.
         </p>
       </section>
     </UniverseChapterShell>

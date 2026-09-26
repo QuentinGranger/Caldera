@@ -1,4 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
+// www serves the same pages as the apex: one canonical host (308, path and query kept).
+function apexRedirect(request: NextRequest) {
+  const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
+  if (host !== `www.${PRODUCTION_HOST}`) return null;
+  // Assigned, never resolved: a path starting with // cannot change the host.
+  const target = new URL(PRODUCTION_SITE_URL);
+  target.pathname = request.nextUrl.pathname;
+  target.search = request.nextUrl.search;
+  return NextResponse.redirect(target, 308);
+}
 // Sentry ingest host, derived from the public DSN: the browser posts errors there.
 function sentryOrigin() {
   try {
@@ -8,6 +19,8 @@ function sentryOrigin() {
   }
 }
 export function proxy(request: NextRequest) {
+  const redirect = apexRedirect(request);
+  if (redirect) return redirect;
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const dev = process.env.NODE_ENV === 'development';
   const policy = [

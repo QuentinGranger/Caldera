@@ -3,10 +3,18 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Container } from '@/components/ui/Container/Container';
+import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { UpdatedOn } from '@/components/editorial/UpdatedOn';
 import {
+  universeChapterPath,
   universeChapters,
+  universeImage,
+  universeIndex,
   type UniverseChapterSlug,
 } from '@/data/universe';
+import { articleNode, graph } from '@/lib/seo/jsonld';
+import { getUniverseShopLinks } from './shopLinks';
 import styles from './UniverseChapter.module.scss';
 
 type Props = {
@@ -14,18 +22,14 @@ type Props = {
   title: string;
   kicker: string;
   lead: string;
-  image: string;
-  imageAlt: string;
   children: ReactNode;
 };
 
-export function UniverseChapterShell({
+export async function UniverseChapterShell({
   slug,
   title,
   kicker,
   lead,
-  image,
-  imageAlt,
   children,
 }: Props) {
   const index = universeChapters.findIndex((chapter) => chapter.slug === slug);
@@ -33,25 +37,35 @@ export function UniverseChapterShell({
   const next =
     index < universeChapters.length - 1 ? universeChapters[index + 1] : null;
   const chapter = universeChapters[index]!;
+  const path = universeChapterPath(slug);
+  const hero = universeImage(chapter.hero.src, chapter.hero.alt);
+  const shop = await getUniverseShopLinks();
 
   return (
     <main id="contenu" className={styles.main}>
       <section className={styles.hero} aria-labelledby="chapter-title">
-        <Image
-          src={image}
-          alt={imageAlt}
-          fill
-          preload
-          sizes="100vw"
-          className={styles.heroImage}
-        />
+        {hero && (
+          <Image
+            src={hero.src}
+            alt={hero.alt}
+            fill
+            preload
+            sizes="100vw"
+            className={styles.heroImage}
+          />
+        )}
         <div className={styles.heroShade} aria-hidden="true" />
         <Container className={styles.heroInner}>
-          <nav className={styles.breadcrumb} aria-label="Fil d’Ariane">
-            <Link href="/univers">Univers</Link>
-            <span aria-hidden="true">/</span>
-            <span>{chapter.title}</span>
-          </nav>
+          <div className={styles.heroBreadcrumb}>
+            <Breadcrumb
+              items={[
+                { label: 'Accueil', href: '/' },
+                { label: 'Univers', href: universeIndex.path },
+                { label: chapter.title },
+              ]}
+              currentPath={path}
+            />
+          </div>
           <p className={styles.chapterNumber}>
             CHRONIQUE {chapter.number} · {kicker}
           </p>
@@ -62,15 +76,18 @@ export function UniverseChapterShell({
 
       <section className={styles.reading}>
         <Container className={styles.readingGrid}>
-          <aside className={styles.chapterNav} aria-label="Chapitres de l’univers">
-            <Link className={styles.backToIndex} href="/univers">
+          <aside
+            className={styles.chapterNav}
+            aria-label="Chapitres de l’univers"
+          >
+            <Link className={styles.backToIndex} href={universeIndex.path}>
               Toutes les chroniques
             </Link>
             <ol>
               {universeChapters.map((item) => (
                 <li key={item.slug}>
                   <Link
-                    href={`/univers/${item.slug}`}
+                    href={universeChapterPath(item.slug)}
                     aria-current={item.slug === slug ? 'page' : undefined}
                   >
                     <span>{item.number}</span>
@@ -87,9 +104,17 @@ export function UniverseChapterShell({
           <article className={styles.article}>
             {children}
 
-            <nav className={styles.pager} aria-label="Navigation entre les chroniques">
+            <UpdatedOn date={chapter.updated} className={styles.updated} />
+
+            <nav
+              className={styles.pager}
+              aria-label="Navigation entre les chroniques"
+            >
               {previous ? (
-                <Link href={`/univers/${previous.slug}`} className={styles.previous}>
+                <Link
+                  href={universeChapterPath(previous.slug)}
+                  className={styles.previous}
+                >
                   <ArrowLeft size={17} aria-hidden="true" />
                   <span>
                     <small>Chronique précédente</small>
@@ -101,26 +126,57 @@ export function UniverseChapterShell({
               )}
 
               {next ? (
-                <Link href={`/univers/${next.slug}`} className={styles.next}>
+                <Link
+                  href={universeChapterPath(next.slug)}
+                  className={styles.next}
+                >
                   <span>
                     <small>Chronique suivante</small>
                     <strong>{next.title}</strong>
                   </span>
                   <ArrowRight size={17} aria-hidden="true" />
                 </Link>
-              ) : (
-                <Link href="/catalogue" className={styles.next}>
+              ) : shop.exit ? (
+                <Link href={shop.exit.href} className={styles.next}>
                   <span>
                     <small>Continuer l’exploration</small>
-                    <strong>Entrer dans la boutique</strong>
+                    <strong>{shop.exit.label}</strong>
                   </span>
                   <ArrowRight size={17} aria-hidden="true" />
                 </Link>
+              ) : (
+                <span />
               )}
             </nav>
+
+            {shop.links.length > 0 && (
+              <nav className={styles.shop} aria-labelledby="chapter-shop-title">
+                <p id="chapter-shop-title" className={styles.shopTitle}>
+                  Dans la boutique
+                </p>
+                <ul>
+                  {shop.links.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href}>{link.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
           </article>
         </Container>
       </section>
+      <JsonLd
+        data={graph(
+          articleNode({
+            path,
+            headline: title,
+            description: lead,
+            dateModified: chapter.updated,
+            image: hero?.src,
+          }),
+        )}
+      />
     </main>
   );
 }

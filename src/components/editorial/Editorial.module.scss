@@ -1,0 +1,645 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.main {
+  min-height: 65vh;
+  padding-block: 2rem clamp(4rem, 8vw, 6rem);
+  background: v.$color-background;
+}
+
+// Page header: eyebrow, h1, lead and date.
+
+.header {
+  max-width: 52rem;
+  padding-bottom: clamp(2rem, 4vw, 3rem);
+
+  h1 {
+    margin: 0.65rem 0 1rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(2.5rem, 5.5vw, 4.6rem) / 1 v.$font-heading;
+    letter-spacing: -0.03em;
+    overflow-wrap: anywhere;
+  }
+}
+
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+}
+
+.lead {
+  max-width: 46rem;
+  color: v.$color-text;
+  font: 400 clamp(1.2rem, 2vw, 1.45rem) / 1.5 v.$font-heading;
+}
+
+.updated {
+  margin-top: 1.1rem;
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+}
+
+.facts {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 46rem;
+  margin-top: 1rem;
+  color: v.$color-text-muted;
+  font-size: 0.85rem;
+  line-height: 1.8;
+
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+    text-decoration-color: v.$color-gold;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: v.$color-green;
+  }
+}
+
+// Reading layout: table of contents beside the article on desktop.
+
+.layout {
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: 16rem minmax(0, 46rem);
+    justify-content: space-between;
+    gap: 5rem;
+  }
+}
+
+.single {
+  max-width: 46rem;
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid v.$color-border;
+}
+
+.toc {
+  padding: 1rem 1.2rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+
+  @include m.from(v.$breakpoint-desktop) {
+    position: sticky;
+    top: 2rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  ol {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    border-top: 1px solid v.$color-border;
+  }
+
+  li {
+    border-bottom: 1px solid v.$color-border;
+  }
+
+  li:last-child {
+    border-bottom: 0;
+
+    @include m.from(v.$breakpoint-desktop) {
+      border-bottom: 1px solid v.$color-border;
+    }
+  }
+
+  a {
+    display: block;
+    padding-block: 0.7rem;
+    color: v.$color-text;
+    font-size: 0.74rem;
+    line-height: 1.45;
+
+    &:hover {
+      color: v.$color-green;
+      text-decoration: underline;
+    }
+  }
+}
+
+.tocTitle {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+}
+
+.article {
+  min-width: 0;
+}
+
+// Markdown body. Mirrors the universe chapters: serif headings, muted text.
+
+.prose {
+  h2 {
+    max-width: 42rem;
+    margin: 3rem 0 1rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(1.9rem, 3.4vw, 2.6rem) / 1.05 v.$font-heading;
+    letter-spacing: -0.02em;
+    scroll-margin-top: 1.5rem;
+  }
+
+  h3 {
+    margin: 2rem 0 0.5rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(1.35rem, 2.4vw, 1.7rem) / 1.1 v.$font-heading;
+    scroll-margin-top: 1.5rem;
+  }
+
+  h4 {
+    margin: 1.5rem 0 0.4rem;
+    color: v.$color-green-dark;
+    font: 600 1.15rem / 1.2 v.$font-heading;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  p,
+  ul,
+  ol {
+    max-width: 43rem;
+    margin-top: 1rem;
+    color: v.$color-text-muted;
+    font-size: 0.88rem;
+    line-height: 1.9;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.2rem;
+  }
+
+  li + li {
+    margin-top: 0.35rem;
+  }
+
+  li::marker {
+    color: v.$color-green-secondary;
+  }
+
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+    text-decoration-color: v.$color-gold;
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: v.$color-green;
+      text-decoration-color: currentcolor;
+    }
+  }
+
+  strong {
+    color: v.$color-text;
+  }
+
+  blockquote {
+    max-width: 43rem;
+    margin: 2rem 0;
+    padding: 0.5rem 0 0.5rem 1.3rem;
+    border-left: 2px solid v.$color-gold;
+
+    p {
+      color: v.$color-green-dark;
+      font: 400 clamp(1.25rem, 2.2vw, 1.55rem) / 1.4 v.$font-heading;
+    }
+  }
+
+  table {
+    display: block;
+    max-width: 100%;
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  th,
+  td {
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid v.$color-border;
+  }
+
+  th {
+    color: v.$color-green-dark;
+  }
+
+  code {
+    padding: 0.1rem 0.3rem;
+    background: v.$color-background-secondary;
+    border-radius: v.$radius-small;
+    font-size: 0.85em;
+  }
+
+  hr {
+    margin: 2.5rem 0;
+    border: 0;
+    border-top: 1px solid v.$color-border;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+// Glossary definition, highlighted above the body.
+
+.definition {
+  max-width: 43rem;
+  margin-bottom: 2.5rem;
+  padding: 1.2rem 1.4rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-left: 3px solid v.$color-gold;
+  border-radius: v.$radius-small;
+
+  a {
+    text-decoration: underline;
+    text-decoration-color: v.$color-gold;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: v.$color-green;
+  }
+}
+
+.definitionLabel {
+  @include m.eyebrow;
+  margin-bottom: 0.5rem;
+  color: v.$color-green-secondary;
+}
+
+.definitionText {
+  color: v.$color-text;
+  font: 400 clamp(1.2rem, 2vw, 1.4rem) / 1.5 v.$font-heading;
+}
+
+// Sections after the body: FAQ, shop, related content.
+
+.section {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid v.$color-border;
+
+  > h2 {
+    margin-bottom: 1.2rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(1.9rem, 3.4vw, 2.6rem) / 1.05 v.$font-heading;
+    letter-spacing: -0.02em;
+  }
+}
+
+.sectionIntro {
+  max-width: 43rem;
+  margin: -0.4rem 0 1.5rem;
+  color: v.$color-text-muted;
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.faq {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 43rem;
+
+  h3 {
+    color: v.$color-green-dark;
+    font: 500 clamp(1.25rem, 2.2vw, 1.5rem) / 1.2 v.$font-heading;
+  }
+
+  p {
+    margin-top: 0.45rem;
+    color: v.$color-text-muted;
+    font-size: 0.86rem;
+    line-height: 1.85;
+  }
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.45rem 0.9rem;
+    color: v.$color-green-dark;
+    background: v.$color-surface;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-pill;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+
+    &:hover {
+      border-color: v.$color-gold;
+    }
+  }
+}
+
+.pillCount {
+  color: v.$color-text-muted;
+  font-weight: 500;
+}
+
+// Lists of guides and terms.
+
+.cards {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.wideCards {
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.3rem 1.4rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  transition: border-color v.$transition-fast;
+
+  &:hover,
+  &:focus-within {
+    border-color: v.$color-gold;
+  }
+
+  h3 {
+    color: v.$color-green-dark;
+    font: 500 clamp(1.35rem, 2.3vw, 1.65rem) / 1.12 v.$font-heading;
+  }
+
+  // The whole card is clickable through the title link.
+  h3 a::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  p {
+    color: v.$color-text-muted;
+    font-size: 0.8rem;
+    line-height: 1.7;
+  }
+
+  .cardKind {
+    @include m.eyebrow;
+    color: v.$color-green-secondary;
+    font-size: 0.58rem;
+  }
+
+  .cardDate {
+    margin-top: auto;
+    padding-top: 0.4rem;
+    font-size: 0.68rem;
+  }
+}
+
+.group + .group {
+  margin-top: clamp(3rem, 6vw, 4rem);
+}
+
+.groupTitle {
+  margin-bottom: 1.2rem;
+  color: v.$color-green-dark;
+  font: 500 clamp(1.9rem, 3.4vw, 2.6rem) / 1.05 v.$font-heading;
+  letter-spacing: -0.02em;
+}
+
+// Glossary index.
+
+.letters {
+  margin-bottom: 2rem;
+  padding-block: 0.75rem;
+  background: v.$color-background;
+  border-bottom: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: grid;
+    min-width: 40px;
+    min-height: 40px;
+    place-items: center;
+    color: v.$color-green-dark;
+    background: v.$color-surface;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-small;
+    font: 600 1.05rem / 1 v.$font-heading;
+
+    &:hover {
+      border-color: v.$color-gold;
+    }
+  }
+}
+
+.letter {
+  display: grid;
+  gap: 1rem;
+  padding-block: 1.8rem;
+  scroll-margin-top: 1rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    scroll-margin-top: 4.5rem;
+  }
+  border-top: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  > h2 {
+    color: v.$color-gold;
+    font: 500 clamp(2.4rem, 4vw, 3.2rem) / 1 v.$font-heading;
+  }
+}
+
+.terms {
+  display: grid;
+  gap: 1.4rem;
+  margin: 0;
+
+  dt {
+    color: v.$color-green-dark;
+    font: 500 clamp(1.3rem, 2.2vw, 1.55rem) / 1.15 v.$font-heading;
+
+    a:hover {
+      color: v.$color-green;
+      text-decoration: underline;
+    }
+  }
+
+  dd {
+    max-width: 46rem;
+    margin: 0.35rem 0 0;
+    color: v.$color-text-muted;
+    font-size: 0.82rem;
+    line-height: 1.75;
+  }
+}
+
+// Delivery table.
+
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+
+  &:focus-visible {
+    outline-offset: 2px;
+  }
+}
+
+.table {
+  width: 100%;
+  min-width: 42rem;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  line-height: 1.55;
+
+  caption {
+    padding: 0.9rem 1rem 0;
+    color: v.$color-text-muted;
+    font-size: 0.72rem;
+    text-align: left;
+  }
+
+  th,
+  td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid v.$color-border;
+  }
+
+  thead th {
+    color: v.$color-green-dark;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  tbody th {
+    color: v.$color-text;
+    font-weight: 700;
+  }
+}
+
+.methodNote {
+  display: block;
+  margin-top: 0.2rem;
+  color: v.$color-text-muted;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.notice {
+  max-width: 46rem;
+  padding: 1.2rem 1.4rem;
+  color: v.$color-text;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.textBlock {
+  max-width: 46rem;
+
+  p,
+  ul {
+    color: v.$color-text-muted;
+    font-size: 0.86rem;
+    line-height: 1.85;
+  }
+
+  p + p,
+  p + ul,
+  ul + p {
+    margin-top: 0.8rem;
+  }
+
+  ul {
+    padding-left: 1.2rem;
+  }
+
+  li + li {
+    margin-top: 0.35rem;
+  }
+
+  strong {
+    color: v.$color-text;
+  }
+
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+    text-decoration-color: v.$color-gold;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: v.$color-green;
+  }
+}

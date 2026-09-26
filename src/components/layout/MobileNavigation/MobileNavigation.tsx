@@ -2,12 +2,16 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Menu, X } from 'lucide-react';
-import { navigation } from '@/data/navigation';
+import type { NavLink, SiteNavigation } from '@/data/navigation';
 import { universeChapters } from '@/data/universe';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import styles from './MobileNavigation.module.scss';
 
-export function MobileNavigation() {
+export function MobileNavigation({
+  navigation,
+}: {
+  navigation: SiteNavigation;
+}) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -48,6 +52,16 @@ export function MobileNavigation() {
     };
   }, [open]);
 
+  const close = () => setOpen(false);
+  const shopLinks: NavLink[] = [
+    ...(navigation.catalogue ? [navigation.catalogue] : []),
+    ...navigation.listings,
+    navigation.extensions,
+    navigation.calendar,
+    navigation.guides,
+    navigation.glossary,
+  ];
+
   return (
     <div ref={wrapper} className={styles.mobile}>
       <IconButton
@@ -71,9 +85,31 @@ export function MobileNavigation() {
             Boutique
           </p>
           <ul className={styles.mainLinks}>
-            {navigation.map(({ label, href }) => (
-              <li key={label}>
-                <Link href={href} onClick={() => setOpen(false)}>
+            {navigation.games.map((game) => (
+              <li key={game.href}>
+                <Link href={game.href} onClick={close}>
+                  {game.label}
+                  <ArrowUpRight size={17} aria-hidden="true" />
+                </Link>
+                {game.children.length > 0 && (
+                  <ul
+                    className={styles.subLinks}
+                    aria-label={`Familles ${game.label}`}
+                  >
+                    {game.children.map((family) => (
+                      <li key={family.href}>
+                        <Link href={family.href} onClick={close}>
+                          {family.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+            {shopLinks.map(({ label, href }) => (
+              <li key={href}>
+                <Link href={href} onClick={close}>
                   {label}
                   <ArrowUpRight size={17} aria-hidden="true" />
                 </Link>
@@ -94,7 +130,7 @@ export function MobileNavigation() {
             <Link
               href="/univers"
               className={styles.allUniverse}
-              onClick={() => setOpen(false)}
+              onClick={close}
             >
               Tout voir
               <ArrowRight size={14} aria-hidden="true" />
@@ -104,10 +140,7 @@ export function MobileNavigation() {
           <ul className={styles.universeLinks}>
             {universeChapters.map((chapter) => (
               <li key={chapter.slug}>
-                <Link
-                  href={`/univers/${chapter.slug}`}
-                  onClick={() => setOpen(false)}
-                >
+                <Link href={`/univers/${chapter.slug}`} onClick={close}>
                   <span className={styles.chapterNumber}>{chapter.number}</span>
                   <span className={styles.chapterCopy}>
                     <strong>{chapter.title}</strong>

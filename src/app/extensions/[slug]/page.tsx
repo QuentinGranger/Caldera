@@ -1,60 +1,100 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
-import { connection } from 'next/server';
-import { notFound } from 'next/navigation';
-import { CatalogPage } from '@/components/catalog/CatalogPage';
-import { getExtension } from '@/lib/catalog/taxonomy';
-import { catalogMetadata } from '@/lib/catalog/metadata';
+import { CatalogHeader } from '@/components/catalog/CatalogHeader';
+import {
+  CatalogResults,
+  catalogItemListNode,
+  catalogListingMetadata,
+  catalogLoadPath,
+  loadCatalog,
+} from '@/components/catalog/CatalogPage';
+import { LandingEditorial } from '@/components/landing/LandingEditorial';
+import { LandingFacts } from '@/components/landing/LandingFacts';
+import { LandingFaq } from '@/components/landing/LandingFaq';
+import { LandingGuides } from '@/components/landing/LandingGuides';
+import { requireStandaloneSet } from '@/components/landing/routes';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
+import { Container } from '@/components/ui/Container/Container';
 import type { SearchParams } from '@/lib/catalog/params';
+import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
 import styles from '@/components/catalog/Catalog.module.scss';
+import landingStyles from '@/components/landing/Landing.module.scss';
+
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<SearchParams>;
 };
-export async function generateMetadata({ params, searchParams }: Props) {
-  await connection();
-  const set = await getExtension((await params).slug);
-  if (!set) notFound();
-  return catalogMetadata(
-    set.name,
-    set.description ?? `Explorez l’extension ${set.name}.`,
-    `/extensions/${set.slug}`,
-    await searchParams,
-  );
+
+// A set attached to an active game lives at /{game}/{set}: this route answers
+// 308 for it and only renders the sets without game.
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
+  const view = await requireStandaloneSet((await params).slug, searchParams);
+  return catalogListingMetadata({
+    path: view.path,
+    searchParams,
+    scope: view.catalogScope,
+    title: view.text.title,
+    description: view.text.description,
+    decision: view.decision,
+    image: view.image,
+  });
 }
+
 export default async function Page({ params, searchParams }: Props) {
-  await connection();
-  const set = await getExtension((await params).slug);
-  if (!set) notFound();
+  const view = await requireStandaloneSet((await params).slug, searchParams);
+  const load = await loadCatalog({
+    path: view.path,
+    searchParams,
+    scope: view.catalogScope,
+  });
+  const { set } = view;
+  const firstPage = load.page === 1;
+  const faq = firstPage ? view.faq : [];
   return (
-    <CatalogPage
-      title={set.name}
-      description={set.description}
-      path={`/extensions/${set.slug}`}
-      scope={{ set: set.slug }}
-      searchParams={searchParams}
-      breadcrumb={[
-        { label: 'Accueil', href: '/' },
-        { label: 'Extensions', href: '/extensions' },
-        { label: set.name },
-      ]}
-    >
-      <div className={styles.setInfo}>
-        {set.logoUrl && (
-          <Image
-            src={set.logoUrl}
-            alt={`Logo ${set.name}`}
-            width={140}
-            height={90}
-          />
+    <main id="contenu" tabIndex={-1} className={styles.main}>
+      <Container>
+        <Breadcrumb items={view.breadcrumb} currentPath={view.path} />
+        <CatalogHeader
+          eyebrow="Extension"
+          title={set.name}
+          description={set.description}
+          intro={
+            <>
+              {set.logoUrl && (
+                <Image
+                  src={set.logoUrl}
+                  alt={`Logo ${set.name}`}
+                  width={180}
+                  height={90}
+                  className={landingStyles.logo}
+                />
+              )}
+              <LandingFacts facts={view.facts} />
+            </>
+          }
+        />
+        {firstPage && <LandingEditorial html={view.editorialHtml} />}
+        <CatalogResults load={load} path={view.path} />
+        {firstPage && (
+          <LandingGuides entries={view.guides} subject={set.name} />
         )}
-        {set.series && <p>{set.series}</p>}
-        {set.releaseDate && (
-          <p>
-            Sortie :{' '}
-            {set.releaseDate.toLocaleDateString('fr-FR', { timeZone: 'UTC' })}
-          </p>
+        <LandingFaq entries={faq} subject={set.name} />
+      </Container>
+      <JsonLd
+        data={graph(
+          collectionPageNode({
+            path: catalogLoadPath(load),
+            name: set.name,
+            description: view.text.description,
+            mainEntity: catalogItemListNode(load),
+          }),
+          faqPageNode(faq),
         )}
-      </div>
-    </CatalogPage>
+      />
+    </main>
   );
 }

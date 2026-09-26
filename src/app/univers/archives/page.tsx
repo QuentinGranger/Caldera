@@ -1,12 +1,11 @@
-import type { Metadata } from 'next';
 import { UniverseChapterShell } from '@/components/universe/UniverseChapterShell';
+import { universeChapterMetadata } from '@/components/universe/metadata';
 import styles from '@/components/universe/UniverseChapter.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Les Archives | L’univers de Caldera',
-  description:
-    'Les Archives des Explorateurs : observatoire, bibliothèque, centre de cartographie et mémoire vivante de Caldera.',
-};
+export const metadata = universeChapterMetadata(
+  'archives',
+  'Les Archives des Explorateurs : observatoire, bibliothèque, centre de cartographie et mémoire vivante de Caldera.',
+);
 
 export default function ArchivesPage() {
   return (
@@ -15,8 +14,6 @@ export default function ArchivesPage() {
       title="Les Archives des Explorateurs"
       kicker="Mémoire"
       lead="Suspendues au-dessus des brumes, les Archives sont à la fois un refuge, un observatoire, une bibliothèque et le lieu où Caldera apprend à se souvenir."
-      image="/assets/images/ArchiveExplorateurs.png"
-      imageAlt="Archives des Explorateurs construites sur une falaise dominant la Caldera"
     >
       <section>
         <h2>Un lieu pour conserver ce qui revient</h2>
@@ -25,15 +22,15 @@ export default function ArchivesPage() {
           roche d’où l’on peut observer une grande partie du bassin.
         </p>
         <p>
-          Le bâtiment n’a pas été construit d’un seul geste. Il s’est agrandi
-          au fil des générations : salles de lecture, galeries de cartes,
-          réserves, ateliers, verrières d’étude et plateformes d’observation se
-          sont accrochés peu à peu à la falaise.
+          Le bâtiment n’a pas été construit d’un seul geste. Il s’est agrandi au
+          fil des générations : salles de lecture, galeries de cartes, réserves,
+          ateliers, verrières d’étude et plateformes d’observation se sont
+          accrochés peu à peu à la falaise.
         </p>
         <p>
-          Les expéditions y partent et y reviennent. On y compare les itinéraires,
-          on y corrige les cartes, on y classe les fragments rapportés du terrain
-          et l’on y rassemble les journaux de voyage.
+          Les expéditions y partent et y reviennent. On y compare les
+          itinéraires, on y corrige les cartes, on y classe les fragments
+          rapportés du terrain et l’on y rassemble les journaux de voyage.
         </p>
         <p>
           Depuis la tour d’observation, les Archivistes surveillent les fumées
@@ -55,17 +52,26 @@ export default function ArchivesPage() {
         <p>
           Il peut s’agir d’une pierre inhabituelle, d’une illustration, d’un
           fragment d’outil, d’une plume, d’un carnet, d’un objet échangé sur les
-          Rivages ou d’une pièce retrouvée sous les cendres des Terres de Braise.
+          Rivages ou d’une pièce retrouvée sous les cendres des Terres de
+          Braise.
         </p>
         <p className={styles.shortBeat}>
-          Un trésor est <strong>quelque chose que quelqu’un a choisi de ne pas oublier</strong>.
+          Un trésor est{' '}
+          <strong>
+            quelque chose que quelqu’un a choisi de ne pas oublier
+          </strong>
+          .
         </p>
         <p>Il peut être exceptionnel ou presque insignifiant.</p>
         <p>Rare ou commun.</p>
         <p>Ancien ou découvert la veille.</p>
         <p>Ce qui compte est la trace qu’il laisse.</p>
-        <p>C’est ainsi qu’est née l’une des plus anciennes maximes des Archives :</p>
-        <blockquote>« Ce qui mérite d’être gardé mérite d’être raconté. »</blockquote>
+        <p>
+          C’est ainsi qu’est née l’une des plus anciennes maximes des Archives :
+        </p>
+        <blockquote>
+          « Ce qui mérite d’être gardé mérite d’être raconté. »
+        </blockquote>
       </section>
 
       <section>
@@ -76,9 +82,9 @@ export default function ArchivesPage() {
         </p>
         <p>
           Chaque objet important devait être accompagné de trois traces :{' '}
-          <strong>le lieu</strong> où il avait été trouvé, <strong>le chemin</strong>{' '}
-          qui avait permis de l’atteindre et <strong>le récit</strong> de celui
-          ou celle qui l’avait rapporté.
+          <strong>le lieu</strong> où il avait été trouvé,{' '}
+          <strong>le chemin</strong> qui avait permis de l’atteindre et{' '}
+          <strong>le récit</strong> de celui ou celle qui l’avait rapporté.
         </p>
         <p>
           Cette règle ne garantissait pas que l’histoire soit complète. Elle

@@ -26,7 +26,12 @@
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(90deg, rgb(3 24 18 / 92%) 0%, rgb(3 24 18 / 67%) 52%, rgb(3 24 18 / 34%) 100%),
+    linear-gradient(
+      90deg,
+      rgb(3 24 18 / 92%) 0%,
+      rgb(3 24 18 / 67%) 52%,
+      rgb(3 24 18 / 34%) 100%
+    ),
     linear-gradient(0deg, rgb(0 42 31 / 65%), transparent 48%);
 }
 
@@ -38,10 +43,8 @@
   padding-block: clamp(4.5rem, 9vw, 7rem) 3rem;
 }
 
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+// Shared Breadcrumb component, recoloured for the dark hero.
+.heroBreadcrumb nav {
   margin-bottom: 2.3rem;
   color: rgb(251 244 223 / 66%);
   font-size: 0.62rem;
@@ -49,6 +52,15 @@
   a {
     color: v.$color-gold-light;
     text-decoration: none;
+  }
+
+  a:hover {
+    color: v.$color-cream;
+    text-decoration: underline;
+  }
+
+  [aria-current] {
+    color: rgb(251 244 223 / 82%);
   }
 }
 
@@ -179,15 +191,6 @@
     margin: 2.7rem 0 0.4rem;
     color: v.$color-green-dark;
     font: 500 clamp(1.7rem, 3vw, 2.45rem)/1 v.$font-heading;
-  }
-
-  h4 {
-    margin: 0 0 1rem;
-    color: v.$color-gold;
-    font-size: 0.62rem;
-    font-weight: 850;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
   }
 
   p {
@@ -344,9 +347,14 @@
     margin: 0;
   }
 
-  h4 {
-    grid-column: 2;
+  // Tagline under a territory name: a styled paragraph, not a heading.
+  .tagline {
+    max-width: none;
     margin: 0.3rem 0 0;
+    color: v.$color-gold;
+    font: 850 0.62rem / 1.08 v.$font-heading;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 }
 
@@ -403,6 +411,56 @@
 .next {
   justify-content: flex-end;
   text-align: right;
+}
+
+.article .updated {
+  margin-top: 3rem;
+  font-size: 0.68rem;
+
+  + .pager {
+    margin-top: 1.5rem;
+  }
+}
+
+.shop {
+  margin-top: 2rem;
+  padding: 1rem 1.1rem;
+  background: v.$color-background-secondary;
+  border-radius: v.$radius-medium;
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: inline-block;
+    padding-block: 0.3rem;
+    color: v.$color-green-dark;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: v.$color-gold;
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: v.$color-green;
+    }
+  }
+}
+
+.article .shopTitle {
+  margin: 0;
+  color: v.$color-green-secondary;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
 @media (max-width: 479px) {

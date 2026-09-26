@@ -3,13 +3,16 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
 import { SectionTitle } from '@/components/ui/SectionTitle/SectionTitle';
-import type { getCollections } from '@/lib/catalog/queries';
+import type { HomeCollection } from '@/components/home/homeData';
+import { formatDateFr } from '@/lib/seo/metadata';
 import styles from './Collections.module.scss';
+const TONES = ['sand', 'sage'] as const;
 export function Collections({
   collections,
 }: {
-  collections: Awaited<ReturnType<typeof getCollections>>;
+  collections: HomeCollection[];
 }) {
+  if (!collections.length) return null;
   return (
     <section
       id="collections"
@@ -19,29 +22,34 @@ export function Collections({
       <Container>
         <SectionTitle
           id="collections-title"
-          eyebrow="Des horizons à découvrir"
-          title="À chaque passion, sa collection"
+          eyebrow="Par date de sortie"
+          title="Les dernières extensions"
+          link={{ href: '/extensions', label: 'Toutes les extensions' }}
         />
         <div className={styles.grid}>
           {collections.map((collection, index) => (
             <Link
               href={collection.href}
               key={collection.slug}
-              id={index === 0 ? 'scelles' : 'accessoires'}
-              className={`${styles.card} ${index === 0 ? styles.prismatic : styles.accessories}`}
+              id={`extension-${collection.slug}`}
+              className={`${styles.card} ${styles[TONES[index % TONES.length]!]}`}
             >
               <div className={styles.copy}>
-                <p>LES EXTENSIONS DU CATALOGUE</p>
+                <p>
+                  {collection.gameName}
+                  {collection.releaseDate &&
+                    ` · Sortie le ${formatDateFr(collection.releaseDate)}`}
+                </p>
                 <h3>{collection.name}</h3>
                 <span>
-                  Découvrir la collection{' '}
+                  Voir les {collection.count} produits{' '}
                   <ArrowUpRight size={17} aria-hidden="true" />
                 </span>
               </div>
               <div className={styles.image}>
                 <Image
-                  src={collection.image}
-                  alt={`Visuel de ${collection.name}`}
+                  src={collection.image.url}
+                  alt={collection.image.alt}
                   fill
                   sizes="(min-width: 768px) 300px, 45vw"
                 />
@@ -49,9 +57,6 @@ export function Collections({
             </Link>
           ))}
         </div>
-        {collections.length === 0 && (
-          <p>Les collections seront bientôt disponibles.</p>
-        )}
       </Container>
     </section>
   );

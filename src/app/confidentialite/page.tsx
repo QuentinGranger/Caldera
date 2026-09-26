@@ -1,25 +1,20 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { Container } from '@/components/ui/Container/Container';
+import {
+  editorialDecision,
+  editorialMetadata,
+} from '@/components/editorial/editorial';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from '../cgv/cgv.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Politique de confidentialité | Les Terres de Caldera',
+export const metadata = editorialMetadata({
+  title: 'Politique de confidentialité',
   description:
-    'Découvrez comment CALDERA collecte, utilise, conserve et protège les données personnelles sur Les Terres de Caldera.',
-  alternates: { canonical: '/confidentialite' },
-  openGraph: {
-    title: 'Politique de confidentialité | Les Terres de Caldera',
-    description:
-      'Politique de confidentialité et informations relatives aux données personnelles de CALDERA.',
-    url: '/confidentialite',
-    type: 'website',
-    locale: 'fr_FR',
-  },
-};
+    'Données personnelles sur Les Terres de Caldera : données collectées, finalités, destinataires, durées de conservation, cookies et exercice de vos droits.',
+  decision: editorialDecision('/confidentialite'),
+});
 
 const sections = [
   ['section-1', '1. Responsable du traitement'],

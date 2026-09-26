@@ -1,32 +1,44 @@
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Compass } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
-import { universeChapters } from '@/data/universe';
+import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { universeIndexMetadata } from '@/components/universe/metadata';
+import {
+  universeChapterPath,
+  universeChapters,
+  universeImage,
+  universeIndex,
+} from '@/data/universe';
+import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
 import styles from './page.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Les Terres de Caldera | Univers & chroniques',
-  description:
-    'Découvrez les Terres de Caldera : un monde né du Grand Effondrement, cinq territoires, des Archives et des routes encore incomplètes.',
-  robots: { index: true, follow: true },
-};
+export const metadata = universeIndexMetadata();
 
 export default function UniversePage() {
+  const hero = universeImage(universeIndex.hero.src, universeIndex.hero.alt);
   return (
     <main id="contenu" className={styles.main}>
       <section className={styles.hero} aria-labelledby="universe-title">
-        <Image
-          src="/assets/images/RouteCinq.png"
-          alt=""
-          fill
-          preload
-          sizes="100vw"
-          className={styles.heroImage}
-        />
+        {hero && (
+          <Image
+            src={hero.src}
+            alt={hero.alt}
+            fill
+            preload
+            sizes="100vw"
+            className={styles.heroImage}
+          />
+        )}
         <div className={styles.heroShade} aria-hidden="true" />
         <Container className={styles.heroInner}>
+          <div className={styles.heroBreadcrumb}>
+            <Breadcrumb
+              items={[{ label: 'Accueil', href: '/' }, { label: 'Univers' }]}
+              currentPath={universeIndex.path}
+            />
+          </div>
           <p className={styles.eyebrow}>LES TERRES DE CALDERA</p>
           <h1 id="universe-title">
             Là où la terre
@@ -38,7 +50,10 @@ export default function UniversePage() {
             falaises, de brumes, de forêts, de terres volcaniques et de routes
             que personne n’a encore fini de tracer.
           </p>
-          <Link className={styles.primaryCta} href="/univers/origines">
+          <Link
+            className={styles.primaryCta}
+            href={universeChapterPath('origines')}
+          >
             Commencer par les origines
             <ArrowRight size={17} aria-hidden="true" />
           </Link>
@@ -83,7 +98,7 @@ export default function UniversePage() {
           <ol className={styles.chapterGrid}>
             {universeChapters.map((chapter) => (
               <li key={chapter.slug}>
-                <Link href={`/univers/${chapter.slug}`}>
+                <Link href={universeChapterPath(chapter.slug)}>
                   <span className={styles.chapterNumber}>{chapter.number}</span>
                   <div>
                     <p>{chapter.label}</p>
@@ -113,6 +128,20 @@ export default function UniversePage() {
           </p>
         </Container>
       </section>
+      <JsonLd
+        data={graph(
+          collectionPageNode({
+            path: universeIndex.path,
+            name: universeIndex.title,
+            mainEntity: itemListNode(
+              universeChapters.map((chapter) => ({
+                path: universeChapterPath(chapter.slug),
+                name: chapter.title,
+              })),
+            ),
+          }),
+        )}
+      />
     </main>
   );
 }

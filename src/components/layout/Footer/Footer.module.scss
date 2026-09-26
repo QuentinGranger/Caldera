@@ -25,16 +25,12 @@
     font-size: 0.75rem;
     color: v.$color-muted-on-dark;
   }
-  li a,
-  li span {
+  li a {
     display: inline-block;
     padding-block: 0.25rem;
   }
   a:hover {
     color: v.$color-gold;
-  }
-  span[aria-disabled] {
-    opacity: 0.65;
   }
   @include m.from(v.$breakpoint-tablet) {
     grid-template-columns: repeat(4, minmax(0, 1fr));

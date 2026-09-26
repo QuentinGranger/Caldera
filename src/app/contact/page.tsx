@@ -1,26 +1,21 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Globe2, PackageSearch, Sparkles } from 'lucide-react';
 
 import { Container } from '@/components/ui/Container/Container';
+import {
+  editorialDecision,
+  editorialMetadata,
+} from '@/components/editorial/editorial';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { ContactForm } from './ContactForm';
 import styles from './contact.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Contact | Les Terres de Caldera',
+export const metadata = editorialMetadata({
+  title: 'Contact',
   description:
     'Contactez Les Terres de Caldera pour une question sur une commande, un produit, une précommande ou la livraison.',
-  alternates: { canonical: '/contact' },
-  openGraph: {
-    title: 'Contact | Les Terres de Caldera',
-    description:
-      'Une question sur votre commande ou sur la boutique Les Terres de Caldera ? Contactez-nous depuis le formulaire dédié.',
-    url: '/contact',
-    type: 'website',
-    locale: 'fr_FR',
-  },
-};
+  decision: editorialDecision('/contact'),
+});
 
 const helpCards = [
   {

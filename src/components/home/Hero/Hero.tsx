@@ -3,8 +3,24 @@ import Link from 'next/link';
 import { ArrowDown, ArrowRight, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
 import { Container } from '@/components/ui/Container/Container';
+import type { HomeCopy, HomeLinks } from '@/components/home/homeData';
 import styles from './Hero.module.scss';
-export function Hero() {
+const SECONDARY: readonly { kind: keyof HomeLinks; label: string }[] = [
+  { kind: 'nouveautes', label: 'Voir les nouveautés' },
+  { kind: 'precommandes', label: 'Voir les précommandes' },
+  { kind: 'en-stock', label: 'Voir les produits en stock' },
+];
+export function Hero({
+  copy,
+  links,
+  familiesAnchor,
+}: {
+  copy: HomeCopy;
+  links: HomeLinks;
+  /** The family grid is shown: #familles exists. */
+  familiesAnchor: boolean;
+}) {
+  const secondary = SECONDARY.find(({ kind }) => links[kind]);
   return (
     <section className={styles.hero} aria-labelledby="hero-title">
       <Image
@@ -21,29 +37,38 @@ export function Hero() {
             <span /> LES TERRES DE CALDERA
           </p>
           <h1 id="hero-title">
-            Entrez dans les terres
+            Cartes{copy.games ? ` ${copy.games}` : ''}
             <br />
-            de la <em>collection.</em>
+            <em>à collectionner.</em>
           </h1>
-          <p className={styles.description}>
-            Cartes, coffrets et objets de collection
-            <br className={styles.desktopBreak} /> sélectionnés pour les
-            passionnés.
-          </p>
-          <div className={styles.actions}>
-            <Button href="/catalogue" variant="gold">
-              Explorer la boutique <ArrowRight aria-hidden="true" />
-            </Button>
-            <Link href="/nouveautes" className={styles.secondary}>
-              Voir les nouveautés <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-          </div>
+          <p className={styles.description}>{copy.summary}</p>
+          {(links.catalogue || secondary) && (
+            <div className={styles.actions}>
+              {links.catalogue && (
+                <Button href={links.catalogue} variant="gold">
+                  Parcourir le catalogue <ArrowRight aria-hidden="true" />
+                </Button>
+              )}
+              {secondary && (
+                <Link
+                  href={links[secondary.kind]!}
+                  className={styles.secondary}
+                >
+                  {secondary.label} <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              )}
+            </div>
+          )}
         </div>
         <div className={styles.foot}>
-          <a href="#pokemon">
-            <ArrowDown size={16} aria-hidden="true" /> Un nouveau territoire
-            vous attend
-          </a>
+          {familiesAnchor ? (
+            <a href="#familles">
+              <ArrowDown size={16} aria-hidden="true" /> Les familles de
+              produits
+            </a>
+          ) : (
+            <span />
+          )}
           <span>
             <Compass size={17} aria-hidden="true" /> L’âme d’un collectionneur.
             L’esprit d’un explorateur.

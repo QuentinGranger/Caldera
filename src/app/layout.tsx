@@ -10,7 +10,7 @@ import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
 import { SpeedInsights } from '@/components/monitoring/SpeedInsights';
-import { PRODUCTION_SITE_URL } from '@/lib/site';
+import { rootMetadata } from '@/components/layout/siteMetadata';
 
 import './globals.scss';
 
@@ -27,12 +27,8 @@ const bodyFont = localFont({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(PRODUCTION_SITE_URL),
-  title: 'Les Terres de Caldera',
-  description:
-    "Boutique spécialisée dans l'univers Pokémon et les cartes à collectionner.",
-};
+// Title template « %s | Caldera », Open Graph and Twitter defaults.
+export const metadata: Metadata = rootMetadata();
 
 export default async function RootLayout({
   children,

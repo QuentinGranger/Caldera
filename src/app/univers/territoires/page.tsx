@@ -1,13 +1,12 @@
-import type { Metadata } from 'next';
-import Image from 'next/image';
 import { UniverseChapterShell } from '@/components/universe/UniverseChapterShell';
+import { universeChapterMetadata } from '@/components/universe/metadata';
+import { UniverseFigure } from '@/components/universe/UniverseFigure';
 import styles from '@/components/universe/UniverseChapter.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Les cinq territoires | L’univers de Caldera',
-  description:
-    'Explorez la Caldera, les Terres de Braise, les Forêts anciennes, les Hautes Terres et les Rivages.',
-};
+export const metadata = universeChapterMetadata(
+  'territoires',
+  'Les cinq territoires de Caldera : la Caldera, les Terres de Braise, les Forêts anciennes, les Hautes Terres et les Rivages.',
+);
 
 export default function TerritoriesPage() {
   return (
@@ -16,11 +15,9 @@ export default function TerritoriesPage() {
       title="Les cinq territoires"
       kicker="Cartographie"
       lead="Autour du cratère, cinq régions ont développé leurs propres paysages, leurs propres dangers et leurs propres façons d’explorer."
-      image="/assets/images/GrandEffondrement.png"
-      imageAlt="Vue générale de la Caldera, de ses falaises, de ses lacs et de ses terres volcaniques"
     >
       <section>
-        <h2>Les cinq territoires</h2>
+        <h2>Une terre, cinq façons d’explorer</h2>
         <p className={styles.intro}>
           Les cartes anciennes représentaient ces régions comme cinq mondes
           séparés. Les explorateurs ont fini par comprendre qu’elles formaient
@@ -28,13 +25,16 @@ export default function TerritoriesPage() {
           les routes humaines.
         </p>
         <p>
-          Chaque région possède sa propre matière, son propre climat et sa propre
-          manière de mettre les voyageurs à l’épreuve. C’est aussi pour cette
-          raison que les découvertes rapportées aux Archives portent toujours la
-          trace du lieu où elles ont été trouvées.
+          Chaque région possède sa propre matière, son propre climat et sa
+          propre manière de mettre les voyageurs à l’épreuve. C’est aussi pour
+          cette raison que les découvertes rapportées aux Archives portent
+          toujours la trace du lieu où elles ont été trouvées.
         </p>
 
-        <nav className={styles.territoryJump} aria-label="Aller à un territoire">
+        <nav
+          className={styles.territoryJump}
+          aria-label="Aller à un territoire"
+        >
           <a href="#caldera">I · La Caldera</a>
           <a href="#braise">II · Terres de Braise</a>
           <a href="#forets">III · Forêts anciennes</a>
@@ -47,21 +47,18 @@ export default function TerritoriesPage() {
             <span className={styles.roman}>I</span>
             <div>
               <h3>La Caldera</h3>
-              <h4>Le cœur des terres</h4>
+              <p className={styles.tagline}>Le cœur des terres</p>
             </div>
           </header>
-          <figure className={styles.territoryVisual}>
-            <Image
-              src="/assets/images/GrandEffondrement.png"
-              alt="Grande vue du bassin central de la Caldera"
-              fill
-              sizes="(min-width: 75rem) 46rem, 100vw"
-            />
-            <figcaption>La Caldera — le cœur des terres.</figcaption>
-          </figure>
+          <UniverseFigure
+            src="/assets/images/GrandEffondrement.png"
+            alt="Grande vue du bassin central de la Caldera"
+            caption="La Caldera — le cœur des terres."
+            className={styles.territoryVisual}
+          />
           <p>
-            Au centre du monde connu s’étend l’immense bassin qui donna son nom à
-            toutes les terres environnantes.
+            Au centre du monde connu s’étend l’immense bassin qui donna son nom
+            à toutes les terres environnantes.
           </p>
           <p>
             Ses falaises forment une couronne de roche sombre autour d’un relief
@@ -85,13 +82,13 @@ export default function TerritoriesPage() {
             croisent aujourd’hui les principales routes.
           </p>
           <p className={styles.maxim}>
-            Toutes les grandes routes finissent, tôt ou tard, par revenir vers la
-            Caldera.
+            Toutes les grandes routes finissent, tôt ou tard, par revenir vers
+            la Caldera.
           </p>
           <p>
-            On dit que l’on peut parcourir le monde entier sans comprendre ce que
-            l’on cherche. Mais qu’une fois revenu ici, on sait enfin pourquoi on
-            était parti.
+            On dit que l’on peut parcourir le monde entier sans comprendre ce
+            que l’on cherche. Mais qu’une fois revenu ici, on sait enfin
+            pourquoi on était parti.
           </p>
         </section>
 
@@ -100,18 +97,15 @@ export default function TerritoriesPage() {
             <span className={styles.roman}>II</span>
             <div>
               <h3>Les Terres de Braise</h3>
-              <h4>La roche garde la mémoire</h4>
+              <p className={styles.tagline}>La roche garde la mémoire</p>
             </div>
           </header>
-          <figure className={styles.territoryVisual}>
-            <Image
-              src="/assets/images/TerresBraise.png"
-              alt="Plateaux volcaniques noirs et rougeoyants des Terres de Braise"
-              fill
-              sizes="(min-width: 75rem) 46rem, 100vw"
-            />
-            <figcaption>Les Terres de Braise — la roche garde la mémoire.</figcaption>
-          </figure>
+          <UniverseFigure
+            src="/assets/images/TerresBraise.png"
+            alt="Plateaux volcaniques noirs et rougeoyants des Terres de Braise"
+            caption="Les Terres de Braise — la roche garde la mémoire."
+            className={styles.territoryVisual}
+          />
           <p>
             À l’est de la Caldera s’étendent des plateaux noirs traversés de
             fractures rouges, de fumerolles et d’anciennes rivières de lave.
@@ -119,7 +113,8 @@ export default function TerritoriesPage() {
           <p>
             La terre y porte encore les marques les plus visibles du Grand
             Effondrement. Certaines zones sont froides depuis des siècles ;
-            d’autres dégagent toujours assez de chaleur pour déformer l’air au-dessus de la roche.
+            d’autres dégagent toujours assez de chaleur pour déformer l’air
+            au-dessus de la roche.
           </p>
           <p>
             Le vent soulève une poussière sombre qui peut recouvrir un chemin en
@@ -127,8 +122,8 @@ export default function TerritoriesPage() {
             un passage ou un fragment resté enfoui pendant des années.
           </p>
           <p className={styles.shortBeat}>
-            Dans les Terres de Braise, ce qui disparaît n’est pas toujours perdu.
-            Les cendres cachent autant qu’elles révèlent.
+            Dans les Terres de Braise, ce qui disparaît n’est pas toujours
+            perdu. Les cendres cachent autant qu’elles révèlent.
           </p>
           <p>
             Une faune lourde et cuirassée vit sur les plateaux les plus chauds.
@@ -151,19 +146,18 @@ export default function TerritoriesPage() {
             <span className={styles.roman}>III</span>
             <div>
               <h3>Les Forêts anciennes</h3>
-              <h4>Tout ne demande pas à être découvert</h4>
+              <p className={styles.tagline}>
+                Tout ne demande pas à être découvert
+              </p>
             </div>
           </header>
-          <figure className={styles.territoryVisual}>
-            <Image
-              src="/assets/images/ForetsAnciennes.png"
-              alt="Forêt ancienne humide et brumeuse de Caldera avec une faune mimétique"
-              fill
-              sizes="(min-width: 75rem) 46rem, 100vw"
-              className={styles.territoryImagePortrait}
-            />
-            <figcaption>Les Forêts anciennes — tout ne demande pas à être découvert.</figcaption>
-          </figure>
+          <UniverseFigure
+            src="/assets/images/ForetsAnciennes.png"
+            alt="Forêt ancienne humide et brumeuse de Caldera avec une faune mimétique"
+            caption="Les Forêts anciennes — tout ne demande pas à être découvert."
+            className={styles.territoryVisual}
+            imageClassName={styles.territoryImagePortrait}
+          />
           <p>
             À l’ouest commencent les grandes forêts, plus anciennes que les
             premières cartes conservées aux Archives.
@@ -174,10 +168,10 @@ export default function TerritoriesPage() {
             les chemins sont régulièrement repris par la végétation.
           </p>
           <p>
-            Les explorateurs disent qu’on ne traverse jamais deux fois exactement
-            la même forêt. Un sentier praticable une saison peut être fermé
-            l’année suivante par un arbre tombé, une crue ou plusieurs mètres de
-            fougères.
+            Les explorateurs disent qu’on ne traverse jamais deux fois
+            exactement la même forêt. Un sentier praticable une saison peut être
+            fermé l’année suivante par un arbre tombé, une crue ou plusieurs
+            mètres de fougères.
           </p>
           <p>
             La faune elle-même semble faite pour disparaître dans le paysage.
@@ -189,8 +183,8 @@ export default function TerritoriesPage() {
           <p>Celui des découvertes inattendues.</p>
           <p>De l’objet que l’on ne cherchait pas.</p>
           <p>
-            De la collection commencée par hasard et que l’on poursuivra pourtant
-            pendant des années.
+            De la collection commencée par hasard et que l’on poursuivra
+            pourtant pendant des années.
           </p>
           <p>
             Les Archivistes possèdent encore des dizaines de cartes incomplètes
@@ -204,18 +198,17 @@ export default function TerritoriesPage() {
             <span className={styles.roman}>IV</span>
             <div>
               <h3>Les Hautes Terres</h3>
-              <h4>Certaines recherches prennent du temps</h4>
+              <p className={styles.tagline}>
+                Certaines recherches prennent du temps
+              </p>
             </div>
           </header>
-          <figure className={styles.territoryVisual}>
-            <Image
-              src="/assets/images/HautesTerres.png"
-              alt="Plateaux froids et falaises des Hautes Terres de Caldera"
-              fill
-              sizes="(min-width: 75rem) 46rem, 100vw"
-            />
-            <figcaption>Les Hautes Terres — certaines recherches prennent du temps.</figcaption>
-          </figure>
+          <UniverseFigure
+            src="/assets/images/HautesTerres.png"
+            alt="Plateaux froids et falaises des Hautes Terres de Caldera"
+            caption="Les Hautes Terres — certaines recherches prennent du temps."
+            className={styles.territoryVisual}
+          />
           <p>
             Au nord, les chemins quittent progressivement les arbres et montent
             jusqu’aux plateaux balayés par le vent.
@@ -253,18 +246,15 @@ export default function TerritoriesPage() {
             <span className={styles.roman}>V</span>
             <div>
               <h3>Les Rivages</h3>
-              <h4>Là où le monde arrive à Caldera</h4>
+              <p className={styles.tagline}>Là où le monde arrive à Caldera</p>
             </div>
           </header>
-          <figure className={styles.territoryVisual}>
-            <Image
-              src="/assets/images/Rivages.png"
-              alt="Village côtier et embarcations des Rivages de Caldera"
-              fill
-              sizes="(min-width: 75rem) 46rem, 100vw"
-            />
-            <figcaption>Les Rivages — là où le monde arrive à Caldera.</figcaption>
-          </figure>
+          <UniverseFigure
+            src="/assets/images/Rivages.png"
+            alt="Village côtier et embarcations des Rivages de Caldera"
+            caption="Les Rivages — là où le monde arrive à Caldera."
+            className={styles.territoryVisual}
+          />
           <p>
             Au sud, les falaises volcaniques s’ouvrent sur l’océan et laissent
             place à une succession de criques, de plages noires et de petits

@@ -3,7 +3,14 @@ import { SectionTitle } from '@/components/ui/SectionTitle/SectionTitle';
 import { ProductCard } from '@/components/product/ProductCard/ProductCard';
 import type { CatalogProduct } from '@/types/product';
 import styles from './RestockSection.module.scss';
-export function RestockSection({ products }: { products: CatalogProduct[] }) {
+export function RestockSection({
+  products,
+  link,
+}: {
+  products: CatalogProduct[];
+  /** /en-stock while indexable. */
+  link?: string;
+}) {
   return (
     <section
       id="reassorts"
@@ -13,12 +20,13 @@ export function RestockSection({ products }: { products: CatalogProduct[] }) {
       <Container>
         <SectionTitle
           id="restock-title"
-          eyebrow="Une nouvelle occasion de les découvrir"
+          eyebrow="Réassorts disponibles"
           title="De retour sur les terres"
-          link={{
-            href: '#newsletter',
-            label: 'Suivre les prochaines découvertes',
-          }}
+          link={
+            link
+              ? { href: link, label: 'Tous les produits en stock' }
+              : undefined
+          }
         />
         <div className={styles.grid}>
           {products.length === 0 && (

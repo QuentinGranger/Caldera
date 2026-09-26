@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Compass } from 'lucide-react';
 
 import styles from './not-found.module.scss';
+
+// Next.js adds <meta name="robots" content="noindex"> itself, streamed or not.
+export const metadata: Metadata = {
+  title: 'Page introuvable',
+  description: 'Cette adresse ne correspond à aucune page de la boutique.',
+};
 
 export default function NotFound() {
   return (

@@ -27,7 +27,12 @@
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(90deg, rgb(2 22 17 / 92%) 0%, rgb(2 22 17 / 58%) 52%, rgb(2 22 17 / 25%) 100%),
+    linear-gradient(
+      90deg,
+      rgb(2 22 17 / 92%) 0%,
+      rgb(2 22 17 / 58%) 52%,
+      rgb(2 22 17 / 25%) 100%
+    ),
     linear-gradient(0deg, rgb(0 35 27 / 68%) 0%, transparent 44%);
 }
 
@@ -37,6 +42,27 @@
   flex-direction: column;
   justify-content: flex-end;
   padding-block: clamp(5rem, 10vw, 8rem) clamp(3rem, 6vw, 5rem);
+}
+
+// Shared Breadcrumb component, recoloured for the dark hero.
+.heroBreadcrumb nav {
+  margin-bottom: 1.6rem;
+  color: rgb(251 244 223 / 66%);
+  font-size: 0.62rem;
+
+  a {
+    color: v.$color-gold-light;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: v.$color-cream;
+    text-decoration: underline;
+  }
+
+  [aria-current] {
+    color: rgb(251 244 223 / 82%);
+  }
 }
 
 .eyebrow {

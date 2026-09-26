@@ -5,8 +5,13 @@ import { SectionTitle } from '@/components/ui/SectionTitle/SectionTitle';
 import { ProductCard } from '@/components/product/ProductCard/ProductCard';
 import type { CatalogProduct } from '@/types/product';
 import styles from './FeaturedProducts.module.scss';
-type Props = { products: CatalogProduct[]; editorial?: boolean };
-export function FeaturedProducts({ products, editorial = false }: Props) {
+type Props = {
+  products: CatalogProduct[];
+  editorial?: boolean;
+  /** /nouveautes while indexable. */
+  link?: string;
+};
+export function FeaturedProducts({ products, editorial = false, link }: Props) {
   if (editorial)
     return (
       <section
@@ -29,8 +34,8 @@ export function FeaturedProducts({ products, editorial = false }: Props) {
               Et celles qui nous trouvent.
             </p>
             <p>
-              Notre sélection fait la part belle aux illustrations singulières
-              et aux coffrets qui racontent une histoire.
+              Produits mis en avant par l’équipe, avec leur prix et leur
+              disponibilité du jour.
             </p>
             <Link href="#univers">
               L’esprit de notre sélection{' '}
@@ -59,9 +64,11 @@ export function FeaturedProducts({ products, editorial = false }: Props) {
       <Container>
         <SectionTitle
           id="new-title"
-          eyebrow="De nouvelles découvertes"
+          eyebrow="Derniers produits publiés"
           title="Nouveautés"
-          link={{ href: '/nouveautes', label: 'Toutes les nouveautés' }}
+          link={
+            link ? { href: link, label: 'Toutes les nouveautés' } : undefined
+          }
         />
         <div className={styles.grid}>
           {products.length === 0 && (

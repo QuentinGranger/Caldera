@@ -1,0 +1,293 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+.logo {
+  display: block;
+  width: auto;
+  max-width: 180px;
+  height: auto;
+  max-height: 90px;
+  margin-bottom: 1rem;
+  object-fit: contain;
+}
+
+.editorial {
+  max-width: 48rem;
+  margin-bottom: 3rem;
+  color: v.$color-text-muted;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+
+  > * + * {
+    margin-top: 0.9rem;
+  }
+
+  h2,
+  h3,
+  h4 {
+    margin-top: 2rem;
+    color: v.$color-green-dark;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.6rem;
+  }
+
+  h4 {
+    font-size: 1.3rem;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.2rem;
+  }
+
+  li + li {
+    margin-top: 0.35rem;
+  }
+
+  strong {
+    color: v.$color-text;
+  }
+
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: v.$color-green;
+  }
+
+  blockquote {
+    padding-left: 1rem;
+    border-left: 2px solid v.$color-gold;
+  }
+}
+
+// Block placed before the product grid (game hub releases).
+.lead {
+  margin-bottom: 3.5rem;
+}
+
+// Block placed after the product grid.
+.section {
+  margin-top: 4rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid v.$color-border;
+}
+
+.subheading {
+  @include m.eyebrow;
+  margin: 2rem 0 1rem;
+  color: v.$color-green-secondary;
+  font-family: v.$font-body;
+  font-weight: 700;
+  line-height: 1.4;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.sets {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.set {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1.25rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+
+  &:has(a:hover) {
+    border-color: v.$color-green;
+  }
+
+  img {
+    width: auto;
+    max-width: 140px;
+    height: 60px;
+    margin-bottom: 0.5rem;
+    object-fit: contain;
+  }
+}
+
+.setName {
+  font: 500 1.5rem/1.15 v.$font-heading;
+  overflow-wrap: anywhere;
+
+  a {
+    text-decoration: underline;
+    text-decoration-color: v.$color-border;
+    text-underline-offset: 4px;
+  }
+
+  a:hover {
+    color: v.$color-green;
+    text-decoration-color: currentcolor;
+  }
+}
+
+.meta {
+  color: v.$color-text-muted;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.badge {
+  @include m.eyebrow;
+  align-self: flex-start;
+  padding: 0.3rem 0.55rem;
+  color: v.$color-green-dark;
+  background: v.$color-gold-light;
+  border-radius: v.$radius-pill;
+  font-size: 0.58rem;
+}
+
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1.25rem;
+  font-size: 0.8rem;
+
+  a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  a:hover {
+    color: v.$color-green;
+  }
+}
+
+.guides {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.guide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 1.25rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+
+  &:has(a:hover) {
+    border-color: v.$color-green;
+  }
+
+  a {
+    font: 500 1.45rem/1.15 v.$font-heading;
+    overflow-wrap: anywhere;
+    text-decoration: underline;
+    text-decoration-color: v.$color-border;
+    text-underline-offset: 4px;
+  }
+
+  p {
+    color: v.$color-text-muted;
+    font-size: 0.8rem;
+    line-height: 1.7;
+  }
+}
+
+.kind {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+}
+
+.faq {
+  max-width: 48rem;
+  margin: 0;
+}
+
+.faqItem {
+  padding-block: 1.25rem;
+  border-bottom: 1px solid v.$color-border;
+
+  &:first-child {
+    border-top: 1px solid v.$color-border;
+  }
+
+  dt {
+    color: v.$color-green-dark;
+    font: 500 1.35rem/1.2 v.$font-heading;
+  }
+
+  dd {
+    margin: 0.5rem 0 0;
+    color: v.$color-text-muted;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+}
+
+.month + .month {
+  margin-top: 2.5rem;
+}
+
+.monthTitle {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.releases {
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid v.$color-border;
+}
+
+.release {
+  display: grid;
+  gap: 0.25rem 1.5rem;
+  padding-block: 1rem;
+  border-bottom: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 10rem minmax(0, 1fr) minmax(0, 14rem);
+    align-items: baseline;
+  }
+}
+
+.releaseDate {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.releaseStock {
+  font-size: 0.78rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    text-align: right;
+  }
+}

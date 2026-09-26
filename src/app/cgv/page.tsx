@@ -1,23 +1,18 @@
-import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import { Container } from '@/components/ui/Container/Container';
+import {
+  editorialDecision,
+  editorialMetadata,
+} from '@/components/editorial/editorial';
 import styles from './cgv.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Conditions générales de vente | Les Terres de Caldera',
+export const metadata = editorialMetadata({
+  title: 'Conditions générales de vente',
   description:
-    'Consultez les Conditions Générales de Vente de la boutique Les Terres de Caldera.',
-  alternates: { canonical: '/cgv' },
-  openGraph: {
-    title: 'Conditions générales de vente | Les Terres de Caldera',
-    description:
-      'Conditions Générales de Vente applicables aux achats réalisés sur Les Terres de Caldera.',
-    url: '/cgv',
-    type: 'website',
-    locale: 'fr_FR',
-  },
-};
+    'Conditions générales de vente des Terres de Caldera : commande, paiement, livraison en France métropolitaine, rétractation sous 14 jours et garanties légales.',
+  decision: editorialDecision('/cgv'),
+});
 
 const articles = [
   ['article-1', '1. Identité du vendeur'],

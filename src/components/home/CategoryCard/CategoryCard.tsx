@@ -1,24 +1,27 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import type { getHomeCategories } from '@/lib/catalog/queries';
+import type { HomeFamily } from '@/components/home/homeData';
 import styles from './CategoryCard.module.scss';
 export function CategoryCard({
-  category,
+  family,
   index,
 }: {
-  category: Awaited<ReturnType<typeof getHomeCategories>>[number];
+  family: HomeFamily;
   index: number;
 }) {
   return (
     <Link
-      href={`/categorie/${category.slug}`}
+      href={family.href}
       className={`${styles.card} ${styles[['forest', 'sand', 'clay', 'sage'][index % 4]!]}`}
     >
-      <span className={styles.number}>TERRITOIRE 0{index + 1}</span>
+      <span className={styles.number}>
+        Territoire {String(index + 1).padStart(2, '0')} · {family.count} produit
+        {family.count > 1 ? 's' : ''}
+      </span>
       <div className={styles.visual}>
         <Image
-          src={category.imageUrl}
+          src={family.imageUrl}
           alt=""
           fill
           sizes="(min-width: 1200px) 280px, (min-width: 768px) 40vw, 45vw"
@@ -26,8 +29,8 @@ export function CategoryCard({
       </div>
       <div className={styles.bottom}>
         <div>
-          <h3>{category.name}</h3>
-          <p>{category.description}</p>
+          <h3>{family.name}</h3>
+          {family.description && <p>{family.description}</p>}
         </div>
         <span className={styles.arrow}>
           <ArrowUpRight size={18} aria-hidden="true" />
