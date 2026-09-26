@@ -482,7 +482,9 @@ export default function ConfidentialitePage() {
               <p>
                 Sentry (Functional Software, Inc.) est utilisé pour la détection
                 des erreurs techniques et le suivi des performances du site,
-                dans les conditions décrites à l’article 2.11.
+                dans les conditions décrites à l’article 2.11. Les données sont
+                hébergées dans l’Union européenne (région de données européenne
+                de Sentry).
               </p>
 
               <h3>Supabase</h3>
