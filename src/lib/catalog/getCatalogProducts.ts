@@ -10,6 +10,7 @@ import {
 import { getCategories, type CatalogCategory } from './taxonomy';
 import {
   CATALOG_PAGE_SIZE,
+  withKnownSlugs,
   type CatalogFilters,
   type CatalogScope,
   type CatalogSort,
@@ -21,9 +22,18 @@ export function buildCatalogWhere(
   categories: CatalogCategory[],
 ) {
   const db = getPrisma();
+  // A language scope keeps only its variants; a filter can only narrow it.
+  const languages = !scope.language
+    ? filters.language
+    : filters.language.length
+      ? filters.language.filter((language) => language === scope.language)
+      : [scope.language];
   const variant: Prisma.ProductVariantWhereInput = {
     isActive: true,
-    ...(filters.language.length ? { language: { in: filters.language } } : {}),
+    ...(languages.length || scope.language
+      ? { language: { in: languages } }
+      : {}),
+    ...(scope.status === 'en-stock' ? { availableQuantity: { gt: 0 } } : {}),
     ...(filters.minPrice || filters.maxPrice
       ? {
           price: {
@@ -47,6 +57,7 @@ export function buildCatalogWhere(
     );
   }
   const conditions: Prisma.ProductWhereInput[] = [visibleProductWhere];
+  if (scope.game) conditions.push({ game: { slug: scope.game } });
   if (scope.category)
     conditions.push({
       categoryId: { in: descendantIds(categories, [scope.category]) },
@@ -58,8 +69,12 @@ export function buildCatalogWhere(
   if (scope.set) conditions.push({ tcgSet: { slug: scope.set } });
   if (filters.set.length)
     conditions.push({ tcgSet: { slug: { in: filters.set } } });
-  if (scope.newArrival) conditions.push({ newArrival: true });
-  if (scope.preorder) conditions.push({ preorder: true });
+  if (scope.newArrival || scope.status === 'nouveautes')
+    conditions.push({ newArrival: true });
+  if (scope.preorder || scope.status === 'precommandes')
+    conditions.push({ preorder: true });
+  // Same rule as ScopeStats.inStockCount: a preorder is never « en stock ».
+  if (scope.status === 'en-stock') conditions.push({ preorder: false });
   if (filters.type.length)
     conditions.push({ productType: { in: filters.type } });
   if (filters.search) {
@@ -99,10 +114,23 @@ export function buildCatalogOrderBy(
   ];
 }
 export async function getCatalogProducts(
-  filters: CatalogFilters,
+  requested: CatalogFilters,
   scope: CatalogScope = {},
 ) {
-  const categories = await getCategories();
+  const db = getPrisma();
+  const [categories, knownSets] = await Promise.all([
+    getCategories(),
+    requested.set.length
+      ? db.tcgSet.findMany({
+          where: { slug: { in: requested.set }, isActive: true },
+          select: { slug: true },
+        })
+      : Promise.resolve([]),
+  ]);
+  const filters = withKnownSlugs(requested, {
+    categories: new Set(categories.map((category) => category.slug)),
+    sets: new Set(knownSets.map((set) => set.slug)),
+  });
   const { where, variant } = buildCatalogWhere(filters, scope, categories);
   const select = {
     ...catalogProductSelect,
@@ -122,48 +150,59 @@ export async function getCatalogProducts(
       },
     },
   } satisfies Prisma.ProductSelect;
-  return getPrisma().$transaction(
-    async (tx) => {
-      // Le total précède la lecture : il permet de borner la page dans le même snapshot.
-      const total = await tx.product.count({ where });
-      const pageCount = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
-      const page = Math.min(filters.page, pageCount);
-      const pagination = {
-        skip: (page - 1) * CATALOG_PAGE_SIZE,
-        take: CATALOG_PAGE_SIZE,
-      };
-      let products;
-      if (filters.sort === 'price-asc' || filters.sort === 'price-desc') {
-        // Prisma ne trie pas Product par MIN(variants.price) : groupBy pagine en SQL.
-        const groups = await tx.productVariant.groupBy({
-          by: ['productId'],
-          where: { AND: [variant, { product: where }] },
-          _min: { price: true },
-          orderBy: [
-            { _min: { price: filters.sort === 'price-asc' ? 'asc' : 'desc' } },
-            { productId: 'asc' },
-          ],
-          ...pagination,
-        });
-        const ids = groups.map((g) => g.productId);
-        const rows = await tx.product.findMany({
-          where: { id: { in: ids } },
-          select,
-        });
-        const byId = new Map(rows.map((row) => [row.id, row]));
-        products = ids.map((id) => toCatalogProduct(byId.get(id)!));
-      } else {
-        const rows = await tx.product.findMany({
-          where,
-          select,
-          orderBy: buildCatalogOrderBy(filters.sort),
-          ...pagination,
-        });
-        products = rows.map(toCatalogProduct);
-      }
-      return { products, total, page, pageSize: CATALOG_PAGE_SIZE, pageCount };
-    },
-    { isolationLevel: 'RepeatableRead', timeout: 10000 },
-  );
+  const readPage = async (page: number) => {
+    const pagination = {
+      skip: (page - 1) * CATALOG_PAGE_SIZE,
+      take: CATALOG_PAGE_SIZE,
+    };
+    if (filters.sort === 'price-asc' || filters.sort === 'price-desc') {
+      // Prisma ne trie pas Product par MIN(variants.price) : groupBy pagine en SQL.
+      const groups = await db.productVariant.groupBy({
+        by: ['productId'],
+        where: { AND: [variant, { product: where }] },
+        _min: { price: true },
+        orderBy: [
+          { _min: { price: filters.sort === 'price-asc' ? 'asc' : 'desc' } },
+          { productId: 'asc' },
+        ],
+        ...pagination,
+      });
+      if (!groups.length) return [];
+      const ids = groups.map((g) => g.productId);
+      const rows = await db.product.findMany({
+        where: { id: { in: ids } },
+        select,
+      });
+      const byId = new Map(rows.map((row) => [row.id, row]));
+      return ids.flatMap((id) => {
+        const row = byId.get(id);
+        return row ? [toCatalogProduct(row)] : [];
+      });
+    }
+    const rows = await db.product.findMany({
+      where,
+      select,
+      orderBy: buildCatalogOrderBy(filters.sort),
+      ...pagination,
+    });
+    return rows.map(toCatalogProduct);
+  };
+  // Count and page run in parallel; an out-of-range page is read again once bounded.
+  const [total, requestedPage] = await Promise.all([
+    db.product.count({ where }),
+    readPage(filters.page),
+  ]);
+  const pageCount = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
+  const page = Math.min(filters.page, pageCount);
+  const products = page === filters.page ? requestedPage : await readPage(page);
+  return {
+    products,
+    total,
+    page,
+    pageSize: CATALOG_PAGE_SIZE,
+    pageCount,
+    /** Effective filters: unknown slugs removed, page bounded. */
+    filters: { ...filters, page },
+  };
 }
 export type CatalogResult = Awaited<ReturnType<typeof getCatalogProducts>>;

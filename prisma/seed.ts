@@ -17,15 +17,204 @@ if (!connectionString)
 if (process.env.NODE_ENV === 'production')
   throw new Error('Ce seed de développement est interdit en production.');
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+
+// Fictional dates relative to the seed run, so the calendar and preorders always
+// have past and upcoming releases.
+const today = new Date();
+function daysFromToday(days: number) {
+  return new Date(
+    Date.UTC(
+      today.getUTCFullYear(),
+      today.getUTCMonth(),
+      today.getUTCDate() + days,
+    ),
+  );
+}
+function demoFaq(subject: string) {
+  return [
+    {
+      question: `[Démo] Question de démonstration sur ${subject} ?`,
+      answer:
+        '[Démo] Réponse de démonstration : ce texte sert uniquement à tester l’affichage de la FAQ et son balisage FAQPage.',
+    },
+    {
+      question: '[Démo] Ces informations sont-elles réelles ?',
+      answer:
+        '[Démo] Non. Les produits, prix, stocks et dates de ce jeu de données sont fictifs et réservés au développement.',
+    },
+  ];
+}
+function demoIntro(subject: string) {
+  return `[Démo] Texte éditorial de démonstration pour ${subject}.\n\nIl sert à tester le rendu Markdown des pages : **mise en valeur**, listes et [liens internes](/catalogue).\n\n- Contenu fictif, non relu.\n- À remplacer par un texte écrit pour la boutique.`;
+}
+
+type DemoProductType = Exclude<ProductType, 'OTHER'>;
+const familyByType: Record<DemoProductType, string> = {
+  DISPLAY: 'displays',
+  BOOSTER: 'boosters',
+  BLISTER: 'boosters',
+  TRIPACK: 'boosters',
+  BUNDLE: 'boosters',
+  ETB: 'etb',
+  COLLECTION_BOX: 'coffrets',
+  TIN: 'coffrets',
+  DECK: 'coffrets',
+  SINGLE_CARD: 'cartes',
+  ACCESSORY: 'accessoires',
+};
+
+const games = [
+  {
+    slug: 'pokemon',
+    name: 'Pokémon',
+    shortName: 'Pokémon',
+    description:
+      'Le jeu de cartes à collectionner Pokémon : produits scellés, cartes à l’unité et accessoires.',
+    intro: demoIntro('le hub Pokémon'),
+    faq: demoFaq('les produits Pokémon'),
+    sortOrder: 0,
+  },
+  {
+    slug: 'lorcana',
+    name: '[Démo] Lorcana',
+    shortName: '[Démo] Lorcana',
+    description:
+      '[Démo] Second jeu de démonstration pour tester le catalogue multi-jeux ; aucun produit réel.',
+    intro: demoIntro('le hub Lorcana'),
+    faq: null,
+    sortOrder: 1,
+  },
+] as const;
+
+type CategorySeed = {
+  slug: string;
+  name: string;
+  parent: string | null;
+  sortOrder: number;
+  description: string;
+  intro?: string;
+  faq?: ReturnType<typeof demoFaq>;
+};
+const categories: CategorySeed[] = [
+  {
+    slug: 'scelles',
+    name: 'Produits scellés',
+    parent: null,
+    sortOrder: 0,
+    description: 'Boosters, displays, ETB et coffrets encore scellés.',
+  },
+  {
+    slug: 'boosters',
+    name: 'Boosters',
+    parent: 'scelles',
+    sortOrder: 1,
+    description: 'Boosters à l’unité, blisters, tripacks et bundles.',
+    intro: demoIntro('la famille Boosters'),
+  },
+  {
+    slug: 'displays',
+    name: 'Displays',
+    parent: 'scelles',
+    sortOrder: 2,
+    description: 'Boîtes de boosters scellées.',
+  },
+  {
+    slug: 'etb',
+    name: 'ETB',
+    parent: 'scelles',
+    sortOrder: 3,
+    description: 'Coffrets Dresseur d’élite.',
+    intro: demoIntro('la famille ETB'),
+    faq: demoFaq('les ETB'),
+  },
+  {
+    slug: 'coffrets',
+    name: 'Coffrets',
+    parent: 'scelles',
+    sortOrder: 4,
+    description: 'Coffrets de collection, tins et decks.',
+  },
+  {
+    slug: 'cartes',
+    name: 'Cartes à l’unité',
+    parent: null,
+    sortOrder: 5,
+    description: 'Cartes vendues à l’unité.',
+  },
+  {
+    slug: 'accessoires',
+    name: 'Accessoires',
+    parent: null,
+    sortOrder: 6,
+    description: 'Protège-cartes, classeurs et rangements.',
+  },
+];
+
+type SetSeed = {
+  slug: string;
+  name: string;
+  code: string;
+  game: string;
+  releaseDate: Date;
+  intro?: string;
+  faq?: ReturnType<typeof demoFaq>;
+  seoTitle?: string;
+  seoDescription?: string;
+};
+const sets: SetSeed[] = [
+  {
+    slug: 'dev-terres-de-braise',
+    name: '[Démo] Terres de Braise',
+    code: 'DEV-BRAISE',
+    game: 'pokemon',
+    releaseDate: daysFromToday(-60),
+    intro: demoIntro('l’extension Terres de Braise'),
+    faq: demoFaq('l’extension Terres de Braise'),
+  },
+  {
+    slug: 'dev-vallees-oubliees',
+    name: '[Démo] Vallées Oubliées',
+    code: 'DEV-VALLEES',
+    game: 'pokemon',
+    releaseDate: daysFromToday(-240),
+    seoTitle: '[Démo] Vallées Oubliées : titre SEO personnalisé',
+    seoDescription:
+      '[Démo] Description SEO personnalisée, prioritaire sur la description générée.',
+  },
+  {
+    slug: 'dev-aurores-sauvages',
+    name: '[Démo] Aurores Sauvages',
+    code: 'DEV-AURORES',
+    game: 'pokemon',
+    releaseDate: daysFromToday(-10),
+  },
+  {
+    slug: 'dev-sentiers-d-opale',
+    name: '[Démo] Sentiers d’Opale',
+    code: 'DEV-OPALE',
+    game: 'pokemon',
+    releaseDate: daysFromToday(90),
+  },
+  {
+    slug: 'dev-brumes-de-cristal',
+    name: '[Démo] Brumes de Cristal',
+    code: 'DEV-BRUMES',
+    game: 'lorcana',
+    releaseDate: daysFromToday(45),
+  },
+];
+
 type Example = {
   slug: string;
   name: string;
-  type: ProductType;
-  category: string;
+  type: DemoProductType;
   sku: string;
   price: string;
   stock: number;
   set?: string;
+  /** Only for products without a set; a set always dictates the game. */
+  game?: string;
+  releaseDate?: Date;
   status?: ProductStatus;
   featured?: boolean;
   newArrival?: boolean;
@@ -39,7 +228,6 @@ const examples: Example[] = [
     slug: 'dev-etb-terres-de-braise',
     name: '[Démo] ETB — Terres de Braise',
     type: 'ETB',
-    category: 'etb',
     sku: 'DEV-ETB-BRAISE-FR',
     price: '59.90',
     stock: 7,
@@ -52,7 +240,6 @@ const examples: Example[] = [
     slug: 'dev-booster-terres-de-braise',
     name: '[Démo] Booster — Terres de Braise',
     type: 'BOOSTER',
-    category: 'boosters',
     sku: 'DEV-BST-BRAISE-FR',
     price: '5.90',
     stock: 25,
@@ -64,7 +251,6 @@ const examples: Example[] = [
     slug: 'dev-display-vallees',
     name: '[Démo] Display — Vallées Oubliées',
     type: 'DISPLAY',
-    category: 'scelles',
     sku: 'DEV-DIS-VALLEES-FR',
     price: '189.90',
     stock: 0,
@@ -75,11 +261,11 @@ const examples: Example[] = [
     slug: 'dev-coffret-aurores',
     name: '[Démo] Coffret — Aurores Sauvages',
     type: 'COLLECTION_BOX',
-    category: 'coffrets',
     sku: 'DEV-COF-AURORES-FR',
     price: '39.90',
     stock: 0,
     set: 'dev-aurores-sauvages',
+    releaseDate: daysFromToday(21),
     newArrival: true,
     preorder: true,
   },
@@ -87,7 +273,6 @@ const examples: Example[] = [
     slug: 'dev-bundle-vallees',
     name: '[Démo] Bundle — Vallées Oubliées',
     type: 'BUNDLE',
-    category: 'scelles',
     sku: 'DEV-BUN-VALLEES-FR',
     price: '29.90',
     stock: 1,
@@ -97,16 +282,16 @@ const examples: Example[] = [
     slug: 'dev-tin-exploration',
     name: '[Démo] Tin — Exploration',
     type: 'TIN',
-    category: 'coffrets',
     sku: 'DEV-TIN-EXPLORATION-FR',
     price: '24.90',
     stock: 8,
+    game: 'pokemon',
+    releaseDate: daysFromToday(-150),
   },
   {
     slug: 'dev-deck-aurores',
     name: '[Démo] Deck — Aurores Sauvages',
     type: 'DECK',
-    category: 'scelles',
     sku: 'DEV-DECK-AURORES-FR',
     price: '19.90',
     stock: 6,
@@ -117,7 +302,6 @@ const examples: Example[] = [
     slug: 'dev-protege-cartes',
     name: '[Démo] Protège-cartes — Vert forêt',
     type: 'ACCESSORY',
-    category: 'accessoires',
     sku: 'DEV-ACC-PROTECTIONS-FR',
     price: '9.90',
     stock: 10,
@@ -127,47 +311,48 @@ const examples: Example[] = [
     slug: 'dev-carte-illustration',
     name: '[Démo] Carte — Illustration volcanique',
     type: 'SINGLE_CARD',
-    category: 'cartes',
     sku: 'DEV-CAR-VOLCAN-FR',
     price: '44.90',
     stock: 1,
+    game: 'pokemon',
+    releaseDate: daysFromToday(-60),
     featured: true,
   },
   {
     slug: 'dev-brouillon',
     name: '[Démo] Produit en préparation',
     type: 'ETB',
-    category: 'etb',
     sku: 'DEV-ETB-BROUILLON-FR',
     price: '49.90',
     stock: 5,
+    game: 'pokemon',
     status: 'DRAFT',
   },
   {
     slug: 'dev-archive',
     name: '[Démo] Ancienne édition',
     type: 'BOOSTER',
-    category: 'boosters',
     sku: 'DEV-BST-ARCHIVE-FR',
     price: '4.90',
     stock: 4,
+    game: 'pokemon',
+    releaseDate: daysFromToday(-400),
     status: 'ARCHIVED',
   },
   {
     slug: 'dev-variante-inactive',
     name: '[Démo] Variante désactivée',
     type: 'BLISTER',
-    category: 'scelles',
     sku: 'DEV-BLI-INACTIF-FR',
     price: '8.90',
     stock: 9,
+    game: 'pokemon',
     inactive: true,
   },
   {
     slug: 'dev-blister-horizons',
     name: '[Démo] Blister — Horizons',
     type: 'BLISTER',
-    category: 'scelles',
     sku: 'DEV-BLI-HORIZONS-EN',
     price: '7.90',
     stock: 3,
@@ -178,7 +363,6 @@ const examples: Example[] = [
     slug: 'dev-tripack-expedition',
     name: '[Démo] Tripack — Expédition',
     type: 'TRIPACK',
-    category: 'scelles',
     sku: 'DEV-TRI-EXPEDITION-FR',
     price: '17.90',
     stock: 2,
@@ -188,27 +372,26 @@ const examples: Example[] = [
     slug: 'dev-display-aurores-jp',
     name: '[Démo] Display — Aurores japonaises',
     type: 'DISPLAY',
-    category: 'scelles',
     sku: 'DEV-DIS-AURORES-JP',
     price: '89.90',
     stock: 8,
     set: 'dev-aurores-sauvages',
+    releaseDate: daysFromToday(-40),
     language: 'JP',
   },
   {
     slug: 'dev-classeur-foret',
     name: '[Démo] Classeur — Forêt',
     type: 'ACCESSORY',
-    category: 'accessoires',
     sku: 'DEV-ACC-CLASSEUR-FR',
     price: '29.90',
     stock: 5,
+    game: 'pokemon',
   },
   {
     slug: 'dev-deck-vallees-en',
     name: '[Démo] Deck — Vallées anglaises',
     type: 'DECK',
-    category: 'scelles',
     sku: 'DEV-DECK-VALLEES-EN',
     price: '22.90',
     stock: 0,
@@ -219,33 +402,66 @@ const examples: Example[] = [
     slug: 'dev-coffret-explorateur',
     name: '[Démo] Coffret — Explorateur',
     type: 'COLLECTION_BOX',
-    category: 'coffrets',
     sku: 'DEV-COF-EXPLORATEUR-FR',
     price: '39.90',
     stock: 4,
+    game: 'pokemon',
+    releaseDate: daysFromToday(-90),
   },
   {
     slug: 'dev-bundle-aurores',
     name: '[Démo] Bundle — Aurores',
     type: 'BUNDLE',
-    category: 'scelles',
     sku: 'DEV-BUN-AURORES-FR',
     price: '34.90',
     stock: 0,
     set: 'dev-aurores-sauvages',
+    releaseDate: daysFromToday(35),
     preorder: true,
   },
   {
     slug: 'dev-booster-aurores',
     name: '[Démo] Booster — Aurores',
     type: 'BOOSTER',
-    category: 'boosters',
     sku: 'DEV-BST-AURORES-FR',
     price: '5.90',
     stock: 4,
     set: 'dev-aurores-sauvages',
   },
+  {
+    slug: 'dev-lorcana-booster-brumes',
+    name: '[Démo] Booster Lorcana — Brumes de Cristal',
+    type: 'BOOSTER',
+    sku: 'DEV-LOR-BST-BRUMES-FR',
+    price: '6.90',
+    stock: 36,
+    set: 'dev-brumes-de-cristal',
+    newArrival: true,
+    preorder: true,
+  },
+  {
+    slug: 'dev-lorcana-display-brumes',
+    name: '[Démo] Display Lorcana — Brumes de Cristal',
+    type: 'DISPLAY',
+    sku: 'DEV-LOR-DIS-BRUMES-EN',
+    price: '149.90',
+    stock: 2,
+    set: 'dev-brumes-de-cristal',
+    preorder: true,
+    language: 'EN',
+  },
+  {
+    slug: 'dev-lorcana-deck-initiation',
+    name: '[Démo] Deck d’initiation Lorcana',
+    type: 'DECK',
+    sku: 'DEV-LOR-DECK-INITIATION-FR',
+    price: '16.90',
+    stock: 6,
+    game: 'lorcana',
+    releaseDate: daysFromToday(-120),
+  },
 ];
+
 async function main() {
   // Development shipping rules only; existing merchant edits stay untouched.
   for (const country of [
@@ -298,50 +514,81 @@ async function main() {
 
   await db.$transaction(
     async (tx) => {
+      const gameIds = new Map<string, string>();
+      for (const { faq, ...game } of games) {
+        const row = await tx.game.upsert({
+          where: { slug: game.slug },
+          update: {},
+          create: { ...game, ...(faq ? { faq } : {}) },
+        });
+        gameIds.set(game.slug, row.id);
+      }
+
+      // Databases seeded before the game axis had a "pokemon" root category:
+      // lift its families to the root and retire it once it is empty.
+      const legacyRoot = await tx.category.findUnique({
+        where: { slug: 'pokemon' },
+        select: { id: true },
+      });
+      if (legacyRoot) {
+        await tx.category.updateMany({
+          where: {
+            parentId: legacyRoot.id,
+            slug: { in: ['scelles', 'cartes'] },
+          },
+          data: { parentId: null },
+        });
+        await tx.category.updateMany({
+          where: {
+            id: legacyRoot.id,
+            children: { none: {} },
+            products: { none: {} },
+          },
+          data: { isActive: false },
+        });
+      }
+
       const categoryIds = new Map<string, string>();
-      for (const [slug, name, parent, sortOrder] of [
-        ['pokemon', 'Pokémon', null, 0],
-        ['scelles', 'Produits scellés', 'pokemon', 1],
-        ['cartes', 'Cartes à l’unité', 'pokemon', 2],
-        ['accessoires', 'Accessoires', null, 3],
-        ['etb', 'ETB', 'scelles', 4],
-        ['boosters', 'Boosters', 'scelles', 5],
-        ['coffrets', 'Coffrets', 'scelles', 6],
-      ] as const) {
-        const category = await tx.category.upsert({
-          where: { slug },
+      for (const { parent, ...category } of categories) {
+        const row = await tx.category.upsert({
+          where: { slug: category.slug },
           update: {},
           create: {
-            slug,
-            name,
-            sortOrder,
+            ...category,
             parentId: parent ? categoryIds.get(parent) : null,
-            imageUrl: getCategoryImage(slug),
-            description: 'Découvrez ce territoire de la collection.',
+            imageUrl: getCategoryImage(category.slug),
           },
         });
-        categoryIds.set(slug, category.id);
+        categoryIds.set(category.slug, row.id);
       }
+
       const setIds = new Map<string, string>();
-      for (const [slug, name, code] of [
-        ['dev-terres-de-braise', '[Démo] Terres de Braise', 'DEV-BRAISE'],
-        ['dev-vallees-oubliees', '[Démo] Vallées Oubliées', 'DEV-VALLEES'],
-        ['dev-aurores-sauvages', '[Démo] Aurores Sauvages', 'DEV-AURORES'],
-      ]) {
-        const set = await tx.tcgSet.upsert({
-          where: { slug: slug! },
+      const setGames = new Map<string, string>();
+      for (const { game, ...set } of sets) {
+        const gameId = gameIds.get(game)!;
+        const row = await tx.tcgSet.upsert({
+          where: { slug: set.slug },
           update: {},
           create: {
-            slug: slug!,
-            name: name!,
-            code,
-            series: 'Série fictive de développement',
+            ...set,
+            gameId,
+            series:
+              game === 'pokemon'
+                ? 'Série fictive de développement'
+                : '[Démo] Série Lorcana fictive',
             description:
-              'Extension fictive pour tester Caldera. Ce n’est pas une extension Pokémon officielle.',
+              'Extension fictive pour tester Caldera. Ce n’est pas une extension officielle.',
           },
         });
-        setIds.set(slug!, set.id);
+        // Sets created by an earlier seed have no game yet.
+        await tx.tcgSet.updateMany({
+          where: { id: row.id, gameId: null },
+          data: { gameId },
+        });
+        setIds.set(set.slug, row.id);
+        setGames.set(set.slug, gameId);
       }
+
       const development = await tx.tag.upsert({
         where: { slug: 'demonstration' },
         update: {},
@@ -353,6 +600,13 @@ async function main() {
         create: { slug: 'reassort', name: 'Réassort' },
       });
       for (const [index, example] of examples.entries()) {
+        const categoryId = categoryIds.get(familyByType[example.type])!;
+        const gameId = example.set
+          ? setGames.get(example.set)!
+          : example.game
+            ? gameIds.get(example.game)!
+            : null;
+        const set = sets.find((s) => s.slug === example.set);
         const product = await tx.product.upsert({
           where: { slug: example.slug },
           update: {},
@@ -360,14 +614,15 @@ async function main() {
             name: example.name,
             slug: example.slug,
             productType: example.type,
-            categoryId: categoryIds.get(example.category)!,
+            categoryId,
             tcgSetId: example.set ? setIds.get(example.set) : null,
+            gameId,
             status: example.status ?? 'ACTIVE',
             featured: example.featured ?? false,
             newArrival: example.newArrival ?? false,
             preorder: example.preorder ?? false,
             publishedAt: new Date(Date.UTC(2026, 8, 19, 0, 0, index)),
-            releaseDate: new Date('2026-09-01T00:00:00Z'),
+            releaseDate: example.releaseDate ?? set?.releaseDate ?? null,
             shortDescription: 'Exemple de développement, non commercialisé.',
             description:
               'Produit fictif destiné aux essais du catalogue Caldera. Le prix, le stock et le visuel sont des données de développement.',
@@ -387,6 +642,20 @@ async function main() {
             },
           },
         });
+        // Earlier seeds filed several families under "scelles" and had no game.
+        await tx.product.updateMany({
+          where: {
+            id: product.id,
+            category: { slug: 'scelles' },
+            categoryId: { not: categoryId },
+          },
+          data: { categoryId },
+        });
+        if (gameId)
+          await tx.product.updateMany({
+            where: { id: product.id, gameId: null },
+            data: { gameId },
+          });
         await tx.productVariant.upsert({
           where: { sku: example.sku },
           update: {},
@@ -467,8 +736,11 @@ async function main() {
     },
     { timeout: 30_000 },
   );
+  const variantCount = await db.productVariant.count({
+    where: { sku: { startsWith: 'DEV-' } },
+  });
   console.log(
-    'Seed : 20 produits de développement, 23 variantes, 7 catégories, 3 extensions fictives. Les enregistrements existants sont préservés.',
+    `Seed : ${examples.length} produits de développement, ${variantCount} variantes, ${categories.length} catégories, ${games.length} jeux, ${sets.length} extensions fictives. Les enregistrements existants sont préservés.`,
   );
 }
 try {

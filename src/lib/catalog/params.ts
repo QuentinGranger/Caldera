@@ -1,4 +1,5 @@
 import type { ProductLanguage, ProductType } from '@/generated/prisma/client';
+import type { LanguageCode, StatusSlug } from '@/lib/seo/types';
 
 export const CATALOG_PAGE_SIZE = 12;
 export const sortLabels = {
@@ -60,12 +61,41 @@ export const multiFilters: MultiFilter[] = [
   'language',
   'availability',
 ];
+/** Fixed part of a listing page, set by its route (slugs are already validated). */
 export type CatalogScope = {
+  /** Game slug. */
+  game?: string;
+  /** Category slug; its descendants are included. */
   category?: string;
+  /** Set slug. */
   set?: string;
+  /** Only the active variants in this language are listed and priced. */
+  language?: LanguageCode;
+  status?: StatusSlug;
   newArrival?: boolean;
   preorder?: boolean;
 };
+export interface KnownCatalogSlugs {
+  categories: ReadonlySet<string>;
+  sets: ReadonlySet<string>;
+}
+/**
+ * Drops category and set slugs that match no entity, so unknown values never
+ * create new URLs (the listing redirects to the cleaned query).
+ */
+export function withKnownSlugs(
+  filters: CatalogFilters,
+  known: KnownCatalogSlugs,
+): CatalogFilters {
+  const category = filters.category.filter((slug) =>
+    known.categories.has(slug),
+  );
+  const set = filters.set.filter((slug) => known.sets.has(slug));
+  return category.length === filters.category.length &&
+    set.length === filters.set.length
+    ? filters
+    : { ...filters, category, set };
+}
 const first = (value: SearchParams[string]) =>
   Array.isArray(value) ? value[0] : value;
 function values(value: SearchParams[string]) {

@@ -42,35 +42,76 @@ enum ProductCondition {
   NEW
 }
 
+enum SlugEntity {
+  PRODUCT
+  CATEGORY
+  SET
+  GAME
+}
+
+model Game {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String    @unique
+  shortName      String?
+  description    String?
+  intro          String?   @db.Text
+  seoTitle       String?
+  seoDescription String?
+  faq            Json?
+  logoUrl        String?
+  sortOrder      Int       @default(0)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sets           TcgSet[]
+  products       Product[]
+}
+
+model SlugRedirect {
+  id         String     @id @default(uuid()) @db.Uuid
+  entityType SlugEntity
+  fromSlug   String
+  entityId   String     @db.Uuid
+  createdAt  DateTime   @default(now())
+
+  @@unique([entityType, fromSlug])
+}
+
 model Product {
-  id               String           @id @default(uuid()) @db.Uuid
+  id               String                          @id @default(uuid()) @db.Uuid
   name             String
-  slug             String           @unique
-  description      String?          @db.Text
+  slug             String                          @unique
+  description      String?                         @db.Text
   shortDescription String?
-  status           ProductStatus    @default(DRAFT)
+  status           ProductStatus                   @default(DRAFT)
   productType      ProductType
-  featured         Boolean          @default(false)
-  newArrival       Boolean          @default(false)
-  preorder         Boolean          @default(false)
-  releaseDate      DateTime?        @db.Date
+  featured         Boolean                         @default(false)
+  newArrival       Boolean                         @default(false)
+  preorder         Boolean                         @default(false)
+  releaseDate      DateTime?                       @db.Date
   publishedAt      DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  categoryId       String           @db.Uuid
-  tcgSetId         String?          @db.Uuid
-  category         Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  tcgSet           TcgSet?          @relation(fields: [tcgSetId], references: [id], onDelete: Restrict)
+  seoTitle         String?
+  seoDescription   String?
+  createdAt        DateTime                        @default(now())
+  updatedAt        DateTime                        @updatedAt
+  categoryId       String                          @db.Uuid
+  tcgSetId         String?                         @db.Uuid
+  gameId           String?                         @db.Uuid
+  category         Category                        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tcgSet           TcgSet?                         @relation(fields: [tcgSetId], references: [id], onDelete: Restrict)
+  game             Game?                           @relation(fields: [gameId], references: [id], onDelete: Restrict)
   variants         ProductVariant[]
   images           ProductImage[]
   tags             Tag[]
   orderItems       OrderItem[]
-  pilotageLaunches  BusinessPilotageLaunchProduct[]
+  pilotageLaunches BusinessPilotageLaunchProduct[]
 
   @@index([status])
   @@index([productType])
   @@index([categoryId])
   @@index([tcgSetId])
+  @@index([gameId])
   @@index([releaseDate])
 }
 
@@ -103,37 +144,49 @@ model ProductVariant {
 }
 
 model Category {
-  id          String     @id @default(uuid()) @db.Uuid
-  name        String
-  slug        String     @unique
-  description String?
-  imageUrl    String?
-  parentId    String?    @db.Uuid
-  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
-  children    Category[] @relation("CategoryTree")
-  sortOrder   Int        @default(0)
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  products    Product[]
+  id             String     @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String     @unique
+  description    String?
+  intro          String?    @db.Text
+  seoTitle       String?
+  seoDescription String?
+  faq            Json?
+  imageUrl       String?
+  parentId       String?    @db.Uuid
+  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Category[] @relation("CategoryTree")
+  sortOrder      Int        @default(0)
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  products       Product[]
 
   @@index([parentId])
 }
 
 model TcgSet {
-  id          String    @id @default(uuid()) @db.Uuid
-  name        String
-  slug        String    @unique
-  code        String?   @unique
-  series      String?
-  description String?
-  releaseDate DateTime? @db.Date
-  logoUrl     String?
-  symbolUrl   String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  products    Product[]
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String    @unique
+  code           String?   @unique
+  series         String?
+  description    String?
+  intro          String?   @db.Text
+  seoTitle       String?
+  seoDescription String?
+  faq            Json?
+  releaseDate    DateTime? @db.Date
+  logoUrl        String?
+  symbolUrl      String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  gameId         String?   @db.Uuid
+  game           Game?     @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  products       Product[]
+
+  @@index([gameId])
 }
 
 model ProductImage {
@@ -530,24 +583,24 @@ model InventoryAdjustment {
 }
 
 model BusinessPilotageSettings {
-  id                String                           @id @default("caldera")
-  revenueTarget     Decimal                          @default(10000) @db.Decimal(12, 2)
-  minimumMarginRate Decimal                          @default(20) @db.Decimal(5, 2)
-  maxStockBudget    Decimal                          @default(1000) @db.Decimal(12, 2)
-  cashBalance       Decimal                          @default(0) @db.Decimal(12, 2)
-  trackingStartDate DateTime?                        @db.Date
-  createdAt         DateTime                         @default(now())
-  updatedAt         DateTime                         @updatedAt
+  id                String                          @id @default("caldera")
+  revenueTarget     Decimal                         @default(10000) @db.Decimal(12, 2)
+  minimumMarginRate Decimal                         @default(20) @db.Decimal(5, 2)
+  maxStockBudget    Decimal                         @default(1000) @db.Decimal(12, 2)
+  cashBalance       Decimal                         @default(0) @db.Decimal(12, 2)
+  trackingStartDate DateTime?                       @db.Date
+  createdAt         DateTime                        @default(now())
+  updatedAt         DateTime                        @updatedAt
   launchProducts    BusinessPilotageLaunchProduct[]
 }
 
 model BusinessPilotageLaunchProduct {
-  id         String                    @id @default(uuid()) @db.Uuid
+  id         String                   @id @default(uuid()) @db.Uuid
   settingsId String
   settings   BusinessPilotageSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
-  productId  String                    @db.Uuid
-  product    Product                   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt  DateTime                  @default(now())
+  productId  String                   @db.Uuid
+  product    Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime                 @default(now())
 
   @@unique([settingsId, productId])
   @@index([productId])

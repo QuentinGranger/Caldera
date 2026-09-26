@@ -11,15 +11,26 @@ import type { ProductVariantView } from '@/lib/product/purchase';
 import type { CatalogProduct } from '@/types/product';
 
 // Lectures non persistées : Studio est visible au prochain rafraîchissement.
-// Futur cache Next.js : envelopper cette frontière puis invalider le tag "catalog".
-const publishedProductWhere: Prisma.ProductWhereInput = {
+// Published product: every parent (category, set, game) is active; the SQL facts
+// of src/lib/seo/registry.ts apply the same rules.
+export const publishedProductWhere: Prisma.ProductWhereInput = {
   status: 'ACTIVE',
   category: { isActive: true },
-  OR: [{ tcgSetId: null }, { tcgSet: { isActive: true } }],
+  AND: [
+    { OR: [{ tcgSetId: null }, { tcgSet: { isActive: true } }] },
+    { OR: [{ gameId: null }, { game: { isActive: true } }] },
+  ],
 };
 export const visibleProductWhere: Prisma.ProductWhereInput = {
   ...publishedProductWhere,
   variants: { some: { isActive: true } },
+};
+/** Purchasable now: in stock (outside preorder) or open for preorder. */
+export const availableProductWhere: Prisma.ProductWhereInput = {
+  OR: [
+    { preorder: true },
+    { variants: { some: { isActive: true, availableQuantity: { gt: 0 } } } },
+  ],
 };
 const variantSelect = {
   id: true,
@@ -45,6 +56,11 @@ const imageOrder = [
   { sortOrder: 'asc' },
   { id: 'asc' },
 ] satisfies Prisma.ProductImageOrderByWithRelationInput[];
+const gameSelect = {
+  id: true,
+  slug: true,
+  name: true,
+} satisfies Prisma.GameSelect;
 export const catalogProductSelect = {
   id: true,
   name: true,
@@ -116,23 +132,25 @@ function boundedLimit(limit: number): number {
     throw new RangeError('La limite doit être un entier entre 1 et 100.');
   return limit;
 }
+const listOrder = [
+  { publishedAt: { sort: 'desc', nulls: 'last' } },
+  { slug: 'asc' },
+] satisfies Prisma.ProductOrderByWithRelationInput[];
 async function list(
-  where: Prisma.ProductWhereInput = {},
-  limit?: number,
+  where: Prisma.ProductWhereInput,
+  limit: number,
 ): Promise<CatalogProduct[]> {
   const rows = await getPrisma().product.findMany({
     where: { AND: [visibleProductWhere, where] },
     select: catalogProductSelect,
-    orderBy: [
-      { publishedAt: { sort: 'desc', nulls: 'last' } },
-      { slug: 'asc' },
-    ],
-    ...(limit === undefined ? {} : { take: boundedLimit(limit) }),
+    orderBy: listOrder,
+    take: boundedLimit(limit),
   });
   return rows.map(toCatalogProduct);
 }
-export function getProducts() {
-  return list();
+/** Bounded: the full catalogue is paginated by getCatalogProducts. */
+export function getProducts(limit = 100) {
+  return list({}, limit);
 }
 export function getFeaturedProducts(limit = 4) {
   return list({ featured: true }, limit);
@@ -141,15 +159,15 @@ export function getFeaturedProducts(limit = 4) {
 export function getNewProducts(limit = 4) {
   return list({ newArrival: true }, limit);
 }
-export function getProductsBySet(slug: string) {
-  return list({ tcgSet: { slug, isActive: true } });
+export function getProductsBySet(slug: string, limit = 100) {
+  return list({ tcgSet: { slug, isActive: true } }, limit);
 }
-export async function getProductsByCategory(slug: string) {
+export async function getProductsByCategory(slug: string, limit = 100) {
   const categories = await getPrisma().category.findMany({
     where: { isActive: true },
     select: { id: true, parentId: true, slug: true },
   });
-  return list({ categoryId: { in: descendantIds(categories, [slug]) } });
+  return list({ categoryId: { in: descendantIds(categories, [slug]) } }, limit);
 }
 // Sélection éditoriale, pas un historique de mouvements de stock.
 export function getRestockedProducts(limit = 3) {
@@ -162,43 +180,115 @@ export function getRestockedProducts(limit = 3) {
     limit,
   );
 }
-export const getProductBySlug = cache(async (slug: string) => {
-  const product = await getPrisma().product.findFirst({
-    where: { AND: [publishedProductWhere, { slug }] },
-    select: {
-      ...catalogProductSelect,
-      variants: {
-        ...catalogProductSelect.variants,
-        select: { ...variantSelect, weightGrams: true },
-      },
-      tcgSet: {
-        select: {
-          name: true,
-          slug: true,
-          series: true,
-          logoUrl: true,
-          releaseDate: true,
-        },
-      },
-      description: true,
-      shortDescription: true,
-      releaseDate: true,
-      images: { select: imageSelect, orderBy: imageOrder },
-    },
+const productOrder = [
+  { featured: 'desc' },
+  { publishedAt: { sort: 'desc', nulls: 'last' } },
+  { id: 'asc' },
+] satisfies Prisma.ProductOrderByWithRelationInput[];
+/**
+ * Visible products of `where`, purchasable ones first (in stock or preorder),
+ * then sold-out ones to fill the remaining places.
+ */
+export async function listProductsAvailableFirst(
+  where: Prisma.ProductWhereInput,
+  limit: number,
+  excludeIds: readonly string[] = [],
+): Promise<CatalogProduct[]> {
+  const take = boundedLimit(limit);
+  const base: Prisma.ProductWhereInput[] = [visibleProductWhere, where];
+  if (excludeIds.length) base.push({ id: { notIn: [...excludeIds] } });
+  const available = await getPrisma().product.findMany({
+    where: { AND: [...base, availableProductWhere] },
+    select: catalogProductSelect,
+    orderBy: productOrder,
+    take,
   });
-  if (!product) return null;
+  if (available.length >= take) return available.map(toCatalogProduct);
+  const soldOut = await getPrisma().product.findMany({
+    where: { AND: [...base, { NOT: availableProductWhere }] },
+    select: catalogProductSelect,
+    orderBy: productOrder,
+    take: take - available.length,
+  });
+  return [...available, ...soldOut].map(toCatalogProduct);
+}
+
+const productDetailSelect = {
+  ...catalogProductSelect,
+  status: true,
+  seoTitle: true,
+  seoDescription: true,
+  updatedAt: true,
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      parentId: true,
+      isActive: true,
+    },
+  },
+  game: { select: { ...gameSelect, isActive: true } },
+  variants: {
+    ...catalogProductSelect.variants,
+    select: { ...variantSelect, barcode: true, weightGrams: true },
+  },
+  tcgSet: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      code: true,
+      series: true,
+      logoUrl: true,
+      releaseDate: true,
+      gameId: true,
+      isActive: true,
+    },
+  },
+  description: true,
+  shortDescription: true,
+  releaseDate: true,
+  images: { select: imageSelect, orderBy: imageOrder },
+} satisfies Prisma.ProductSelect;
+type ProductDetailRow = Prisma.ProductGetPayload<{
+  select: typeof productDetailSelect;
+}>;
+
+function toProductDetail(product: ProductDetailRow) {
   return {
     ...toCatalogProduct(product),
     productType: product.productType,
     preorder: product.preorder,
     newArrival: product.newArrival,
-    categoryInfo: product.category,
+    categoryInfo: {
+      id: product.category.id,
+      name: product.category.name,
+      slug: product.category.slug,
+      parentId: product.category.parentId,
+    },
+    game: product.game
+      ? {
+          id: product.game.id,
+          slug: product.game.slug,
+          name: product.game.name,
+        }
+      : null,
     tcgSet: product.tcgSet
       ? {
-          ...product.tcgSet,
+          id: product.tcgSet.id,
+          name: product.tcgSet.name,
+          slug: product.tcgSet.slug,
+          code: product.tcgSet.code,
+          series: product.tcgSet.series,
+          logoUrl: product.tcgSet.logoUrl,
+          gameId: product.tcgSet.gameId,
           releaseDate: product.tcgSet.releaseDate?.toISOString() ?? null,
         }
       : null,
+    seoTitle: product.seoTitle,
+    seoDescription: product.seoDescription,
+    updatedAt: product.updatedAt.toISOString(),
     description: product.description,
     shortDescription: product.shortDescription,
     releaseDate: product.releaseDate?.toISOString() ?? null,
@@ -206,58 +296,167 @@ export const getProductBySlug = cache(async (slug: string) => {
       ...image,
       ...getProductVisual(product.productType, product.name, image),
     })),
-    variants: product.variants.map((variant): ProductVariantView => ({
-      id: variant.id,
-      sku: variant.sku,
-      language: variant.language,
-      condition: variant.condition,
-      isDefault: variant.isDefault,
-      price: variant.price.toFixed(2),
-      compareAtPrice: variant.compareAtPrice?.greaterThan(variant.price)
-        ? variant.compareAtPrice.toFixed(2)
-        : null,
-      availability: getAvailability(product.preorder, [variant]),
-      maxQuantity: availableQuantity(variant),
-      lowStockQuantity:
-        getAvailability(product.preorder, [variant]) === 'LOW_STOCK'
-          ? availableQuantity(variant)
+    variants: product.variants.map(
+      (variant): ProductVariantView & { barcode: string | null } => ({
+        id: variant.id,
+        sku: variant.sku,
+        barcode: variant.barcode,
+        language: variant.language,
+        condition: variant.condition,
+        isDefault: variant.isDefault,
+        price: variant.price.toFixed(2),
+        compareAtPrice: variant.compareAtPrice?.greaterThan(variant.price)
+          ? variant.compareAtPrice.toFixed(2)
           : null,
-      weightGrams: variant.weightGrams,
-    })),
+        availability: getAvailability(product.preorder, [variant]),
+        maxQuantity: availableQuantity(variant),
+        lowStockQuantity:
+          getAvailability(product.preorder, [variant]) === 'LOW_STOCK'
+            ? availableQuantity(variant)
+            : null,
+        weightGrams: variant.weightGrams,
+      }),
+    ),
   };
-});
-export type ProductDetail = NonNullable<
-  Awaited<ReturnType<typeof getProductBySlug>>
->;
-
-export async function getHomeCategories() {
-  const categories = await getPrisma().category.findMany({
-    where: {
-      isActive: true,
-      slug: { in: ['pokemon', 'scelles', 'cartes', 'accessoires'] },
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      imageUrl: true,
-    },
-    orderBy: [{ sortOrder: 'asc' }, { slug: 'asc' }],
-  });
-  return categories.map((category) => ({
-    ...category,
-    imageUrl: getCategoryImage(category.slug, category.imageUrl),
-  }));
 }
+export type ProductDetail = ReturnType<typeof toProductDetail>;
+
+/** Active parents of an archived product, to pick its redirect target. */
+export interface ArchivedProductParents {
+  id: string;
+  slug: string;
+  name: string;
+  game: { id: string; slug: string; name: string } | null;
+  tcgSet: { id: string; slug: string; name: string } | null;
+  category: {
+    id: string;
+    slug: string;
+    name: string;
+    parentId: string | null;
+  } | null;
+}
+export type ProductRoute =
+  | { state: 'visible' | 'no-variant'; product: ProductDetail }
+  | { state: 'archived'; product: ArchivedProductParents }
+  | { state: 'missing'; product: null };
+
+/**
+ * visible: published with an active variant; no-variant: published, 200
+ * noindex; archived: 308 to a parent; missing: DRAFT, unknown slug or inactive
+ * parent (404 once SlugRedirect has been checked).
+ */
+export const getProductRoute = cache(
+  async (slug: string): Promise<ProductRoute> => {
+    const product = await getPrisma().product.findUnique({
+      where: { slug },
+      select: productDetailSelect,
+    });
+    if (!product) return { state: 'missing', product: null };
+    if (product.status === 'ARCHIVED') {
+      const game = product.game?.isActive ? product.game : null;
+      return {
+        state: 'archived',
+        product: {
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          game: game ? { id: game.id, slug: game.slug, name: game.name } : null,
+          tcgSet:
+            product.tcgSet?.isActive && game
+              ? {
+                  id: product.tcgSet.id,
+                  slug: product.tcgSet.slug,
+                  name: product.tcgSet.name,
+                }
+              : null,
+          category: product.category.isActive
+            ? {
+                id: product.category.id,
+                slug: product.category.slug,
+                name: product.category.name,
+                parentId: product.category.parentId,
+              }
+            : null,
+        },
+      };
+    }
+    // Same rules as publishedProductWhere.
+    if (
+      product.status !== 'ACTIVE' ||
+      !product.category.isActive ||
+      (product.tcgSet && !product.tcgSet.isActive) ||
+      (product.game && !product.game.isActive)
+    )
+      return { state: 'missing', product: null };
+    return {
+      state: product.variants.length ? 'visible' : 'no-variant',
+      product: toProductDetail(product),
+    };
+  },
+);
+
+/** Published product (active parents), with or without an active variant. */
+export const getProductBySlug = cache(async (slug: string) => {
+  const route = await getProductRoute(slug);
+  return route.state === 'visible' || route.state === 'no-variant'
+    ? route.product
+    : null;
+});
+
+/** Active root families holding at least one visible product in their subtree. */
+export async function getHomeCategories() {
+  const db = getPrisma();
+  const [categories, groups] = await Promise.all([
+    db.category.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageUrl: true,
+        parentId: true,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { slug: 'asc' }],
+    }),
+    db.product.groupBy({ by: ['categoryId'], where: visibleProductWhere }),
+  ]);
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  const rootsWithProducts = new Set<string>();
+  for (const { categoryId } of groups) {
+    // Climb to the root through active categories only; a cycle never ends on a root.
+    const visited = new Set<string>();
+    let current = byId.get(categoryId);
+    while (current?.parentId && !visited.has(current.id)) {
+      visited.add(current.id);
+      current = byId.get(current.parentId);
+    }
+    if (current && !current.parentId) rootsWithProducts.add(current.id);
+  }
+  return categories
+    .filter((category) => rootsWithProducts.has(category.id))
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      imageUrl: getCategoryImage(category.slug, category.imageUrl),
+    }));
+}
+/** Latest active sets with visible products, newest release first. */
 export async function getCollections() {
   const sets = await getPrisma().tcgSet.findMany({
     where: { isActive: true, products: { some: visibleProductWhere } },
     take: 2,
-    orderBy: { slug: 'asc' },
+    orderBy: [
+      { releaseDate: { sort: 'desc', nulls: 'last' } },
+      { name: 'asc' },
+      { id: 'asc' },
+    ],
     select: {
       name: true,
       slug: true,
+      game: { select: { slug: true, isActive: true } },
       products: {
         where: visibleProductWhere,
         select: {
@@ -274,7 +473,10 @@ export async function getCollections() {
   return sets.map((set) => ({
     name: set.name,
     slug: set.slug,
-    href: `/extensions/${set.slug}`,
+    // Canonical silo URL; /extensions/{slug} only redirects there.
+    href: set.game?.isActive
+      ? `/${encodeURIComponent(set.game.slug)}/${encodeURIComponent(set.slug)}`
+      : `/extensions/${set.slug}`,
     image: getProductVisual(
       set.products[0]!.productType,
       set.products[0]!.name,

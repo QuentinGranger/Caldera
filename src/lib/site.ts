@@ -16,3 +16,8 @@ export function siteOrigin() {
 export function isIndexableHost(host: string | null) {
   return host === PRODUCTION_HOST || host === `www.${PRODUCTION_HOST}`;
 }
+
+/** Absolute URL on the public origin; absolute URLs (e.g. Blob images) are kept. */
+export function absoluteUrl(path: string) {
+  return new URL(path, `${siteOrigin()}/`).href;
+}
