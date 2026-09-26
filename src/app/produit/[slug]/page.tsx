@@ -1,62 +1,54 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { connection } from 'next/server';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { ProductGallery } from '@/components/product/ProductGallery/ProductGallery';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel/ProductPurchasePanel';
 import { ProductDetails } from '@/components/product/ProductDetails/ProductDetails';
 import { ProductSetSection } from '@/components/product/ProductSetSection/ProductSetSection';
+import { ProductExplore } from '@/components/product/ProductExplore/ProductExplore';
 import { RelatedProducts } from '@/components/product/RelatedProducts/RelatedProducts';
-import { getProductBySlug } from '@/lib/catalog/queries';
-import { getRelatedProducts } from '@/lib/catalog/getRelatedProducts';
-import { getCategory } from '@/lib/catalog/taxonomy';
-import { productTypeLabels } from '@/lib/product/purchase';
 import {
-  productMetadata,
-  productJsonLd,
-  serializeJsonLd,
-} from '@/lib/product/seo';
+  getProductPageRoute,
+  loadProductPage,
+  productPageMetadata,
+} from '@/lib/product/page';
+import { productTypeLabels } from '@/lib/product/purchase';
+import { productPath } from '@/lib/product/seo';
 import styles from './product.module.scss';
 type Props = { params: Promise<{ slug: string }> };
-export async function generateMetadata({ params }: Props) {
+async function resolve(params: Props['params']) {
   await connection();
-  const product = await getProductBySlug((await params).slug);
-  if (!product) notFound();
-  return productMetadata(product);
+  const route = await getProductPageRoute((await params).slug);
+  if (route.type === 'redirect') permanentRedirect(route.path);
+  if (route.type === 'not-found') notFound();
+  return route;
+}
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { product, decision } = await resolve(params);
+  return productPageMetadata(product, decision);
 }
 export default async function ProductPage({ params }: Props) {
-  await connection();
-  const product = await getProductBySlug((await params).slug);
-  if (!product) notFound();
-  const [category, related] = await Promise.all([
-    getCategory(product.categoryInfo.slug),
-    getRelatedProducts(product),
-  ]);
-  const breadcrumb = [
-    { label: 'Accueil', href: '/' },
-    { label: 'Catalogue', href: '/catalogue' },
-    ...(category
-      ? [...category.ancestors, category].map((c) => ({
-          label: c.name,
-          href: `/categorie/${c.slug}`,
-        }))
-      : []),
-    { label: product.name },
-  ];
+  const { product, decision } = await resolve(params);
+  const page = await loadProductPage(product, decision);
   const images = product.images.length
     ? product.images
     : [{ url: product.image, alt: product.imageAlt }];
+  const purchasable = product.availability !== 'OUT_OF_STOCK';
+  const alternatives = purchasable
+    ? []
+    : page.related.filter((item) => item.availability !== 'OUT_OF_STOCK');
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <Container>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(productJsonLd(product)),
-          }}
+        <JsonLd data={page.structuredData} />
+        <Breadcrumb
+          items={page.breadcrumb}
+          currentPath={productPath(product.slug)}
         />
-        <Breadcrumb items={breadcrumb} />
         <div className={styles.hero}>
           <ProductGallery
             key={product.id}
@@ -68,14 +60,16 @@ export default async function ProductPage({ params }: Props) {
               {productTypeLabels[product.productType]}
             </p>
             <h1>{product.name}</h1>
-            {product.tcgSet && (
-              <Link
-                href={`/extensions/${product.tcgSet.slug}`}
-                className={styles.setLink}
-              >
-                Extension : {product.tcgSet.name}
-              </Link>
-            )}
+            {product.tcgSet &&
+              (page.setHref ? (
+                <Link href={page.setHref} className={styles.setLink}>
+                  Extension : {product.tcgSet.name}
+                </Link>
+              ) : (
+                <p className={styles.setName}>
+                  Extension : {product.tcgSet.name}
+                </p>
+              ))}
             {product.shortDescription && (
               <p className={styles.summary}>{product.shortDescription}</p>
             )}
@@ -86,12 +80,50 @@ export default async function ProductPage({ params }: Props) {
               newArrival={product.newArrival}
               releaseDate={product.releaseDate}
               typeLabel={productTypeLabels[product.productType]}
+              shipping={page.shipping}
             />
+            {!purchasable &&
+              (product.variants.length > 0 || alternatives.length > 0) && (
+                <div className={styles.notice}>
+                  {product.variants.length > 0 && (
+                    <p>
+                      <strong>Produit épuisé.</strong>{' '}
+                      {product.variants.length > 1
+                        ? 'Toutes les versions de ce produit sont en rupture de stock.'
+                        : 'Ce produit est en rupture de stock.'}
+                    </p>
+                  )}
+                  {alternatives.length > 0 && (
+                    <a href="#alternatives-title">
+                      {alternatives.length > 1
+                        ? `Voir les ${alternatives.length} produits similaires disponibles`
+                        : 'Voir un produit similaire disponible'}
+                    </a>
+                  )}
+                </div>
+              )}
           </div>
         </div>
+        {alternatives.length > 0 && (
+          <RelatedProducts
+            products={alternatives}
+            id="alternatives-title"
+            eyebrow={
+              product.variants.length ? 'Produit épuisé' : 'Indisponible'
+            }
+            title="Alternatives disponibles"
+          />
+        )}
         <ProductDetails description={product.description} tags={product.tags} />
-        {product.tcgSet && <ProductSetSection set={product.tcgSet} />}
-        <RelatedProducts products={related} />
+        {product.tcgSet && (
+          <ProductSetSection set={product.tcgSet} href={page.setHref} />
+        )}
+        <ProductExplore
+          links={page.links}
+          glossary={page.glossary}
+          guides={page.guides}
+        />
+        {!alternatives.length && <RelatedProducts products={page.related} />}
       </Container>
     </main>
   );

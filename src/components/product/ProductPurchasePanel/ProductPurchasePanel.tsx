@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { MAX_CART_ITEM_QUANTITY } from '@/lib/cart/constants';
 import { useSearchParams } from 'next/navigation';
-import { Package, Truck } from 'lucide-react';
+import { Package, RotateCcw, Truck } from 'lucide-react';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { ProductVariantSelector } from '@/components/product/ProductVariantSelector/ProductVariantSelector';
 import { QuantitySelector } from '@/components/product/QuantitySelector/QuantitySelector';
@@ -18,6 +19,12 @@ import {
   conditionLabels,
   type ProductVariantView,
 } from '@/lib/product/purchase';
+import {
+  HANDLING_LABEL,
+  RETURN_LABEL,
+  RETURN_POLICY_PATH,
+  type ShippingOptionView,
+} from '@/lib/product/services';
 import { formatPrice } from '@/utils/formatPrice';
 import { formatProductDate, formatProductWeight } from '@/utils/formatProduct';
 import styles from './ProductPurchasePanel.module.scss';
@@ -27,12 +34,15 @@ type Props = {
   newArrival: boolean;
   releaseDate: string | null;
   typeLabel: string;
+  /** Shipping methods offered at checkout (ShippingMethod). */
+  shipping: ShippingOptionView[];
 };
 function SelectedVariant({
   variant,
   newArrival,
   releaseDate,
   typeLabel,
+  shipping,
 }: Omit<Props, 'variants'> & { variant: ProductVariantView }) {
   const [quantity, setQuantity] = useState(1);
   const badge = getProductBadge(variant.availability, newArrival);
@@ -86,9 +96,37 @@ function SelectedVariant({
         <Truck size={20} aria-hidden="true" />
         <div>
           <strong>Livraison</strong>
+          {shipping.length ? (
+            <>
+              <ul className={styles.shipping}>
+                {shipping.map((option) => (
+                  <li key={option.code}>
+                    {option.name}
+                    {option.destinations.length > 0 &&
+                      ` (${option.destinations.join(', ')})`}{' '}
+                    : {option.details.join(', ')}
+                  </li>
+                ))}
+              </ul>
+              <p>{HANDLING_LABEL}</p>
+            </>
+          ) : (
+            <p>
+              Les modalités, frais et délais seront précisés à l’ouverture des
+              commandes.
+            </p>
+          )}
+        </div>
+      </div>
+      <div className={styles.service}>
+        <RotateCcw size={20} aria-hidden="true" />
+        <div>
+          <strong>Retours</strong>
           <p>
-            Les modalités, frais et délais seront précisés à l’ouverture des
-            commandes.
+            {RETURN_LABEL}{' '}
+            <Link href={RETURN_POLICY_PATH}>
+              Conditions de retour (article 12 des CGV)
+            </Link>
           </p>
         </div>
       </div>

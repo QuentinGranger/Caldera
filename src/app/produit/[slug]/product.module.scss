@@ -36,3 +36,25 @@
   color: v.$color-text-muted;
   margin-top: 1rem;
 }
+.setName {
+  font-size: 0.8rem;
+}
+.notice {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid v.$color-danger;
+  background: v.$color-surface;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  a {
+    justify-self: start;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  a:hover {
+    color: v.$color-green;
+  }
+}

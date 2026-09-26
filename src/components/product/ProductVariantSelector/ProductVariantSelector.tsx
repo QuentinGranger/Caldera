@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { languageLabels } from '@/lib/catalog/params';
 import { availabilityLabels } from '@/lib/catalog/getAvailability';
 import type { ProductVariantView } from '@/lib/product/purchase';
+import { formatPrice } from '@/utils/formatPrice';
 import styles from './ProductVariantSelector.module.scss';
 export function ProductVariantSelector({
   variants,
@@ -13,6 +14,8 @@ export function ProductVariantSelector({
   onChange: (sku: string) => void;
 }) {
   const name = useId();
+  // Every offer of the structured data is visible when prices differ.
+  const pricesDiffer = new Set(variants.map((v) => v.price)).size > 1;
   return (
     <fieldset className={styles.selector}>
       <legend>Langue et version</legend>
@@ -29,6 +32,7 @@ export function ProductVariantSelector({
             <span>
               <strong>{languageLabels[variant.language]}</strong>
               <small>{availabilityLabels[variant.availability]}</small>
+              {pricesDiffer && <small>{formatPrice(variant.price)}</small>}
               {variants.filter((v) => v.language === variant.language).length >
                 1 && <small>{variant.sku}</small>}
             </span>

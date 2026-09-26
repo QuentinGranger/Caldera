@@ -1,0 +1,72 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+.explore {
+  margin-top: 4rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid v.$color-border;
+  > h2 {
+    font-size: clamp(2.3rem, 3.5vw, 3.25rem);
+    margin-bottom: 2rem;
+  }
+}
+.columns {
+  display: grid;
+  gap: 2rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.column {
+  min-width: 0;
+  h3 {
+    font-size: 1.6rem;
+    margin-bottom: 0.75rem;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0.15rem;
+  }
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  a {
+    display: inline-block;
+    padding: 0.35rem 0;
+    overflow-wrap: anywhere;
+    text-decoration: underline;
+    text-decoration-color: v.$color-border;
+    text-underline-offset: 4px;
+  }
+  a:hover {
+    color: v.$color-green;
+    text-decoration-color: currentColor;
+  }
+}
+.count {
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+}
+.term {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.text {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: v.$color-text-muted;
+  max-width: 60ch;
+}
+.guide {
+  padding-bottom: 0.5rem;
+}

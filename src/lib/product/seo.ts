@@ -1,83 +1,82 @@
-import type { Metadata } from 'next';
+// Product metadata and structured data (docs/seo-architecture.md §5 and §6),
+// built from the product exactly as its page displays it.
 import type { ProductDetail } from '@/lib/catalog/queries';
-import { PRODUCTION_SITE_URL } from '@/lib/site';
-import { selectProductVariant } from './purchase';
-const availabilityUrls = {
-  IN_STOCK: 'https://schema.org/InStock',
-  LOW_STOCK: 'https://schema.org/InStock',
-  OUT_OF_STOCK: 'https://schema.org/OutOfStock',
-  PREORDER: 'https://schema.org/PreOrder',
-} as const;
-function absoluteUrl(path: string): string | undefined {
-  try {
-    const origin = new URL(process.env.SITE_URL || PRODUCTION_SITE_URL);
-    if (!['https:', 'http:'].includes(origin.protocol)) return undefined;
-    return new URL(path, origin.origin).href;
-  } catch {
-    return undefined;
-  }
+import {
+  isPlaceholderImage,
+  productNode,
+  type JsonLdNode,
+  type ShippingMethodInput,
+} from '@/lib/seo/jsonld';
+import {
+  productMetadataText,
+  type MetadataImage,
+  type MetadataText,
+} from '@/lib/seo/metadata';
+
+/** Canonical path: /produit/{slug}, without ?variant. */
+export function productPath(slug: string): string {
+  return `/produit/${encodeURIComponent(slug)}`;
 }
-export function productDescription(product: ProductDetail) {
-  return (
-    product.shortDescription?.trim() ||
-    product.description?.trim() ||
-    product.name
-  )
-    .replace(/\s+/g, ' ')
-    .slice(0, 160);
+
+const toDate = (value: string | null) => (value ? new Date(value) : null);
+
+/** Languages of the active variants, in display order. */
+export function productLanguages(product: Pick<ProductDetail, 'variants'>) {
+  return [...new Set(product.variants.map((variant) => variant.language))];
 }
-export function productMetadata(product: ProductDetail): Metadata {
-  const path = `/produit/${encodeURIComponent(product.slug)}`;
-  const url = absoluteUrl(path),
-    image = absoluteUrl(product.image),
-    description = productDescription(product);
-  return {
-    title: `${product.name} | Les Terres de Caldera`,
-    description,
-    ...(url ? { alternates: { canonical: url } } : {}),
-    openGraph: {
-      type: 'website',
-      locale: 'fr_FR',
-      siteName: 'Les Terres de Caldera',
-      title: product.name,
-      description,
-      ...(url ? { url } : {}),
-      ...(image ? { images: [{ url: image, alt: product.imageAlt }] } : {}),
-    },
-  };
-}
-export function productJsonLd(product: ProductDetail) {
-  const variant = selectProductVariant(product.variants);
-  const path = `/produit/${encodeURIComponent(product.slug)}`,
-    url = absoluteUrl(path) ?? path;
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+
+/** Title and description from real facts; seoTitle / seoDescription win. */
+export function productSeoText(product: ProductDetail): MetadataText {
+  return productMetadataText({
     name: product.name,
-    description: productDescription(product),
-    image: [
-      ...new Set(
-        (product.images.length ? product.images : [{ url: product.image }]).map(
-          (image) => absoluteUrl(image.url) ?? image.url,
-        ),
-      ),
-    ],
-    url,
-    ...(variant
-      ? {
-          sku: variant.sku,
-          offers: {
-            '@type': 'Offer',
-            price: variant.price,
-            priceCurrency: 'EUR',
-            availability: availabilityUrls[variant.availability],
-            itemCondition: 'https://schema.org/NewCondition',
-            url,
-          },
-        }
-      : {}),
-  };
+    categoryName: product.categoryInfo.name,
+    setName: product.tcgSet?.name,
+    gameName: product.game?.name,
+    languages: productLanguages(product),
+    price: product.price,
+    priceFrom: product.priceFrom,
+    availability: product.availability,
+    preorder: product.preorder,
+    releaseDate: toDate(product.releaseDate),
+    overrides: {
+      seoTitle: product.seoTitle,
+      seoDescription: product.seoDescription,
+    },
+  });
 }
-export function serializeJsonLd(value: ReturnType<typeof productJsonLd>) {
-  return JSON.stringify(value).replace(/</g, '\\u003c');
+
+/** First real photo of the gallery; replacement visuals are never shared. */
+export function productShareImage(
+  product: Pick<ProductDetail, 'images'>,
+): MetadataImage | null {
+  const image = product.images.find(({ url }) => !isPlaceholderImage(url));
+  return image ? { url: image.url, alt: image.alt } : null;
+}
+
+/**
+ * Product node with one Offer per active variant; null without an active
+ * variant (such a page is noindex and carries no Product markup).
+ */
+export function productStructuredData(
+  product: ProductDetail,
+  shippingMethods: readonly ShippingMethodInput[] = [],
+): JsonLdNode | null {
+  return productNode({
+    name: product.name,
+    path: productPath(product.slug),
+    description:
+      product.description?.trim() || product.shortDescription?.trim() || null,
+    images: product.images.map((image) => image.url),
+    brand: product.game?.name ?? null,
+    category: product.categoryInfo.name,
+    releaseDate: toDate(product.releaseDate),
+    variants: product.variants.map((variant) => ({
+      sku: variant.sku,
+      barcode: variant.barcode,
+      price: variant.price,
+      isActive: true,
+      availability: variant.availability,
+    })),
+    shippingMethods,
+  });
 }

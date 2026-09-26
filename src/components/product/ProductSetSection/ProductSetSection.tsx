@@ -5,8 +5,11 @@ import { formatProductDate } from '@/utils/formatProduct';
 import styles from './ProductSetSection.module.scss';
 export function ProductSetSection({
   set,
+  href,
 }: {
   set: NonNullable<ProductDetail['tcgSet']>;
+  /** Indexable landing of the set; no link otherwise. */
+  href: string | null;
 }) {
   return (
     <section className={styles.set}>
@@ -26,9 +29,11 @@ export function ProductSetSection({
           height={100}
         />
       )}
-      <Button href={`/extensions/${set.slug}`} variant="gold">
-        Découvrir l’extension
-      </Button>
+      {href && (
+        <Button href={href} variant="gold">
+          Voir l’extension {set.name}
+        </Button>
+      )}
     </section>
   );
 }
