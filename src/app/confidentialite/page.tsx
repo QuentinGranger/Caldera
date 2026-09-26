@@ -471,6 +471,7 @@ export default function ConfidentialitePage() {
               <ul>
                 <li>l’hébergement et le déploiement du site ;</li>
                 <li>son infrastructure technique ;</li>
+                <li>le stockage des images du catalogue (Vercel Blob) ;</li>
                 <li>Vercel Web Analytics lorsque cette fonctionnalité est activée ;</li>
                 <li>
                   Vercel Speed Insights, pour mesurer les performances de
@@ -487,17 +488,14 @@ export default function ConfidentialitePage() {
                 de Sentry).
               </p>
 
-              <h3>Supabase</h3>
-              <p>Supabase est utilisé notamment pour :</p>
+              <h3>Neon</h3>
+              <p>Neon est utilisé notamment pour :</p>
               <ul>
-                <li>la base de données ;</li>
-                <li>
-                  certaines fonctionnalités liées aux comptes clients et à
-                  l’authentification ;
-                </li>
+                <li>l’hébergement de la base de données de la boutique ;</li>
                 <li>
                   le stockage des données nécessaires au fonctionnement de la
-                  boutique.
+                  boutique, notamment le catalogue, les commandes et les
+                  comptes d’administration.
                 </li>
               </ul>
 
@@ -515,6 +513,7 @@ export default function ConfidentialitePage() {
               </p>
               <ul>
                 <li>carte bancaire ;</li>
+                <li>Link, le service de paiement enregistré de Stripe ;</li>
                 <li>Apple Pay ;</li>
                 <li>Google Pay ;</li>
                 <li>PayPal ;</li>

@@ -64,7 +64,7 @@ export default function MentionsLegalesPage() {
           <p className={styles.eyebrow}>Informations légales</p>
           <h1>Mentions légales</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
-          <p className={styles.version}>Dernière mise à jour : 21 septembre 2026</p>
+          <p className={styles.version}>Dernière mise à jour : 26 septembre 2026</p>
         </Container>
       </section>
 
@@ -337,13 +337,19 @@ export default function MentionsLegalesPage() {
               <p>
                 <strong>Vercel</strong>
                 <br />
-                Hébergement, déploiement et mesure d’audience du site.
+                Hébergement, déploiement, stockage des images, mesure d’audience et
+                des performances du site.
               </p>
               <p>
-                <strong>Supabase</strong>
+                <strong>Neon</strong>
                 <br />
-                Infrastructure de base de données et fonctionnalités liées aux
-                comptes clients.
+                Hébergement de la base de données de la boutique.
+              </p>
+              <p>
+                <strong>Sentry</strong>
+                <br />
+                Détection des erreurs techniques et suivi des performances du
+                site.
               </p>
               <p>
                 <strong>Stripe et ses partenaires</strong>
