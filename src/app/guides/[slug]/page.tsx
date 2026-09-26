@@ -10,11 +10,13 @@ import {
   KIND_LABELS,
   editorialDecision,
   editorialMetadata,
+  freeAnchor,
 } from '@/components/editorial/editorial';
 import {
   ArticleLayout,
   ContentSection,
   EditorialHeader,
+  FAQ_TITLE,
   FaqSection,
   Prose,
   ShopSection,
@@ -42,6 +44,7 @@ export default async function GuidePage({ params }: Props) {
   const page = await getGuidePage(slug);
   if (!page) notFound();
   const { entry, related, shop } = page;
+  const faqId = freeAnchor('questions-frequentes', entry.headings);
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <Container>
@@ -59,9 +62,14 @@ export default async function GuidePage({ params }: Props) {
           lead={entry.description}
           updated={entry.updated}
         />
-        <ArticleLayout headings={entry.headings}>
+        <ArticleLayout
+          headings={entry.headings}
+          extra={
+            entry.faq.length ? [{ id: faqId, text: FAQ_TITLE }] : undefined
+          }
+        >
           <Prose html={entry.html} />
-          <FaqSection entries={entry.faq} id="guide-faq-titre" />
+          <FaqSection entries={entry.faq} id={faqId} />
         </ArticleLayout>
         <ShopSection
           products={shop.products}

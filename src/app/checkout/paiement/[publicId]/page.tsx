@@ -12,7 +12,7 @@ import styles from '@/components/payment/Payment.module.scss';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Paiement | Les Terres de Caldera',
+  title: 'Paiement',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 };

@@ -16,6 +16,7 @@ import {
 import { renderMarkdown, type ContentEntry } from '@/lib/content';
 import { LANGUAGE_LABELS, landingPath } from '@/lib/seo/facets';
 import { decideCategoryHubIndexation } from '@/lib/seo/indexation';
+import { isPlaceholderImage } from '@/lib/seo/jsonld';
 import {
   categoryHubText,
   type MetadataImage,
@@ -182,15 +183,17 @@ export const resolveCategoryHub = cache(
         catalogScope: { category: category.slug },
         stats: hub.stats,
         decision,
+        // Multi-game products belong to no game: the title names none.
         text: categoryHubText({
           name: category.name,
           stats: hub.stats,
-          gameNames,
+          gameNames: hub.hasGamelessProducts ? [] : gameNames,
           overrides: category,
         }),
-        image: category.imageUrl
-          ? { url: category.imageUrl, alt: category.name }
-          : null,
+        image:
+          category.imageUrl && !isPlaceholderImage(category.imageUrl)
+            ? { url: category.imageUrl, alt: category.name }
+            : null,
         heading: categoryHubHeading(
           category.name,
           gameNames,

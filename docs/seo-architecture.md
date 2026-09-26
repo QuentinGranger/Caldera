@@ -34,6 +34,7 @@ model Game {                       // jeu / licence : Pokémon, Lorcana, One Pie
 ```
 
 Ajouts :
+
 - `TcgSet.gameId String? @db.Uuid` (→ Game, onDelete Restrict, indexé) + `intro String? @db.Text`, `seoTitle String?`, `seoDescription String?`, `faq Json?`.
 - `Category` + `intro String? @db.Text`, `seoTitle String?`, `seoDescription String?`, `faq Json?`.
 - `Product.gameId String? @db.Uuid` (→ Game, onDelete Restrict, indexé) + `seoTitle String?`, `seoDescription String?`.
@@ -44,31 +45,31 @@ La catégorie représente la **famille de produits** (Produits scellés › Boos
 
 ## 3. URL
 
-| URL | Page | Source |
-|---|---|---|
-| `/{jeu}` | hub jeu | `src/app/[game]/page.tsx` |
-| `/{jeu}/{facette}` | landing 1 facette | `src/app/[game]/[...facets]/page.tsx` |
-| `/{jeu}/{facette}/{facette}` | landing 2 facettes | idem |
-| `/produit/{slug}` | fiche produit (URL canonique courte et stable) | existante |
-| `/categorie/{slug}` | hub famille multi-jeux | existante |
-| `/extensions` | index des extensions par jeu | existante |
-| `/extensions/{slug}` | 308 → `/{jeu}/{extension}` si l’extension a un jeu | existante |
-| `/catalogue`, `/nouveautes`, `/precommandes`, `/en-stock` | hubs transverses | existants + `/en-stock` |
-| `/guides`, `/guides/{slug}` | guides, comparatifs, dossiers | contenu `content/guides/*.md` |
-| `/glossaire`, `/glossaire/{slug}` | glossaire JCC | contenu `content/glossaire/*.md` |
-| `/calendrier-des-sorties` | calendrier (TcgSet.releaseDate) | base |
-| `/livraison` | modes, délais, tarifs réels | table ShippingMethod |
+| URL                                                       | Page                                               | Source                                |
+| --------------------------------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| `/{jeu}`                                                  | hub jeu                                            | `src/app/[game]/page.tsx`             |
+| `/{jeu}/{facette}`                                        | landing 1 facette                                  | `src/app/[game]/[...facets]/page.tsx` |
+| `/{jeu}/{facette}/{facette}`                              | landing 2 facettes                                 | idem                                  |
+| `/produit/{slug}`                                         | fiche produit (URL canonique courte et stable)     | existante                             |
+| `/categorie/{slug}`                                       | hub famille multi-jeux                             | existante                             |
+| `/extensions`                                             | index des extensions par jeu                       | existante                             |
+| `/extensions/{slug}`                                      | 308 → `/{jeu}/{extension}` si l’extension a un jeu | existante                             |
+| `/catalogue`, `/nouveautes`, `/precommandes`, `/en-stock` | hubs transverses                                   | existants + `/en-stock`               |
+| `/guides`, `/guides/{slug}`                               | guides, comparatifs, dossiers                      | contenu `content/guides/*.md`         |
+| `/glossaire`, `/glossaire/{slug}`                         | glossaire JCC                                      | contenu `content/glossaire/*.md`      |
+| `/calendrier-des-sorties`                                 | calendrier (TcgSet.releaseDate)                    | base                                  |
+| `/livraison`                                              | modes, délais, tarifs réels                        | table ShippingMethod                  |
 
 ### Facettes (sous `/{jeu}`)
 
 Dimensions et ordre canonique : **extension → famille → langue → statut**.
 
-| Dimension | Slugs | Source |
-|---|---|---|
-| extension | `TcgSet.slug` (extension du jeu) | base |
-| famille | `Category.slug` (inclut les descendants) | base |
-| langue | `francais`, `anglais`, `japonais`, `allemand`, `espagnol`, `italien` | `ProductLanguage` (niveau variante) |
-| statut | `en-stock`, `precommandes`, `nouveautes` | stock / `preorder` / `newArrival` |
+| Dimension | Slugs                                                                | Source                              |
+| --------- | -------------------------------------------------------------------- | ----------------------------------- |
+| extension | `TcgSet.slug` (extension du jeu)                                     | base                                |
+| famille   | `Category.slug` (inclut les descendants)                             | base                                |
+| langue    | `francais`, `anglais`, `japonais`, `allemand`, `espagnol`, `italien` | `ProductLanguage` (niveau variante) |
+| statut    | `en-stock`, `precommandes`, `nouveautes`                             | stock / `preorder` / `newArrival`   |
 
 Combinaisons autorisées (2 facettes maximum) : extension, famille, langue, statut, extension+famille, extension+langue, extension+statut, famille+langue, famille+statut. Toute autre combinaison ou un ordre non canonique : 308 vers l’ordre canonique si les facettes sont valides, sinon 404.
 
@@ -78,18 +79,18 @@ Espace de noms : un slug d’extension, de famille, de langue, de statut et les 
 
 `decideIndexation(kind, stats, parentStats?)` renvoie `{ index, reason, canonicalPath }`. Règles :
 
-| Page | Indexable si | Sinon |
-|---|---|---|
-| hub jeu | ≥ 1 produit visible | noindex, follow |
-| extension, famille (1 facette entité) | ≥ 2 produits | 0 produit : 200 noindex si l’entité existe (page « bientôt », dates) ; 1 produit : noindex |
-| langue, statut (1 facette filtre) | ≥ 2 produits **et** strictement moins que le hub jeu | identique au parent : canonical vers le parent ; 0 produit : 404 |
-| extension+famille | ≥ 2 produits **et** strictement moins que l’extension seule | identique : canonical vers l’extension ; 0 : 404 |
-| combinaisons avec langue/statut | ≥ 2 produits **et** strictement moins que le parent entité | identique : canonical parent ; 0 : 404 |
-| `/categorie/{slug}` | ≥ 2 produits **et** (≥ 2 jeux distincts **ou** des produits sans jeu) | un seul jeu : canonical vers `/{jeu}/{famille}` |
-| hubs transverses | ≥ 2 produits (`/catalogue` : ≥ 1) | noindex, follow |
-| produit | statut ACTIVE, catégorie/extension/jeu actifs, ≥ 1 variante active | aucune variante active : 200 noindex sans JSON-LD Product ; ARCHIVED : 308 vers le meilleur parent indexable ; DRAFT/inexistant : 404 (après SlugRedirect) |
-| `?page=N` | si la page de base est indexable : self-canonical `?page=N` | noindex |
-| filtres, tri, recherche, prix | jamais | noindex, follow ; tri/recherche/prix aussi bloqués dans robots.txt |
+| Page                                  | Indexable si                                                          | Sinon                                                                                                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| hub jeu                               | ≥ 1 produit visible                                                   | noindex, follow                                                                                                                                            |
+| extension, famille (1 facette entité) | ≥ 2 produits                                                          | 0 produit : 200 noindex si l’entité existe (page « bientôt », dates) ; 1 produit : noindex                                                                 |
+| langue, statut (1 facette filtre)     | ≥ 2 produits **et** strictement moins que le hub jeu                  | identique au parent : canonical vers le parent ; 0 produit : 404                                                                                           |
+| extension+famille                     | ≥ 2 produits **et** strictement moins que l’extension seule           | identique : canonical vers l’extension ; 0 : 404                                                                                                           |
+| combinaisons avec langue/statut       | ≥ 2 produits **et** strictement moins que le parent entité            | identique : canonical parent ; 0 : 404                                                                                                                     |
+| `/categorie/{slug}`                   | ≥ 2 produits **et** (≥ 2 jeux distincts **ou** des produits sans jeu) | un seul jeu : canonical vers `/{jeu}/{famille}`                                                                                                            |
+| hubs transverses                      | ≥ 2 produits (`/catalogue` : ≥ 1)                                     | noindex, follow                                                                                                                                            |
+| produit                               | statut ACTIVE, catégorie/extension/jeu actifs, ≥ 1 variante active    | aucune variante active : 200 noindex sans JSON-LD Product ; ARCHIVED : 308 vers le meilleur parent indexable ; DRAFT/inexistant : 404 (après SlugRedirect) |
+| `?page=N`                             | si la page de base est indexable : self-canonical `?page=N`           | noindex                                                                                                                                                    |
+| filtres, tri, recherche, prix         | jamais                                                                | noindex, follow ; tri/recherche/prix aussi bloqués dans robots.txt                                                                                         |
 
 Un noindex n’est jamais combiné à un canonical vers une autre URL. Les pages non indexables ne sont ni dans les sitemaps ni ciblées par le moteur de maillage.
 
@@ -108,9 +109,9 @@ Un noindex n’est jamais combiné à un canonical vers une autre URL. Les pages
 
 ## 6. Données structurées (`src/lib/seo/jsonld.ts`, `src/components/seo/JsonLd.tsx`)
 
-Un seul `<script type="application/ld+json">` par page, sous forme de `@graph` :
+Deux blocs au plus par page : le `BreadcrumbList`, émis par le composant `Breadcrumb` à partir des items visibles (ils ne peuvent donc pas diverger), et un `@graph` pour le reste de la page :
+
 - layout (accueil) : `Organization` (nom, URL, logo, email de contact s’il est public ; ni adresse ni SIREN tant que la société n’est pas immatriculée) + `WebSite` (+ `SearchAction` vers `/catalogue?search=`) ;
-- toute page avec fil d’Ariane : `BreadcrumbList` généré par le composant `Breadcrumb` à partir des mêmes items ;
 - listes : `CollectionPage` + `ItemList` (URLs des produits affichés) ;
 - produit : `Product` (name, description, image hors placeholders, sku, gtin13/gtin selon `barcode`, brand = jeu, category, offers : une `Offer` par variante active avec price, priceCurrency EUR, availability réelle, `availabilityStarts` = date de sortie en précommande, itemCondition, url, seller = Organization, `shippingDetails` depuis ShippingMethod, `hasMerchantReturnPolicy` depuis les CGV) ;
 - guides : `Article` ; glossaire : `DefinedTerm` (+ `DefinedTermSet` sur l’index) ;
@@ -119,6 +120,7 @@ Un seul `<script type="application/ld+json">` par page, sous forme de `@graph` :
 ## 7. Maillage interne (`src/lib/seo/links.ts`)
 
 Liens calculés depuis la base, **uniquement vers des cibles indexables** :
+
 - hub jeu → extensions (récentes d’abord), familles, langues/statuts pertinents, guides du jeu, calendrier ;
 - extension → familles de l’extension, extensions voisines (même série, précédente/suivante par date de sortie), langues disponibles, guides liés ;
 - famille → sous-familles, extensions proposant cette famille, langues ;
@@ -141,14 +143,14 @@ Markdown avec front-matter dans `content/` (versionné, relu), chargé par `src/
 
 ```yaml
 title: …
-description: …            # meta description
+description: … # meta description
 kind: guide | comparatif | dossier | glossaire
 updated: 2026-09-26
-games: [pokemon]          # slugs Game (facultatif)
-categories: [etb]         # slugs Category (facultatif)
-sets: []                  # slugs TcgSet (facultatif)
-related: [autre-slug]     # contenus du même cluster
-faq:                      # facultatif, affiché et balisé FAQPage
+games: [pokemon] # slugs Game (facultatif)
+categories: [etb] # slugs Category (facultatif)
+sets: [] # slugs TcgSet (facultatif)
+related: [autre-slug] # contenus du même cluster
+faq: # facultatif, affiché et balisé FAQPage
   - question: …
     answer: …
 ```

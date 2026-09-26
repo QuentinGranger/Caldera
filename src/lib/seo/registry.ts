@@ -182,9 +182,14 @@ function factFilter(
  * `modified` covers every variant, inactive ones included.
  */
 function productFactsSql(filter: FactFilter): Prisma.Sql {
-  const active = filter.language
+  const base = filter.language
     ? Prisma.sql`(v."isActive" AND v."language" = ${filter.language}::"ProductLanguage")`
     : Prisma.sql`v."isActive"`;
+  // The in-stock listing only shows and prices variants that are in stock.
+  const active =
+    filter.status === 'en-stock'
+      ? Prisma.sql`(${base} AND v."availableQuantity" > 0)`
+      : base;
   const conditions = [
     Prisma.sql`p."status" = 'ACTIVE'`,
     Prisma.sql`c."isActive"`,

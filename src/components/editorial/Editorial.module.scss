@@ -304,6 +304,7 @@
     color: v.$color-green-dark;
     font: 500 clamp(1.9rem, 3.4vw, 2.6rem) / 1.05 v.$font-heading;
     letter-spacing: -0.02em;
+    scroll-margin-top: 1.5rem;
   }
 }
 
@@ -490,16 +491,14 @@
   display: grid;
   gap: 1rem;
   padding-block: 1.8rem;
+  border-top: 1px solid v.$color-border;
   scroll-margin-top: 1rem;
 
-  @include m.from(v.$breakpoint-tablet) {
-    scroll-margin-top: 4.5rem;
-  }
-  border-top: 1px solid v.$color-border;
-
+  // Clears the sticky letter bar.
   @include m.from(v.$breakpoint-tablet) {
     grid-template-columns: 5rem minmax(0, 1fr);
     gap: 2rem;
+    scroll-margin-top: 4.5rem;
   }
 
   > h2 {

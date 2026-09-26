@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/ui/Container/Container';
 import { CartPageContent } from '@/components/cart/CartPageContent';
 export const metadata: Metadata = {
-  title: 'Votre panier | Les Terres de Caldera',
+  title: 'Votre panier',
   robots: { index: false, follow: false },
 };
 export default function CartPage() {

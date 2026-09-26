@@ -14,7 +14,7 @@ import {
   toSetRef,
   type CatalogSetDetail,
 } from '@/lib/catalog/taxonomy';
-import { renderMarkdown } from '@/lib/content';
+import { renderMarkdown, type ContentEntry } from '@/lib/content';
 import { getPrisma } from '@/lib/db/prisma';
 import {
   LANGUAGE_LABELS,
@@ -23,6 +23,7 @@ import {
   landingPath,
 } from '@/lib/seo/facets';
 import { decideListingIndexation } from '@/lib/seo/indexation';
+import { isPlaceholderImage } from '@/lib/seo/jsonld';
 import {
   DESCRIPTION_MAX,
   TITLE_MAX,
@@ -56,7 +57,6 @@ import {
   type CountedLink,
   type Fact,
 } from './landingText';
-import type { ContentEntry } from '@/lib/content';
 
 /** Only the product count matters to a list decision. */
 const countStats = (productCount: number): ScopeStats => ({
@@ -331,7 +331,10 @@ async function buildStandaloneSet(
     stats,
     decision: decideListingIndexation({ path, stats }),
     text: categoryHubText({ name: set.name, stats, overrides: set }),
-    image: set.logoUrl ? { url: set.logoUrl, alt: `Logo ${set.name}` } : null,
+    image:
+      set.logoUrl && !isPlaceholderImage(set.logoUrl)
+        ? { url: set.logoUrl, alt: `Logo ${set.name}` }
+        : null,
     facts: standaloneSetFacts({
       set,
       stats,
@@ -353,29 +356,33 @@ async function buildStandaloneSet(
 }
 
 /** /extensions/{slug}: 308 to the game silo, or the page of a set without game. */
-export const resolveSetPage = cache(async (slug: string): Promise<SetResolution> => {
-  const set = await getSetBySlug(slug);
-  if (set) {
-    const target = siloPath(set);
-    return target
-      ? { type: 'redirect', path: target }
-      : { type: 'ok', view: await buildStandaloneSet(set) };
-  }
-  const moved = await findSlugRedirect('SET', slug);
-  const renamed = moved
-    ? await getPrisma().tcgSet.findFirst({
-        where: { id: moved.entityId, isActive: true },
-        select: { slug: true },
-      })
-    : null;
-  const current =
-    renamed && renamed.slug !== slug ? await getSetBySlug(renamed.slug) : null;
-  if (!current) return { type: 'not-found' };
-  return {
-    type: 'redirect',
-    path: siloPath(current) ?? setPagePath(current.slug),
-  };
-});
+export const resolveSetPage = cache(
+  async (slug: string): Promise<SetResolution> => {
+    const set = await getSetBySlug(slug);
+    if (set) {
+      const target = siloPath(set);
+      return target
+        ? { type: 'redirect', path: target }
+        : { type: 'ok', view: await buildStandaloneSet(set) };
+    }
+    const moved = await findSlugRedirect('SET', slug);
+    const renamed = moved
+      ? await getPrisma().tcgSet.findFirst({
+          where: { id: moved.entityId, isActive: true },
+          select: { slug: true },
+        })
+      : null;
+    const current =
+      renamed && renamed.slug !== slug
+        ? await getSetBySlug(renamed.slug)
+        : null;
+    if (!current) return { type: 'not-found' };
+    return {
+      type: 'redirect',
+      path: siloPath(current) ?? setPagePath(current.slug),
+    };
+  },
+);
 
 // ---------------------------------------------------------------------------
 // /calendrier-des-sorties

@@ -35,13 +35,14 @@ export function EditorialSection() {
             Le plaisir de la garder.
           </p>
           <p>
-            Chaque extension ouvre un nouveau territoire. Nous sélectionnons les
-            produits qui méritent une place dans votre collection.
-          </p>
-          <p>
             Caldera est née de cette envie : donner à la passion un lieu à part.
             Un refuge pour les curieux, les amoureux des belles illustrations et
             les collectionneurs de toujours.
+          </p>
+          <p>
+            Chaque extension ouvre un nouveau territoire. Nos chroniques
+            racontent le monde qui donne son nom à la boutique : le Grand
+            Effondrement, cinq territoires et les Archives.
           </p>
           <Link href="/univers">
             Poursuivre l’exploration{' '}

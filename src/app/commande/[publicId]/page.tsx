@@ -11,7 +11,7 @@ import { OrderStatusRefresh } from '@/components/payment/OrderStatusRefresh';
 import styles from '@/components/payment/Payment.module.scss';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Votre commande | Les Terres de Caldera',
+  title: 'Votre commande',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 };

@@ -4,10 +4,7 @@ import 'server-only';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { connection } from 'next/server';
 import type { SearchParams } from '@/lib/catalog/params';
-import {
-  resolveCategoryHub,
-  type CategoryHubView,
-} from './categoryData';
+import { resolveCategoryHub, type CategoryHubView } from './categoryData';
 import { resolveLanding, type LandingView } from './landingData';
 import { withSearchParams } from './landingText';
 import { resolveSetPage, type StandaloneSetView } from './releaseData';

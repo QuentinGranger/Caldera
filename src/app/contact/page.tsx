@@ -11,7 +11,7 @@ import { ContactForm } from './ContactForm';
 import styles from './contact.module.scss';
 
 export const metadata = editorialMetadata({
-  title: 'Contact',
+  title: 'Contact : commandes, produits et livraison',
   description:
     'Contactez Les Terres de Caldera pour une question sur une commande, un produit, une précommande ou la livraison.',
   decision: editorialDecision('/contact'),

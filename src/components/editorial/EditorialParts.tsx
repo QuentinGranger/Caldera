@@ -41,18 +41,29 @@ export function Prose({ html }: { html: string }) {
   );
 }
 
+export interface TocEntry {
+  id: string;
+  text: string;
+}
+
 /**
  * Article column with the table of its h2 beside it on desktop, above it on
  * smaller screens; a single column when there are fewer than two sections.
+ * `extra`: h2 rendered after the body (FAQ), listed last.
  */
 export function ArticleLayout({
   headings,
+  extra = [],
   children,
 }: {
   headings: readonly ContentHeading[];
+  extra?: readonly TocEntry[];
   children: ReactNode;
 }) {
-  const sections = headings.filter((heading) => heading.level === 2);
+  const sections: TocEntry[] = [
+    ...headings.filter((heading) => heading.level === 2),
+    ...extra,
+  ];
   if (sections.length < 2)
     return <div className={styles.single}>{children}</div>;
   return (
@@ -74,10 +85,12 @@ export function ArticleLayout({
   );
 }
 
+export const FAQ_TITLE = 'Questions fréquentes';
+
 /** Visible FAQ; the page adds faqPageNode for the same entries. */
 export function FaqSection({
   entries,
-  id = 'questions-frequentes-titre',
+  id = 'questions-frequentes',
 }: {
   entries: readonly FaqEntry[];
   id?: string;
@@ -85,7 +98,7 @@ export function FaqSection({
   if (!entries.length) return null;
   return (
     <section className={styles.section} aria-labelledby={id}>
-      <h2 id={id}>Questions fréquentes</h2>
+      <h2 id={id}>{FAQ_TITLE}</h2>
       <div className={styles.faq}>
         {entries.map((entry) => (
           <div key={entry.question}>

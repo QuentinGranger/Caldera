@@ -38,11 +38,18 @@ function jsonLdTypes(html: string) {
       /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
     ),
   ].flatMap(([, json]) => {
-    const data = JSON.parse(json ?? '{}') as {
-      '@graph'?: { '@type': string }[];
-      '@type'?: string;
+    // Nested nodes count too: the ItemList is the CollectionPage mainEntity.
+    const types: string[] = [];
+    const visit = (value: unknown) => {
+      if (Array.isArray(value)) value.forEach(visit);
+      else if (value && typeof value === 'object') {
+        const type = (value as { '@type'?: unknown })['@type'];
+        if (typeof type === 'string') types.push(type);
+        Object.values(value).forEach(visit);
+      }
     };
-    return (data['@graph'] ?? [data]).map((node) => node['@type']);
+    visit(JSON.parse(json ?? '{}'));
+    return types;
   });
 }
 

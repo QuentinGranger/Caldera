@@ -1,7 +1,6 @@
 // Links from the chronicles to the shop: indexable game hubs, guides and
 // glossary, and the exit of the last chronicle.
 import 'server-only';
-import { connection } from 'next/server';
 import {
   LISTING_HUBS,
   getIndexableListings,
@@ -21,7 +20,6 @@ export interface UniverseShopLinks {
 }
 
 export async function getUniverseShopLinks(): Promise<UniverseShopLinks> {
-  await connection();
   const [navigation, listings, guides, glossary] = await Promise.all([
     getNavigation(),
     getIndexableListings(),

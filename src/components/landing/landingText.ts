@@ -579,6 +579,24 @@ export function mergeFaq(...lists: readonly (readonly FaqEntry[])[]) {
 // ---------------------------------------------------------------------------
 // Breadcrumb
 
+/** Ancestors of a category, root first (cycle-safe). */
+export function categoryAncestors<
+  T extends { id: string; parentId: string | null },
+>(categories: readonly T[], category: { parentId: string | null }): T[] {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const chain: T[] = [];
+  const visited = new Set<string>();
+  let parentId = category.parentId;
+  while (parentId && !visited.has(parentId)) {
+    visited.add(parentId);
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    chain.unshift(parent);
+    parentId = parent.parentId;
+  }
+  return chain;
+}
+
 export interface LandingTrailInput {
   scope: LandingScope;
   /** Ancestors of the scope family, root first. */

@@ -9,17 +9,22 @@ import {
   listingScope,
 } from '@/components/catalog/listingHub';
 import {
+  getGlossaryIndex,
+  getGuidesIndex,
+} from '@/components/editorial/content';
+import { getDeliveryPage } from '@/components/editorial/delivery';
+import { EXTENSIONS_PATH } from '@/components/landing/landingData';
+import {
+  getExtensionsIndex,
+  getReleaseCalendar,
+} from '@/components/landing/releaseData';
+import {
   universeChapterPath,
   universeChapters,
   universeIndex,
 } from '@/data/universe';
 import { visibleProductWhere } from '@/lib/catalog/queries';
-import { getExtensions } from '@/lib/catalog/taxonomy';
-import {
-  contentSection,
-  getAllContent,
-  type ContentSection,
-} from '@/lib/content';
+import { getAllContent } from '@/lib/content';
 import { getPrisma } from '@/lib/db/prisma';
 import { isPlaceholderImage } from '@/lib/seo/jsonld';
 import {
@@ -28,7 +33,7 @@ import {
   listIndexableLandings,
   type SitemapEntry,
 } from '@/lib/seo/registry';
-import { getShippingFacts } from '@/lib/seo/shipping';
+import type { IndexDecision } from '@/lib/seo/types';
 import { absoluteUrl } from '@/lib/site';
 import {
   latestDate,
@@ -43,9 +48,8 @@ import {
 /** Dates of the editorial files (YYYY-MM-DD, read in UTC). */
 const day = (value: string) => new Date(`${value}T00:00:00Z`);
 
-// Pages without catalogue data: always indexable.
+// Pages without catalogue data: always indexable (editorialDecision).
 const STATIC_PAGES: readonly { path: string; updated?: string }[] = [
-  { path: '/' },
   { path: universeIndex.path, updated: universeIndex.updated },
   ...universeChapters.map((chapter) => ({
     path: universeChapterPath(chapter.slug),
@@ -57,11 +61,22 @@ const STATIC_PAGES: readonly { path: string; updated?: string }[] = [
   { path: '/confidentialite' },
 ];
 
-/** Static pages, /livraison and the indexable transverse listings. */
+/** The page itself when its decision is indexable and self-canonical. */
+function decided(
+  decision: IndexDecision,
+  lastModified: Date | null = null,
+): SitemapUrl[] {
+  return decision.index
+    ? [{ loc: absoluteUrl(decision.canonicalPath), lastModified }]
+    : [];
+}
+
+/** Home, static pages, /livraison and the indexable transverse listings. */
 export async function getPageUrls(): Promise<SitemapUrl[]> {
-  const [listings, shipping] = await Promise.all([
+  const [listings, delivery, catalogue] = await Promise.all([
     getIndexableListings(),
-    getShippingFacts(),
+    getDeliveryPage(),
+    getScopeStats(listingScope('catalogue')),
   ]);
   const listingUrls = await Promise.all(
     LISTING_KINDS.filter((listing) => listings.has(listing)).map(
@@ -72,12 +87,14 @@ export async function getPageUrls(): Promise<SitemapUrl[]> {
     ),
   );
   return [
+    // The home page shows the catalogue's figures and latest products.
+    { loc: absoluteUrl('/'), lastModified: catalogue.lastModified },
     ...STATIC_PAGES.map(({ path, updated }) => ({
       loc: absoluteUrl(path),
       lastModified: updated ? day(updated) : null,
     })),
-    // Shipping page: real methods and rates only, nothing to show without them.
-    ...(shipping.length ? [{ loc: absoluteUrl('/livraison') }] : []),
+    // Noindex while no shipping method is offered.
+    ...decided(delivery.decision),
     ...listingUrls,
   ];
 }
@@ -87,47 +104,45 @@ const fromEntry = ({ path, lastModified }: SitemapEntry): SitemapUrl => ({
   lastModified,
 });
 
-/** At least one active set of an active (or no) game has a release date. */
-async function hasReleaseDates(): Promise<boolean> {
-  const count = await getPrisma().tcgSet.count({
-    where: {
-      isActive: true,
-      releaseDate: { not: null },
-      OR: [{ gameId: null }, { game: { isActive: true } }],
-    },
-  });
-  return count > 0;
-}
-
-/** Game hubs, facet landings, family hubs, extensions index and calendar. */
+/**
+ * Game hubs, facet landings, family hubs, then /extensions, the calendar and
+ * the pages of sets without game (/extensions/{slug}) as their pages decide.
+ */
 export async function getLandingUrls(): Promise<SitemapUrl[]> {
   const [landings, categoryHubs, extensions, calendar] = await Promise.all([
     listIndexableLandings(),
     listIndexableCategoryHubs(),
-    getExtensions(),
-    hasReleaseDates(),
+    getExtensionsIndex(),
+    getReleaseCalendar(),
   ]);
+  // Game sets link to their landing, already listed; only an indexable set
+  // page without game has an href under /extensions/.
+  const setPages = extensions.groups.flatMap((group) =>
+    group.entries.flatMap((entry) =>
+      entry.href?.startsWith(`${EXTENSIONS_PATH}/`)
+        ? [{ loc: absoluteUrl(entry.href) }]
+        : [],
+    ),
+  );
   return [
-    ...(extensions.length ? [{ loc: absoluteUrl('/extensions') }] : []),
-    ...(calendar ? [{ loc: absoluteUrl('/calendrier-des-sorties') }] : []),
     ...landings.map(fromEntry),
     ...categoryHubs.map(fromEntry),
+    ...decided(extensions.decision),
+    ...decided(calendar.decision),
+    ...setPages,
   ];
 }
 
 /** Guides, glossary terms and their two index pages. */
 export async function getContentUrls(): Promise<SitemapUrl[]> {
-  const entries = await getAllContent();
-  const sections = new Map<ContentSection, Date[]>();
-  for (const entry of entries) {
-    const section = contentSection(entry.kind);
-    sections.set(section, [...(sections.get(section) ?? []), entry.updated]);
-  }
+  const [entries, guides, glossary] = await Promise.all([
+    getAllContent(),
+    getGuidesIndex(),
+    getGlossaryIndex(),
+  ]);
   return [
-    ...[...sections].map(([section, dates]) => ({
-      loc: absoluteUrl(`/${section}`),
-      lastModified: latestDate(dates),
-    })),
+    ...decided(guides.decision, guides.updated),
+    ...decided(glossary.decision, glossary.updated),
     ...entries.map((entry) => ({
       loc: absoluteUrl(entry.href),
       lastModified: entry.updated,

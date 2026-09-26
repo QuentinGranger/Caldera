@@ -8,7 +8,7 @@ import { getCheckout } from '@/lib/checkout/getCheckout';
 import type { CheckoutStep } from '@/lib/checkout/types';
 import styles from '@/components/checkout/Checkout.module.scss';
 export const metadata: Metadata = {
-  title: 'Commande | Les Terres de Caldera',
+  title: 'Commande',
   robots: { index: false, follow: false },
 };
 const steps: CheckoutStep[] = ['contact', 'shipping', 'review'];

@@ -42,7 +42,9 @@ import {
   decideLandingIndexation,
   isNotFoundDecision,
 } from '@/lib/seo/indexation';
+import { isPlaceholderImage } from '@/lib/seo/jsonld';
 import {
+  gameMetadataText,
   landingMetadataText,
   type MetadataImage,
   type MetadataText,
@@ -68,6 +70,7 @@ import type {
   SeoLinkGroup,
 } from '@/lib/seo/types';
 import {
+  categoryAncestors,
   factualFaq,
   familyAndSubject,
   isUpcoming,
@@ -277,24 +280,6 @@ export function catalogScopeOf(scope: LandingScope): CatalogScope {
   };
 }
 
-/** Ancestors of a category, root first (cycle-safe). */
-export function categoryAncestors<
-  T extends { id: string; parentId: string | null },
->(categories: readonly T[], category: { parentId: string | null }): T[] {
-  const byId = new Map(categories.map((c) => [c.id, c]));
-  const chain: T[] = [];
-  const visited = new Set<string>();
-  let parentId = category.parentId;
-  while (parentId && !visited.has(parentId)) {
-    visited.add(parentId);
-    const parent = byId.get(parentId);
-    if (!parent) break;
-    chain.unshift(parent);
-    parentId = parent.parentId;
-  }
-  return chain;
-}
-
 /**
  * Guides of a scope; a family also takes the content of its ancestors. An
  * unreadable content folder is reported and leaves the list empty: the
@@ -342,11 +327,12 @@ export const hasReleaseCalendar = cache(async () => {
   return count > 0;
 });
 
+/** Share image of an entity; replacement visuals never stand for it. */
 function imageOf(
   url: string | null | undefined,
   alt: string,
 ): MetadataImage | null {
-  return url ? { url, alt } : null;
+  return url && !isPlaceholderImage(url) ? { url, alt } : null;
 }
 
 async function buildLandingView(
@@ -471,21 +457,28 @@ async function buildLandingView(
       : null;
   }
 
+  // A family's own SEO fields and image describe this landing only when the
+  // game is the only one selling it (its /categorie hub points here).
+  const ownFamily =
+    kind === 'category' && categoryHub?.singleGameSlug === game.slug;
   const overrides: SeoOverrides | null =
     kind === 'game'
       ? game
       : kind === 'set'
         ? setDetail
-        : kind === 'category' && categoryHub?.singleGameSlug === game.slug
+        : ownFamily
           ? category
           : null;
-  const text = landingMetadataText(
-    scope,
-    kind,
-    stats,
-    families.map((family) => family.label),
-    overrides,
-  );
+  const familyNames = families.map((family) => family.label);
+  const text =
+    kind === 'game'
+      ? gameMetadataText({
+          game: scope.game,
+          stats,
+          availableCategoryNames: familyNames,
+          overrides,
+        })
+      : landingMetadataText(scope, kind, stats, familyNames, overrides);
   const ancestors = category
     ? categoryAncestors(categories, category).map(toCategoryRef)
     : [];
@@ -509,7 +502,9 @@ async function buildLandingView(
               description: category.description,
               intro: category.intro,
               faq: category.faq,
-              image: imageOf(category.imageUrl, category.name),
+              image: ownFamily
+                ? imageOf(category.imageUrl, category.name)
+                : null,
             }
           : null;
   const setLogo = scope.set
@@ -589,7 +584,10 @@ async function buildLandingView(
     stats,
     decision,
     text,
-    image: entity?.image ?? imageOf(setLogo, `Logo ${scope.set?.name ?? ''}`),
+    image:
+      entity?.image ??
+      imageOf(setLogo, `Logo ${scope.set?.name ?? ''}`) ??
+      imageOf(game.logoUrl, `Logo ${game.name}`),
     heading: landingHeading(scope),
     eyebrow: landingEyebrow(scope),
     description: entity?.description ?? null,

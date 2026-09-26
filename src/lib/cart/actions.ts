@@ -5,8 +5,9 @@ import { mutateCart } from './service';
 import { CartError } from './validation';
 import type { CartActionResult } from './types';
 
-// Each action returns the fresh cart and CartProvider applies it: no
-// revalidatePath, which would re-render the page and purge every cached route.
+// Each action returns the fresh cart and CartProvider applies it. Setting the
+// cookie already makes Next.js send the re-rendered layout in the same response:
+// no revalidatePath, which would also expire the server cache of every page.
 async function run(
   mutation: Parameters<typeof mutateCart>[1],
   message: string,

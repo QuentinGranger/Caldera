@@ -80,8 +80,9 @@ export function editorialMetadata({
   });
 }
 
-// Clause boundaries a long title can be cut at without an ellipsis.
-const CLAUSE_END = /\s[:–—]\s|,\s/g;
+// Clause boundaries a long title can be cut at without an ellipsis; « et »
+// ends an enumeration (« protège-cartes, toploaders et classeurs »).
+const CLAUSE_END = /\s[:–—]\s|,\s|\set\s/g;
 
 /**
  * The title when it fits TITLE_MAX, else its longest leading clause that fits
@@ -147,6 +148,17 @@ export const lowerFirst = (text: string) =>
 
 export const upperFirst = (text: string) =>
   text.charAt(0).toLocaleUpperCase('fr-FR') + text.slice(1);
+
+/** `base`, or `base-2`, `base-3`… when a heading of the body already uses it. */
+export function freeAnchor(
+  base: string,
+  headings: readonly { id: string }[],
+): string {
+  const taken = new Set(headings.map((heading) => heading.id));
+  let id = base;
+  for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
+  return id;
+}
 
 export const isoDay = (date: Date | string) =>
   (typeof date === 'string' ? new Date(date) : date).toISOString().slice(0, 10);

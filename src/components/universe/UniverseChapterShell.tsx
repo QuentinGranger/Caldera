@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { connection } from 'next/server';
 import type { ReactNode } from 'react';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
@@ -39,6 +40,8 @@ export async function UniverseChapterShell({
   const chapter = universeChapters[index]!;
   const path = universeChapterPath(slug);
   const hero = universeImage(chapter.hero.src, chapter.hero.alt);
+  // Shop links read the database: rendered per request, never prerendered.
+  await connection();
   const shop = await getUniverseShopLinks();
 
   return (
