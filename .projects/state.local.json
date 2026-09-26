@@ -1,0 +1,49 @@
+{
+  "version": 4,
+  "project": {
+    "catalog": "prod",
+    "initializedAt": "2026-09-25T21:21:18.703Z",
+    "merchantDisplayName": null,
+    "merchantId": "acct_1UHkDVDE2sBCcWDn",
+    "projectId": "project_61VT4VqSm7F4nuERX16VR8AsR1DPLeTEmtKUbVSJcAFk",
+    "projectName": "Les terres de Caldera"
+  },
+  "providers": {
+    "neon": {
+      "accountRequestId": "facctrq_61VT4Wy73Caw5hZQS16VR8AsR1DPLeTEmtKUbVSJcSyG",
+      "configuration": {},
+      "linkedAt": "2026-09-25T21:22:31.010Z",
+      "providerId": "prvdr_61UH8uNXFdoJUJOtT54AC",
+      "providerName": "Neon",
+      "redirectUrl": null,
+      "requestedAt": "2026-09-25T21:22:31.009Z",
+      "status": "complete"
+    }
+  },
+  "resources": {
+    "neon-plan": {
+      "configuration": {},
+      "createdAt": "2026-09-25T21:22:33.252Z",
+      "lastRevealedAt": "2026-09-25T21:22:33.588Z",
+      "lastStatus": "complete",
+      "livemode": true,
+      "name": "neon-plan",
+      "providerId": "prvdr_61UH8uNXFdoJUJOtT54AC",
+      "providerName": "Neon",
+      "resourceId": "fres_61VT4X18799mUdkkz16VR8AsR1DPLeTEmtKUbVSJcT2u",
+      "serviceId": "free"
+    },
+    "primary-db": {
+      "configuration": {},
+      "createdAt": "2026-09-25T21:22:47.995Z",
+      "lastRevealedAt": "2026-09-25T21:22:48.471Z",
+      "lastStatus": "complete",
+      "livemode": true,
+      "name": "primary-db",
+      "providerId": "prvdr_61UH8uNXFdoJUJOtT54AC",
+      "providerName": "Neon",
+      "resourceId": "fres_61VT4XFNpVdxYs95K16VR8AsR1DPLeTEmtKUbVSJcWwS",
+      "serviceId": "postgres"
+    }
+  }
+}

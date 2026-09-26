@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "providers": {
+    "neon": {
+      "name": "Neon"
+    }
+  },
+  "resources": {
+    "neon-plan": {
+      "livemode": true,
+      "name": "neon-plan",
+      "providerName": "Neon",
+      "serviceId": "free"
+    },
+    "primary-db": {
+      "livemode": true,
+      "name": "primary-db",
+      "providerName": "Neon",
+      "serviceId": "postgres"
+    }
+  }
+}
