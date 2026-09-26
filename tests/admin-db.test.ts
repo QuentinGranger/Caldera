@@ -11,7 +11,8 @@ import {
   changePublication,
 } from '../src/lib/admin/products';
 import { adjustStock } from '../src/lib/admin/inventory';
-import { saveCategory, saveSet } from '../src/lib/admin/taxonomy';
+import { saveCategory, saveGame, saveSet } from '../src/lib/admin/taxonomy';
+import { faqInput, parseFaq } from '../src/lib/admin/seo';
 import { uploadImage, editImage } from '../src/lib/admin/images';
 import {
   imageStorage,
@@ -41,6 +42,8 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
   const urls: string[] = [];
   const categories: string[] = [];
   const sets: string[] = [];
+  const games: string[] = [];
+  const seoProducts: string[] = [];
   const admin = await db.adminUser.create({
     data: { name: 'Test admin', email: `admin-${key}@example.com` },
   });
@@ -604,6 +607,382 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
       },
     );
     await t.test(
+      'jeux : slug réservé, unicité, FAQ validée et redirection du slug',
+      async () => {
+        const gameForm = (
+          extra: Record<string, string | number | boolean> = {},
+        ) =>
+          form({
+            name: 'Jeu test',
+            slug: `jeu-${key}`,
+            sortOrder: 0,
+            isActive: true,
+            ...extra,
+          });
+        for (const reserved of ['catalogue', 'guides', 'en-stock', 'admin'])
+          await assert.rejects(
+            saveGame(admin.id, gameForm({ slug: reserved })),
+            /réservé à une page du site/,
+          );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ slug: 'x'.repeat(101) })),
+          /maximum 100/,
+        );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ faq: 'Question sans réponse' })),
+          /FAQ, ligne 1/,
+        );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ faq: 'A ? :: Oui.\na ? :: Non.' })),
+          /FAQ, ligne 2 : cette question est déjà posée/,
+        );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ seoTitle: 'x'.repeat(71) })),
+          /Titre SEO : 70 caractères maximum/,
+        );
+        await assert.rejects(
+          saveGame(
+            admin.id,
+            gameForm({ seoTitle: 'Boosters Jeu test | Caldera' }),
+          ),
+          /n’ajoutez pas « Caldera »/,
+        );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ seoDescription: 'x'.repeat(171) })),
+          /Meta description : 170 caractères maximum/,
+        );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ unknown: 'forgé' })),
+          /non autorisé/,
+        );
+        assert.deepEqual(parseFaq('\n  \nQ ? :: R :: suite\n'), [
+          { question: 'Q ?', answer: 'R :: suite' },
+        ]);
+        const { game } = await saveGame(
+          admin.id,
+          gameForm({
+            intro: '## Le jeu\n\nTexte **éditorial**.',
+            seoTitle: 'Jeu test : boosters et coffrets',
+            faq: 'Quand ? :: Demain.\n\nOù ? :: Ici :: là.',
+          }),
+        );
+        games.push(game.id);
+        assert.equal(game.intro, '## Le jeu\n\nTexte **éditorial**.');
+        assert.deepEqual(game.faq, [
+          { question: 'Quand ?', answer: 'Demain.' },
+          { question: 'Où ?', answer: 'Ici :: là.' },
+        ]);
+        assert.equal(
+          faqInput(game.faq),
+          'Quand ? :: Demain.\nOù ? :: Ici :: là.',
+        );
+        assert.equal(
+          faqInput([{ question: 'A::B ?', answer: 'Ligne 1\nLigne 2' }]),
+          'A:B ? :: Ligne 1 Ligne 2',
+        );
+        await assert.rejects(
+          saveGame(admin.id, gameForm({ name: 'Doublon' })),
+          /déjà utilisé par le jeu « Jeu test »/,
+        );
+        const renamed = await saveGame(
+          admin.id,
+          gameForm({ id: game.id, slug: `jeu-renomme-${key}` }),
+        );
+        assert.equal(renamed.previousSlug, `jeu-${key}`);
+        assert.equal(renamed.game.faq, null);
+        assert.equal(
+          (
+            await db.slugRedirect.findUniqueOrThrow({
+              where: {
+                entityType_fromSlug: {
+                  entityType: 'GAME',
+                  fromSlug: `jeu-${key}`,
+                },
+              },
+            })
+          ).entityId,
+          game.id,
+        );
+        // Back to the first slug: the live slug never keeps a redirect.
+        await saveGame(admin.id, gameForm({ id: game.id }));
+        assert.deepEqual(
+          (
+            await db.slugRedirect.findMany({
+              where: { entityId: game.id },
+              select: { entityType: true, fromSlug: true },
+            })
+          ).map((row) => `${row.entityType}:${row.fromSlug}`),
+          [`GAME:jeu-renomme-${key}`],
+        );
+        assert.equal(
+          await db.adminAuditLog.count({
+            where: { entityId: game.id, action: 'GAME_SAVED' },
+          }),
+          3,
+        );
+      },
+    );
+    await t.test(
+      'extensions et catégories : filtres réservés, collisions et redirections',
+      async () => {
+        await assert.rejects(
+          saveSet(
+            admin.id,
+            form({ name: 'Set', slug: 'japonais', isActive: true }),
+          ),
+          /réservé aux filtres de langue et de disponibilité/,
+        );
+        await assert.rejects(
+          saveCategory(
+            admin.id,
+            form({
+              name: 'Cat',
+              slug: 'en-stock',
+              sortOrder: 0,
+              isActive: true,
+            }),
+          ),
+          /réservé aux filtres de langue et de disponibilité/,
+        );
+        await assert.rejects(
+          saveSet(
+            admin.id,
+            form({ name: 'Set', slug: category.slug, isActive: true }),
+          ),
+          /déjà utilisé par la catégorie « Test admin ». Une extension et une catégorie ne peuvent pas partager une adresse/,
+        );
+        await assert.rejects(
+          saveCategory(
+            admin.id,
+            form({
+              name: 'Cat',
+              slug: `set-${key}`,
+              sortOrder: 0,
+              isActive: true,
+            }),
+          ),
+          /déjà utilisé par l’extension « Set ». Une extension et une catégorie ne peuvent pas partager une adresse/,
+        );
+        await assert.rejects(
+          saveSet(
+            admin.id,
+            form({ name: 'Set bis', slug: `set-${key}`, isActive: true }),
+          ),
+          /déjà utilisé par l’extension « Set »\.$/,
+        );
+        await assert.rejects(
+          saveSet(
+            admin.id,
+            form({
+              name: 'Set',
+              slug: `set-bis-${key}`,
+              gameId: randomUUID(),
+              isActive: true,
+            }),
+          ),
+          /Jeu introuvable/,
+        );
+        await saveSet(
+          admin.id,
+          form({
+            id: sets[0]!,
+            name: 'Set',
+            slug: `set-renomme-${key}`,
+            seoDescription: 'Extension de test.',
+            faq: 'Date ? :: Aucune.',
+            isActive: true,
+          }),
+        );
+        const set = await db.tcgSet.findUniqueOrThrow({
+          where: { id: sets[0]! },
+        });
+        assert.equal(set.seoDescription, 'Extension de test.');
+        assert.deepEqual(set.faq, [{ question: 'Date ?', answer: 'Aucune.' }]);
+        assert.equal(
+          (
+            await db.slugRedirect.findUniqueOrThrow({
+              where: {
+                entityType_fromSlug: {
+                  entityType: 'SET',
+                  fromSlug: `set-${key}`,
+                },
+              },
+            })
+          ).entityId,
+          sets[0],
+        );
+        await saveCategory(
+          admin.id,
+          form({
+            id: category.id,
+            name: category.name,
+            slug: `admin-renomme-${key}`,
+            intro: 'Famille de test.',
+            imageUrl: '/assets/images/products/prismatic.png',
+            sortOrder: 0,
+            isActive: true,
+          }),
+        );
+        const renamed = await db.category.findUniqueOrThrow({
+          where: { id: category.id },
+        });
+        assert.equal(renamed.intro, 'Famille de test.');
+        assert.equal(renamed.imageUrl, '/assets/images/products/prismatic.png');
+        assert.equal(
+          (
+            await db.slugRedirect.findUniqueOrThrow({
+              where: {
+                entityType_fromSlug: {
+                  entityType: 'CATEGORY',
+                  fromSlug: category.slug,
+                },
+              },
+            })
+          ).entityId,
+          category.id,
+        );
+        // The old slug is free again: a set may take it, its redirect stays scoped to categories.
+        const reuse = await saveSet(
+          admin.id,
+          form({ name: 'Set réutilisé', slug: category.slug, isActive: true }),
+        );
+        sets.push(reuse.id);
+      },
+    );
+    await t.test(
+      'produits : jeu imposé par l’extension, incohérence refusée, slug redirigé',
+      async () => {
+        const [gameId] = games;
+        const other = (
+          await saveGame(
+            admin.id,
+            form({
+              name: 'Autre jeu',
+              slug: `autre-jeu-${key}`,
+              sortOrder: 1,
+              isActive: true,
+            }),
+          )
+        ).game;
+        games.push(other.id);
+        const gameSet = await saveSet(
+          admin.id,
+          form({
+            name: 'Set du jeu',
+            slug: `set-jeu-${key}`,
+            gameId: gameId!,
+            isActive: true,
+          }),
+        );
+        sets.push(gameSet.id);
+        const base = {
+          name: 'Booster du jeu',
+          slug: `booster-jeu-${key}`,
+          categoryId: category.id,
+          productType: 'BOOSTER',
+          tcgSetId: gameSet.id,
+        };
+        const created = (await saveProduct(admin.id, form(base))).product;
+        seoProducts.push(created.id);
+        assert.equal(created.gameId, gameId);
+        await assert.rejects(
+          saveProduct(
+            admin.id,
+            form({ ...base, slug: `booster-bis-${key}`, gameId: other.id }),
+          ),
+          /L’extension « Set du jeu » appartient au jeu « Jeu test » : le produit doit être rattaché à ce jeu/,
+        );
+        await assert.rejects(
+          saveProduct(
+            admin.id,
+            form({
+              ...base,
+              slug: `booster-ter-${key}`,
+              tcgSetId: '',
+              gameId: randomUUID(),
+            }),
+          ),
+          /Jeu introuvable/,
+        );
+        const loose = (
+          await saveProduct(
+            admin.id,
+            form({
+              name: 'Accessoire du jeu',
+              slug: `accessoire-${key}`,
+              categoryId: category.id,
+              productType: 'ACCESSORY',
+              gameId: other.id,
+            }),
+          )
+        ).product;
+        seoProducts.push(loose.id);
+        assert.equal(loose.gameId, other.id);
+        const current = await db.product.findUniqueOrThrow({
+          where: { id: created.id },
+        });
+        const renamed = await saveProduct(
+          admin.id,
+          form({
+            ...base,
+            id: created.id,
+            version: current.updatedAt.toISOString(),
+            slug: `booster-renomme-${key}`,
+            gameId: gameId!,
+            seoTitle: 'Booster du jeu – Set du jeu',
+            seoDescription: 'Booster de test.',
+          }),
+        );
+        assert.equal(renamed.previousSlug, `booster-jeu-${key}`);
+        assert.equal(renamed.product.seoTitle, 'Booster du jeu – Set du jeu');
+        assert.equal(renamed.product.seoDescription, 'Booster de test.');
+        assert.equal(
+          (
+            await db.slugRedirect.findUniqueOrThrow({
+              where: {
+                entityType_fromSlug: {
+                  entityType: 'PRODUCT',
+                  fromSlug: `booster-jeu-${key}`,
+                },
+              },
+            })
+          ).entityId,
+          created.id,
+        );
+        await saveSet(
+          admin.id,
+          form({
+            id: gameSet.id,
+            name: 'Set du jeu',
+            slug: `set-jeu-${key}`,
+            gameId: other.id,
+            isActive: true,
+          }),
+        );
+        assert.equal(
+          (await db.product.findUniqueOrThrow({ where: { id: created.id } }))
+            .gameId,
+          other.id,
+        );
+        await db.productVariant.create({
+          data: { productId: loose.id, sku: `ACC-${key}`, price: '9.90' },
+        });
+        await saveGame(
+          admin.id,
+          form({
+            id: other.id,
+            name: other.name,
+            slug: other.slug,
+            sortOrder: 1,
+          }),
+        );
+        await assert.rejects(
+          changePublication(admin.id, form({ id: loose.id, status: 'ACTIVE' })),
+          /le jeu doivent être actifs/,
+        );
+      },
+    );
+    await t.test(
       'ajustements concurrents atomiques et désactivation sans perte des snapshots',
       async () => {
         const before = await db.productVariant.findUniqueOrThrow({
@@ -699,12 +1078,24 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
     await db.adminAuditLog.deleteMany({ where: { adminUserId: admin.id } });
     await db.productVariant.deleteMany({ where: { productId: product.id } });
     await db.product.delete({ where: { id: product.id } });
+    await db.productVariant.deleteMany({
+      where: { productId: { in: seoProducts } },
+    });
+    await db.product.deleteMany({ where: { id: { in: seoProducts } } });
+    await db.slugRedirect.deleteMany({
+      where: {
+        entityId: {
+          in: [product.id, ...seoProducts, ...categories, ...sets, ...games],
+        },
+      },
+    });
     await db.category.updateMany({
       where: { id: { in: categories } },
       data: { parentId: null },
     });
     await db.category.deleteMany({ where: { id: { in: categories } } });
     await db.tcgSet.deleteMany({ where: { id: { in: sets } } });
+    await db.game.deleteMany({ where: { id: { in: games } } });
     await db.adminUser.delete({ where: { id: admin.id } });
     for (const url of urls) await imageStorage.delete(url);
     await db.$disconnect();

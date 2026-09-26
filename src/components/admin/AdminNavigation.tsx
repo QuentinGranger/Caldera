@@ -5,6 +5,7 @@ import { useId, useRef, useState } from 'react';
 import {
   BarChart3,
   Boxes,
+  Dices,
   FolderTree,
   Layers3,
   LayoutDashboard,
@@ -19,7 +20,11 @@ const groups = [
     label: 'Pilotage',
     links: [
       { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
-      { href: '/admin/pilotage', label: 'Pilotage économique', icon: BarChart3 },
+      {
+        href: '/admin/pilotage',
+        label: 'Pilotage économique',
+        icon: BarChart3,
+      },
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
     ],
@@ -28,6 +33,7 @@ const groups = [
     label: 'Catalogue',
     links: [
       { href: '/admin/produits', label: 'Produits', icon: Package },
+      { href: '/admin/jeux', label: 'Jeux', icon: Dices },
       { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
       { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
     ],

@@ -12,10 +12,17 @@ import {
   type CatalogFilters as Filters,
   type CatalogScope,
   type MultiFilter,
+  type StockFilter,
 } from '@/lib/catalog/params';
 import type { CatalogFacets } from '@/lib/catalog/facets';
 import styles from './Catalog.module.scss';
 
+/** Stock options that can still narrow the scope. */
+function availabilityOptions(scope: CatalogScope): StockFilter[] {
+  if (scope.preorder || scope.status === 'precommandes') return [];
+  if (scope.status === 'en-stock') return ['low-stock'];
+  return Object.keys(stockLabels) as StockFilter[];
+}
 type Props = {
   filters: Filters;
   facets: CatalogFacets;
@@ -36,15 +43,20 @@ function FilterForm({
   pending: boolean;
 }) {
   const id = useId();
+  const stock = availabilityOptions(scope);
   const sections: {
     key: MultiFilter;
     label: string;
-    options: { value: string; label: string }[];
+    options: { value: string; label: string; count?: number }[];
   }[] = [
     {
       key: 'category',
       label: 'Catégorie',
-      options: facets.categories.map((c) => ({ value: c.slug, label: c.name })),
+      options: facets.categories.map((c) => ({
+        value: c.slug,
+        label: c.name,
+        count: c.count,
+      })),
     },
     {
       key: 'type',
@@ -52,6 +64,7 @@ function FilterForm({
       options: facets.types.map((value) => ({
         value,
         label: typeLabels[value],
+        count: facets.counts.types[value],
       })),
     },
     ...(!scope.set
@@ -59,26 +72,36 @@ function FilterForm({
           {
             key: 'set' as const,
             label: 'Extension',
-            options: facets.sets.map((s) => ({ value: s.slug, label: s.name })),
+            options: facets.sets.map((s) => ({
+              value: s.slug,
+              label: s.name,
+              count: s.count,
+            })),
           },
         ]
       : []),
-    {
-      key: 'language',
-      label: 'Langue',
-      options: facets.languages.map((value) => ({
-        value,
-        label: languageLabels[value],
-      })),
-    },
-    ...(!scope.preorder
+    // A language scope already restricts every price and stock to its variants.
+    ...(!scope.language
+      ? [
+          {
+            key: 'language' as const,
+            label: 'Langue',
+            options: facets.languages.map((value) => ({
+              value,
+              label: languageLabels[value],
+              count: facets.counts.languages[value],
+            })),
+          },
+        ]
+      : []),
+    ...(stock.length
       ? [
           {
             key: 'availability' as const,
             label: 'Disponibilité',
-            options: Object.entries(stockLabels).map(([value, label]) => ({
+            options: stock.map((value) => ({
               value,
-              label,
+              label: stockLabels[value],
             })),
           },
         ]
@@ -114,7 +137,15 @@ function FilterForm({
                       })
                     }
                   />
-                  <span>{option.label}</span>
+                  <span>
+                    {option.label}
+                    {option.count !== undefined && (
+                      <span className={styles.optionCount}>
+                        {' '}
+                        ({option.count})
+                      </span>
+                    )}
+                  </span>
                 </label>
               ))}
             </fieldset>

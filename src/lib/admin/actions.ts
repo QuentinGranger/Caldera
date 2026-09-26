@@ -1,16 +1,17 @@
 'use server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
+import { CATALOG_CACHE_TAG } from '@/lib/seo/registry';
 import { getAdminAuth, requireAdmin } from './auth';
 import { allowLogin } from './login';
 import { AdminError, text, whitelist } from './validation';
 import type { AdminActionState } from './action-types';
 import { saveProduct, saveVariant, changePublication } from './products';
 import { adjustStock } from './inventory';
-import { saveCategory, saveSet } from './taxonomy';
+import { saveCategory, saveGame, saveSet } from './taxonomy';
 import { editImage, uploadImage } from './images';
 import { cancelAdminOrder, saveOrderNote } from './orders';
 import { saveBusinessPilotage } from './pilotage';
@@ -38,13 +39,19 @@ function failure(error: unknown): AdminActionState {
   };
 }
 async function invalidateCatalog(productId?: string, previousSlug?: string) {
+  // Registry aggregates, landing index and navigation are cached under this tag.
+  revalidateTag(CATALOG_CACHE_TAG, 'max');
   revalidatePath('/');
   revalidatePath('/catalogue');
   revalidatePath('/categorie/[slug]', 'page');
   revalidatePath('/extensions/[slug]', 'page');
+  revalidatePath('/[game]', 'page');
+  revalidatePath('/[game]/[...facets]', 'page');
   revalidatePath('/nouveautes');
+  revalidatePath('/en-stock');
   revalidatePath('/extensions');
   revalidatePath('/precommandes');
+  revalidatePath('/calendrier-des-sorties');
   if (previousSlug) revalidatePath(`/produit/${previousSlug}`);
   if (productId) {
     const product = await getPrisma().product.findUnique({
@@ -170,6 +177,20 @@ export async function saveCategoryAction(
     await invalidateCatalog();
     revalidatePath('/admin/categories');
     return { success: true, message: 'Catégorie enregistrée.' };
+  } catch (error) {
+    return failure(error);
+  }
+}
+export async function saveGameAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    await saveGame(admin.id, form);
+    await invalidateCatalog();
+    revalidatePath('/admin/jeux');
+    return { success: true, message: 'Jeu enregistré.' };
   } catch (error) {
     return failure(error);
   }

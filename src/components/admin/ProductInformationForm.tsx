@@ -4,6 +4,8 @@ import { dateInput, label } from '@/lib/admin/format';
 import type { getAdminOptions, getAdminProduct } from '@/lib/admin/queries';
 import { AdminForm } from './AdminForm';
 import { Field, SelectField, TextField, Check, Hidden } from './AdminFields';
+import { GameSetFields } from './GameSetFields';
+import { SeoFields } from './SeoFields';
 import { SlugFields } from './SlugFields';
 import styles from './Admin.module.scss';
 export type AdminProduct = NonNullable<
@@ -70,19 +72,12 @@ export function ProductInformationForm({
             </option>
           ))}
         </SelectField>
-        <SelectField
-          label="Extension"
-          name="tcgSetId"
-          defaultValue={product?.tcgSetId ?? ''}
-        >
-          <option value="">Aucune extension</option>
-          {options.sets.map((set) => (
-            <option key={set.id} value={set.id}>
-              {set.name}
-              {!set.isActive ? ' (inactive)' : ''}
-            </option>
-          ))}
-        </SelectField>
+        <GameSetFields
+          games={options.games}
+          sets={options.sets}
+          tcgSetId={product?.tcgSetId ?? ''}
+          gameId={product?.gameId ?? ''}
+        />
         <Field
           label="Tags, séparés par une virgule"
           name="tags"
@@ -119,6 +114,13 @@ export function ProductInformationForm({
         La visibilité dépend du statut de publication. La date éditoriale ne
         programme pas une mise en ligne.
       </small>
+      <h3>Référencement</h3>
+      <div className={styles.fields}>
+        <SeoFields
+          seoTitle={product?.seoTitle}
+          seoDescription={product?.seoDescription}
+        />
+      </div>
     </AdminForm>
   );
 }

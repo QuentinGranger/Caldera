@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import styles from '@/components/admin/Admin.module.scss';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Administration — Caldera',
+  title: 'Administration',
   robots: { index: false, follow: false },
 };
 export default function AdminLayout({ children }: { children: ReactNode }) {

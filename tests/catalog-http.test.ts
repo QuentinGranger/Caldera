@@ -4,7 +4,12 @@ import { after, test } from 'node:test';
 import { getPrisma } from '../src/lib/db/prisma';
 import { formatPrice } from '../src/utils/formatPrice';
 
-if (process.env.NODE_ENV === 'production')
+if (
+  process.env.NODE_ENV === 'production' ||
+  !['localhost', '127.0.0.1'].includes(
+    new URL(process.env.DATABASE_URL ?? 'invalid:').hostname,
+  )
+)
   throw new Error('Ces tests sont réservés à une base de développement.');
 const db = getPrisma();
 const base = process.env.TEST_BASE_URL ?? 'http://localhost:3000';
@@ -19,6 +24,15 @@ async function page(path: string, status = 200) {
     'Aucune donnée interne publique',
   );
   return html;
+}
+/** Status and target of a redirect, without following it. */
+async function redirection(path: string) {
+  const response = await fetch(`${base}${path}`, { redirect: 'manual' });
+  const location = response.headers.get('location');
+  return {
+    status: response.status,
+    target: location ? new URL(location, base) : null,
+  };
 }
 function text(html: string) {
   return html
@@ -47,8 +61,12 @@ test('HTTP : pages PostgreSQL, metadata, SKU, images et véritables 404', async 
   assert.ok(detail.includes('DEV-ETB-BRAISE-FR'));
   assert.ok(detail.includes('DEV-ETB-BRAISE-EN'));
   assert.ok(!detail.includes('DEV-ETB-BRAISE-JP-INACTIF'));
-  for (const slug of ['inexistant', 'dev-brouillon', 'dev-archive'])
+  for (const slug of ['inexistant', 'dev-brouillon'])
     await page(`/produit/${slug}`, 404);
+  // ARCHIVED: 308 to its best indexable parent (game hub or family landing).
+  const archived = await redirection('/produit/dev-archive');
+  assert.equal(archived.status, 308);
+  assert.match(archived.target?.pathname ?? '', /^\/pokemon(?:\/|$)/);
   const image = await fetch(`${base}/assets/products/placeholder-product.png`);
   assert.equal(image.status, 200);
   assert.equal(image.headers.get('content-type'), 'image/png');

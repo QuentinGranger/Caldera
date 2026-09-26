@@ -1,5 +1,6 @@
 import { Prisma } from '@/generated/prisma/client';
 import { createSlug } from '@/lib/catalog/createSlug';
+import { SLUG_MAX_LENGTH } from './limits';
 export class AdminError extends Error {}
 export function text(form: FormData, key: string, max = 200, required = true) {
   const value = form.get(key);
@@ -71,7 +72,7 @@ export function date(form: FormData, key: string) {
   return result;
 }
 export function slug(form: FormData, name: string) {
-  const value = text(form, 'slug', 180, false) || createSlug(name);
+  const value = text(form, 'slug', SLUG_MAX_LENGTH, false) || createSlug(name);
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))
     throw new AdminError(
       'Slug : lettres minuscules, chiffres et tirets uniquement.',

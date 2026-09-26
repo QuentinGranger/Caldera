@@ -6,6 +6,7 @@ import {
   type SearchParams,
 } from '@/lib/admin/queries';
 import { saveCategoryAction } from '@/lib/admin/actions';
+import { faqInput } from '@/lib/admin/seo';
 import {
   PageHeader,
   AdminTable,
@@ -20,6 +21,7 @@ import {
   SelectField,
   TextField,
 } from '@/components/admin/AdminFields';
+import { SeoFields } from '@/components/admin/SeoFields';
 import { SlugFields } from '@/components/admin/SlugFields';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function CategoriesPage({
@@ -136,10 +138,25 @@ export default async function CategoriesPage({
               max={1000000}
               defaultValue={category?.sortOrder ?? 0}
             />
+            <Field
+              label="Image (chemin local)"
+              name="imageUrl"
+              defaultValue={category?.imageUrl ?? ''}
+              placeholder="/assets/images/..."
+              maxLength={500}
+            />
             <TextField
               label="Description"
               name="description"
               defaultValue={category?.description}
+            />
+            <SeoFields
+              seoTitle={category?.seoTitle}
+              seoDescription={category?.seoDescription}
+              editorial={{
+                intro: category?.intro,
+                faq: faqInput(category?.faq ?? null),
+              }}
             />
           </div>
           <div className={styles.checks}>
@@ -149,6 +166,10 @@ export default async function CategoriesPage({
               checked={category?.isActive ?? true}
             />
           </div>
+          <small>
+            Image : asset local /assets/ ou image téléversée /media/. Aucun
+            téléchargement externe automatique.
+          </small>
         </AdminForm>
       </section>
     </>

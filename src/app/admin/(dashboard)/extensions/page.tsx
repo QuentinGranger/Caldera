@@ -1,12 +1,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import {
+  getAdminOptions,
   getAdminTaxonomy,
   param,
   type SearchParams,
 } from '@/lib/admin/queries';
 import { saveSetAction } from '@/lib/admin/actions';
 import { dateInput } from '@/lib/admin/format';
+import { faqInput } from '@/lib/admin/seo';
 import {
   PageHeader,
   AdminTable,
@@ -18,8 +20,10 @@ import {
   Check,
   Field,
   Hidden,
+  SelectField,
   TextField,
 } from '@/components/admin/AdminFields';
+import { SeoFields } from '@/components/admin/SeoFields';
 import { SlugFields } from '@/components/admin/SlugFields';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function SetsPage({
@@ -28,14 +32,17 @@ export default async function SetsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const data = await getAdminTaxonomy('set', params);
+  const [data, options] = await Promise.all([
+    getAdminTaxonomy('set', params),
+    getAdminOptions(),
+  ]);
   if (data.kind !== 'set') return null;
   const set = data.editing;
   return (
     <>
       <PageHeader
         title="Extensions"
-        description="Séries, codes et dates de sortie."
+        description="Jeu, séries, codes, dates de sortie et textes des pages d’extension."
       >
         <Link href="/admin/extensions#edition">Créer une extension</Link>
       </PageHeader>
@@ -56,6 +63,7 @@ export default async function SetsPage({
           caption="Extensions"
           headings={[
             'Extension',
+            'Jeu',
             'Code',
             'Série',
             'Sortie',
@@ -74,6 +82,7 @@ export default async function SetsPage({
                   {row.name}
                 </div>
               </td>
+              <td>{row.game?.name ?? '—'}</td>
               <td>{row.code ?? '—'}</td>
               <td>{row.series ?? '—'}</td>
               <td>
@@ -117,6 +126,19 @@ export default async function SetsPage({
           {set && <Hidden name="id" value={set.id} />}
           <div className={styles.fields}>
             <SlugFields name={set?.name} slug={set?.slug} />
+            <SelectField
+              label="Jeu"
+              name="gameId"
+              defaultValue={set?.gameId ?? ''}
+            >
+              <option value="">Aucun jeu</option>
+              {options.games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.name}
+                  {!game.isActive ? ' (inactif)' : ''}
+                </option>
+              ))}
+            </SelectField>
             <Field
               label="Code"
               name="code"
@@ -154,6 +176,11 @@ export default async function SetsPage({
               name="description"
               defaultValue={set?.description}
             />
+            <SeoFields
+              seoTitle={set?.seoTitle}
+              seoDescription={set?.seoDescription}
+              editorial={{ intro: set?.intro, faq: faqInput(set?.faq ?? null) }}
+            />
           </div>
           <div className={styles.checks}>
             <Check
@@ -164,7 +191,8 @@ export default async function SetsPage({
           </div>
           <small>
             Assets locaux /assets/ ou images téléversées /media/. Aucun
-            téléchargement externe automatique.
+            téléchargement externe automatique. Les produits de l’extension
+            suivent le jeu choisi.
           </small>
         </AdminForm>
       </section>

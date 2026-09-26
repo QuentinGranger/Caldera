@@ -5,8 +5,8 @@ import {
 import type { SearchParams } from '@/lib/catalog/params';
 type Props = { searchParams: Promise<SearchParams> };
 export function generateMetadata({ searchParams }: Props) {
-  return listingHubMetadata('catalogue', searchParams);
+  return listingHubMetadata('en-stock', searchParams);
 }
 export default function Page({ searchParams }: Props) {
-  return <ListingHubPage listing="catalogue" searchParams={searchParams} />;
+  return <ListingHubPage listing="en-stock" searchParams={searchParams} />;
 }

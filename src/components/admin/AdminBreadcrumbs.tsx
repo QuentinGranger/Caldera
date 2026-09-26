@@ -8,6 +8,7 @@ const sections: Record<string, string> = {
   produits: 'Produits',
   commandes: 'Commandes',
   stocks: 'Stocks',
+  jeux: 'Jeux',
   categories: 'Catégories',
   extensions: 'Extensions',
 };

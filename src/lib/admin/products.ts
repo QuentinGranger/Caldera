@@ -1,8 +1,14 @@
 import 'server-only';
-import { ProductLanguage, ProductType } from '@/generated/prisma/client';
+import {
+  type Prisma,
+  ProductLanguage,
+  ProductType,
+} from '@/generated/prisma/client';
 import { createSlug } from '@/lib/catalog/createSlug';
+import { recordSlugChange } from '@/lib/seo/redirects';
 import { adminTransaction, audit, lockProduct } from './common';
 import { changeStock } from './inventory';
+import { seoMetaFields } from './seo';
 import {
   AdminError,
   checked,
@@ -15,6 +21,36 @@ import {
   text,
   whitelist,
 } from './validation';
+/** The game of a set wins: empty means inherited, a different game is refused. */
+async function productGame(
+  tx: Prisma.TransactionClient,
+  tcgSetId: string | null,
+  requestedGameId: string | null,
+) {
+  const set = tcgSetId
+    ? await tx.tcgSet.findUnique({
+        where: { id: tcgSetId },
+        select: { name: true, gameId: true, game: { select: { name: true } } },
+      })
+    : null;
+  if (tcgSetId && !set) throw new AdminError('Extension introuvable.');
+  if (set?.gameId) {
+    if (requestedGameId && requestedGameId !== set.gameId)
+      throw new AdminError(
+        `L’extension « ${set.name} » appartient au jeu « ${set.game?.name ?? ''} » : le produit doit être rattaché à ce jeu.`,
+      );
+    return set.gameId;
+  }
+  if (
+    requestedGameId &&
+    !(await tx.game.findUnique({
+      where: { id: requestedGameId },
+      select: { id: true },
+    }))
+  )
+    throw new AdminError('Jeu introuvable.');
+  return requestedGameId;
+}
 export async function saveProduct(adminId: string, form: FormData) {
   whitelist(form, [
     'id',
@@ -25,11 +61,14 @@ export async function saveProduct(adminId: string, form: FormData) {
     'productType',
     'categoryId',
     'tcgSetId',
+    'gameId',
     'featured',
     'newArrival',
     'preorder',
     'releaseDate',
     'publishedAt',
+    'seoTitle',
+    'seoDescription',
     'tags',
     'version',
   ]);
@@ -48,7 +87,9 @@ export async function saveProduct(adminId: string, form: FormData) {
     preorder: checked(form, 'preorder'),
     releaseDate: date(form, 'releaseDate'),
     publishedAt: date(form, 'publishedAt'),
+    ...seoMetaFields(form),
   };
+  const requestedGameId = id(form, 'gameId', true) || null;
   const tags = [
     ...new Set(
       text(form, 'tags', 500, false)
@@ -65,6 +106,7 @@ export async function saveProduct(adminId: string, form: FormData) {
       throw new AdminError(
         'Ce produit a été modifié. Rechargez avant d’enregistrer.',
       );
+    const gameId = await productGame(tx, data.tcgSetId, requestedGameId);
     const connectedTags = [];
     for (const tag of tags)
       connectedTags.push(
@@ -78,11 +120,24 @@ export async function saveProduct(adminId: string, form: FormData) {
     const product = previous
       ? await tx.product.update({
           where: { id: previous.id },
-          data: { ...data, tags: { set: connectedTags } },
+          data: { ...data, gameId, tags: { set: connectedTags } },
         })
       : await tx.product.create({
-          data: { ...data, status: 'DRAFT', tags: { connect: connectedTags } },
+          data: {
+            ...data,
+            gameId,
+            status: 'DRAFT',
+            tags: { connect: connectedTags },
+          },
         });
+    if (previous)
+      await recordSlugChange(
+        tx,
+        'PRODUCT',
+        product.id,
+        previous.slug,
+        product.slug,
+      );
     await audit(
       tx,
       adminId,
@@ -98,11 +153,14 @@ export async function saveProduct(adminId: string, form: FormData) {
           'productType',
           'categoryId',
           'tcgSetId',
+          'gameId',
           'featured',
           'newArrival',
           'preorder',
           'releaseDate',
           'publishedAt',
+          'seoTitle',
+          'seoDescription',
           'tags',
         ],
         previousSlug: previous?.slug ?? null,
@@ -137,9 +195,16 @@ export async function changePublication(adminId: string, form: FormData) {
       const set = previous.tcgSetId
         ? await tx.tcgSet.findUnique({ where: { id: previous.tcgSetId } })
         : null;
-      if (!category?.isActive || (set && !set.isActive))
+      const game = previous.gameId
+        ? await tx.game.findUnique({ where: { id: previous.gameId } })
+        : null;
+      if (
+        !category?.isActive ||
+        (set && !set.isActive) ||
+        (game && !game.isActive)
+      )
         throw new AdminError(
-          'La catégorie et l’extension doivent être actives avant publication.',
+          'La catégorie, l’extension et le jeu doivent être actifs avant publication.',
         );
     }
     const product = await tx.product.update({

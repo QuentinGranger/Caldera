@@ -48,7 +48,10 @@
     "test:maintenance": "node --conditions=react-server --import tsx --test tests/maintenance.test.ts",
     "test:monitoring": "node --conditions=react-server --import tsx --test tests/monitoring.test.ts",
     "test:maintenance:http": "node --conditions=react-server --import tsx --test tests/maintenance-http.test.ts",
-    "dev:stripe": "node scripts/dev-stripe.mjs"
+    "dev:stripe": "node scripts/dev-stripe.mjs",
+    "seo": "node --conditions=react-server --import tsx scripts/seo-audit.ts",
+    "test:seo": "node --conditions=react-server --import tsx --test tests/seo.test.ts tests/seo-registry.test.ts tests/seo-audit.test.ts",
+    "test:content": "node --conditions=react-server --import tsx --test tests/content.test.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",

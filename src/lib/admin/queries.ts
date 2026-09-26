@@ -37,17 +37,21 @@ function validId(value: string) {
 export async function getAdminOptions() {
   await requireAdmin();
   const db = getPrisma();
-  const [categories, sets] = await Promise.all([
+  const [categories, sets, games] = await Promise.all([
     db.category.findMany({
       select: { id: true, name: true, isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     }),
     db.tcgSet.findMany({
-      select: { id: true, name: true, isActive: true },
+      select: { id: true, name: true, isActive: true, gameId: true },
       orderBy: { name: 'asc' },
     }),
+    db.game.findMany({
+      select: { id: true, name: true, isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    }),
   ]);
-  return { categories, sets };
+  return { categories, sets, games };
 }
 export async function getAdminProducts(params: SearchParams) {
   await requireAdmin();
@@ -383,7 +387,7 @@ export async function getAdminOrder(id: string) {
   return { ...order, fulfillmentAudit };
 }
 export async function getAdminTaxonomy(
-  kind: 'category' | 'set',
+  kind: 'category' | 'set' | 'game',
   params: SearchParams,
 ) {
   await requireAdmin();
@@ -411,13 +415,30 @@ export async function getAdminTaxonomy(
     ]);
     return { kind, rows, total, page, editing } as const;
   }
+  if (kind === 'game') {
+    const [rows, total, editing] = await Promise.all([
+      db.game.findMany({
+        where,
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { id: 'asc' }],
+        include: { _count: { select: { sets: true, products: true } } },
+      }),
+      db.game.count({ where }),
+      selected ? db.game.findUnique({ where: { id: selected } }) : null,
+    ]);
+    return { kind, rows, total, page, editing } as const;
+  }
   const [rows, total, editing] = await Promise.all([
     db.tcgSet.findMany({
       where,
       take: pageSize,
       skip: (page - 1) * pageSize,
       orderBy: { name: 'asc' },
-      include: { _count: { select: { products: true } } },
+      include: {
+        game: { select: { name: true } },
+        _count: { select: { products: true } },
+      },
     }),
     db.tcgSet.count({ where }),
     selected ? db.tcgSet.findUnique({ where: { id: selected } }) : null,

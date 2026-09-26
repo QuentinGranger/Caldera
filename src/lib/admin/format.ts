@@ -68,6 +68,7 @@ export const labels: Record<string, string> = {
   IMAGE_REMOVED: 'Image retirée',
   CATEGORY_SAVED: 'Catégorie enregistrée',
   SET_SAVED: 'Extension enregistrée',
+  GAME_SAVED: 'Jeu enregistré',
   ORDER_NOTE_UPDATED: 'Note interne modifiée',
   ORDER_CANCELLATION_REQUESTED: 'Annulation demandée',
   ORDER_CANCELLATION_RESULT: 'Résultat d’annulation',

@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { createSlug } from '@/lib/catalog/createSlug';
+import { SLUG_MAX_LENGTH } from '@/lib/admin/limits';
 export function SlugFields({
   name = '',
   slug = '',
@@ -28,7 +29,7 @@ export function SlugFields({
         Slug
         <input
           name="slug"
-          maxLength={180}
+          maxLength={SLUG_MAX_LENGTH}
           value={value}
           onChange={(event) => {
             setManual(Boolean(event.target.value));

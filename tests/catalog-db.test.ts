@@ -12,7 +12,12 @@ import {
   getProductsBySet,
   getRestockedProducts,
 } from '../src/lib/catalog/queries';
-if (process.env.NODE_ENV === 'production')
+if (
+  process.env.NODE_ENV === 'production' ||
+  !['localhost', '127.0.0.1'].includes(
+    new URL(process.env.DATABASE_URL ?? 'invalid:').hostname,
+  )
+)
   throw new Error('Ces tests sont réservés à une base de développement.');
 const db = getPrisma();
 after(() => db.$disconnect());
@@ -33,22 +38,63 @@ async function rejectedWrite(
 test('seed : identités uniques et relations conservées après plusieurs exécutions', async () => {
   assert.equal(
     await db.product.count({ where: { slug: { startsWith: 'dev-' } } }),
-    20,
+    23,
   );
   assert.equal(
     await db.productVariant.count({ where: { sku: { startsWith: 'DEV-' } } }),
-    23,
+    26,
   );
   assert.equal(
     await db.productImage.count({
       where: { product: { slug: { startsWith: 'dev-' } } },
     }),
-    22,
+    25,
   );
   const sets = await db.tcgSet.findMany({
     where: { slug: { startsWith: 'dev-' } },
+    select: { gameId: true },
   });
-  assert.equal(sets.length, 3);
+  assert.equal(sets.length, 5);
+  assert.ok(sets.every((set) => set.gameId));
+  // Families are cross-game roots; the game is its own axis.
+  const roots = await db.category.findMany({
+    where: { isActive: true, parentId: null },
+    select: { slug: true },
+    orderBy: { sortOrder: 'asc' },
+  });
+  assert.deepEqual(
+    roots.map((category) => category.slug),
+    ['scelles', 'cartes', 'accessoires'],
+  );
+  assert.equal(
+    await db.category.count({ where: { slug: 'pokemon', isActive: true } }),
+    0,
+  );
+  assert.deepEqual(
+    (
+      await db.game.findMany({
+        where: { isActive: true },
+        select: { slug: true },
+        orderBy: { sortOrder: 'asc' },
+      })
+    ).map((game) => game.slug),
+    ['pokemon', 'lorcana'],
+  );
+  // A product with a set belongs to the set's game; game-less = multi-game.
+  for (const product of await db.product.findMany({
+    where: { slug: { startsWith: 'dev-' } },
+    select: { gameId: true, tcgSet: { select: { gameId: true } } },
+  }))
+    if (product.tcgSet) assert.equal(product.gameId, product.tcgSet.gameId);
+  assert.equal(
+    (
+      await db.product.findUniqueOrThrow({
+        where: { slug: 'dev-protege-cartes' },
+        select: { gameId: true },
+      })
+    ).gameId,
+    null,
+  );
   const product = await db.product.findUniqueOrThrow({
     where: { slug: 'dev-etb-terres-de-braise' },
     include: { variants: true, images: true },
@@ -58,7 +104,7 @@ test('seed : identités uniques et relations conservées après plusieurs exécu
 });
 test('lecture : statuts, variantes, DTO public, prix minimum et listes spécialisées', async () => {
   const products = await getProducts();
-  assert.equal(products.filter((p) => p.slug.startsWith('dev-')).length, 17);
+  assert.equal(products.filter((p) => p.slug.startsWith('dev-')).length, 20);
   for (const slug of ['dev-brouillon', 'dev-archive', 'inexistant'])
     assert.equal(await getProductBySlug(slug), null);
   const product = await getProductBySlug('dev-etb-terres-de-braise');
@@ -78,10 +124,11 @@ test('lecture : statuts, variantes, DTO public, prix minimum et listes spéciali
   assert.equal((await getFeaturedProducts(2)).length, 2);
   assert.equal((await getNewProducts(4)).length, 4);
   assert.ok(
-    (await getProductsByCategory('pokemon')).some(
+    (await getProductsByCategory('scelles')).some(
       (p) => p.slug === 'dev-etb-terres-de-braise',
     ),
   );
+  assert.deepEqual(await getProductsByCategory('pokemon'), []);
   assert.equal((await getProductsBySet('dev-terres-de-braise')).length, 2);
   assert.deepEqual(await getProductsByCategory('inexistant'), []);
   assert.deepEqual(await getProductsBySet('inexistant'), []);
@@ -116,7 +163,11 @@ test('UNIQUE PostgreSQL : slugs, SKU et barcode nullable', async () => {
   );
   await rejectedWrite(
     (tx) =>
-      tx.category.create({ data: { name: 'collision', slug: 'pokemon' } }),
+      tx.category.create({ data: { name: 'collision', slug: 'scelles' } }),
+    'P2002',
+  );
+  await rejectedWrite(
+    (tx) => tx.game.create({ data: { name: 'collision', slug: 'pokemon' } }),
     'P2002',
   );
   await rejectedWrite(
@@ -172,6 +223,10 @@ test('CHECK PostgreSQL et clés étrangères : écritures invalides annulées', 
   );
   await rejectedWrite(
     (tx) => tx.tcgSet.delete({ where: { slug: 'dev-terres-de-braise' } }),
+    'P2003',
+  );
+  await rejectedWrite(
+    (tx) => tx.game.delete({ where: { slug: 'lorcana' } }),
     'P2003',
   );
   await rejectedWrite(

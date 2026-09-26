@@ -200,6 +200,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           `/admin/commandes/${order.id}`,
           '/admin/categories',
           '/admin/extensions',
+          '/admin/jeux',
           `/admin/commandes/${order.id}/bon-preparation`,
         ]) {
           const result = await page(path, 'caldera_cart=invalid');
@@ -333,6 +334,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/stocks',
           '/admin/categories',
           '/admin/extensions',
+          '/admin/jeux',
         ]) {
           const result = await page(path);
           assert.equal(result.response.status, 200);
@@ -590,6 +592,54 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       },
     );
     await t.test(
+      'jeux HTTP : création authentifiée, slug réservé et champ forgé refusés',
+      async () => {
+        const denied = await action(
+          'saveGameAction',
+          { name: 'Jeu HTTP', slug: `http-jeu-${key}`, sortOrder: '0' },
+          '',
+        );
+        assert.ok(
+          (
+            denied.response.headers.get('x-action-redirect') ?? denied.body
+          ).includes('/admin/login'),
+        );
+        const reserved = await action('saveGameAction', {
+          name: 'Jeu HTTP',
+          slug: 'catalogue',
+          sortOrder: '0',
+          isActive: 'on',
+        });
+        assert.ok(reserved.body.includes('réservé à une page du site'));
+        const forged = await action('saveGameAction', {
+          name: 'Jeu HTTP',
+          slug: `http-jeu-${key}`,
+          sortOrder: '0',
+          isActive: 'on',
+          createdAt: '2000-01-01',
+        });
+        assert.ok(forged.body.includes('non autorisé'));
+        const created = await action('saveGameAction', {
+          name: 'Jeu HTTP',
+          slug: `http-jeu-${key}`,
+          sortOrder: '0',
+          isActive: 'on',
+          faq: 'Question HTTP ? :: Réponse HTTP.',
+        });
+        assert.ok(created.body.includes('"success":true'));
+        const game = await db.game.findUniqueOrThrow({
+          where: { slug: `http-jeu-${key}` },
+        });
+        assert.deepEqual(game.faq, [
+          { question: 'Question HTTP ?', answer: 'Réponse HTTP.' },
+        ]);
+        const list = await page('/admin/jeux?search=Jeu%20HTTP');
+        assert.ok(list.html.includes(`/http-jeu-${key}`));
+        const edit = await page(`/admin/jeux?edit=${game.id}`);
+        assert.ok(edit.html.includes('Question HTTP ? :: Réponse HTTP.'));
+      },
+    );
+    await t.test(
       'upload HTTP, image publique réencodée, optimisation Next et suppression de galerie',
       async () => {
         const png = await sharp({
@@ -706,6 +756,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
     await db.productVariant.deleteMany({ where: { productId: product.id } });
     await db.product.delete({ where: { id: product.id } });
     await db.category.delete({ where: { id: category.id } });
+    await db.game.deleteMany({ where: { slug: `http-jeu-${key}` } });
     await db.adminUser.delete({ where: { id: admin.id } });
     for (const url of uploadedUrls) await imageStorage.delete(url);
     await db.$disconnect();
