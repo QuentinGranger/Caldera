@@ -87,7 +87,7 @@ export async function Footer() {
             © {new Date().getFullYear()} Les Terres de Caldera ·{' '}
             <Link href={PRODUCTION_SITE_URL}>{PRODUCTION_HOST}</Link>
           </p>
-          <p>Boutique en préparation · Produits et prix de démonstration</p>
+          <p>Boutique en préparation · Ouverture prochaine</p>
           <span>Explorez. Collectionnez.</span>
         </div>
       </Container>

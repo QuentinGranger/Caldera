@@ -83,6 +83,16 @@ test('facturation distincte, pays et formats postaux', () => {
       ),
     CheckoutError,
   );
+  assert.throws(
+    () =>
+      parseContact(
+        { ...contact, shipping: { ...shipping, postalCode: '97100' } },
+        ['FR'],
+      ),
+    (error: unknown) =>
+      error instanceof CheckoutError &&
+      Boolean(error.errors['shipping.postalCode']),
+  );
   assert.doesNotThrow(() =>
     parseContact(
       {

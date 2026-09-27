@@ -84,7 +84,7 @@ function address(
       'Ce pays n’est pas actuellement proposé. Choisissez un pays disponible.';
   const pattern =
     result.countryCode === 'FR'
-      ? /^\d{5}$/
+      ? /^(?:0[1-9]|[1-8]\d|9[0-5])\d{3}$/
       : result.countryCode === 'BE'
         ? /^\d{4}$/
         : /^[\p{L}\p{N}][\p{L}\p{N} -]{1,15}$/u;
