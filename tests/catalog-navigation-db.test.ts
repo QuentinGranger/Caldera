@@ -142,7 +142,13 @@ test('filtres combinés, périmètres jeu / famille / statut et recherche litté
   ] as const) {
     const preorder = await catalog({}, scope);
     assert.equal(preorder.total, 4);
-    assert.ok(preorder.products.every((p) => p.availability === 'PREORDER'));
+    // Preorders with quota left are orderable; an exhausted one is sold out.
+    assert.ok(preorder.products.some((p) => p.availability === 'PREORDER'));
+    assert.ok(
+      preorder.products.every((p) =>
+        ['PREORDER', 'OUT_OF_STOCK'].includes(p.availability),
+      ),
+    );
   }
   for (const scope of [{ newArrival: true }, { status: 'nouveautes' }] as const)
     assert.equal((await catalog({}, scope)).total, 5);

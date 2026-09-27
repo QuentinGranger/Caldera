@@ -43,6 +43,36 @@ import type {
 /** Cache tag of every catalog aggregate: revalidateTag('catalog', 'max') after a write. */
 export const CATALOG_CACHE_TAG = 'catalog';
 const REVALIDATE_SECONDS = 3600;
+// Stock and price aggregates shown in page text: never older than 5 minutes,
+// and invalidated at once by admin writes and confirmed payments.
+const AGGREGATE_REVALIDATE_SECONDS = 300;
+
+/**
+ * unstable_cache shared across requests, falling back to a direct call where
+ * Next provides no cache store (scripts, DB tests).
+ */
+export function sharedCache<Args extends string[], Result>(
+  fn: (...args: Args) => Promise<Result>,
+  keyParts: string[],
+  revalidate: number,
+) {
+  const cached = unstable_cache(fn, keyParts, {
+    tags: [CATALOG_CACHE_TAG],
+    revalidate,
+  });
+  return async (...args: Args): Promise<Result> => {
+    try {
+      return await cached(...args);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith('Invariant: incrementalCache missing')
+      )
+        return fn(...args);
+      throw error;
+    }
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Category tree (pure)
@@ -213,6 +243,7 @@ function productFactsSql(filter: FactFilter): Prisma.Sql {
     SELECT p."id", p."gameId", g."slug" AS "gameSlug", p."tcgSetId",
       p."categoryId", p."preorder", p."newArrival",
       ${inStock} AS "inStock",
+      (p."preorder" AND BOOL_OR(${active} AND v."availableQuantity" > 0)) AS "preorderOpen",
       MIN(v."price") FILTER (WHERE ${active}) AS "minPrice",
       MAX(v."price") FILTER (WHERE ${active}) AS "maxPrice",
       ARRAY_AGG(DISTINCT v."language"::text) FILTER (WHERE ${active}) AS "languages",
@@ -270,14 +301,38 @@ interface AggregateRow {
   languages: string[];
 }
 
+// Cached as JSON: decimals as strings, the date as epoch milliseconds.
+const cachedAggregate = sharedCache(
+  async (key: string) => {
+    const row = await queryAggregate(key);
+    return {
+      ...row,
+      minPrice: priceString(row.minPrice),
+      maxPrice: priceString(row.maxPrice),
+      lastModified: row.lastModified ? row.lastModified.getTime() : null,
+    };
+  },
+  ['scope-aggregate'],
+  AGGREGATE_REVALIDATE_SECONDS,
+);
+
 // React cache compares arguments by identity: the filter is keyed as JSON.
-const aggregateByKey = cache(async (key: string) => {
+const aggregateByKey = cache(async (key: string): Promise<AggregateRow> => {
+  const row = await cachedAggregate(key);
+  return {
+    ...row,
+    lastModified: row.lastModified === null ? null : new Date(row.lastModified),
+  };
+});
+
+async function queryAggregate(key: string) {
   const filter = JSON.parse(key) as FactFilter;
   const [row] = await getPrisma().$queryRaw<AggregateRow[]>`
     WITH facts AS (${productFactsSql(filter)})
     SELECT COUNT(*)::int AS "productCount",
       (COUNT(*) FILTER (WHERE "inStock"))::int AS "inStockCount",
-      (COUNT(*) FILTER (WHERE "preorder"))::int AS "preorderCount",
+      -- Only preorders that can still be ordered are announced as such.
+      (COUNT(*) FILTER (WHERE "preorderOpen"))::int AS "preorderCount",
       (COUNT(*) FILTER (WHERE "newArrival"))::int AS "newArrivalCount",
       MIN("minPrice") AS "minPrice",
       MAX("maxPrice") AS "maxPrice",
@@ -289,7 +344,7 @@ const aggregateByKey = cache(async (key: string) => {
     FROM facts`;
   if (!row) throw new Error('Scope aggregate returned no row');
   return row;
-});
+}
 
 async function aggregateScope(
   scope: RegistryScope,
@@ -420,7 +475,15 @@ export function breakdownFromRows(
   };
 }
 
-const breakdownByKey = cache(async (key: string) => {
+const breakdownByKey = cache((key: string) => cachedBreakdown(key));
+
+const cachedBreakdown = sharedCache(
+  (key: string) => queryBreakdown(key),
+  ['scope-breakdown'],
+  AGGREGATE_REVALIDATE_SECONDS,
+);
+
+function queryBreakdown(key: string) {
   const filter = JSON.parse(key) as FactFilter;
   return getPrisma().$queryRaw<BreakdownRow[]>`
     WITH facts AS (${productFactsSql(filter)})
@@ -440,7 +503,7 @@ const breakdownByKey = cache(async (key: string) => {
     SELECT 'status', 'precommandes', COUNT(*)::int FROM facts WHERE "preorder"
     UNION ALL
     SELECT 'status', 'nouveautes', COUNT(*)::int FROM facts WHERE "newArrival"`;
-});
+}
 
 /** Product counts of a scope by set, category (whole tree), language and status. */
 export async function getScopeBreakdown(

@@ -179,7 +179,13 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   const preorders = (await page('/precommandes')).html;
   assert.ok(preorders.includes('href="/pokemon/precommandes"'));
   assert.ok(preorders.includes('href="/catalogue"'));
-  assert.ok(articles(preorders).every((a) => a.includes('Précommande')));
+  // Every preorder is shown as such, or as sold out once its quota is used up.
+  assert.ok(articles(preorders).some((a) => a.includes('Précommande')));
+  assert.ok(
+    articles(preorders).every(
+      (a) => a.includes('Précommande') || a.includes('Rupture'),
+    ),
+  );
   // The stock filter cannot narrow a preorder listing: it is not offered.
   assert.doesNotMatch(preorders, /<summary>Disponibilité/);
 

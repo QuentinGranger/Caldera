@@ -26,7 +26,10 @@ const stock = (quantity: number, threshold = 2, isActive = true) => ({
 });
 test('disponibilité : priorités, bornes et variantes inactives', () => {
   assert.equal(getAvailability(true, []), 'OUT_OF_STOCK');
-  assert.equal(getAvailability(true, [stock(0)]), 'PREORDER');
+  // A preorder with no quota left cannot be ordered: sold out.
+  assert.equal(getAvailability(true, [stock(0)]), 'OUT_OF_STOCK');
+  assert.equal(getAvailability(true, [stock(1)]), 'PREORDER');
+  assert.equal(getAvailability(true, [stock(0), stock(4)]), 'PREORDER');
   assert.equal(getAvailability(false, [stock(0)]), 'OUT_OF_STOCK');
   assert.equal(getAvailability(false, [stock(2)]), 'LOW_STOCK');
   assert.equal(getAvailability(false, [stock(3)]), 'IN_STOCK');

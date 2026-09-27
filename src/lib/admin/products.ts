@@ -107,6 +107,17 @@ export async function saveProduct(adminId: string, form: FormData) {
         'Ce produit a été modifié. Rechargez avant d’enregistrer.',
       );
     const gameId = await productGame(tx, data.tcgSetId, requestedGameId);
+    // Same guard as changePublication: a published product never joins an inactive game.
+    if (previous?.status === 'ACTIVE' && gameId) {
+      const game = await tx.game.findUnique({
+        where: { id: gameId },
+        select: { name: true, isActive: true },
+      });
+      if (game && !game.isActive)
+        throw new AdminError(
+          `Le jeu « ${game.name} » est désactivé : réactivez-le ou dépubliez ce produit avant de l’y rattacher.`,
+        );
+    }
     const connectedTags = [];
     for (const tag of tags)
       connectedTags.push(

@@ -32,6 +32,7 @@ export type ValidatableVariant = {
     status: string;
     category: { isActive: boolean };
     tcgSet: { isActive: boolean } | null;
+    game: { isActive: boolean } | null;
   };
 };
 export function itemIssue(
@@ -43,7 +44,9 @@ export function itemIssue(
     !variant.isActive ||
     variant.product.status !== 'ACTIVE' ||
     !variant.product.category.isActive ||
-    variant.product.tcgSet?.isActive === false
+    variant.product.tcgSet?.isActive === false ||
+    // Same rule as the public catalogue: a product of an inactive game is withdrawn.
+    variant.product.game?.isActive === false
   )
     return 'UNAVAILABLE';
   if (availableQuantity(variant) < 1) return 'OUT_OF_STOCK';

@@ -78,6 +78,7 @@ export default async function ProductPage({ params }: Props) {
               productId={product.id}
               variants={product.variants}
               newArrival={product.newArrival}
+              preorder={product.preorder}
               releaseDate={product.releaseDate}
               typeLabel={productTypeLabels[product.productType]}
               shipping={page.shipping}

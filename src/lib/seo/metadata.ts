@@ -377,14 +377,13 @@ function landingTitle(
   families: readonly string[],
 ): string {
   const names = families.map(inSentence);
+  // « stock » only when something is actually in stock.
+  const priceAnd =
+    stats.inStockCount > 0 ? 'prix et stock' : 'prix et disponibilité';
   switch (kind) {
     case 'game':
+      // No « en stock » here: every family listed is not necessarily in stock.
       return firstFitting(
-        fitList(
-          (list) =>
-            `${subject} : ${list}${stats.inStockCount > 0 ? ' en stock' : ''}`,
-          names,
-        ),
         fitList((list) => `${subject} : ${list}`, names),
         stats.productCount ? `${subject} : prix et disponibilité` : null,
         subject,
@@ -398,14 +397,14 @@ function landingTitle(
           subject,
         );
       return firstFitting(
-        fitList((list) => `${subject} : ${list} – prix et stock`, names),
-        `${subject} – prix et stock`,
+        fitList((list) => `${subject} : ${list} – ${priceAnd}`, names),
+        `${subject} – ${priceAnd}`,
         subject,
       );
     case 'category':
       return firstFitting(`${subject} : prix et disponibilité`, subject);
     case 'set-category':
-      return firstFitting(`${subject} – prix et stock`, subject);
+      return firstFitting(`${subject} – ${priceAnd}`, subject);
     case 'language':
     case 'status':
       return firstFitting(

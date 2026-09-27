@@ -21,6 +21,7 @@ import {
 } from '@/lib/product/purchase';
 import {
   HANDLING_LABEL,
+  PREORDER_HANDLING_LABEL,
   RETURN_LABEL,
   RETURN_POLICY_PATH,
   type ShippingOptionView,
@@ -32,6 +33,8 @@ type Props = {
   productId: string;
   variants: ProductVariantView[];
   newArrival: boolean;
+  /** Product sold on preorder; a variant with no quota left is sold out. */
+  preorder: boolean;
   releaseDate: string | null;
   typeLabel: string;
   /** Shipping methods offered at checkout (ShippingMethod). */
@@ -40,6 +43,7 @@ type Props = {
 function SelectedVariant({
   variant,
   newArrival,
+  preorder: preorderProduct,
   releaseDate,
   typeLabel,
   shipping,
@@ -59,12 +63,12 @@ function SelectedVariant({
         {badge && <ProductBadge kind={badge} />}
         <span className={soldOut ? styles.unavailable : ''}>{label}</span>
       </div>
-      {preorder && releaseDate && (
+      {preorderProduct && releaseDate && (
         <p className={styles.release}>
           Sortie prévue le {formatProductDate(releaseDate)}
         </p>
       )}
-      {preorder && variant.maxQuantity === 0 && (
+      {preorderProduct && variant.maxQuantity === 0 && (
         <p className={styles.release}>
           Aucune quantité de précommande disponible actuellement.
         </p>
@@ -108,7 +112,9 @@ function SelectedVariant({
                   </li>
                 ))}
               </ul>
-              <p>{HANDLING_LABEL}</p>
+              <p>
+                {preorderProduct ? PREORDER_HANDLING_LABEL : HANDLING_LABEL}
+              </p>
             </>
           ) : (
             <p>

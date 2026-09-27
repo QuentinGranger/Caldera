@@ -598,7 +598,8 @@ test('metadata des landings : faits réels, longueurs, aucune formule creuse', (
     stats: fullStats,
     availableCategoryNames: ['Boosters', 'ETB', 'Coffrets', 'Displays'],
   });
-  assert.equal(hub.title, 'Pokémon : boosters, ETB et coffrets en stock');
+  // Never « en stock » in the hub title: not every family listed is in stock.
+  assert.equal(hub.title, 'Pokémon : boosters, ETB et coffrets');
   assert.equal(
     hub.description,
     `Pokémon : 12 produits de 5,90${NBSP}€ à 189,90${NBSP}€. 9 en stock, 3 en précommande. Langues : français et japonais.`,

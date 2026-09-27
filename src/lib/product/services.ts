@@ -47,6 +47,9 @@ export function shippingOptionViews(
 }
 
 /** CGV art. 10.3. */
+/** A preorder leaves with the whole order once the product is released. */
+export const PREORDER_HANDLING_LABEL =
+  'Précommande : expédition à partir de la date de sortie du produit.';
 export const HANDLING_LABEL = `Commande préparée et expédiée sous ${businessDays(
   HANDLING_TIME.minDays,
   HANDLING_TIME.maxDays,

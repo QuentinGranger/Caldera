@@ -23,6 +23,7 @@ import {
   getLandingIndex,
   getScopeStats,
   getScopeWhere,
+  sharedCache,
   type RegistryScope,
 } from '@/lib/seo/registry';
 import type {
@@ -167,14 +168,22 @@ export function presentFamilies(
     .sort((a, b) => b.count - a.count);
 }
 
-const readListingCounts = cache(async () => {
-  const counts = await Promise.all(
-    LISTING_KINDS.map(async (listing) =>
-      getPrisma().product.count({
-        where: await getScopeWhere(listingScope(listing)),
-      }),
+// Four catalogue-wide counts used by many pages: shared across requests.
+const cachedListingCounts = sharedCache(
+  () =>
+    Promise.all(
+      LISTING_KINDS.map(async (listing) =>
+        getPrisma().product.count({
+          where: await getScopeWhere(listingScope(listing)),
+        }),
+      ),
     ),
-  );
+  ['listing-counts'],
+  300,
+);
+
+const readListingCounts = cache(async () => {
+  const counts = await cachedListingCounts();
   return new Map(
     LISTING_KINDS.map((listing, index) => [listing, counts[index] ?? 0]),
   );

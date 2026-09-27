@@ -26,15 +26,31 @@ export function productLanguages(product: Pick<ProductDetail, 'variants'>) {
 }
 
 /** Title and description from real facts; seoTitle / seoDescription win. */
+/**
+ * Price announced in the description: the cheapest variant that can be bought
+ * (in stock or open preorder), so « dès X € » is never a sold-out price.
+ */
+function purchasablePrice(product: ProductDetail) {
+  const sellable = product.variants.filter(
+    (variant) => variant.availability !== 'OUT_OF_STOCK',
+  );
+  if (!sellable.length)
+    return { price: product.price, priceFrom: product.priceFrom };
+  const prices = sellable.map((variant) => Number(variant.price));
+  const cheapest = sellable[prices.indexOf(Math.min(...prices))]!;
+  return { price: cheapest.price, priceFrom: new Set(prices).size > 1 };
+}
+
 export function productSeoText(product: ProductDetail): MetadataText {
+  const { price, priceFrom } = purchasablePrice(product);
   return productMetadataText({
     name: product.name,
     categoryName: product.categoryInfo.name,
     setName: product.tcgSet?.name,
     gameName: product.game?.name,
     languages: productLanguages(product),
-    price: product.price,
-    priceFrom: product.priceFrom,
+    price,
+    priceFrom,
     availability: product.availability,
     preorder: product.preorder,
     releaseDate: toDate(product.releaseDate),

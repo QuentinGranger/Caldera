@@ -376,13 +376,15 @@ test('metadata produit : prix « dès », disponibilité réelle et surcharges',
   const text = productSeoText(detail());
   assert.ok(!text.title.includes('Caldera'));
   assert.ok(text.title.length <= 60);
-  assert.match(text.description, /dès 54,90\s€/u);
+  // The cheaper EN variant is sold out: its price is never announced.
+  assert.match(text.description, /à 59,90\s€/u);
+  assert.doesNotMatch(text.description, /54,90/u);
   assert.match(text.description, /En stock\./);
   assert.match(text.description, /Langues : français et anglais\./);
   const preorder = productSeoText(
     detail({ availability: 'PREORDER', preorder: true, priceFrom: false }),
   );
-  assert.match(preorder.description, /à 54,90\s€/u);
+  assert.match(preorder.description, /à 59,90\s€/u);
   assert.match(
     preorder.description,
     /En précommande, sortie le 14 novembre 2026\./,

@@ -29,6 +29,7 @@ export const cartVariantSelect = {
       preorder: true,
       category: { select: { isActive: true } },
       tcgSet: { select: { isActive: true } },
+      game: { select: { isActive: true } },
       images: {
         take: 1,
         orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { id: 'asc' }],

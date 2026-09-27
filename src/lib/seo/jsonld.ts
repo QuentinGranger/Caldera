@@ -392,6 +392,8 @@ const BUSINESS_DAYS = [
 function shippingDetails(
   method: ShippingMethodInput,
   offerPrice: string,
+  // A preorder ships from its release date: no delivery time is promised.
+  withDeliveryTime = true,
 ): JsonLdValue | undefined {
   const countries = [...new Set(method.countries)].filter((code) =>
     /^[A-Z]{2}$/.test(code),
@@ -421,7 +423,7 @@ function shippingDetails(
       '@type': 'DefinedRegion',
       addressCountry: code,
     })),
-    ...(hasTransit
+    ...(hasTransit && withDeliveryTime
       ? {
           deliveryTime: {
             '@type': 'ShippingDeliveryTime',
@@ -494,7 +496,13 @@ export function productNode(input: ProductJsonLdInput): JsonLdNode | null {
   const returnPolicy = merchantReturnPolicyNode();
   const offers = variants.map((variant) => {
     const shipping = (input.shippingMethods ?? [])
-      .map((method) => shippingDetails(method, variant.price))
+      .map((method) =>
+        shippingDetails(
+          method,
+          variant.price,
+          variant.availability !== 'PREORDER',
+        ),
+      )
       .filter((detail): detail is JsonLdValue => detail !== undefined);
     return node({
       '@type': 'Offer',

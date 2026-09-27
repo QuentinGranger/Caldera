@@ -11,7 +11,11 @@ export function getAvailability(
 ): Availability {
   const active = variants.filter((variant) => variant.isActive);
   if (!active.length) return 'OUT_OF_STOCK';
-  if (preorder) return 'PREORDER';
+  // A preorder whose quota is used up cannot be ordered: it is sold out.
+  if (preorder)
+    return active.some((variant) => availableQuantity(variant) > 0)
+      ? 'PREORDER'
+      : 'OUT_OF_STOCK';
   if (
     active.some(
       (variant) => availableQuantity(variant) > variant.lowStockThreshold,

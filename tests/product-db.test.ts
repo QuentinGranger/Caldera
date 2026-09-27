@@ -60,7 +60,14 @@ test('précommande et related products cohérents, disponibles d’abord, sans d
     preorder.variants.find((v) => v.language === 'EN')?.maxQuantity,
     3,
   );
-  assert.ok(preorder.variants.every((v) => v.availability === 'PREORDER'));
+  // A preorder variant with no quota left cannot be ordered: sold out.
+  assert.ok(
+    preorder.variants.every(
+      (v) =>
+        v.availability === (v.maxQuantity > 0 ? 'PREORDER' : 'OUT_OF_STOCK'),
+    ),
+  );
+  assert.ok(preorder.variants.some((v) => v.availability === 'PREORDER'));
   const product = await getProductBySlug('dev-display-aurores-jp');
   assert.ok(product);
   const related = await getRelatedProducts(product);
@@ -211,13 +218,21 @@ test('SEO : offres réelles par variante, noindex sans variante et échappement 
   const preorderData = JSON.parse(
     JSON.stringify(productStructuredData(preorder)),
   );
+  type PreorderOffer = { availability: string; availabilityStarts?: string };
+  const offers = preorderData.offers as PreorderOffer[];
   assert.ok(
-    preorderData.offers.every(
-      (offer: { availability: string; availabilityStarts: string }) =>
-        offer.availability === 'https://schema.org/PreOrder' &&
-        offer.availabilityStarts === preorder.releaseDate?.slice(0, 10),
+    offers.some(
+      (offer) => offer.availability === 'https://schema.org/PreOrder',
     ),
   );
+  // PreOrder offers carry the release date; an exhausted preorder is OutOfStock.
+  for (const offer of offers)
+    assert.ok(
+      offer.availability === 'https://schema.org/PreOrder'
+        ? offer.availabilityStarts === preorder.releaseDate?.slice(0, 10)
+        : offer.availability === 'https://schema.org/OutOfStock' &&
+            offer.availabilityStarts === undefined,
+    );
   const serialized = serializeJsonLd(
     graph(
       organizationNode(),
