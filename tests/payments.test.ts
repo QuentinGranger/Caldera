@@ -70,3 +70,20 @@ test('maintenance : CHECKOUT_PAUSED bloque toute nouvelle commande ou tentative'
     else process.env.CHECKOUT_PAUSED = saved;
   }
 });
+
+test('préouverture : la production reste fermée sans activation explicite', () => {
+  const env = process.env as Record<string, string | undefined>;
+  const saved = { node: env.NODE_ENV, open: env.STORE_OPEN };
+  try {
+    env.NODE_ENV = 'production';
+    delete env.STORE_OPEN;
+    assert.throws(assertPaymentConfiguration, /boutique est en préparation/);
+    env.STORE_OPEN = '0';
+    assert.throws(assertPaymentConfiguration, /boutique est en préparation/);
+  } finally {
+    if (saved.node === undefined) delete env.NODE_ENV;
+    else env.NODE_ENV = saved.node;
+    if (saved.open === undefined) delete env.STORE_OPEN;
+    else env.STORE_OPEN = saved.open;
+  }
+});

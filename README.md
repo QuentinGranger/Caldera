@@ -447,6 +447,17 @@ Cette commande traite jusqu’à 100 commandes échues, les plus anciennement in
 
 ### Tests du paiement
 
+La production est actuellement en **préouverture** : l’absence de produits est volontaire et `STORE_OPEN` reste différent de `1`. Même si un produit était ajouté par erreur, toute création ou reprise de paiement afficherait « La boutique est en préparation » avant de créer une commande ou un PaymentIntent. Aucun produit fictif ni paiement réel n’est nécessaire pendant cette période.
+
+La recette commerciale devient une condition de passage à l’ouverture, une fois le vrai catalogue, le stock et les tarifs de livraison configurés :
+
+1. en sandbox Stripe, vérifier succès, refus et défi 3DS interactif avec les moyens de test officiels ;
+2. en production, définir temporairement `STORE_OPEN=1` et effectuer un achat réel de faible montant sur un vrai produit ;
+3. contrôler le webhook signé, la commande payée, le décrément du stock et la réception de l’email ;
+4. rembourser immédiatement ce paiement depuis Stripe, puis refermer avec `STORE_OPEN=0` si l’ouverture publique n’est pas immédiate.
+
+Le jour de l’ouverture, `STORE_OPEN=1` doit être défini explicitement dans Vercel Production puis faire l’objet d’un nouveau déploiement. Ce verrou n’interrompt pas les webhooks des paiements déjà engagés.
+
 ```bash
 npm run test:payments
 npm run test:payments:db

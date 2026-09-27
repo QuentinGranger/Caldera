@@ -19,6 +19,12 @@ export function getStripe() {
   }));
 }
 export function assertPaymentConfiguration() {
+  // Production is deliberately closed until the merchant completes the
+  // pre-launch checklist. Opening requires an explicit environment change.
+  if (process.env.NODE_ENV === 'production' && process.env.STORE_OPEN !== '1')
+    throw new OrderError(
+      'La boutique est en préparation. Les commandes ouvriront prochainement.',
+    );
   // Set while the database is copied to another region (docs/migration-europe.md):
   // no new order nor payment attempt is written between the copy and the switch.
   if (process.env.CHECKOUT_PAUSED === '1')
