@@ -13,10 +13,15 @@ export function HeaderWishlistLink({ className = '' }: { className?: string }) {
   return (
     <IconLink
       href="/favoris"
-      className={`${className} ${count ? styles.active : ''}`}
+      className={`${className} ${styles.link} ${count ? styles.active : ''}`}
       label={label}
     >
       <Heart aria-hidden="true" />
+      {count > 0 && (
+        <span className={styles.count} aria-hidden="true">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
     </IconLink>
   );
 }

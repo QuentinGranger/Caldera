@@ -1,0 +1,46 @@
+@use '../../../styles/abstracts/variables' as v;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  margin-top: 1rem;
+  padding: 0.65rem 0.9rem;
+  background: transparent;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-small;
+  color: v.$color-text;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background v.$transition-fast,
+    border-color v.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: v.$color-surface;
+    border-color: v.$color-green-secondary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid v.$color-green;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
+}
+
+.active {
+  background: rgb(244 217 133 / 44%);
+  border-color: v.$color-gold;
+  color: v.$color-green-dark;
+
+  svg {
+    fill: currentColor;
+  }
+}

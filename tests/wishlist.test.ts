@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  addFavoriteToSession,
   isProductId,
   MAX_GUEST_FAVORITES,
   parseFavoriteSession,
@@ -28,4 +29,12 @@ test('favoris invités : le cookie est borné à cinquante produits', () => {
   const serialized = serializeFavoriteSession(ids);
   assert.equal(parseFavoriteSession(serialized).length, MAX_GUEST_FAVORITES);
   assert.ok(serialized.length < 4096);
+  const full = addFavoriteToSession(ids.slice(0, MAX_GUEST_FAVORITES), id(99));
+  assert.equal(full.full, true);
+  assert.equal(full.ids.includes(id(99)), false);
+
+  const reordered = addFavoriteToSession(full.ids, id(2));
+  assert.equal(reordered.full, false);
+  assert.equal(reordered.ids[0], id(2));
+  assert.equal(reordered.ids.length, MAX_GUEST_FAVORITES);
 });

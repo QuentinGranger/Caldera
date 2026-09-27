@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
   useTransition,
@@ -11,7 +12,7 @@ import {
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  mergeGuestFavoritesAction,
+  refreshWishlistAction,
   setWishlistProductAction,
 } from '@/lib/wishlist/actions';
 import type { WishlistSnapshot } from '@/lib/wishlist/data';
@@ -32,6 +33,10 @@ export function useWishlist() {
   return context;
 }
 
+function sameIds(left: ReadonlySet<string>, right: readonly string[]) {
+  return left.size === right.length && right.every((id) => left.has(id));
+}
+
 export function WishlistProvider({
   snapshot,
   children,
@@ -44,19 +49,20 @@ export function WishlistProvider({
   const [productIds, setProductIds] = useState(
     () => new Set(snapshot.productIds),
   );
+  const [pendingIds, setPendingIds] = useState(() => new Set<string>());
   const [serverSnapshot, setServerSnapshot] = useState(snapshot);
   if (serverSnapshot !== snapshot) {
     setServerSnapshot(snapshot);
-    setProductIds(new Set(snapshot.productIds));
+    if (!pendingIds.size) setProductIds(new Set(snapshot.productIds));
   }
-  const [pendingIds, setPendingIds] = useState(() => new Set<string>());
   const [message, setMessage] = useState('');
   const [, startTransition] = useTransition();
   const idsRef = useRef(productIds);
   const pendingRef = useRef(pendingIds);
+  const refreshBusy = useRef(false);
   const mergeStarted = useRef(false);
-  idsRef.current = productIds;
-  pendingRef.current = pendingIds;
+  const previousPath = useRef(pathname);
+  const latestMutation = useRef(0);
 
   function updateProducts(ids: readonly string[]) {
     const next = new Set(ids);
@@ -70,28 +76,62 @@ export function WishlistProvider({
   }
 
   useEffect(() => {
-    if (!snapshot.authenticated || !snapshot.hasGuestFavorites) {
-      mergeStarted.current = false;
-      return;
-    }
-    if (mergeStarted.current) return;
-    mergeStarted.current = true;
+    idsRef.current = productIds;
+  }, [productIds]);
+
+  const refresh = useEffectEvent((announceMerge = false) => {
+    if (refreshBusy.current || pendingRef.current.size) return;
+    refreshBusy.current = true;
     startTransition(async () => {
       try {
-        const merged = await mergeGuestFavoritesAction();
-        updateProducts(merged.productIds);
-        setMessage(merged.message);
-        if (merged.success && pathname === '/favoris') router.refresh();
+        const result = await refreshWishlistAction();
+        const changed =
+          !result.readError && !sameIds(idsRef.current, result.productIds);
+        if (!result.readError) updateProducts(result.productIds);
+        if (announceMerge && result.message) setMessage(result.message);
+        if (changed && pathname === '/favoris') router.refresh();
       } catch {
-        setMessage('Impossible de synchroniser vos favoris pour le moment.');
+        if (announceMerge)
+          setMessage('Impossible de synchroniser vos favoris pour le moment.');
+      } finally {
+        refreshBusy.current = false;
       }
     });
-  }, [pathname, router, snapshot.authenticated, snapshot.hasGuestFavorites]);
+  });
+
+  // Shared layouts persist across navigation. Re-read the cookie/database on a
+  // new page, and merge guest favorites after a login redirect.
+  useEffect(() => {
+    const changedPath = previousPath.current !== pathname;
+    previousPath.current = pathname;
+    const needsMerge =
+      snapshot.authenticated &&
+      snapshot.hasGuestFavorites &&
+      !mergeStarted.current;
+    if (!snapshot.hasGuestFavorites) mergeStarted.current = false;
+    if (needsMerge) mergeStarted.current = true;
+    if (changedPath || needsMerge) refresh(needsMerge);
+  }, [pathname, snapshot.authenticated, snapshot.hasGuestFavorites]);
+
+  // Cookies are shared between tabs. Returning to this tab picks up a favorite,
+  // login or logout performed elsewhere.
+  useEffect(() => {
+    const onFocus = () => refresh(false);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
+  useEffect(() => {
+    if (!message) return;
+    const timeout = window.setTimeout(() => setMessage(''), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
 
   function toggle(productId: string) {
     if (pendingRef.current.has(productId)) return;
-    const previous = [...idsRef.current];
-    const nextFavorite = !idsRef.current.has(productId);
+    const request = ++latestMutation.current;
+    const wasFavorite = idsRef.current.has(productId);
+    const nextFavorite = !wasFavorite;
     const optimistic = new Set(idsRef.current);
     if (nextFavorite) optimistic.add(productId);
     else optimistic.delete(productId);
@@ -102,12 +142,25 @@ export function WishlistProvider({
     startTransition(async () => {
       try {
         const result = await setWishlistProductAction(productId, nextFavorite);
-        updateProducts(result.productIds);
-        setMessage(result.message);
-        if (result.success && pathname === '/favoris') router.refresh();
+        if (request === latestMutation.current) {
+          if (!result.readError) updateProducts(result.productIds);
+          else if (!result.success) {
+            const rollback = new Set(idsRef.current);
+            if (wasFavorite) rollback.add(productId);
+            else rollback.delete(productId);
+            updateProducts([...rollback]);
+          }
+          setMessage(result.message);
+          if (result.success && pathname === '/favoris') router.refresh();
+        }
       } catch {
-        updateProducts(previous);
-        setMessage('Impossible de modifier vos favoris pour le moment.');
+        if (request === latestMutation.current) {
+          const rollback = new Set(idsRef.current);
+          if (wasFavorite) rollback.add(productId);
+          else rollback.delete(productId);
+          updateProducts([...rollback]);
+          setMessage('Impossible de modifier vos favoris pour le moment.');
+        }
       } finally {
         const next = new Set(pendingRef.current);
         next.delete(productId);

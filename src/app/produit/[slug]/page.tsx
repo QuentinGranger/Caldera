@@ -7,6 +7,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ProductGallery } from '@/components/product/ProductGallery/ProductGallery';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel/ProductPurchasePanel';
+import { ProductWishlistButton } from '@/components/product/ProductWishlistButton/ProductWishlistButton';
 import { ProductDetails } from '@/components/product/ProductDetails/ProductDetails';
 import { ProductSetSection } from '@/components/product/ProductSetSection/ProductSetSection';
 import { ProductExplore } from '@/components/product/ProductExplore/ProductExplore';
@@ -74,6 +75,10 @@ export default async function ProductPage({ params }: Props) {
             {product.shortDescription && (
               <p className={styles.summary}>{product.shortDescription}</p>
             )}
+            <ProductWishlistButton
+              productId={product.id}
+              productName={product.name}
+            />
             <ProductPurchasePanel
               key={product.id}
               productId={product.id}

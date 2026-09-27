@@ -1,9 +1,30 @@
 @use '../../styles/abstracts/variables' as v;
 
+.link {
+  position: relative;
+}
+
 .active {
   color: v.$color-gold-light;
 
   svg {
     fill: currentColor;
   }
+}
+
+.count {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding-inline: 3px;
+  background: v.$color-gold;
+  border-radius: 9px;
+  color: v.$color-green-dark;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
 }

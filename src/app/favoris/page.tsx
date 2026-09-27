@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function WishlistPage() {
   const snapshot = await getWishlistSnapshot();
-  const products = await getWishlistProducts(snapshot);
+  const { products, readError } = await getWishlistProducts(snapshot);
 
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
@@ -23,12 +23,29 @@ export default async function WishlistPage() {
           <p className={styles.eyebrow}>MA SÉLECTION</p>
           <h1>Mes favoris</h1>
           <p>
-            {snapshot.authenticated
-              ? 'Votre sélection est enregistrée dans votre compte.'
-              : 'Votre sélection est conservée pendant cette session. Connectez-vous pour la retrouver dans votre compte.'}
+            {snapshot.authenticated ? (
+              'Votre sélection est enregistrée dans votre compte.'
+            ) : (
+              <>
+                Votre sélection est conservée pendant cette session.{' '}
+                <Link href="/compte/connexion?retour=%2Ffavoris">
+                  Connectez-vous
+                </Link>{' '}
+                pour la retrouver dans votre compte.
+              </>
+            )}
           </p>
         </header>
-        {products.length ? (
+        {readError ? (
+          <section className={styles.empty}>
+            <Heart size={34} strokeWidth={1.4} aria-hidden="true" />
+            <h2>Vos favoris sont momentanément indisponibles</h2>
+            <p>
+              Réessayez dans quelques instants : votre sélection est conservée.
+            </p>
+            <Link href="/favoris">Réessayer</Link>
+          </section>
+        ) : products.length ? (
           <div className={styles.grid}>
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />

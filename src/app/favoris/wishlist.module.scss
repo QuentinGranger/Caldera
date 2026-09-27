@@ -19,6 +19,13 @@
     color: v.$color-text-muted;
     line-height: 1.7;
   }
+
+  a {
+    color: v.$color-text;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .eyebrow {

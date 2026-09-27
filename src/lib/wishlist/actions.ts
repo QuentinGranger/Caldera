@@ -10,17 +10,22 @@ import {
   getGuestFavoriteIds,
   setGuestFavoriteIds,
 } from './session';
-import { isProductId, MAX_GUEST_FAVORITES } from './sessionValue';
+import {
+  addFavoriteToSession,
+  isProductId,
+  MAX_GUEST_FAVORITES,
+} from './sessionValue';
 
 export type WishlistActionResult = {
   success: boolean;
   productIds: string[];
+  readError: boolean;
   message: string;
 };
 
 async function mergeGuestFavorites(customerId: string) {
   const guestIds = await getGuestFavoriteIds();
-  if (!guestIds.length) return;
+  if (!guestIds.length) return false;
   const visible = await getPrisma().product.findMany({
     where: { AND: [visibleProductWhere, { id: { in: guestIds } }] },
     select: { id: true },
@@ -31,26 +36,31 @@ async function mergeGuestFavorites(customerId: string) {
       skipDuplicates: true,
     });
   await clearGuestFavorites();
+  return true;
 }
 
 async function result(success: boolean, message: string) {
   const snapshot = await getWishlistSnapshot();
-  return { success, message, productIds: snapshot.productIds };
+  return {
+    success,
+    message,
+    productIds: snapshot.productIds,
+    readError: snapshot.readError,
+  };
 }
 
-export async function mergeGuestFavoritesAction(): Promise<WishlistActionResult> {
-  const customer = await currentCustomer();
-  if (!customer)
-    return result(false, 'Connectez-vous pour synchroniser vos favoris.');
+/** Silent re-read for navigation/focus; it also handles a login in another tab. */
+export async function refreshWishlistAction(): Promise<WishlistActionResult> {
   try {
-    await mergeGuestFavorites(customer.id);
-    revalidatePath('/favoris');
-    return result(true, 'Vos favoris ont été synchronisés avec votre compte.');
-  } catch {
+    const customer = await currentCustomer();
+    const merged = customer ? await mergeGuestFavorites(customer.id) : false;
+    if (merged) revalidatePath('/favoris');
     return result(
-      false,
-      'Impossible de synchroniser vos favoris pour le moment.',
+      true,
+      merged ? 'Vos favoris ont été synchronisés avec votre compte.' : '',
     );
+  } catch {
+    return result(false, 'Impossible d’actualiser vos favoris pour le moment.');
   }
 }
 
@@ -93,12 +103,13 @@ export async function setWishlistProductAction(
           select: { id: true },
         });
         if (!product) return result(false, 'Ce produit n’est plus disponible.');
-        await setGuestFavoriteIds(
-          [productId, ...ids.filter((id) => id !== productId)].slice(
-            0,
-            MAX_GUEST_FAVORITES,
-          ),
-        );
+        const addition = addFavoriteToSession(ids, productId);
+        if (addition.full)
+          return result(
+            false,
+            `Vous pouvez conserver jusqu’à ${MAX_GUEST_FAVORITES} favoris pendant une session. Retirez-en un avant d’en ajouter un autre.`,
+          );
+        await setGuestFavoriteIds(addition.ids);
       } else {
         await setGuestFavoriteIds(ids.filter((id) => id !== productId));
       }

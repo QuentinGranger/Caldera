@@ -22,3 +22,17 @@ export function parseFavoriteSession(value: string | undefined): string[] {
 export function serializeFavoriteSession(ids: readonly string[]): string {
   return parseFavoriteSession(ids.join(',')).join(',');
 }
+
+export function addFavoriteToSession(
+  ids: readonly string[],
+  productId: string,
+): { ids: string[]; full: boolean } {
+  const current = parseFavoriteSession(ids.join(','));
+  const alreadyPresent = current.includes(productId);
+  if (!alreadyPresent && current.length >= MAX_GUEST_FAVORITES)
+    return { ids: current, full: true };
+  return {
+    ids: [productId, ...current.filter((id) => id !== productId)],
+    full: false,
+  };
+}

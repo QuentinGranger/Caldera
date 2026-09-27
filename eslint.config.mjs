@@ -7,5 +7,11 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
   prettier,
-  globalIgnores(['.next/**', 'src/generated/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    '.claude/worktrees/**',
+    '.codex/worktrees/**',
+    'src/generated/**',
+    'next-env.d.ts',
+  ]),
 ]);
