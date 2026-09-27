@@ -16,6 +16,7 @@ import { getDeliveryPage } from '@/components/editorial/delivery';
 import { EXTENSIONS_PATH } from '@/components/landing/landingData';
 import {
   getExtensionsIndex,
+  getCalendarYears,
   getReleaseCalendar,
 } from '@/components/landing/releaseData';
 import {
@@ -109,12 +110,14 @@ const fromEntry = ({ path, lastModified }: SitemapEntry): SitemapUrl => ({
  * the pages of sets without game (/extensions/{slug}) as their pages decide.
  */
 export async function getLandingUrls(): Promise<SitemapUrl[]> {
-  const [landings, categoryHubs, extensions, calendar] = await Promise.all([
-    listIndexableLandings(),
-    listIndexableCategoryHubs(),
-    getExtensionsIndex(),
-    getReleaseCalendar(),
-  ]);
+  const [landings, categoryHubs, extensions, calendar, years] =
+    await Promise.all([
+      listIndexableLandings(),
+      listIndexableCategoryHubs(),
+      getExtensionsIndex(),
+      getReleaseCalendar(),
+      getCalendarYears(),
+    ]);
   // Game sets link to their landing, already listed; only an indexable set
   // page without game has an href under /extensions/.
   const setPages = extensions.groups.flatMap((group) =>
@@ -129,6 +132,9 @@ export async function getLandingUrls(): Promise<SitemapUrl[]> {
     ...categoryHubs.map(fromEntry),
     ...decided(extensions.decision),
     ...decided(calendar.decision),
+    ...years
+      .filter((page) => page.indexable)
+      .map((page) => ({ loc: absoluteUrl(page.path) })),
     ...setPages,
   ];
 }

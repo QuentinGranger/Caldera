@@ -47,6 +47,7 @@ const entry = (
     title: slug,
     description: slug,
     updated: new Date('2026-09-01'),
+    published: new Date('2026-09-01'),
     games: [],
     categories: [],
     sets: [],

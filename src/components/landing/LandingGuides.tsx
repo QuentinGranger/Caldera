@@ -8,6 +8,8 @@ const KIND_LABELS: Record<ContentKind, string> = {
   comparatif: 'Comparatif',
   dossier: 'Dossier',
   glossaire: 'Glossaire',
+  question: 'Question',
+  actualite: 'Actualité',
 };
 
 /** Guides and glossary terms of the page scope. */

@@ -100,7 +100,7 @@ test('SEO : www redirigé en 308 vers l’apex, chemin et query conservés', asy
   const { proxy } = await import('../src/proxy');
   const request = (url: string, host = new URL(url).host) =>
     new NextRequest(url, { headers: { host } });
-  const redirected = proxy(
+  const redirected = await proxy(
     request('https://www.lesterresdecaldera.fr/pokemon/etb?page=2&tri=1'),
   );
   assert.equal(redirected.status, 308);
@@ -109,22 +109,24 @@ test('SEO : www redirigé en 308 vers l’apex, chemin et query conservés', asy
     'https://lesterresdecaldera.fr/pokemon/etb?page=2&tri=1',
   );
   assert.equal(
-    proxy(request('https://www.lesterresdecaldera.fr/')).headers.get(
+    (await proxy(request('https://www.lesterresdecaldera.fr/'))).headers.get(
       'location',
     ),
     'https://lesterresdecaldera.fr/',
   );
   assert.equal(
-    proxy(
-      request(
-        'https://www.lesterresdecaldera.fr/robots.txt',
-        'WWW.LesTerresDeCaldera.fr:443',
-      ),
+    (
+      await proxy(
+        request(
+          'https://www.lesterresdecaldera.fr/robots.txt',
+          'WWW.LesTerresDeCaldera.fr:443',
+        ),
+      )
     ).headers.get('location'),
     'https://lesterresdecaldera.fr/robots.txt',
   );
   // A path starting with // never changes the redirect host.
-  const tricky = proxy(
+  const tricky = await proxy(
     request('https://www.lesterresdecaldera.fr//exemple.com/x'),
   );
   assert.equal(
@@ -135,11 +137,43 @@ test('SEO : www redirigé en 308 vers l’apex, chemin et query conservés', asy
     'https://lesterresdecaldera.fr/pokemon',
     'https://les-terres-de-caldera.vercel.app/pokemon',
   ]) {
-    const response = proxy(request(url));
+    const response = await proxy(request(url));
     assert.equal(response.headers.get('location'), null, url);
     assert.match(
       response.headers.get('content-security-policy') ?? '',
       /default-src 'self'/,
     );
+  }
+});
+test('410 : produit retiré définitivement, liste lue sur l’origine configurée', async () => {
+  const { NextRequest } = await import('next/server');
+  const { proxy } = await import('../src/proxy');
+  const saved = { fetch: globalThis.fetch, site: process.env.SITE_URL };
+  const called: string[] = [];
+  process.env.SITE_URL = 'https://lesterresdecaldera.fr';
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    called.push(String(input));
+    return Response.json({ products: ['ancien-coffret'] });
+  }) as typeof fetch;
+  try {
+    const forged = new NextRequest(
+      'https://lesterresdecaldera.fr/produit/ancien-coffret',
+      { headers: { host: 'attaquant.example' } },
+    );
+    const gone = await proxy(forged);
+    assert.equal(gone.status, 410);
+    assert.equal(gone.headers.get('x-robots-tag'), 'noindex');
+    assert.match(await gone.text(), /n’est plus proposé/);
+    assert.deepEqual(called, ['https://lesterresdecaldera.fr/api/seo/gone']);
+    const live = await proxy(
+      new NextRequest('https://lesterresdecaldera.fr/produit/etb-actuel'),
+    );
+    assert.notEqual(live.status, 410);
+    // The list is cached: no second read within five minutes.
+    assert.equal(called.length, 1);
+  } finally {
+    globalThis.fetch = saved.fetch;
+    if (saved.site === undefined) delete process.env.SITE_URL;
+    else process.env.SITE_URL = saved.site;
   }
 });

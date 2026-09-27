@@ -22,7 +22,8 @@ export interface ContentLibrary {
 }
 
 const titleOrder = new Intl.Collator('fr', { sensitivity: 'base' });
-const INTERNAL_CONTENT_LINK = /^\/(guides|glossaire)\/([^/?#]+)/;
+const INTERNAL_CONTENT_LINK =
+  /^\/(guides|glossaire|questions|actualites)\/([^/?#]+)/;
 
 // Entries are shared by every request: freezing keeps a caller from
 // corrupting the cache.
@@ -86,17 +87,24 @@ export function buildContentLibrary(
 // ---------------------------------------------------------------------------
 // Selections
 
-const isGuide = (entry: ContentEntry) =>
-  contentSection(entry.kind) === 'guides';
+// Reading value of a section next to products: guides first, news last.
+const SECTION_WEIGHT: Readonly<Record<ContentSection, number>> = {
+  guides: 3,
+  questions: 2,
+  glossaire: 1,
+  actualites: 0,
+};
+const weight = (entry: ContentEntry) =>
+  SECTION_WEIGHT[contentSection(entry.kind)];
 
-/** Guides before glossary terms, then relevance, freshness and title. */
+/** Guides, questions, terms then news; then relevance, freshness and title. */
 function rank(
   entries: readonly { entry: ContentEntry; score: number }[],
 ): ContentEntry[] {
   return [...entries]
     .sort(
       (a, b) =>
-        Number(isGuide(b.entry)) - Number(isGuide(a.entry)) ||
+        weight(b.entry) - weight(a.entry) ||
         b.score - a.score ||
         b.entry.updated.getTime() - a.entry.updated.getTime() ||
         titleOrder.compare(a.entry.title, b.entry.title),

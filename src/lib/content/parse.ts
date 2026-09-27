@@ -8,16 +8,25 @@ import type { ContentKind, ContentPage, ContentSection } from './types';
 export const CONTENT_SECTIONS: readonly ContentSection[] = [
   'guides',
   'glossaire',
+  'questions',
+  'actualites',
 ];
 const SECTION_KINDS: Readonly<Record<ContentSection, readonly ContentKind[]>> =
   {
     guides: ['guide', 'comparatif', 'dossier'],
     glossaire: ['glossaire'],
+    questions: ['question'],
+    actualites: ['actualite'],
   };
 
 export function contentSection(kind: ContentKind): ContentSection {
-  return kind === 'glossaire' ? 'glossaire' : 'guides';
+  if (kind === 'glossaire') return 'glossaire';
+  if (kind === 'question') return 'questions';
+  if (kind === 'actualite') return 'actualites';
+  return 'guides';
 }
+/** Sections whose first paragraph is a short definition or answer. */
+const LEAD_SECTIONS: readonly ContentSection[] = ['glossaire', 'questions'];
 export function contentHref(section: ContentSection, slug: string): string {
   return `/${section}/${slug}`;
 }
@@ -32,6 +41,7 @@ const FIELDS = new Set([
   'description',
   'kind',
   'updated',
+  'published',
   'games',
   'categories',
   'sets',
@@ -181,10 +191,29 @@ export function parseContentFile({
     issues.push(
       `liens ou images refusés : ${document.rejectedTargets.join(', ')}`,
     );
-  if (section === 'glossaire' && !document.lead)
-    issues.push('une définition commence par un paragraphe');
+  if (LEAD_SECTIONS.includes(section) && !document.lead)
+    issues.push(
+      section === 'glossaire'
+        ? 'une définition commence par un paragraphe'
+        : 'une question commence par un paragraphe de réponse directe',
+    );
+  const published =
+    data.published === undefined ? updated : dateValue(data.published);
+  if (section === 'actualites' && data.published === undefined)
+    issues.push('« published » (date de publication) est obligatoire');
+  else if (!published)
+    issues.push('« published » doit être une date AAAA-MM-JJ');
+  else if (updated && published > updated)
+    issues.push('« published » est postérieure à « updated »');
 
-  if (issues.length || !title || !description || !kind || !updated)
+  if (
+    issues.length ||
+    !title ||
+    !description ||
+    !kind ||
+    !updated ||
+    !published
+  )
     throw new ContentError(`${file} : ${issues.join(' ; ')}`);
   return {
     page: {
@@ -193,13 +222,14 @@ export function parseContentFile({
       title,
       description,
       updated,
+      published,
       games,
       categories,
       sets,
       related,
       faq,
       href: contentHref(section, slug),
-      ...(section === 'glossaire' && document.lead
+      ...(LEAD_SECTIONS.includes(section) && document.lead
         ? { definition: document.lead }
         : {}),
       wordCount: document.wordCount,

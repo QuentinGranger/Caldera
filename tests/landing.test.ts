@@ -26,6 +26,9 @@ import {
   type CountedLink,
   type DatedLink,
   type LanguageLink,
+  calendarYearPath as yearPath,
+  parseCalendarSlug,
+  yearCalendarText,
 } from '../src/components/landing/landingText';
 import { landingKind, landingPath } from '../src/lib/seo/facets';
 import { breadcrumbListNode, breadcrumbTrail } from '../src/lib/seo/jsonld';
@@ -778,4 +781,57 @@ test('redirections : la requête suit le chemin canonique', () => {
     '/pokemon/boosters/francais?page=2&utm_source=x&language=FR&language=EN',
   );
   assert.equal(withSearchParams('/pokemon', {}), '/pokemon');
+});
+
+test('calendrier annuel : URL, titres et faits datés', () => {
+  assert.deepEqual(parseCalendarSlug('2026'), { year: 2026, gameSlug: null });
+  assert.deepEqual(parseCalendarSlug('pokemon-2026'), {
+    year: 2026,
+    gameSlug: 'pokemon',
+  });
+  assert.deepEqual(parseCalendarSlug('one-piece-2027'), {
+    year: 2027,
+    gameSlug: 'one-piece',
+  });
+  for (const invalid of [
+    '26',
+    '2026-pokemon',
+    'pokemon',
+    '1800',
+    'Pokemon-2026',
+  ])
+    assert.equal(parseCalendarSlug(invalid), null, invalid);
+  assert.equal(yearPath(2026), '/calendrier-des-sorties/2026');
+  assert.equal(
+    yearPath(2026, 'pokemon'),
+    '/calendrier-des-sorties/pokemon-2026',
+  );
+  const text = yearCalendarText({
+    year: 2026,
+    gameName: 'Pokémon',
+    gameNames: ['Pokémon'],
+    upcoming: [
+      { name: 'Flammes', releaseDate: new Date(Date.UTC(2026, 10, 14)) },
+    ],
+    released: [{}, {}],
+  });
+  assert.equal(text.title, 'Sorties Pokémon 2026 : calendrier des extensions');
+  assert.match(
+    text.description,
+    /^3 extensions Pokémon en 2026 : 2 déjà sorties, 1 à venir\./,
+  );
+  assert.match(
+    text.description,
+    /Prochaine sortie : Flammes le 14 novembre 2026\./,
+  );
+  assert.ok(text.description.length <= 160);
+  const past = yearCalendarText({
+    year: 2025,
+    gameName: null,
+    gameNames: ['Pokémon', 'Lorcana'],
+    upcoming: [],
+    released: [{}],
+  });
+  assert.equal(past.title, 'Calendrier des sorties 2025 : Pokémon et Lorcana');
+  assert.equal(past.description, '1 extension en 2025, déjà sortie.');
 });

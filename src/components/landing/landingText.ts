@@ -11,7 +11,15 @@ import {
   landingPath,
   type FacetLanguage,
 } from '@/lib/seo/facets';
-import { formatDateFr, formatEuro, listFr } from '@/lib/seo/metadata';
+import {
+  DESCRIPTION_MAX,
+  TITLE_MAX,
+  formatDateFr,
+  formatEuro,
+  listFr,
+  truncateAtWord,
+  type MetadataText,
+} from '@/lib/seo/metadata';
 import type {
   CategoryRef,
   FaqEntry,
@@ -758,4 +766,89 @@ export function withSearchParams(
       query.append(key, entry);
   const text = query.toString();
   return text ? `${path}?${text}` : path;
+}
+
+// ---------------------------------------------------------------------------
+// Year calendars: /calendrier-des-sorties/2026, /calendrier-des-sorties/pokemon-2026
+
+/** A year page is indexable from this many dated sets. */
+export const CALENDAR_YEAR_MIN_SETS = 2;
+
+export function calendarYearPath(year: number, gameSlug?: string | null) {
+  return `/calendrier-des-sorties/${gameSlug ? `${gameSlug}-` : ''}${year}`;
+}
+
+/** « 2026 » or « pokemon-2026 »; null for anything else. */
+export function parseCalendarSlug(
+  slug: string,
+): { year: number; gameSlug: string | null } | null {
+  const match = /^(?:([a-z0-9]+(?:-[a-z0-9]+)*)-)?(\d{4})$/.exec(slug);
+  if (!match) return null;
+  const year = Number(match[2]);
+  if (year < 1990 || year > 2100) return null;
+  return { year, gameSlug: match[1] ?? null };
+}
+
+export function yearCalendarText(input: {
+  year: number;
+  gameName: string | null;
+  gameNames: readonly string[];
+  upcoming: readonly { name: string; releaseDate: Date }[];
+  released: readonly unknown[];
+}): MetadataText {
+  const { year, gameName, gameNames, upcoming, released } = input;
+  const title = gameName
+    ? [
+        `Sorties ${gameName} ${year} : calendrier des extensions`,
+        `Sorties ${gameName} ${year}`,
+      ].find((candidate) => candidate.length <= TITLE_MAX)!
+    : ([
+        `Calendrier des sorties ${year} : ${listFr(gameNames)}`,
+        `Calendrier des sorties JCC ${year}`,
+      ].find((candidate) => candidate.length <= TITLE_MAX) ??
+      `Sorties ${year}`);
+  const total = upcoming.length + released.length;
+  const next = upcoming[0];
+  const sentences = [
+    `${plural(total, 'extension', 'extensions')}${gameName ? ` ${gameName}` : ''} en ${year}${
+      released.length && upcoming.length
+        ? ` : ${plural(released.length, 'déjà sortie', 'déjà sorties')}, ${upcoming.length} à venir`
+        : total === 1
+          ? upcoming.length
+            ? ', à venir'
+            : ', déjà sortie'
+          : upcoming.length
+            ? ', toutes à venir'
+            : ', toutes déjà sorties'
+    }.`,
+    next
+      ? `Prochaine sortie : ${next.name} le ${formatDateFr(next.releaseDate)}.`
+      : null,
+  ].filter((sentence): sentence is string => Boolean(sentence));
+  return {
+    title,
+    description: truncateAtWord(sentences.join(' '), DESCRIPTION_MAX),
+  };
+}
+
+export function yearCalendarFacts(
+  upcoming: readonly { name: string; releaseDate: Date; gameName: string }[],
+  released: readonly unknown[],
+  year: number,
+): Fact[] {
+  const next = upcoming[0];
+  return [
+    [
+      `${plural(upcoming.length + released.length, 'extension datée', 'extensions datées')} en ${year}${
+        upcoming.length ? `, dont ${upcoming.length} à venir` : ''
+      }.`,
+    ],
+    ...(next
+      ? [
+          [
+            `Prochaine sortie : ${next.name} (${next.gameName}) le ${formatDateFr(next.releaseDate)}.`,
+          ],
+        ]
+      : []),
+  ];
 }

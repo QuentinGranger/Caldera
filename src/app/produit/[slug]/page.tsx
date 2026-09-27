@@ -24,7 +24,8 @@ async function resolve(params: Props['params']) {
   await connection();
   const route = await getProductPageRoute((await params).slug);
   if (route.type === 'redirect') permanentRedirect(route.path);
-  if (route.type === 'not-found') notFound();
+  // 'gone' answers 410 in src/proxy.ts; a stale proxy list still gets a 404.
+  if (route.type === 'not-found' || route.type === 'gone') notFound();
   return route;
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

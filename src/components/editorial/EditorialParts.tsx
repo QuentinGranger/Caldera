@@ -163,11 +163,14 @@ export function ContentCards({
   entries,
   showKind = true,
   showDate = true,
+  published = false,
   wide = false,
 }: {
   entries: readonly ContentEntry[];
   showKind?: boolean;
   showDate?: boolean;
+  /** News: the publication date instead of the update date. */
+  published?: boolean;
   wide?: boolean;
 }) {
   if (!entries.length) return null;
@@ -184,7 +187,11 @@ export function ContentCards({
             </h3>
             <p>{entry.description}</p>
             {showDate && (
-              <UpdatedOn date={entry.updated} className={styles.cardDate} />
+              <UpdatedOn
+                date={published ? entry.published : entry.updated}
+                prefix={published ? 'Publié le' : undefined}
+                className={styles.cardDate}
+              />
             )}
           </article>
         </li>

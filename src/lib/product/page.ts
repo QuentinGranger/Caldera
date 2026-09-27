@@ -29,6 +29,7 @@ import type { IndexDecision, SeoLink } from '@/lib/seo/types';
 import type { CatalogProduct } from '@/types/product';
 import {
   CATALOGUE_LEVEL,
+  CATALOGUE_PATH,
   archivedProductTarget,
   familyLineage,
   indexablePaths,
@@ -49,6 +50,8 @@ import { shippingOptionViews, type ShippingOptionView } from './services';
 export type ProductPageRoute =
   | { type: 'page'; product: ProductDetail; decision: IndexDecision }
   | { type: 'redirect'; path: string }
+  // Withdrawn for good, no meaningful parent: 410 from src/proxy.ts.
+  | { type: 'gone' }
   | { type: 'not-found' };
 
 type LoadIndex = () => Promise<LandingIndex>;
@@ -68,9 +71,21 @@ async function archivedTarget(
   );
 }
 
+/** 308 to a meaningful parent; the generic catalogue alone means gone. */
+async function archivedRoute(
+  product: ArchivedProductParents,
+  loadIndex: LoadIndex,
+): Promise<ProductPageRoute> {
+  const path = await archivedTarget(product, loadIndex);
+  return path === CATALOGUE_PATH
+    ? { type: 'gone' }
+    : { type: 'redirect', path };
+}
+
 /**
  * Published → page (noindex without an active variant); ARCHIVED → 308 to the
- * best indexable parent; unknown or DRAFT → former slug (SlugRedirect) or 404.
+ * best indexable parent, gone (410) without one; unknown or DRAFT → former
+ * slug (SlugRedirect) or 404.
  * `loadIndex` defaults to the cached landing index.
  */
 export async function resolveProductRoute(
@@ -89,10 +104,7 @@ export async function resolveProductRoute(
       }),
     };
   if (route.state === 'archived')
-    return {
-      type: 'redirect',
-      path: await archivedTarget(route.product, loadIndex),
-    };
+    return archivedRoute(route.product, loadIndex);
   const redirect = await findSlugRedirect('PRODUCT', slug);
   if (!redirect) return { type: 'not-found' };
   const target = await getPrisma().product.findUnique({
@@ -104,10 +116,7 @@ export async function resolveProductRoute(
   const current = await getProductRoute(target.slug);
   if (current.state === 'missing') return { type: 'not-found' };
   if (current.state === 'archived')
-    return {
-      type: 'redirect',
-      path: await archivedTarget(current.product, loadIndex),
-    };
+    return archivedRoute(current.product, loadIndex);
   return { type: 'redirect', path: productPath(current.product.slug) };
 }
 

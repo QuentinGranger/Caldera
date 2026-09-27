@@ -41,6 +41,8 @@ async function readSection(section: ContentSection) {
   try {
     files = await readdir(directory);
   } catch (error) {
+    // A section without any file yet (e.g. the first news item) is empty.
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw new ContentError(
       `Dossier content/${section} illisible depuis ${process.cwd()} (${error instanceof Error ? error.message : String(error)})`,
     );

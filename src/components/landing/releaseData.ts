@@ -48,9 +48,14 @@ import {
   type SetEntry,
 } from './landingData';
 import {
+  CALENDAR_YEAR_MIN_SETS,
+  calendarYearPath,
   countedFact,
   factText,
   isUpcoming,
+  parseCalendarSlug,
+  yearCalendarFacts,
+  yearCalendarText,
   plural,
   releaseWindow,
   standaloneSetFacts,
@@ -390,6 +395,7 @@ export const resolveSetPage = cache(
 export interface CalendarEntry extends SetEntry {
   releaseDate: Date;
   gameName: string;
+  gameSlug: string;
   inStockCount: number;
   preorderCount: number;
 }
@@ -403,8 +409,8 @@ export interface ReleaseCalendar {
   decision: IndexDecision;
 }
 
-/** Dated sets of the active games: upcoming ones, then the last 12 months. */
-export const getReleaseCalendar = cache(async (): Promise<ReleaseCalendar> => {
+/** Every dated set of the active games, with its product counts. */
+const getDatedSets = cache(async () => {
   const today = getToday();
   const [games, indexed] = await Promise.all([
     getSiloGames(),
@@ -435,6 +441,7 @@ export const getReleaseCalendar = cache(async (): Promise<ReleaseCalendar> => {
             releaseDate,
             logoUrl: set.logoUrl,
             gameName: game.name,
+            gameSlug: game.slug,
             count: total?.get(set.id) ?? 0,
             inStockCount: inStock?.get(set.id) ?? 0,
             preorderCount: preorder?.get(set.id) ?? 0,
@@ -445,7 +452,14 @@ export const getReleaseCalendar = cache(async (): Promise<ReleaseCalendar> => {
       });
     }),
   );
-  const { upcoming, recent } = releaseWindow(perGame.flat(), today);
+  return { games, entries: perGame.flat() };
+});
+
+/** Dated sets of the active games: upcoming ones, then the last 12 months. */
+export const getReleaseCalendar = cache(async (): Promise<ReleaseCalendar> => {
+  const today = getToday();
+  const { games, entries } = await getDatedSets();
+  const { upcoming, recent } = releaseWindow(entries, today);
   const gameNames = games
     .map((game) => game.name)
     .filter((name) =>
@@ -485,3 +499,121 @@ export const getReleaseCalendar = cache(async (): Promise<ReleaseCalendar> => {
     }),
   };
 });
+
+// ---------------------------------------------------------------------------
+// /calendrier-des-sorties/{année} and /calendrier-des-sorties/{jeu}-{année}
+
+export interface YearCalendar {
+  year: number;
+  game: { slug: string; name: string } | null;
+  path: string;
+  upcoming: CalendarEntry[];
+  released: CalendarEntry[];
+  heading: string;
+  text: MetadataText;
+  facts: Fact[];
+  decision: IndexDecision;
+}
+
+/** Releases of one year, for all games or one; null when there is none. */
+export const getYearCalendar = cache(
+  async (slug: string): Promise<YearCalendar | null> => {
+    const parsed = parseCalendarSlug(slug);
+    if (!parsed) return null;
+    const today = getToday();
+    const { games, entries } = await getDatedSets();
+    const game = parsed.gameSlug
+      ? games.find((candidate) => candidate.slug === parsed.gameSlug)
+      : null;
+    if (parsed.gameSlug && !game) return null;
+    const inYear = entries.filter(
+      (entry) =>
+        entry.releaseDate.getUTCFullYear() === parsed.year &&
+        (!game || entry.gameSlug === game.slug),
+    );
+    if (!inYear.length) return null;
+    const byDate = (a: CalendarEntry, b: CalendarEntry) =>
+      a.releaseDate.getTime() - b.releaseDate.getTime();
+    const upcoming = inYear
+      .filter((entry) => isUpcoming(entry.releaseDate, today))
+      .sort(byDate);
+    const released = inYear
+      .filter((entry) => !isUpcoming(entry.releaseDate, today))
+      .sort(byDate);
+    const gameNames = [...new Set(inYear.map((entry) => entry.gameName))];
+    const text = yearCalendarText({
+      year: parsed.year,
+      gameName: game?.name ?? null,
+      gameNames,
+      upcoming,
+      released,
+    });
+    const path = calendarYearPath(parsed.year, game?.slug);
+    const soleGame = [...new Set(inYear.map((entry) => entry.gameSlug))];
+    // One game only that year: its own page (« sorties Pokémon 2026 ») is the
+    // canonical one, the all-games page points to it.
+    const decision =
+      !game && soleGame.length === 1
+        ? {
+            index: false,
+            reason: 'duplicate-of-game-year',
+            canonicalPath: calendarYearPath(parsed.year, soleGame[0]),
+          }
+        : decideListingIndexation({
+            path,
+            stats: countStats(inYear.length),
+            min: CALENDAR_YEAR_MIN_SETS,
+          });
+    return {
+      year: parsed.year,
+      game: game ? { slug: game.slug, name: game.name } : null,
+      path,
+      upcoming,
+      released,
+      heading: text.title,
+      text,
+      facts: yearCalendarFacts(upcoming, released, parsed.year),
+      decision,
+    };
+  },
+);
+
+/** Year pages that have releases, all games first then per game, newest first. */
+export const getCalendarYears = cache(
+  async (): Promise<
+    { path: string; label: string; count: number; indexable: boolean }[]
+  > => {
+    const { games, entries } = await getDatedSets();
+    const count = (year: number, gameSlug?: string) =>
+      entries.filter(
+        (entry) =>
+          entry.releaseDate.getUTCFullYear() === year &&
+          (!gameSlug || entry.gameSlug === gameSlug),
+      ).length;
+    const years = [
+      ...new Set(entries.map((entry) => entry.releaseDate.getUTCFullYear())),
+    ].sort((a, b) => b - a);
+    const pages = years.flatMap((year) => [
+      { year, game: null as (typeof games)[number] | null },
+      ...games.map((game) => ({ year, game })),
+    ]);
+    return pages.flatMap(({ year, game }) => {
+      const total = count(year, game?.slug);
+      const gamesThatYear = new Set(
+        entries
+          .filter((entry) => entry.releaseDate.getUTCFullYear() === year)
+          .map((entry) => entry.gameSlug),
+      ).size;
+      // With a single game that year, only its own page is listed.
+      if (!total || (!game && gamesThatYear === 1)) return [];
+      return [
+        {
+          path: calendarYearPath(year, game?.slug),
+          label: game ? `Sorties ${game.name} ${year}` : `Sorties ${year}`,
+          count: total,
+          indexable: total >= CALENDAR_YEAR_MIN_SETS,
+        },
+      ];
+    });
+  },
+);

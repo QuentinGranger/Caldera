@@ -1,9 +1,11 @@
 // Editorial content contract (docs/seo-architecture.md §9). Pure types.
 import type { FaqEntry } from '@/lib/seo/types';
 
-export type ContentKind = 'guide' | 'comparatif' | 'dossier' | 'glossaire';
+export type ContentKind =
+  'guide' | 'comparatif' | 'dossier' | 'glossaire' | 'question' | 'actualite';
 /** Folder under content/ and first URL segment. */
-export type ContentSection = 'guides' | 'glossaire';
+export type ContentSection =
+  'guides' | 'glossaire' | 'questions' | 'actualites';
 
 export interface ContentEntry {
   slug: string;
@@ -12,6 +14,8 @@ export interface ContentEntry {
   /** Meta description. */
   description: string;
   updated: Date;
+  /** Publication date (news); the update date for other entries. */
+  published: Date;
   /** Game slugs; empty = every game. */
   games: string[];
   /** Category slugs. */
@@ -21,9 +25,12 @@ export interface ContentEntry {
   /** Slugs of other entries (guides or glossary terms) of the same cluster. */
   related: string[];
   faq: FaqEntry[];
-  /** /guides/{slug} or /glossaire/{slug}. */
+  /** /{section}/{slug}. */
   href: string;
-  /** Glossary terms only: plain text of the first paragraph. */
+  /**
+   * Glossary terms and questions: plain text of the first paragraph (the
+   * definition, or the direct answer).
+   */
   definition?: string;
   /** Words of the Markdown body (front-matter and FAQ excluded). */
   wordCount: number;

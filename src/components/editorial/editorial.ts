@@ -20,6 +20,8 @@ export const KIND_LABELS: Readonly<Record<ContentKind, string>> = {
   comparatif: 'Comparatif',
   dossier: 'Dossier',
   glossaire: 'Glossaire',
+  question: 'Question',
+  actualite: 'Actualité',
 };
 
 const KIND_NOUNS: Readonly<Record<ContentKind, [string, string]>> = {
@@ -27,6 +29,8 @@ const KIND_NOUNS: Readonly<Record<ContentKind, [string, string]>> = {
   comparatif: ['comparatif', 'comparatifs'],
   dossier: ['dossier', 'dossiers'],
   glossaire: ['terme', 'termes'],
+  question: ['question', 'questions'],
+  actualite: ['actualité', 'actualités'],
 };
 
 /** Order of the groups on /guides. */

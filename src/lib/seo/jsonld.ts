@@ -185,6 +185,8 @@ export interface ArticleInput {
   dateModified: Date | string;
   datePublished?: Date | string | null;
   image?: string | null;
+  /** BlogPosting for dated news, Article otherwise. */
+  type?: 'Article' | 'BlogPosting';
 }
 
 const isoDate = (value: Date | string) =>
@@ -197,10 +199,11 @@ export function articleNode({
   dateModified,
   datePublished,
   image,
+  type = 'Article',
 }: ArticleInput): JsonLdNode {
   const url = absoluteUrl(path);
   return node({
-    '@type': 'Article',
+    '@type': type,
     '@id': `${url}#article`,
     headline,
     description: description || undefined,
