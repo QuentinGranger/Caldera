@@ -35,11 +35,26 @@
 }
 .actions {
   display: flex;
+  align-items: center;
   gap: 0;
 }
 .actions .desktop {
   display: none;
   @include m.from(v.$breakpoint-desktop) {
     display: inline-grid;
+  }
+}
+.actions .account {
+  width: 56px;
+  height: 58px;
+  gap: 0.2rem;
+  border-radius: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+
+  @include m.from(v.$breakpoint-desktop) {
+    display: inline-flex;
+    flex-direction: column;
   }
 }

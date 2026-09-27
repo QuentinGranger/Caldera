@@ -172,32 +172,23 @@ export function shopGroups(site: SiteNavigation): NavGroup[] {
   ];
 }
 
-/** Desktop header: the shop, the main games, extensions, guides, universe. */
+/** Desktop header: the compact storefront navigation from the original design. */
 export function headerItems(site: SiteNavigation): NavItem[] {
+  const pokemon = site.games.find((game) =>
+    game.label.toLocaleLowerCase('fr').includes('pokémon'),
+  ) ?? {
+    href: '/pokemon',
+    label: 'Pokémon',
+    children: [],
+  };
+
   return [
-    {
-      href: site.catalogue.href,
-      label: 'Boutique',
-      children: [],
-      groups: shopGroups(site),
-    },
-    ...site.games.slice(0, 2),
-    {
-      ...site.extensions,
-      children: [
-        { href: site.extensions.href, label: 'Toutes les extensions' },
-        site.calendar,
-      ],
-    },
-    {
-      ...site.guides,
-      children: [
-        { href: site.guides.href, label: 'Tous les guides' },
-        site.glossary,
-        ...(site.questions ? [site.questions] : []),
-        ...(site.news ? [site.news] : []),
-      ],
-    },
+    pokemon,
+    { href: '/nouveautes', label: 'Nouveautés', children: [] },
+    { href: '/categorie/scelles', label: 'Scellés', children: [] },
+    { href: '/categorie/cartes', label: 'Cartes', children: [] },
+    { href: '/categorie/accessoires', label: 'Accessoires', children: [] },
+    { href: site.extensions.href, label: 'Collections', children: [] },
     { ...site.universe, children: [] },
   ];
 }
