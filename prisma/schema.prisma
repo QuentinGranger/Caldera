@@ -386,6 +386,9 @@ model Order {
   shippingMethodName   String
   checkoutSessionId    String             @unique @db.Uuid
   checkoutSession      CheckoutSession    @relation(fields: [checkoutSessionId], references: [id], onDelete: Restrict)
+  /// Account signed in when the order was placed; kept (null) if the account is deleted.
+  customerId           String?            @db.Uuid
+  customer             Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   paidAt               DateTime?
@@ -398,6 +401,7 @@ model Order {
   @@index([status])
   @@index([fulfillmentStatus, paidAt])
   @@index([shippedAt])
+  @@index([customerId])
 }
 
 model OrderItem {
@@ -560,6 +564,94 @@ model AdminVerification {
 }
 
 model AdminLoginAttempt {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
+
+// Customer accounts (better-auth, src/lib/account/auth.ts): tables and cookies
+// separate from the administration.
+model Customer {
+  id            String             @id @default(uuid()) @db.Uuid
+  email         String             @unique
+  emailVerified Boolean            @default(false)
+  name          String
+  image         String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  sessions      CustomerSession[]
+  accounts      CustomerAccount[]
+  address       CustomerAddress?
+  orders        Order[]
+}
+
+model CustomerSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model CustomerAccount {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  user                  Customer  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId             String
+  providerId            String
+  password              String?
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model CustomerVerification {
+  id         String   @id @default(uuid()) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+/// Default delivery address, prefilled at checkout.
+model CustomerAddress {
+  id           String   @id @default(uuid()) @db.Uuid
+  customerId   String   @unique @db.Uuid
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  firstName    String
+  lastName     String
+  company      String?
+  addressLine1 String
+  addressLine2 String?
+  postalCode   String
+  city         String
+  region       String?
+  countryCode  String   @db.Char(2)
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Fixed windows for sign-in, sign-up and reset requests (key = hashed scope).
+model CustomerAuthAttempt {
   key         String   @id
   count       Int
   windowStart DateTime

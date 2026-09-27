@@ -95,6 +95,20 @@ function address(
     errors[`${prefix}.phone`] = 'Indiquez un numéro de téléphone valide.';
   return result;
 }
+/** One delivery address (customer account), with the checkout rules and field ids. */
+export function parseAddress(
+  value: unknown,
+  countries: readonly string[],
+): AddressValues {
+  const errors: Record<string, string> = {};
+  const result = address(value, 'shipping', countries, errors);
+  if (Object.keys(errors).length)
+    throw new CheckoutError(
+      'Vérifiez les champs indiqués avant d’enregistrer.',
+      errors,
+    );
+  return result;
+}
 export function parseContact(
   value: unknown,
   countries: readonly string[],

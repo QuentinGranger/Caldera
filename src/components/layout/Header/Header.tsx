@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import { CartButton } from '@/components/cart/CartButton';
 import Link from 'next/link';
-import { Heart, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
-import { IconButton } from '@/components/ui/IconButton/IconButton';
+import { IconLink } from '@/components/ui/IconButton/IconButton';
 import { Navigation } from '@/components/layout/Navigation/Navigation';
 import { MobileNavigation } from '@/components/layout/MobileNavigation/MobileNavigation';
 import { getSiteNavigation, headerItems } from '@/data/navigation';
@@ -37,20 +37,13 @@ export async function Header() {
           aria-label="Services de la boutique"
         >
           <HeaderSearch />
-          <IconButton
+          <IconLink
+            href={navigation.account.href}
             className={styles.desktop}
-            label="Compte — bientôt disponible"
-            disabled
+            label={navigation.account.label}
           >
             <UserRound aria-hidden="true" />
-          </IconButton>
-          <IconButton
-            className={styles.desktop}
-            label="Favoris — bientôt disponibles"
-            disabled
-          >
-            <Heart aria-hidden="true" />
-          </IconButton>
+          </IconLink>
           <CartButton />
         </div>
       </Container>

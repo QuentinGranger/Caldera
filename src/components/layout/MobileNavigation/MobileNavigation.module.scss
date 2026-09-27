@@ -80,6 +80,25 @@
   }
 }
 
+// Secondary sections: two columns of plain links.
+.compactLinks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    color: v.$color-text-on-dark;
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+}
+
 .universeGroup {
   padding-bottom: 0.4rem;
 }

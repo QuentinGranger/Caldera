@@ -19,9 +19,11 @@ const titles = {
 export function CheckoutFlow({
   view,
   step,
+  account = null,
 }: {
   view: CheckoutView;
   step: CheckoutStep;
+  account?: { email: string } | null;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -58,7 +60,7 @@ export function CheckoutFlow({
           ) : !view.sessionId || view.status === 'EXPIRED' ? (
             <StartCheckoutButton restart={view.status === 'EXPIRED'} />
           ) : step === 'contact' ? (
-            <CheckoutContactForm view={view} />
+            <CheckoutContactForm view={view} account={account} />
           ) : step === 'shipping' ? (
             <CheckoutShipping view={view} />
           ) : (

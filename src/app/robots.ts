@@ -18,6 +18,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         '/checkout',
         '/panier',
         '/commande/',
+        '/compte',
         // Sort, search and price bounds: noindex listings without end.
         '/*?*sort=',
         '/*?*search=',

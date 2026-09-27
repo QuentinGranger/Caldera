@@ -17,6 +17,8 @@ import { toStripeAmount } from '@/lib/stripe/amount';
 export async function prepareOrder(
   token: string | undefined,
   rawSessionId: unknown,
+  /** Signed-in customer: the order also shows in that account. */
+  customerId: string | null = null,
 ) {
   const sessionId = parseId(rawSessionId),
     hash = cartTokenHash(token);
@@ -85,6 +87,7 @@ export async function prepareOrder(
         publicId: randomBytes(32).toString('hex'),
         orderNumber: `CAL-${new Date().getUTCFullYear()}-${randomBytes(10).toString('hex').toUpperCase()}`,
         checkoutSessionId: sessionId,
+        customerId,
         email: contact.email,
         phone: contact.phone || null,
         currency: STORE_CURRENCY,

@@ -16,6 +16,7 @@ import { ensureIntent, paymentPreflight } from './intents';
 import { cancelOrder, currentOrder } from './cancel';
 import { reconcilePaymentIntent } from './events';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
+import { currentCustomer } from '@/lib/account/auth';
 
 const payableIntentStatuses = new Set([
   'requires_payment_method',
@@ -69,7 +70,12 @@ function payableResult(
 export async function startPaymentAction(sessionId: unknown) {
   try {
     assertPaymentConfiguration();
-    const order = await prepareOrder(await getCartCookie(), sessionId);
+    const customer = await currentCustomer();
+    const order = await prepareOrder(
+      await getCartCookie(),
+      sessionId,
+      customer?.id ?? null,
+    );
     revalidatePath('/', 'layout');
     invalidateCatalogCache();
     return {

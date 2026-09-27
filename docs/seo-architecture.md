@@ -142,7 +142,7 @@ Les ancres sont descriptives et varient selon le contexte (« Tous les ETB Flamm
 - `/sitemap.xml` : index → `/sitemaps/pages.xml`, `/sitemaps/landings.xml`, `/sitemaps/products-{n}.xml` (10 000 URL par fichier), `/sitemaps/content.xml`.
 - Uniquement des URL indexables, `lastmod` = vraie date de modification (produit, variante, contenu), jamais `new Date()`.
 - Réponses avec `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`.
-- `robots.txt` : Disallow `/admin`, `/api/`, `/checkout`, `/panier`, `/commande/`, `/*?*sort=`, `/*?*search=`, `/*?*minPrice=`, `/*?*maxPrice=`. Ressources `/_next/` et images non bloquées. Hôtes non canoniques : tout bloqué ; `www` redirige en 308 vers l’apex.
+- `robots.txt` : Disallow `/admin`, `/api/`, `/checkout`, `/panier`, `/commande/`, `/compte` (espace client, noindex et `no-store`), `/*?*sort=`, `/*?*search=`, `/*?*minPrice=`, `/*?*maxPrice=`. Ressources `/_next/` et images non bloquées. Hôtes non canoniques : tout bloqué ; `www` redirige en 308 vers l’apex.
 
 ## 9. Contenu éditorial
 

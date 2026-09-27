@@ -13,7 +13,13 @@ const PUBLISHED_IMAGES: Readonly<
   Record<string, { width: number; height: number }>
 > = {
   '/assets/images/ArchiveExplorateurs.png': { width: 1672, height: 941 },
+  '/assets/images/ForetsAnciennes.png': { width: 1086, height: 1448 },
+  '/assets/images/GrandEffondrement.png': { width: 1672, height: 941 },
+  '/assets/images/HautesTerres.png': { width: 1672, height: 941 },
   '/assets/images/PremiersExplorateurs.png': { width: 1536, height: 1024 },
+  '/assets/images/Rivages.png': { width: 1672, height: 941 },
+  '/assets/images/RouteCinq.png': { width: 1916, height: 821 },
+  '/assets/images/TerresBraise.png': { width: 1672, height: 941 },
 };
 
 /** The image with its size when the file is published, null otherwise. */

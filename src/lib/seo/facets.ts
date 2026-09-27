@@ -81,6 +81,7 @@ export const RESERVED_ROOT_SLUGS: ReadonlySet<string> = new Set([
   'cgv',
   'checkout',
   'commande',
+  'compte',
   'confidentialite',
   'contact',
   'extensions',

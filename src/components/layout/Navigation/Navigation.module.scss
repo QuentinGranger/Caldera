@@ -27,16 +27,21 @@
       content: '';
       transition: width v.$transition-base;
     }
-    &:hover::after {
+    &:hover::after,
+    &.current::after {
       width: 100%;
     }
   }
+}
+.current {
+  color: v.$color-gold-light;
 }
 .menu {
   display: flex;
   gap: clamp(1rem, 1.5vw, 1.7rem);
 }
-.hasMenu {
+.hasMenu,
+.hasPanel {
   position: relative;
   > a svg {
     transition: transform v.$transition-fast;
@@ -46,13 +51,16 @@
     transform: rotate(180deg);
   }
   &:hover > .submenu,
-  &:focus-within > .submenu {
+  &:focus-within > .submenu,
+  &:hover > .panel,
+  &:focus-within > .panel {
     visibility: visible;
     opacity: 1;
     transform: none;
   }
 }
-.submenu {
+.submenu,
+.panel {
   position: absolute;
   top: 100%;
   left: -1.1rem;
@@ -79,14 +87,37 @@
     min-height: 40px;
     color: v.$color-muted-on-dark;
     &:hover,
-    &:focus-visible {
+    &:focus-visible,
+    &[aria-current='page'] {
       color: v.$color-gold-light;
     }
   }
 }
+// The shop: titled columns side by side.
+.panel {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(11rem, max-content);
+  gap: 2rem;
+  min-width: 0;
+  max-width: min(46rem, calc(100vw - 4rem));
+  padding: 1.1rem 1.4rem 1.2rem;
+}
+.column {
+  min-width: 0;
+}
+.columnTitle {
+  margin-bottom: 0.35rem;
+  color: v.$color-gold;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
 @media (prefers-reduced-motion: reduce) {
   .submenu,
-  .hasMenu > a svg {
+  .panel,
+  .hasMenu > a svg,
+  .hasPanel > a svg {
     transition: none;
   }
 }

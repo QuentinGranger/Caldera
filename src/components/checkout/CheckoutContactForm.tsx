@@ -7,7 +7,13 @@ import { emptyAddress, type CheckoutView } from '@/lib/checkout/types';
 import { AddressForm } from './AddressForm';
 import { useCheckoutAction } from './useCheckoutAction';
 import styles from './Checkout.module.scss';
-export function CheckoutContactForm({ view }: { view: CheckoutView }) {
+export function CheckoutContactForm({
+  view,
+  account = null,
+}: {
+  view: CheckoutView;
+  account?: { email: string } | null;
+}) {
   const [contact, setContact] = useState(view.contact);
   const { execute, pending, result } = useCheckoutAction();
   const errorSummary = useRef<HTMLDivElement>(null);
@@ -43,7 +49,21 @@ export function CheckoutContactForm({ view }: { view: CheckoutView }) {
       <fieldset disabled={pending} className={styles.formSection}>
         <legend>Votre contact</legend>
         <p className={styles.hint}>
-          Sans création de compte. Les champs marqués * sont obligatoires.
+          {account ? (
+            <>
+              Connecté avec {account.email} : cette commande apparaîtra dans{' '}
+              <Link href="/compte">votre compte</Link>.
+            </>
+          ) : (
+            <>
+              Aucun compte n’est nécessaire.{' '}
+              <Link href="/compte/connexion?retour=/checkout">
+                Se connecter
+              </Link>{' '}
+              pour retrouver vos coordonnées.
+            </>
+          )}{' '}
+          Les champs marqués * sont obligatoires.
         </p>
         <div className={styles.fields}>
           <div className={styles.full}>

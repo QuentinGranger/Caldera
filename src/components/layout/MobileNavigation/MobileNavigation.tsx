@@ -54,15 +54,27 @@ export function MobileNavigation({
 
   const close = () => setOpen(false);
   const shopLinks: NavLink[] = [
-    ...(navigation.catalogue ? [navigation.catalogue] : []),
     ...navigation.familyHubs,
     ...navigation.listings,
-    navigation.extensions,
-    navigation.calendar,
-    navigation.guides,
-    navigation.glossary,
-    ...(navigation.questions ? [navigation.questions] : []),
-    ...(navigation.news ? [navigation.news] : []),
+  ];
+  const secondary: { id: string; title: string; links: NavLink[] }[] = [
+    {
+      id: 'mobile-explore-heading',
+      title: 'Extensions et guides',
+      links: [
+        navigation.extensions,
+        navigation.calendar,
+        navigation.guides,
+        navigation.glossary,
+        ...(navigation.questions ? [navigation.questions] : []),
+        ...(navigation.news ? [navigation.news] : []),
+      ],
+    },
+    {
+      id: 'mobile-service-heading',
+      title: 'Aide et compte',
+      links: [navigation.account, navigation.delivery, navigation.contact],
+    },
   ];
 
   return (
@@ -88,6 +100,12 @@ export function MobileNavigation({
             Boutique
           </p>
           <ul className={styles.mainLinks}>
+            <li>
+              <Link href={navigation.catalogue.href} onClick={close}>
+                {navigation.catalogue.label}
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </Link>
+            </li>
             {navigation.games.map((game) => (
               <li key={game.href}>
                 <Link href={game.href} onClick={close}>
@@ -99,7 +117,8 @@ export function MobileNavigation({
                     className={styles.subLinks}
                     aria-label={`Familles ${game.label}`}
                   >
-                    {game.children.map((family) => (
+                    {/* The game link above already opens all its products. */}
+                    {game.children.slice(1).map((family) => (
                       <li key={family.href}>
                         <Link href={family.href} onClick={close}>
                           {family.label}
@@ -120,6 +139,27 @@ export function MobileNavigation({
             ))}
           </ul>
         </section>
+
+        {secondary.map((group) => (
+          <section
+            key={group.id}
+            className={styles.group}
+            aria-labelledby={group.id}
+          >
+            <p id={group.id} className={styles.eyebrow}>
+              {group.title}
+            </p>
+            <ul className={styles.compactLinks}>
+              {group.links.map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} onClick={close}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
 
         <section
           className={`${styles.group} ${styles.universeGroup}`}

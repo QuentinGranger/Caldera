@@ -1,6 +1,6 @@
-// Header, mobile menu and footer links (docs/seo-architecture.md §7): games and
-// families from the landing index, listings only while indexable, then pages
-// that always answer 200.
+// Header, mobile menu and footer links (docs/seo-architecture.md §7): the
+// catalogue always, games and families from the landing index, listings only
+// while indexable, then pages that always answer 200.
 import 'server-only';
 import { getAllContent } from '@/lib/content';
 import { unstable_cache } from 'next/cache';
@@ -21,17 +21,27 @@ export interface NavLink {
   href: string;
   label: string;
 }
-/** A menu entry; `children` open under it (families of a game, related pages). */
+export interface NavGroup {
+  title: string;
+  links: NavLink[];
+}
+/**
+ * A menu entry; `children` open under it (families of a game, related pages),
+ * `groups` open as a wider panel of titled columns (the shop).
+ */
 export interface NavItem extends NavLink {
   children: NavLink[];
+  groups?: NavGroup[];
 }
 export interface SiteNavigation {
   /** Games with an indexable hub, menu order; children: their families. */
   games: NavItem[];
-  /** Indexable multi-game family hubs. */
+  /** Indexable multi-game family hubs (« Accessoires pour tous les jeux »). */
   familyHubs: NavLink[];
-  /** /catalogue while indexable. */
-  catalogue: NavLink | null;
+  /** The same hubs by short name, under a « Par type de produit » title. */
+  productTypes: NavLink[];
+  /** /catalogue: always reachable, even before it has enough products to be indexed. */
+  catalogue: NavLink;
   /** Nouveautés, Précommandes, En stock while indexable. */
   listings: NavLink[];
   extensions: NavLink;
@@ -44,6 +54,7 @@ export interface SiteNavigation {
   universe: NavLink;
   delivery: NavLink;
   contact: NavLink;
+  account: NavLink;
 }
 
 const LISTING_ORDER: readonly Exclude<ListingKind, 'catalogue'>[] = [
@@ -74,18 +85,29 @@ export function buildSiteNavigation(
     label: LISTING_HUBS[kind].label,
   });
   return {
-    games: navigation.games.map((game) => ({
-      href: game.href,
-      label: game.shortName?.trim() || game.name,
-      children: flattenFamilies(game.families),
-    })),
+    games: navigation.games.map((game) => {
+      const label = game.shortName?.trim() || game.name;
+      const families = flattenFamilies(game.families);
+      return {
+        href: game.href,
+        label,
+        children: families.length
+          ? [{ href: game.href, label: `Tout ${label}` }, ...families]
+          : [],
+      };
+    }),
     familyHubs: navigation.categoryHubs.map((family) => ({
       href: family.href,
       label: family.label,
     })),
-    catalogue: listings.has('catalogue')
-      ? { href: LISTING_HUBS.catalogue.path, label: 'Tout le catalogue' }
-      : null,
+    productTypes: navigation.categoryHubs.map((family) => ({
+      href: family.href,
+      label: family.name,
+    })),
+    catalogue: {
+      href: LISTING_HUBS.catalogue.path,
+      label: 'Tout le catalogue',
+    },
     listings: LISTING_ORDER.filter((kind) => listings.has(kind)).map(listing),
     extensions: { href: '/extensions', label: 'Extensions' },
     calendar: {
@@ -101,6 +123,8 @@ export function buildSiteNavigation(
     universe: { href: '/univers', label: 'Univers' },
     delivery: { href: '/livraison', label: 'Livraison' },
     contact: { href: '/contact', label: 'Contact' },
+    // Signed-in visitors are sent on to /compte: no redirect for crawlers.
+    account: { href: '/compte/connexion', label: 'Mon compte' },
   };
 }
 
@@ -130,16 +154,34 @@ export const getSiteNavigation = cache(async (): Promise<SiteNavigation> => {
   }
 });
 
-/** Desktop header: games, indexable listings, extensions and guides. */
-export function headerItems(site: SiteNavigation): NavItem[] {
-  const shop: NavItem[] = site.games.length
-    ? site.games.slice(0, 3)
-    : site.catalogue
-      ? [{ ...site.catalogue, children: [] }]
-      : [];
+/** The shop as titled columns: by game, by product type, selections. */
+export function shopGroups(site: SiteNavigation): NavGroup[] {
   return [
-    ...shop,
-    ...site.listings.map((link) => ({ ...link, children: [] })),
+    ...(site.games.length
+      ? [
+          {
+            title: 'Par jeu',
+            links: site.games.map(({ href, label }) => ({ href, label })),
+          },
+        ]
+      : []),
+    ...(site.productTypes.length
+      ? [{ title: 'Par type de produit', links: site.productTypes }]
+      : []),
+    { title: 'Sélections', links: [site.catalogue, ...site.listings] },
+  ];
+}
+
+/** Desktop header: the shop, the main games, extensions, guides, universe. */
+export function headerItems(site: SiteNavigation): NavItem[] {
+  return [
+    {
+      href: site.catalogue.href,
+      label: 'Boutique',
+      children: [],
+      groups: shopGroups(site),
+    },
+    ...site.games.slice(0, 2),
     {
       ...site.extensions,
       children: [
@@ -156,5 +198,6 @@ export function headerItems(site: SiteNavigation): NavItem[] {
         ...(site.news ? [site.news] : []),
       ],
     },
+    { ...site.universe, children: [] },
   ];
 }

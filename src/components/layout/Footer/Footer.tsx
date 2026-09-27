@@ -18,7 +18,7 @@ export async function Footer() {
     {
       title: 'Boutique',
       links: [
-        ...(navigation.catalogue ? [navigation.catalogue] : []),
+        navigation.catalogue,
         ...navigation.games.map(({ href, label }) => ({ href, label })),
         ...navigation.familyHubs,
         ...navigation.listings,
@@ -28,10 +28,9 @@ export async function Footer() {
     },
     {
       title: 'Aide',
+      // Guides and glossary stay in the header and mobile menus.
       links: [
         navigation.delivery,
-        navigation.guides,
-        navigation.glossary,
         ...(navigation.questions ? [navigation.questions] : []),
         ...(navigation.news ? [navigation.news] : []),
         navigation.contact,

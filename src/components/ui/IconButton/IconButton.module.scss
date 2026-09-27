@@ -16,7 +16,8 @@
     height: 20px;
     stroke-width: 1.5;
   }
-  &:hover:enabled {
+  &:hover:enabled,
+  &:is(a):hover {
     background: #bca46a24;
   }
   &:disabled {
