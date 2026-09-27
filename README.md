@@ -686,12 +686,18 @@ Recette et inventaire exact des fichiers : [docs/phase-10.md](docs/phase-10.md).
 
 Une exécution manquée, dupliquée, concurrente ou interrompue est sans danger : verrous de commande, `FOR UPDATE SKIP LOCKED`, baux et clés d’idempotence Stripe/Resend existants. Le passage suivant reprend le travail restant.
 
-**Limite Vercel.** Le projet est sur le plan **Hobby** : un cron Vercel y tourne **au plus une fois par jour**, à ±59 min, et une expression plus fréquente fait **échouer le déploiement**. `vercel.json` déclare donc un passage quotidien (`0 4 * * *` UTC), filet de sécurité compatible Hobby. Il ne suffit pas : les réservations de 20 minutes doivent être libérées chaque minute. Deux options :
+**Planification de production.** Le projet reste sur Vercel Hobby, dont les crons sont limités à un passage par jour. Une Neon Function (`functions/maintenance.ts`) est donc déclenchée par Neon chaque minute, y compris lorsque la base est en veille. Elle accepte uniquement les appels attestés par l’en-tête interne Neon, puis appelle `GET https://lesterresdecaldera.fr/api/cron/maintenance` avec le même secret que Vercel. Le cron Vercel quotidien (`0 4 * * *` UTC) reste un filet de sécurité.
 
-1. **Plan Pro** : remplacer la planification par `* * * * *` dans `vercel.json` et redéployer. Précision à la minute, rien d’autre à héberger.
-2. **Planificateur externe** (sans changer de plan) : service capable d’un appel par minute avec en-tête personnalisé (par exemple cron-job.org), en `GET https://lesterresdecaldera.fr/api/cron/maintenance` avec `Authorization: Bearer <CRON_SECRET>`. Garder le cron quotidien Vercel en secours.
+Le secret n’est jamais versionné : `CRON_SECRET` dans Vercel Production et `MAINTENANCE_SECRET` dans le déploiement de la Neon Function doivent contenir la même valeur. Après une rotation, redéployer Vercel, redéployer la Function puis vérifier son trigger `caldera-maintenance-minute` et les logs `scope:"maintenance"`. Les déploiements Preview sans secret répondent 503.
 
-Mise en place : générer `openssl rand -hex 32` et l’ajouter comme `CRON_SECRET` **uniquement en Production** dans Vercel (`vercel env add CRON_SECRET production`), puis redéployer. Les déploiements Preview sans secret répondent 503. Vercel ne rejoue pas un cron échoué et n’enregistre pas les réponses en cache/redirection : surveiller les logs `scope:"maintenance"`.
+```bash
+npx neonctl functions deploy maintenance --src functions/maintenance.ts \
+  --project-id raspy-shadow-90117479 --branch production \
+  --env MAINTENANCE_SECRET='<même secret que CRON_SECRET>'
+npx neonctl triggers create --function-slug maintenance \
+  --name caldera-maintenance-minute --cron '* * * * *' \
+  --project-id raspy-shadow-90117479 --branch production
+```
 
 ```bash
 npm run test:maintenance
@@ -717,4 +723,3 @@ Mise en place : compte Sentry créé directement sur sentry.io (plan gratuit Dev
 ```bash
 npm run test:monitoring
 ```
-
