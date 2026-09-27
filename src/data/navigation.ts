@@ -2,6 +2,7 @@
 // families from the landing index, listings only while indexable, then pages
 // that always answer 200.
 import 'server-only';
+import { getAllContent } from '@/lib/content';
 import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 import {
@@ -37,6 +38,9 @@ export interface SiteNavigation {
   calendar: NavLink;
   guides: NavLink;
   glossary: NavLink;
+  /** Only once the section has published entries. */
+  questions: NavLink | null;
+  news: NavLink | null;
   universe: NavLink;
   delivery: NavLink;
   contact: NavLink;
@@ -60,6 +64,10 @@ function flattenFamilies(families: readonly NavigationFamily[]): NavLink[] {
 export function buildSiteNavigation(
   navigation: Navigation,
   listings: ReadonlySet<ListingKind>,
+  content: { questions: boolean; news: boolean } = {
+    questions: false,
+    news: false,
+  },
 ): SiteNavigation {
   const listing = (kind: ListingKind): NavLink => ({
     href: LISTING_HUBS[kind].path,
@@ -86,6 +94,10 @@ export function buildSiteNavigation(
     },
     guides: { href: '/guides', label: 'Guides' },
     glossary: { href: '/glossaire', label: 'Glossaire' },
+    questions: content.questions
+      ? { href: '/questions', label: 'Questions fréquentes' }
+      : null,
+    news: content.news ? { href: '/actualites', label: 'Actualités' } : null,
     universe: { href: '/univers', label: 'Univers' },
     delivery: { href: '/livraison', label: 'Livraison' },
     contact: { href: '/contact', label: 'Contact' },
@@ -104,11 +116,15 @@ const cachedListings = unstable_cache(
 /** Menus of the current request; without the database, only fixed pages. */
 export const getSiteNavigation = cache(async (): Promise<SiteNavigation> => {
   try {
-    const [navigation, listings] = await Promise.all([
+    const [navigation, listings, content] = await Promise.all([
       getNavigation(),
       cachedListings(),
+      getAllContent(),
     ]);
-    return buildSiteNavigation(navigation, new Set(listings));
+    return buildSiteNavigation(navigation, new Set(listings), {
+      questions: content.some((entry) => entry.kind === 'question'),
+      news: content.some((entry) => entry.kind === 'actualite'),
+    });
   } catch {
     return buildSiteNavigation({ games: [], categoryHubs: [] }, new Set());
   }
@@ -136,6 +152,8 @@ export function headerItems(site: SiteNavigation): NavItem[] {
       children: [
         { href: site.guides.href, label: 'Tous les guides' },
         site.glossary,
+        ...(site.questions ? [site.questions] : []),
+        ...(site.news ? [site.news] : []),
       ],
     },
   ];

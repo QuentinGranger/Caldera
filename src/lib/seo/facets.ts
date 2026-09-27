@@ -102,6 +102,8 @@ export const RESERVED_ROOT_SLUGS: ReadonlySet<string> = new Set([
   'calendrier-des-sorties',
   'livraison',
   'sitemaps',
+  'questions',
+  'actualites',
   // Framework, hosting and public/ files
   '_next',
   '_vercel',

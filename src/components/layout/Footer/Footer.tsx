@@ -32,6 +32,8 @@ export async function Footer() {
         navigation.delivery,
         navigation.guides,
         navigation.glossary,
+        ...(navigation.questions ? [navigation.questions] : []),
+        ...(navigation.news ? [navigation.news] : []),
         navigation.contact,
       ],
     },

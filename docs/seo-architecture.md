@@ -45,20 +45,27 @@ La catégorie représente la **famille de produits** (Produits scellés › Boos
 
 ## 3. URL
 
-| URL                                                       | Page                                               | Source                                |
-| --------------------------------------------------------- | -------------------------------------------------- | ------------------------------------- |
-| `/{jeu}`                                                  | hub jeu                                            | `src/app/[game]/page.tsx`             |
-| `/{jeu}/{facette}`                                        | landing 1 facette                                  | `src/app/[game]/[...facets]/page.tsx` |
-| `/{jeu}/{facette}/{facette}`                              | landing 2 facettes                                 | idem                                  |
-| `/produit/{slug}`                                         | fiche produit (URL canonique courte et stable)     | existante                             |
-| `/categorie/{slug}`                                       | hub famille multi-jeux                             | existante                             |
-| `/extensions`                                             | index des extensions par jeu                       | existante                             |
-| `/extensions/{slug}`                                      | 308 → `/{jeu}/{extension}` si l’extension a un jeu | existante                             |
-| `/catalogue`, `/nouveautes`, `/precommandes`, `/en-stock` | hubs transverses                                   | existants + `/en-stock`               |
-| `/guides`, `/guides/{slug}`                               | guides, comparatifs, dossiers                      | contenu `content/guides/*.md`         |
-| `/glossaire`, `/glossaire/{slug}`                         | glossaire JCC                                      | contenu `content/glossaire/*.md`      |
-| `/calendrier-des-sorties`                                 | calendrier (TcgSet.releaseDate)                    | base                                  |
-| `/livraison`                                              | modes, délais, tarifs réels                        | table ShippingMethod                  |
+| URL                                                                        | Page                                               | Source                                |
+| -------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| `/{jeu}`                                                                   | hub jeu                                            | `src/app/[game]/page.tsx`             |
+| `/{jeu}/{facette}`                                                         | landing 1 facette                                  | `src/app/[game]/[...facets]/page.tsx` |
+| `/{jeu}/{facette}/{facette}`                                               | landing 2 facettes                                 | idem                                  |
+| `/produit/{slug}`                                                          | fiche produit (URL canonique courte et stable)     | existante                             |
+| `/categorie/{slug}`                                                        | hub famille multi-jeux                             | existante                             |
+| `/extensions`                                                              | index des extensions par jeu                       | existante                             |
+| `/extensions/{slug}`                                                       | 308 → `/{jeu}/{extension}` si l’extension a un jeu | existante                             |
+| `/catalogue`, `/nouveautes`, `/precommandes`, `/en-stock`                  | hubs transverses                                   | existants + `/en-stock`               |
+| `/guides`, `/guides/{slug}`                                                | guides, comparatifs, dossiers                      | contenu `content/guides/*.md`         |
+| `/glossaire`, `/glossaire/{slug}`                                          | glossaire JCC                                      | contenu `content/glossaire/*.md`      |
+| `/calendrier-des-sorties`                                                  | calendrier (TcgSet.releaseDate)                    | base                                  |
+| `/calendrier-des-sorties/{annee}`, `/calendrier-des-sorties/{jeu}-{annee}` | sorties d’une année, tous jeux ou un jeu           | base                                  |
+| `/questions`, `/questions/{slug}`                                          | réponses courtes (« combien de boosters… »)        | contenu `content/questions/*.md`      |
+| `/actualites`, `/actualites/{slug}`                                        | actualités datées (masquées tant que vides)        | contenu `content/actualites/*.md`     |
+| `/livraison`                                                               | modes, délais, tarifs réels                        | table ShippingMethod                  |
+
+**Produit retiré définitivement** (`ARCHIVED`) : 308 vers sa landing la plus précise encore indexable (extension, famille, jeu). S’il n’en reste aucune, la fiche répond **410 Gone** (`src/lib/product/gone.ts`, appliqué par `src/proxy.ts` à partir de `/api/seo/gone`, liste relue toutes les 5 minutes sur l’origine configurée, jamais sur l’en-tête Host).
+
+**Calendriers par année** : une page par année et par jeu+année dès `CALENDAR_YEAR_MIN_SETS` (2) extensions datées ; en dessous, page accessible mais `noindex`. Si un seul jeu sort des extensions une année, la page tous jeux est canonisée vers celle du jeu.
 
 ### Facettes (sous `/{jeu}`)
 
@@ -144,8 +151,9 @@ Markdown avec front-matter dans `content/` (versionné, relu), chargé par `src/
 ```yaml
 title: …
 description: … # meta description
-kind: guide | comparatif | dossier | glossaire
+kind: guide | comparatif | dossier | glossaire | question | actualite
 updated: 2026-09-26
+published: 2026-09-26 # obligatoire pour une actualité ; sinon = updated
 games: [pokemon] # slugs Game (facultatif)
 categories: [etb] # slugs Category (facultatif)
 sets: [] # slugs TcgSet (facultatif)
@@ -155,8 +163,26 @@ faq: # facultatif, affiché et balisé FAQPage
     answer: …
 ```
 
+Où va chaque type :
+
+- `content/guides/` : `guide`, `comparatif`, `dossier`.
+- `content/glossaire/` : `glossaire` (le premier paragraphe est la définition).
+- `content/questions/` : `question` — le titre est la question, le premier paragraphe la réponse directe (affichée « En bref » et balisée FAQPage).
+- `content/actualites/` : `actualite` — `published` obligatoire, balisée BlogPosting. La rubrique, son lien de menu et son sitemap n’apparaissent qu’avec le premier article : aucune actualité n’est inventée.
+
+**Dossier d’extension** : un `dossier` avec `sets: [slug-extension]` s’affiche sur la landing de l’extension (`/{jeu}/{extension}`) et la renforce. À écrire quand l’extension existe en base (slug réel), avec des faits vérifiés : date de sortie, produits, contenu des boosters.
+
+**Autres jeux** : les guides et termes Lorcana, One Piece, Magic et Yu-Gi-Oh! ciblent les slugs `lorcana`, `one-piece`, `magic` et `yugioh`. Leurs liens vers la boutique n’apparaissent qu’une fois le jeu créé dans l’admin avec exactement ce slug (et des produits).
+
 Les pages de contenu affichent automatiquement les produits correspondant à leurs facettes (si indexables) : l’éditorial et le commerce se renforcent. Ton concret, pas de formules génériques (« Découvrez notre large sélection… »), aucun chiffre non vérifiable.
 
-## 10. Observabilité
+## 10. Performance, cache et images
+
+- **CSP stricte à nonce conservée** : toutes les pages HTML sont rendues à la demande. Next 16.3 insère le flux RSC en scripts inline : sans nonce, une CSP statique sans `'unsafe-inline'` bloque l’hydratation, même avec `experimental.sri` (vérifié). Le cache CDN du HTML n’est donc pas activé.
+- **Cache partagé des données publiques** (`src/lib/cache/catalogCache.ts`, tag `catalog`) : agrégats, landings, navigation, sélections de l’accueil, liste 410. Jamais de panier, de commande ni de donnée liée à un visiteur. Expiration ≤ 5 minutes pour les prix et stocks, et `invalidateCatalogCache()` après chaque écriture de prix, de stock ou de réservation (admin, création/annulation/expiration de commande, webhook Stripe). Le tunnel de commande relit prix et stock en base.
+- **Images** : `npm run images:optimize` recompresse `public/` sur place (PNG palette ou sans perte, JPEG mozjpeg), uniquement si le résultat est plus léger et visuellement identique (PSNR ≥ 40 dB). À lancer après l’ajout d’une image lourde, par exemple les visuels d’univers (`public/assets/images/*.png`).
+- **Région** : fonctions Vercel et base dans la même région ; migration vers Francfort décrite dans `docs/migration-europe.md`.
+
+## 11. Observabilité
 
 `npm run seo` : contrôles base (produits sans image/description/jeu, extensions sans jeu ou sans date, catégories vides, slugs en collision) et crawl d’un serveur (`SEO_BASE_URL`, défaut `http://localhost:3000`) à partir du sitemap : title/description présents, uniques et de bonne longueur, canonical absolu, un seul h1, JSON-LD valide, cohérence noindex/sitemap, liens internes cassés, pages orphelines (indexables mais jamais liées).

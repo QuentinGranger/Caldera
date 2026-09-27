@@ -12,6 +12,10 @@ import {
   getGlossaryIndex,
   getGuidesIndex,
 } from '@/components/editorial/content';
+import {
+  getNewsIndex,
+  getQuestionsIndex,
+} from '@/components/editorial/sections';
 import { getDeliveryPage } from '@/components/editorial/delivery';
 import { EXTENSIONS_PATH } from '@/components/landing/landingData';
 import {
@@ -141,14 +145,18 @@ export async function getLandingUrls(): Promise<SitemapUrl[]> {
 
 /** Guides, glossary terms and their two index pages. */
 export async function getContentUrls(): Promise<SitemapUrl[]> {
-  const [entries, guides, glossary] = await Promise.all([
+  const [entries, guides, glossary, questions, news] = await Promise.all([
     getAllContent(),
     getGuidesIndex(),
     getGlossaryIndex(),
+    getQuestionsIndex(),
+    getNewsIndex(),
   ]);
   return [
     ...decided(guides.decision, guides.updated),
     ...decided(glossary.decision, glossary.updated),
+    ...decided(questions.decision, questions.updated),
+    ...decided(news.decision, news.updated),
     ...entries.map((entry) => ({
       loc: absoluteUrl(entry.href),
       lastModified: entry.updated,

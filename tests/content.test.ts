@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { ProductType } from '../src/generated/prisma/enums';
@@ -21,10 +21,13 @@ import { linkTarget, renderDocument } from '../src/lib/content/markdown';
 import { parseContentFile, type ContentSource } from '../src/lib/content/parse';
 import { DESCRIPTION_MAX } from '../src/lib/seo/metadata';
 
-const markdownFiles = (section: string) =>
-  readdirSync(path.join(process.cwd(), 'content', section)).filter((file) =>
-    file.endsWith('.md'),
-  );
+const markdownFiles = (section: string) => {
+  const dir = path.join(process.cwd(), 'content', section);
+  // A section without any entry yet (actualites) has no folder.
+  return existsSync(dir)
+    ? readdirSync(dir).filter((file) => file.endsWith('.md'))
+    : [];
+};
 
 const frontMatter = (lines: string[]) => `---\n${lines.join('\n')}\n---\n`;
 const guideSource = (
@@ -64,10 +67,24 @@ const entry = (
 
 test('contenu réel : chaque fichier est valide, trié par titre et bien relié', async () => {
   const entries = await getAllContent();
-  const glossary = markdownFiles('glossaire');
-  const guides = markdownFiles('guides');
-  assert.equal(entries.length, glossary.length + guides.length);
-  assert.ok(glossary.length > 0 && guides.length > 0);
+  const files = ['glossaire', 'guides', 'questions', 'actualites'].reduce(
+    (total, section) => total + markdownFiles(section).length,
+    0,
+  );
+  assert.equal(entries.length, files);
+  assert.ok(
+    ['glossaire', 'guides', 'questions'].every(
+      (section) => markdownFiles(section).length > 0,
+    ),
+  );
+  const sectionOf = (kind: ContentEntry['kind']) =>
+    kind === 'glossaire'
+      ? 'glossaire'
+      : kind === 'question'
+        ? 'questions'
+        : kind === 'actualite'
+          ? 'actualites'
+          : 'guides';
   const titles = entries.map((e) => e.title);
   assert.deepEqual(
     titles,
@@ -76,15 +93,17 @@ test('contenu réel : chaque fichier est valide, trié par titre et bien relié'
   const slugs = new Set(entries.map((e) => e.slug));
   assert.equal(slugs.size, entries.length);
   for (const e of entries) {
-    const glossaryTerm = e.kind === 'glossaire';
-    assert.equal(e.href, `/${glossaryTerm ? 'glossaire' : 'guides'}/${e.slug}`);
+    // Terms and questions open on a direct definition or answer.
+    const lead = e.kind === 'glossaire' || e.kind === 'question';
+    assert.equal(e.href, `/${sectionOf(e.kind)}/${e.slug}`);
     assert.ok(e.title && !/caldera\s*$/i.test(e.title), e.slug);
     assert.ok(e.description.length <= DESCRIPTION_MAX, e.slug);
     assert.ok(e.updated instanceof Date && !Number.isNaN(e.updated.getTime()));
+    assert.ok(e.published.getTime() <= e.updated.getTime(), e.slug);
     assert.ok(e.wordCount > 150, `${e.slug} : ${e.wordCount} mots`);
     for (const slug of e.related) assert.ok(slugs.has(slug), slug);
     for (const item of e.faq) assert.ok(item.question && item.answer);
-    if (glossaryTerm) {
+    if (lead) {
       assert.ok(e.definition && e.definition.length > 40, e.slug);
       assert.doesNotMatch(e.definition, /[[\]<>*_]|\]\(/);
     } else assert.equal(e.definition, undefined);
@@ -95,7 +114,7 @@ test('contenu réel : chaque fichier est valide, trié par titre et bien relié'
   const first = entries[0];
   assert.ok(first && Object.isFrozen(first) && Object.isFrozen(first.games));
   entries.pop();
-  assert.equal((await getAllContent()).length, glossary.length + guides.length);
+  assert.equal((await getAllContent()).length, files);
 });
 
 test('page de contenu : HTML, sommaire, liens relatifs et section vérifiée', async () => {
@@ -158,14 +177,20 @@ test('contenu par périmètre : guides d’abord, facettes exactes, multi-jeux p
     assert.ok(!e.categories.length || e.categories.includes('boosters'));
 
   // A game without its own content still gets the multi-game entries.
+  const other = await getContentForScope({ game: 'digimon' }, 50);
+  assert.ok(other.length > 0);
+  assert.ok(other.every((e) => e.games.length === 0));
+  assert.ok(other.some((e) => e.slug === 'proteger-ses-cartes'));
+  // A game with its own content gets it, never another game's.
   const lorcana = await getContentForScope({ game: 'lorcana' }, 50);
-  assert.ok(lorcana.length > 0);
-  assert.ok(lorcana.every((e) => e.games.length === 0));
-  assert.ok(lorcana.some((e) => e.slug === 'proteger-ses-cartes'));
+  assert.ok(lorcana.some((e) => e.slug === 'debuter-disney-lorcana'));
+  assert.ok(
+    lorcana.every((e) => !e.games.length || e.games.includes('lorcana')),
+  );
 
   // Within a section, entries of the game come before multi-game ones.
   const guides = (await getContentForScope({ game: 'pokemon' }, 50)).filter(
-    (e) => e.kind !== 'glossaire',
+    (e) => ['guide', 'comparatif', 'dossier'].includes(e.kind),
   );
   const firstGeneric = guides.findIndex((e) => !e.games.length);
   assert.ok(firstGeneric > 0);

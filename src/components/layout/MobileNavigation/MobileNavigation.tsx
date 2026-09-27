@@ -61,6 +61,8 @@ export function MobileNavigation({
     navigation.calendar,
     navigation.guides,
     navigation.glossary,
+    ...(navigation.questions ? [navigation.questions] : []),
+    ...(navigation.news ? [navigation.news] : []),
   ];
 
   return (
