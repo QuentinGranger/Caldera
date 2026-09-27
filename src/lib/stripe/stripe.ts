@@ -19,6 +19,12 @@ export function getStripe() {
   }));
 }
 export function assertPaymentConfiguration() {
+  // Set while the database is copied to another region (docs/migration-europe.md):
+  // no new order nor payment attempt is written between the copy and the switch.
+  if (process.env.CHECKOUT_PAUSED === '1')
+    throw new OrderError(
+      'Les commandes sont suspendues quelques minutes pour maintenance. Votre panier est conservé : réessayez un peu plus tard.',
+    );
   getStripe();
   if (
     !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith(

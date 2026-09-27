@@ -21,6 +21,7 @@
     "db:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
+    "db:copy": "bash scripts/migrate-database.sh",
     "test:catalog": "node --conditions=react-server --import tsx --test tests/catalog.test.ts tests/catalog-filters.test.ts",
     "test:catalog:db": "node --conditions=react-server --import tsx --test tests/catalog-db.test.ts tests/catalog-navigation-db.test.ts",
     "test:catalog:http": "node --conditions=react-server --import tsx --test tests/catalog-http.test.ts tests/catalog-navigation-http.test.ts",

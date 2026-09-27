@@ -3,7 +3,10 @@ import { test } from 'node:test';
 import Stripe from 'stripe';
 import { toStripeAmount } from '../src/lib/stripe/amount';
 import { verifyWebhook } from '../src/lib/stripe/webhook';
-import { stripeMode } from '../src/lib/stripe/stripe';
+import {
+  assertPaymentConfiguration,
+  stripeMode,
+} from '../src/lib/stripe/stripe';
 import { availableQuantity } from '../src/lib/inventory/availability';
 test('EUR : centimes exacts, aucune troncature ni montant invalide', () => {
   assert.equal(toStripeAmount('59.90'), 5990);
@@ -54,5 +57,16 @@ test('mode Stripe : déduit de la clé serveur, live réservé au build de produ
   } finally {
     env.STRIPE_SECRET_KEY = saved.key;
     env.NODE_ENV = saved.node;
+  }
+});
+
+test('maintenance : CHECKOUT_PAUSED bloque toute nouvelle commande ou tentative', () => {
+  const saved = process.env.CHECKOUT_PAUSED;
+  try {
+    process.env.CHECKOUT_PAUSED = '1';
+    assert.throws(assertPaymentConfiguration, /suspendues quelques minutes/);
+  } finally {
+    if (saved === undefined) delete process.env.CHECKOUT_PAUSED;
+    else process.env.CHECKOUT_PAUSED = saved;
   }
 });
