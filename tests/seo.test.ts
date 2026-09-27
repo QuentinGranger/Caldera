@@ -30,6 +30,7 @@ import {
   websiteNode,
   type JsonLdNode,
   type ProductJsonLdInput,
+  organizationNode,
 } from '../src/lib/seo/jsonld';
 import {
   buildMetadata,
@@ -43,6 +44,7 @@ import {
   productMetadataText,
   truncateAtWord,
 } from '../src/lib/seo/metadata';
+import { LEGAL_IDENTITY } from '../src/lib/seo/policies';
 import { absoluteUrl } from '../src/lib/site';
 import type {
   CategoryRef,
@@ -1004,4 +1006,19 @@ test('JsonLd : échappement de </script> et des séparateurs de ligne', () => {
     ...data,
   });
   assert.equal(JsonLd({ data: null }), null);
+});
+
+test('Organization : siège social publié, identifiants seulement une fois connus', () => {
+  const node = organizationNode() as Record<string, unknown>;
+  assert.deepEqual(node.address, {
+    '@type': 'PostalAddress',
+    streetAddress: LEGAL_IDENTITY.address.street,
+    postalCode: LEGAL_IDENTITY.address.postalCode,
+    addressLocality: LEGAL_IDENTITY.address.locality,
+    addressCountry: 'FR',
+  });
+  // No placeholder identifier while the company is being registered.
+  assert.equal('taxID' in node, LEGAL_IDENTITY.siren !== null);
+  assert.equal('vatID' in node, LEGAL_IDENTITY.vatId !== null);
+  assert.equal('telephone' in node, false);
 });

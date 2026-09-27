@@ -7,6 +7,7 @@ import {
   editorialMetadata,
 } from '@/components/editorial/editorial';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
+import { LEGAL_IDENTITY } from '@/lib/seo/policies';
 import styles from '../cgv/cgv.module.scss';
 
 export const metadata = editorialMetadata({
@@ -59,7 +60,9 @@ export default function MentionsLegalesPage() {
           <p className={styles.eyebrow}>Informations légales</p>
           <h1>Mentions légales</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
-          <p className={styles.version}>Dernière mise à jour : 26 septembre 2026</p>
+          <p className={styles.version}>
+            Dernière mise à jour : 26 septembre 2026
+          </p>
         </Container>
       </section>
 
@@ -97,19 +100,31 @@ export default function MentionsLegalesPage() {
                 <br />
                 Siège social :
                 <br />
-                <strong>74 rue Pierre Valdo</strong>
+                <strong>{LEGAL_IDENTITY.address.street}</strong>
                 <br />
-                <strong>69005 Lyon — France</strong>
-                <br />
-                <br />
-                Société en cours d’immatriculation au{' '}
-                <strong>Registre du commerce et des sociétés de Lyon</strong> et
-                au <strong>Registre national des entreprises</strong>.
+                <strong>
+                  {LEGAL_IDENTITY.address.postalCode}{' '}
+                  {LEGAL_IDENTITY.address.locality} — France
+                </strong>
                 <br />
                 <br />
-                SIREN : <strong>à compléter après immatriculation</strong>
+                Société{' '}
+                {LEGAL_IDENTITY.siren
+                  ? 'immatriculée'
+                  : 'en cours d’immatriculation'}{' '}
+                au <strong>Registre du commerce et des sociétés de Lyon</strong>{' '}
+                et au <strong>Registre national des entreprises</strong>.
                 <br />
-                SIRET : <strong>à compléter après immatriculation</strong>
+                <br />
+                SIREN :{' '}
+                <strong>
+                  {LEGAL_IDENTITY.siren ?? 'à compléter après immatriculation'}
+                </strong>
+                <br />
+                SIRET :{' '}
+                <strong>
+                  {LEGAL_IDENTITY.siret ?? 'à compléter après immatriculation'}
+                </strong>
                 <br />
                 <br />
                 Président : <strong>Quentin SAVIGNY</strong>
@@ -124,8 +139,8 @@ export default function MentionsLegalesPage() {
               </address>
 
               <p>
-                CALDERA bénéficie, sous réserve du maintien des conditions légales
-                applicables, du régime de franchise en base de TVA.
+                CALDERA bénéficie, sous réserve du maintien des conditions
+                légales applicables, du régime de franchise en base de TVA.
               </p>
               <p>
                 <strong>
@@ -176,12 +191,14 @@ export default function MentionsLegalesPage() {
               <ul>
                 <li>cartes Pokémon à l’unité ;</li>
                 <li>produits Pokémon JCC scellés ;</li>
-                <li>accessoires destinés aux jeux de cartes à collectionner.</li>
+                <li>
+                  accessoires destinés aux jeux de cartes à collectionner.
+                </li>
               </ul>
               <p>
                 Les ventes sont régies par les{' '}
-                <Link href="/cgv">Conditions Générales de Vente</Link> disponibles
-                sur le site.
+                <Link href="/cgv">Conditions Générales de Vente</Link>{' '}
+                disponibles sur le site.
               </p>
               <p>CALDERA exerce son activité de manière indépendante.</p>
             </Section>
@@ -217,12 +234,12 @@ export default function MentionsLegalesPage() {
               <p>
                 Toute reproduction, représentation, adaptation, extraction,
                 diffusion ou réutilisation, totale ou partielle, de ces éléments
-                est interdite sans l’autorisation préalable de CALDERA, sauf dans
-                les cas expressément autorisés par la loi.
+                est interdite sans l’autorisation préalable de CALDERA, sauf
+                dans les cas expressément autorisés par la loi.
               </p>
               <p>
-                Toute utilisation non autorisée est susceptible de constituer une
-                atteinte aux droits de propriété intellectuelle de leurs
+                Toute utilisation non autorisée est susceptible de constituer
+                une atteinte aux droits de propriété intellectuelle de leurs
                 titulaires.
               </p>
             </Section>
@@ -231,23 +248,23 @@ export default function MentionsLegalesPage() {
               <p>
                 <strong>Pokémon</strong>, ainsi que les noms, personnages,
                 illustrations, logos, marques, produits et autres éléments
-                associés à l’univers Pokémon, appartiennent à leurs propriétaires
-                et ayants droit respectifs.
+                associés à l’univers Pokémon, appartiennent à leurs
+                propriétaires et ayants droit respectifs.
               </p>
               <p>Les Terres de Caldera est une boutique indépendante.</p>
               <p>
                 Sauf indication expresse contraire,{' '}
                 <strong>
-                  CALDERA / Les Terres de Caldera n’est ni affiliée, ni sponsorisée,
-                  ni administrée par The Pokémon Company, Nintendo, Game Freak ou
-                  Creatures Inc.
+                  CALDERA / Les Terres de Caldera n’est ni affiliée, ni
+                  sponsorisée, ni administrée par The Pokémon Company, Nintendo,
+                  Game Freak ou Creatures Inc.
                 </strong>
               </p>
               <p>
-                La présence de marques, photographies ou références à des produits
-                de tiers sur le site est réalisée uniquement dans le cadre de la
-                présentation et de la commercialisation licite des produits
-                concernés.
+                La présence de marques, photographies ou références à des
+                produits de tiers sur le site est réalisée uniquement dans le
+                cadre de la présentation et de la commercialisation licite des
+                produits concernés.
               </p>
             </Section>
 
@@ -264,7 +281,9 @@ export default function MentionsLegalesPage() {
                 <li>du service client ;</li>
                 <li>des demandes adressées via le formulaire de contact ;</li>
                 <li>de la newsletter ;</li>
-                <li>de la sécurité du site et de la prévention de la fraude.</li>
+                <li>
+                  de la sécurité du site et de la prévention de la fraude.
+                </li>
               </ul>
               <p>
                 Les informations détaillées concernant les traitements réalisés,
@@ -274,8 +293,8 @@ export default function MentionsLegalesPage() {
                 <strong>Politique de confidentialité</strong> du site.
               </p>
               <p>
-                CALDERA n’a pas désigné de délégué à la protection des données à ce
-                jour.
+                CALDERA n’a pas désigné de délégué à la protection des données à
+                ce jour.
               </p>
               <p>
                 Toute demande relative à l’exercice des droits en matière de
@@ -285,9 +304,9 @@ export default function MentionsLegalesPage() {
                 </a>
               </p>
               <p>
-                Les personnes concernées disposent également, dans les conditions
-                prévues par la réglementation applicable, du droit d’introduire
-                une réclamation auprès de la{' '}
+                Les personnes concernées disposent également, dans les
+                conditions prévues par la réglementation applicable, du droit
+                d’introduire une réclamation auprès de la{' '}
                 <strong>
                   Commission nationale de l’informatique et des libertés (CNIL)
                 </strong>
@@ -301,8 +320,8 @@ export default function MentionsLegalesPage() {
                 <strong>Stripe et ses partenaires de paiement</strong>.
               </p>
               <p>
-                Selon les moyens activés et l’éligibilité du client, le site peut
-                notamment proposer :
+                Selon les moyens activés et l’éligibilité du client, le site
+                peut notamment proposer :
               </p>
               <ul>
                 <li>carte bancaire ;</li>
@@ -317,7 +336,8 @@ export default function MentionsLegalesPage() {
               </p>
               <p>
                 Les traitements réalisés par les prestataires de paiement sont
-                soumis à leurs propres conditions et politiques de confidentialité.
+                soumis à leurs propres conditions et politiques de
+                confidentialité.
               </p>
             </Section>
 
@@ -332,8 +352,8 @@ export default function MentionsLegalesPage() {
               <p>
                 <strong>Vercel</strong>
                 <br />
-                Hébergement, déploiement, stockage des images, mesure d’audience et
-                des performances du site.
+                Hébergement, déploiement, stockage des images, mesure d’audience
+                et des performances du site.
               </p>
               <p>
                 <strong>Neon</strong>
@@ -364,8 +384,8 @@ export default function MentionsLegalesPage() {
               <p>
                 <strong>La Poste / Colissimo</strong>
                 <br />
-                Acheminement des commandes à domicile lorsque ce mode de livraison
-                est proposé.
+                Acheminement des commandes à domicile lorsque ce mode de
+                livraison est proposé.
               </p>
               <p>
                 <strong>OVHcloud</strong>
@@ -378,8 +398,8 @@ export default function MentionsLegalesPage() {
             <Section id="section-10" title="10. Mesure d’audience">
               <p>
                 Le site peut utiliser <strong>Vercel Web Analytics</strong> afin
-                d’obtenir des statistiques relatives notamment à la fréquentation
-                et à l’utilisation du site.
+                d’obtenir des statistiques relatives notamment à la
+                fréquentation et à l’utilisation du site.
               </p>
               <p>
                 CALDERA utilise également <strong>Google Search Console</strong>{' '}
@@ -387,13 +407,16 @@ export default function MentionsLegalesPage() {
                 résultats du moteur de recherche Google.
               </p>
               <p>
-                Aucun pixel publicitaire de type Meta Pixel, TikTok Pixel ou Google
-                Ads n’est prévu au lancement du site.
+                Aucun pixel publicitaire de type Meta Pixel, TikTok Pixel ou
+                Google Ads n’est prévu au lancement du site.
               </p>
               <p>
                 Les conditions relatives aux traceurs et technologies similaires
                 sont détaillées dans la{' '}
-                <strong>Politique de confidentialité et relative aux cookies</strong>.
+                <strong>
+                  Politique de confidentialité et relative aux cookies
+                </strong>
+                .
               </p>
             </Section>
 
@@ -409,16 +432,16 @@ export default function MentionsLegalesPage() {
               </p>
               <p>
                 Les informations contractuelles applicables à une commande sont
-                celles présentées au client au moment de la validation de celle-ci,
-                dans les conditions prévues par les{' '}
+                celles présentées au client au moment de la validation de
+                celle-ci, dans les conditions prévues par les{' '}
                 <Link href="/cgv">Conditions Générales de Vente</Link>.
               </p>
               <p>
                 CALDERA ne saurait être tenue responsable des interruptions ou
                 dysfonctionnements du site résultant notamment d’opérations de
-                maintenance, de problèmes techniques ou d’événements indépendants
-                de sa volonté, sans préjudice des droits impératifs dont bénéficie
-                le consommateur.
+                maintenance, de problèmes techniques ou d’événements
+                indépendants de sa volonté, sans préjudice des droits impératifs
+                dont bénéficie le consommateur.
               </p>
             </Section>
 
@@ -428,19 +451,20 @@ export default function MentionsLegalesPage() {
                 exploités par des tiers.
               </p>
               <p>
-                CALDERA n’exerce aucun contrôle général sur les contenus, pratiques
-                ou politiques de ces sites tiers et ne saurait être tenue
-                responsable de leur contenu lorsque cette responsabilité ne lui
-                incombe pas légalement.
+                CALDERA n’exerce aucun contrôle général sur les contenus,
+                pratiques ou politiques de ces sites tiers et ne saurait être
+                tenue responsable de leur contenu lorsque cette responsabilité
+                ne lui incombe pas légalement.
               </p>
             </Section>
 
             <Section id="section-13" title="13. Médiation de la consommation">
               <p>
-                Conformément aux dispositions applicables au règlement amiable des
-                litiges de consommation, le consommateur pourra saisir gratuitement
-                le médiateur de la consommation dont relève CALDERA après avoir
-                adressé une réclamation écrite préalable à la société.
+                Conformément aux dispositions applicables au règlement amiable
+                des litiges de consommation, le consommateur pourra saisir
+                gratuitement le médiateur de la consommation dont relève CALDERA
+                après avoir adressé une réclamation écrite préalable à la
+                société.
               </p>
               <div className={styles.warning}>
                 <p>
@@ -499,21 +523,22 @@ export default function MentionsLegalesPage() {
               <p>
                 Pour faciliter le traitement d’une réclamation relative à une
                 commande, le client est invité à indiquer son nom, son numéro de
-                commande, une description du problème et toute pièce justificative
-                utile.
+                commande, une description du problème et toute pièce
+                justificative utile.
               </p>
             </Section>
 
             <Section id="section-15" title="15. Droit applicable">
               <p>
-                Le présent site et les relations juridiques liées à son utilisation
-                sont régis par le droit français, sous réserve des dispositions
-                impératives plus protectrices éventuellement applicables au
-                consommateur.
+                Le présent site et les relations juridiques liées à son
+                utilisation sont régis par le droit français, sous réserve des
+                dispositions impératives plus protectrices éventuellement
+                applicables au consommateur.
               </p>
               <p>
                 Les ventes réalisées sur le site sont régies par les{' '}
-                <Link href="/cgv">Conditions Générales de Vente</Link> de CALDERA.
+                <Link href="/cgv">Conditions Générales de Vente</Link> de
+                CALDERA.
               </p>
             </Section>
           </div>

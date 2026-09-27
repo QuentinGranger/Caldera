@@ -2,7 +2,12 @@
 // describes what the page shows; missing facts are omitted, never guessed.
 import { absoluteUrl, siteOrigin } from '@/lib/site';
 import type { Availability } from '@/types/product';
-import { HANDLING_TIME, ORGANIZATION, RETURN_POLICY } from './policies';
+import {
+  HANDLING_TIME,
+  LEGAL_IDENTITY,
+  ORGANIZATION,
+  RETURN_POLICY,
+} from './policies';
 import type { FaqEntry } from './types';
 
 export type JsonLdValue =
@@ -70,6 +75,16 @@ export function organizationNode(): JsonLdNode {
       height: ORGANIZATION.logo.height,
     },
     email: ORGANIZATION.email,
+    // Registered office, not a shop open to the public.
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: LEGAL_IDENTITY.address.street,
+      postalCode: LEGAL_IDENTITY.address.postalCode,
+      addressLocality: LEGAL_IDENTITY.address.locality,
+      addressCountry: LEGAL_IDENTITY.address.country,
+    },
+    taxID: LEGAL_IDENTITY.siren ?? undefined,
+    vatID: LEGAL_IDENTITY.vatId ?? undefined,
   });
 }
 

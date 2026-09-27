@@ -4,7 +4,7 @@
 /** Trade name and legal identity, from /mentions-legales (section 1). */
 export const ORGANIZATION = {
   name: 'Les Terres de Caldera',
-  /** SIREN/SIRET and address are omitted until the company is registered. */
+  /** Identifiers and office: LEGAL_IDENTITY. */
   legalName: 'CALDERA',
   path: '/',
   logo: {
@@ -15,6 +15,35 @@ export const ORGANIZATION = {
   /** Displayed publicly in /mentions-legales and /cgv. */
   email: 'contact@lesterresdecaldera.fr',
 } as const;
+
+/**
+ * Registered office and identifiers, shown in /mentions-legales and in the
+ * Organization JSON-LD. Fill siren/siret (and vatId if any) once the company is
+ * registered: both places update. No shop is open to the public at this address.
+ */
+export const LEGAL_IDENTITY: {
+  legalForm: string;
+  address: {
+    street: string;
+    postalCode: string;
+    locality: string;
+    country: string;
+  };
+  siren: string | null;
+  siret: string | null;
+  vatId: string | null;
+} = {
+  legalForm: 'Société par actions simplifiée unipersonnelle (SASU)',
+  address: {
+    street: '74 rue Pierre Valdo',
+    postalCode: '69005',
+    locality: 'Lyon',
+    country: 'FR',
+  },
+  siren: null,
+  siret: null,
+  vatId: null,
+};
 
 /** Withdrawal and returns, from /cgv articles 10 and 12. */
 export const RETURN_POLICY = {
