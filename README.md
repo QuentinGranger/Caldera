@@ -485,7 +485,7 @@ Cette commande est volontairement distincte des suites hors réseau : elle crée
 
 ## Périmètre restant
 
-Catalogue, panier, checkout, commandes et paiement Stripe TEST sont implémentés sur PostgreSQL. Les produits et tarifs de livraison restent des démonstrations. Stripe Tax et Invoicing sont planifiés dans `docs/stripe-integration-plan.md` mais non activés. L’administration interne est implémentée en phase 9. La préparation, le suivi manuel et les emails transactionnels Resend sont implémentés en phase 10 (envois désactivés). APIs transporteurs, étiquettes, factures, remboursements automatisés, retours, comptes clients, favoris et codes promo restent hors périmètre. Aucune phase suivante n’est commencée.
+Catalogue, panier, checkout, commandes et paiement Stripe TEST sont implémentés sur PostgreSQL. Le catalogue de production est volontairement vide pendant la préouverture et aucun tarif de livraison fictif n’est installé. Stripe Tax et Invoicing sont planifiés dans `docs/stripe-integration-plan.md` mais non activés. L’administration interne est implémentée en phase 9. La préparation, le suivi manuel et les emails transactionnels Resend sont implémentés en phase 10 ; les envois sont actifs en production, alors que l’environnement local reste désactivé par défaut. APIs transporteurs, étiquettes, factures, remboursements automatisés, retours, favoris et codes promo restent hors périmètre.
 
 ## Administration (phase 9)
 
@@ -597,7 +597,7 @@ Les validations détaillées et l’inventaire des fichiers sont dans [docs/phas
 
 Phase 10 : **Resend**, isolé derrière `EmailProvider` (`src/lib/email/provider.ts`), appelé avec `fetch` côté serveur. Aucune dépendance email supplémentaire. Les deux templates HTML / texte sont dans `src/emails/templates.ts`. Ils utilisent exclusivement les snapshots de commande, sans coûts, notes internes ni informations bancaires.
 
-**Les envois réels restent désactivés**, conformément au choix actuel. Aucun destinataire de recette ni domaine expéditeur n’a été validé. Les emails sont enregistrés et consultables depuis la commande admin même sans clé Resend.
+**Les envois réels sont actifs en production.** Le 27 septembre 2026, le formulaire public a envoyé un message de recette que l’API Resend a accepté. Le DNS public expose le DKIM `resend._domainkey` ainsi que le SPF et le MX du sous-domaine `send.lesterresdecaldera.fr`. L’environnement local conserve `EMAILS_ENABLED=false` pour empêcher tout envoi accidentel pendant les tests.
 
 | Variable                 | Configuration                                                                                                    |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
@@ -611,7 +611,7 @@ Phase 10 : **Resend**, isolé derrière `EmailProvider` (`src/lib/email/provider
 
 `ORDER_ACCESS_SECRET` a été généré dans le `.env` local sans afficher sa valeur. Pour un autre environnement, générer un secret distinct (`openssl rand -hex 32`) et le renseigner dans son gestionnaire de secrets. Conserver le `.env` existant ; ne pas l’écraser avec l’exemple.
 
-Avant un envoi réel, valider le domaine et ses enregistrements SPF/DKIM dans Resend, configurer l’expéditeur et une adresse de test, puis activer `EMAILS_ENABLED`. L’origine et le logo doivent être accessibles publiquement pour un destinataire distant : les URL localhost ne sont utiles que sur la machine de développement. Aucun domaine n’est déclaré vérifié par ce projet.
+L’origine et le logo sont publics en production. La réception finale ne peut pas être déduite du statut HTTP du fournisseur : contrôler le message de recette dans Gmail et Outlook, dossier indésirable compris. Pour chaque boîte, noter réception, classement, expéditeur affiché et rendu HTML/texte. Ne jamais activer les envois sur une copie locale de données de production.
 
 ```text
 Webhook Stripe vérifié
@@ -629,6 +629,8 @@ Le processeur prend possession du travail avec `FOR UPDATE SKIP LOCKED`, un bail
 Resend conserve ses [clés d’idempotence pendant 24 heures](https://resend.com/docs/dashboard/emails/idempotency-keys). Par prudence, toute reprise après **23 heures depuis la première tentative** est bloquée pour vérification chez le fournisseur, y compris après un crash ou un retry manuel retardé. Ce mécanisme évite de présenter une garantie illimitée d’envoi unique que le fournisseur ne propose pas. Un timeout peut signifier que Resend a accepté l’email : ne jamais effacer la ligne ou changer sa clé pour forcer un nouvel envoi.
 
 Maximum **5 tentatives**. Les échecs passent à `FAILED`, avec code contrôlé et reprise différée (1, 2, 4, 8 minutes entre les cinq tentatives). Un `SENDING` abandonné peut être repris après expiration du bail, dans la même fenêtre d’idempotence. L’admin peut réessayer un `FAILED` éligible ; un `SENT` ne peut pas être renvoyé. Un problème Resend ne remet jamais en cause le paiement, le stock consommé ou l’expédition.
+
+Recette de reprise effectuée le 27 septembre 2026 sur un PostgreSQL temporaire propre : échec fournisseur 503, backoff, reprise admin, deux workers concurrents, réponse fournisseur perdue et fenêtre d’idempotence expirée. Les 15 scénarios de `test:fulfillment:db` passent, sans envoi réseau pendant cette simulation. En production, le planificateur Neon exécute le processeur chaque minute.
 
 `SENT` signifie **accepté par le fournisseur**, pas réception effective. L’identifiant Resend est conservé ; les bounces / plaintes / webhooks de délivrabilité sont reportés. Un défaut de configuration globale laisse la file en attente ; consulter les logs contrôlés et la configuration. Aucun corps de réponse fournisseur brut ou secret n’est journalisé.
 
@@ -685,7 +687,7 @@ npm run test:admin:http
 npm run test:payments:http
 ```
 
-Recette et inventaire exact des fichiers : [docs/phase-10.md](docs/phase-10.md). Les tests email utilisent un fournisseur simulé : aucun email Resend réel n’a été envoyé. Restent la configuration du fournisseur, la réception sur une adresse choisie, la vérification visuelle desktop/mobile et l’aperçu d’impression dans un navigateur. Ne pas lancer `next dev` pendant `next build`.
+Recette et inventaire exact des fichiers : [docs/phase-10.md](docs/phase-10.md). Un email de contact réel a été accepté par Resend le 27 septembre 2026 ; les tests de reprise utilisent un fournisseur simulé pour provoquer les pannes sans envoyer de doublons. Restent la confirmation de réception dans Gmail et Outlook, la vérification visuelle desktop/mobile et l’aperçu d’impression dans un navigateur. Les emails de commande seront validés avec le premier vrai produit pendant la recette de préouverture. Ne pas lancer `next dev` pendant `next build`.
 
 ## Tâches planifiées (production)
 

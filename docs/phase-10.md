@@ -1,6 +1,6 @@
 # Phase 10 — Emails, préparation, expédition et suivi
 
-Projet existant : `/Users/quentin/Downloads/Les terres de Caldera`. Next.js **16.3.5**, React **19.3.0**, Prisma **7.10.0** conservés. Livraison du 20 septembre 2026. Resend retenu par l’utilisateur ; envois réels désactivés, sans destinataire de recette actuellement.
+Projet existant : `/Users/quentin/Downloads/Les terres de Caldera`. Next.js **16.3.5**, React **19.3.0**, Prisma **7.10.0** conservés. Livraison initiale du 20 septembre 2026. Mise à jour du 27 septembre : Resend est configuré et actif en production ; un email de contact réel a été accepté par le fournisseur.
 
 ## 1. Fichiers créés
 
@@ -94,7 +94,7 @@ Transporteurs centralisés : Colissimo, Mondial Relay, Chronopost, UPS, DHL, Aut
 
 ## 13. Fournisseur
 
-**Resend**, choisi explicitement. Endpoint officiel `POST /emails`. Domaine expéditeur/SPF/DKIM et destinataire de recette restent à configurer ; aucun email réel envoyé. Documentation : [envoi d’emails Resend](https://resend.com/docs/api-reference/emails/send-email).
+**Resend**, choisi explicitement. Endpoint officiel `POST /emails`. Le domaine d’envoi publie DKIM ainsi que le SPF/MX du sous-domaine `send`, et l’envoi réel du 27 septembre a reçu une réponse fournisseur positive. La présence effective dans Gmail et Outlook reste à confirmer dans les boîtes concernées. Documentation : [envoi d’emails Resend](https://resend.com/docs/api-reference/emails/send-email).
 
 ## 14. Abstraction email
 
@@ -142,18 +142,18 @@ Session/rôle/admin actif vérifiés avant lectures et Server Actions, contrôle
 
 ## 25. Tests
 
-- `test:fulfillment:db` : **14 scénarios**, PostgreSQL réel, fournisseur simulé : paiement requis, disabled, HTML/URLs/signature, échec/backoff/retry, concurrence workers, préparation, brouillon, double expédition, correction, reprise ambiguë, limite/fenêtre expirée, destinataire figé, absence de suivi/livraison manuelle, changements d’heure, admin révoqué (certains regroupés dans le même scénario).
+- `test:fulfillment:db` : **15 scénarios**, PostgreSQL réel, fournisseur simulé : paiement requis, disabled, HTML/URLs/signature, échec/backoff/retry, concurrence workers, préparation, brouillon, double expédition, correction, reprise ambiguë, limite/fenêtre expirée, destinataire figé, absence de suivi/livraison manuelle, changements d’heure, admin révoqué (certains regroupés dans le même scénario). Nouvelle exécution réussie le 27 septembre sur une base temporaire propre.
 - `test:payments:db` : **16 scénarios**, dont doubles webhooks avec exactement une confirmation PENDING et un seul stock consommé.
 - `test:admin:db` : **15 scénarios** de non-régression.
 - `test:admin:http` : **11 scénarios**, serveur de production local : authentification/actions, workflow logistique, filtres/recherche, aperçu privé, bon, lien signé en lecture seule, retry et livraison.
 - `test:payments:http` : **6 scénarios**, protection du parcours paiement conservée.
 - `test:stripe:sandbox` : **3 scénarios Stripe TEST réels** : succès, refus, authentification requise. Le vrai webhook signé de succès confirme PAID et crée exactement un email PENDING sans tentative d’envoi. Aucun débit réel ; fixtures locales nettoyées, traces Stripe TEST conservées.
 
-Le runner Node compte aussi chaque test parent : 67 résultats pour les cinq suites DB/HTTP, soit 62 scénarios utiles. Aucun navigateur de contrôle connecté : rendu desktop/mobile, focus interactif, aperçu d’impression, Payment Element et défi 3DS interactif restent à vérifier visuellement. L’HTML et les routes ont été testés, pas la réception dans Gmail/Outlook ni la délivrabilité Resend.
+Le runner Node compte aussi chaque test parent. Aucun navigateur de contrôle connecté : rendu desktop/mobile, focus interactif, aperçu d’impression, Payment Element et défi 3DS interactif restent à vérifier visuellement. L’envoi Resend est accepté ; la réception et le classement dans Gmail/Outlook restent à vérifier manuellement.
 
 ## 26. Reporté volontairement
 
-Configuration réelle Resend et domaine, premier destinataire de test/réception, scheduler de production, webhooks de délivrabilité, APIs transporteurs/étiquettes/point relais, expéditions partielles, factures, remboursements, retours, comptes clients. Aucune phase suivante commencée.
+Confirmation visuelle Gmail/Outlook, webhooks de délivrabilité Resend, APIs transporteurs/étiquettes/point relais, expéditions partielles, factures, remboursements et retours.
 
 ## 27. Prisma generate
 
