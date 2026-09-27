@@ -1,0 +1,51 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Heart } from 'lucide-react';
+import { ProductCard } from '@/components/product/ProductCard/ProductCard';
+import { Container } from '@/components/ui/Container/Container';
+import { getWishlistProducts, getWishlistSnapshot } from '@/lib/wishlist/data';
+import styles from './wishlist.module.scss';
+
+export const metadata: Metadata = {
+  title: 'Mes favoris',
+  description: 'Retrouvez votre sélection de produits préférés.',
+  robots: { index: false, follow: false },
+};
+
+export default async function WishlistPage() {
+  const snapshot = await getWishlistSnapshot();
+  const products = await getWishlistProducts(snapshot);
+
+  return (
+    <main id="contenu" tabIndex={-1} className={styles.main}>
+      <Container>
+        <header className={styles.header}>
+          <p className={styles.eyebrow}>MA SÉLECTION</p>
+          <h1>Mes favoris</h1>
+          <p>
+            {snapshot.authenticated
+              ? 'Votre sélection est enregistrée dans votre compte.'
+              : 'Votre sélection est conservée pendant cette session. Connectez-vous pour la retrouver dans votre compte.'}
+          </p>
+        </header>
+        {products.length ? (
+          <div className={styles.grid}>
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <section className={styles.empty}>
+            <Heart size={34} strokeWidth={1.4} aria-hidden="true" />
+            <h2>Votre sélection est vide</h2>
+            <p>
+              Touchez le cœur d’un produit pour le garder ici et le retrouver
+              facilement.
+            </p>
+            <Link href="/catalogue">Explorer le catalogue</Link>
+          </section>
+        )}
+      </Container>
+    </main>
+  );
+}

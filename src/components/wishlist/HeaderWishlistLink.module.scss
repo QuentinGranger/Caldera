@@ -1,0 +1,9 @@
+@use '../../styles/abstracts/variables' as v;
+
+.active {
+  color: v.$color-gold-light;
+
+  svg {
+    fill: currentColor;
+  }
+}

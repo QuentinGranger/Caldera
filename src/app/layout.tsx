@@ -11,6 +11,8 @@ import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
 import { SpeedInsights } from '@/components/monitoring/SpeedInsights';
 import { rootMetadata } from '@/components/layout/siteMetadata';
+import { WishlistProvider } from '@/components/wishlist/WishlistProvider';
+import { getWishlistSnapshot } from '@/lib/wishlist/data';
 
 import './globals.scss';
 
@@ -33,22 +35,28 @@ export const metadata: Metadata = rootMetadata();
 export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  const [cart, wishlist] = await Promise.all([
+    getCart(),
+    getWishlistSnapshot(),
+  ]);
   return (
     <html lang="fr" className={`${headingFont.variable} ${bodyFont.variable}`}>
       <body>
         <a className="skip-link" href="#contenu">
           Aller au contenu
         </a>
-        <CartProvider cart={await getCart()}>
-          <StorefrontOnly>
-            <AnnouncementBar />
-            <Header />
-          </StorefrontOnly>
-          {children}
-          <StorefrontOnly>
-            <Footer />
-            <SpeedInsights />
-          </StorefrontOnly>
+        <CartProvider cart={cart}>
+          <WishlistProvider snapshot={wishlist}>
+            <StorefrontOnly>
+              <AnnouncementBar />
+              <Header />
+            </StorefrontOnly>
+            {children}
+            <StorefrontOnly>
+              <Footer />
+              <SpeedInsights />
+            </StorefrontOnly>
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

@@ -73,7 +73,12 @@ export function MobileNavigation({
     {
       id: 'mobile-service-heading',
       title: 'Aide et compte',
-      links: [navigation.account, navigation.delivery, navigation.contact],
+      links: [
+        navigation.account,
+        { href: '/favoris', label: 'Favoris' },
+        navigation.delivery,
+        navigation.contact,
+      ],
     },
   ];
 

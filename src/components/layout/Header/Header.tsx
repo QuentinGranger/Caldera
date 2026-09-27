@@ -1,14 +1,15 @@
 import Image from 'next/image';
 import { CartButton } from '@/components/cart/CartButton';
 import Link from 'next/link';
-import { Heart, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
-import { IconButton, IconLink } from '@/components/ui/IconButton/IconButton';
+import { IconLink } from '@/components/ui/IconButton/IconButton';
 import { Navigation } from '@/components/layout/Navigation/Navigation';
 import { MobileNavigation } from '@/components/layout/MobileNavigation/MobileNavigation';
 import { getSiteNavigation, headerItems } from '@/data/navigation';
 import styles from './Header.module.scss';
 import { HeaderSearch } from '@/components/layout/HeaderSearch/HeaderSearch';
+import { HeaderWishlistLink } from '@/components/wishlist/HeaderWishlistLink';
 export async function Header() {
   const navigation = await getSiteNavigation();
   return (
@@ -44,13 +45,7 @@ export async function Header() {
           >
             <UserRound aria-hidden="true" />
           </IconLink>
-          <IconButton
-            className={styles.desktop}
-            label="Favoris — bientôt disponibles"
-            disabled
-          >
-            <Heart aria-hidden="true" />
-          </IconButton>
+          <HeaderWishlistLink className={styles.desktop} />
           <CartButton />
         </div>
       </Container>
