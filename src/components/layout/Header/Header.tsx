@@ -39,11 +39,10 @@ export async function Header() {
           <HeaderSearch />
           <IconLink
             href={navigation.account.href}
-            className={`${styles.desktop} ${styles.account}`}
+            className={styles.desktop}
             label={navigation.account.label}
           >
             <UserRound aria-hidden="true" />
-            <span aria-hidden="true">Compte</span>
           </IconLink>
           <IconButton
             className={styles.desktop}
