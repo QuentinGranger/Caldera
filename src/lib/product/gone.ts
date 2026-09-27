@@ -4,7 +4,8 @@
 import 'server-only';
 import { getPrisma } from '@/lib/db/prisma';
 import { getCategories } from '@/lib/catalog/taxonomy';
-import { getLandingIndex, sharedCache } from '@/lib/seo/registry';
+import { sharedCache } from '@/lib/cache/catalogCache';
+import { getLandingIndex } from '@/lib/seo/registry';
 import {
   CATALOGUE_PATH,
   archivedProductTarget,

@@ -23,7 +23,6 @@ import {
   type FacetLanguage,
 } from './facets';
 import {
-  CATALOG_CACHE_TAG,
   categoryDescendants,
   categoryHubPath,
   categoryLineage,
@@ -31,6 +30,7 @@ import {
   type IndexedPage,
   type LandingIndex,
 } from './registry';
+import { CATALOG_CACHE_TAG } from '@/lib/cache/catalogCache';
 import type {
   CategoryRef,
   GameRef,

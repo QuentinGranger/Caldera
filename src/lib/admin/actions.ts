@@ -1,10 +1,10 @@
 'use server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
-import { CATALOG_CACHE_TAG } from '@/lib/seo/registry';
+import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { getAdminAuth, requireAdmin } from './auth';
 import { allowLogin } from './login';
 import { AdminError, text, whitelist } from './validation';
@@ -40,7 +40,8 @@ function failure(error: unknown): AdminActionState {
 }
 async function invalidateCatalog(productId?: string, previousSlug?: string) {
   // Registry aggregates, landing index and navigation are cached under this tag.
-  revalidateTag(CATALOG_CACHE_TAG, 'max');
+  // Immediate: a price or stock change must never show stale for one visit.
+  invalidateCatalogCache();
   revalidatePath('/');
   revalidatePath('/catalogue');
   revalidatePath('/categorie/[slug]', 'page');

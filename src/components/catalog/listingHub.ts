@@ -23,9 +23,9 @@ import {
   getLandingIndex,
   getScopeStats,
   getScopeWhere,
-  sharedCache,
   type RegistryScope,
 } from '@/lib/seo/registry';
+import { sharedCache } from '@/lib/cache/catalogCache';
 import type {
   GameRef,
   IndexDecision,

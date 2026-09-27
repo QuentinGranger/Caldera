@@ -5,6 +5,7 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 import { Prisma } from '@/generated/prisma/client';
+import { CATALOG_CACHE_TAG, sharedCache } from '@/lib/cache/catalogCache';
 import { visibleProductWhere } from '@/lib/catalog/queries';
 import {
   getCategories,
@@ -40,39 +41,10 @@ import type {
   StatusSlug,
 } from './types';
 
-/** Cache tag of every catalog aggregate: revalidateTag('catalog', 'max') after a write. */
-export const CATALOG_CACHE_TAG = 'catalog';
 const REVALIDATE_SECONDS = 3600;
 // Stock and price aggregates shown in page text: never older than 5 minutes,
 // and invalidated at once by admin writes and confirmed payments.
 const AGGREGATE_REVALIDATE_SECONDS = 300;
-
-/**
- * unstable_cache shared across requests, falling back to a direct call where
- * Next provides no cache store (scripts, DB tests).
- */
-export function sharedCache<Args extends string[], Result>(
-  fn: (...args: Args) => Promise<Result>,
-  keyParts: string[],
-  revalidate: number,
-) {
-  const cached = unstable_cache(fn, keyParts, {
-    tags: [CATALOG_CACHE_TAG],
-    revalidate,
-  });
-  return async (...args: Args): Promise<Result> => {
-    try {
-      return await cached(...args);
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.startsWith('Invariant: incrementalCache missing')
-      )
-        return fn(...args);
-      throw error;
-    }
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Category tree (pure)

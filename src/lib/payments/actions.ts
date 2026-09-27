@@ -15,6 +15,7 @@ import { validateIntent } from './validation';
 import { ensureIntent, paymentPreflight } from './intents';
 import { cancelOrder, currentOrder } from './cancel';
 import { reconcilePaymentIntent } from './events';
+import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 
 const payableIntentStatuses = new Set([
   'requires_payment_method',
@@ -35,11 +36,7 @@ function cancelLog(message: string) {
   if (process.env.NODE_ENV !== 'production') console.info(message);
 }
 
-function unavailable(
-  message: string,
-  retryable = false,
-  cancelable = true,
-) {
+function unavailable(message: string, retryable = false, cancelable = true) {
   return {
     success: false as const,
     retryable,
@@ -74,6 +71,7 @@ export async function startPaymentAction(sessionId: unknown) {
     assertPaymentConfiguration();
     const order = await prepareOrder(await getCartCookie(), sessionId);
     revalidatePath('/', 'layout');
+    invalidateCatalogCache();
     return {
       success: true as const,
       href: `/checkout/paiement/${order.publicId}`,
@@ -193,6 +191,7 @@ export async function retryPaymentAction(publicId: unknown) {
       await reconcilePaymentIntent(intent);
       const current = await currentOrder(order.id);
       revalidatePath('/', 'layout');
+      invalidateCatalogCache();
 
       if (['CANCELLED', 'EXPIRED'].includes(current.status)) {
         return {
@@ -264,6 +263,7 @@ export async function cancelPaymentAction(publicId: unknown) {
     const outcome = await cancelOrder(order.id);
     let current = await currentOrder(order.id);
     revalidatePath('/', 'layout');
+    invalidateCatalogCache();
 
     if (outcome.kind === 'cancelled') {
       cancelLog('cancelPaymentAction: cancelled');
@@ -286,6 +286,7 @@ export async function cancelPaymentAction(publicId: unknown) {
         await reconcilePaymentIntent(intent);
         current = await currentOrder(order.id);
         revalidatePath('/', 'layout');
+        invalidateCatalogCache();
       }
 
       const message =

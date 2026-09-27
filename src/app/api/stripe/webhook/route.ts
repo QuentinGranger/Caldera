@@ -1,6 +1,5 @@
 import { after } from 'next/server';
-import { revalidateTag } from 'next/cache';
-import { CATALOG_CACHE_TAG } from '@/lib/seo/registry';
+import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { safelyProcessEmails } from '@/lib/email/processor';
 import { getStripe, stripeMode } from '@/lib/stripe/stripe';
 import { verifyWebhook } from '@/lib/stripe/webhook';
@@ -37,7 +36,7 @@ export async function POST(request: Request) {
     const intent = await getStripe().paymentIntents.retrieve(object.id);
     await processPaymentEvent(event.id, event.type, intent);
     // Stock just changed (consumed or released): stock texts must not lag.
-    revalidateTag(CATALOG_CACHE_TAG, { expire: 0 });
+    invalidateCatalogCache();
     after(async () => {
       await safelyProcessEmails();
     });

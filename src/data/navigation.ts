@@ -14,7 +14,7 @@ import {
   type NavigationFamily,
 } from '@/lib/seo/links';
 import type { ListingKind } from '@/lib/seo/metadata';
-import { CATALOG_CACHE_TAG } from '@/lib/seo/registry';
+import { CATALOG_CACHE_TAG } from '@/lib/cache/catalogCache';
 
 export interface NavLink {
   href: string;

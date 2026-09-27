@@ -2,6 +2,7 @@ import 'server-only';
 import { processPendingEmails } from '@/lib/email/processor';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
+import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import type { PaymentGateway } from '@/lib/stripe/stripe';
 
 export const maintenanceJobs = [
@@ -22,6 +23,8 @@ const tasks: Record<
 > = {
   'expire-reservations': async ({ gateway }) => {
     const counts = await expireReservations(gateway);
+    // Released reservations put units back on sale.
+    if (counts.inspected > 0) invalidateCatalogCache();
     return { ok: counts.failures === 0, counts };
   },
   'process-emails': async ({ provider }) => ({
