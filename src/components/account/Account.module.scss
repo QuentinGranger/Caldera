@@ -1,14 +1,16 @@
 @use '@/styles/abstracts/variables' as v;
 @use '@/styles/abstracts/mixins' as m;
 
-.main {
-  padding-block: clamp(2.5rem, 6vw, 5rem);
-}
+// Customer area: sign-in pages (auth*), then the signed-in space (area),
+// shared form parts and order cards. Mobile first.
 
-// Sign-in, sign-up and link pages: one narrow card.
-.narrow {
-  max-width: 34rem;
-  margin-inline: auto;
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .eyebrow {
@@ -16,37 +18,167 @@
   color: v.$color-text-muted;
 }
 
-.title {
-  font-family: v.$font-heading;
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
-  line-height: 1.1;
-  margin-block: 0.6rem 1rem;
-}
-
 .lead {
   color: v.$color-text-muted;
+  font-size: 0.95rem;
   line-height: 1.7;
-  margin-bottom: 2rem;
+  max-width: 40rem;
 }
 
-.card {
+.notice {
+  padding: 0.9rem 1rem;
+  background: v.$color-surface;
+  border-left: 3px solid v.$color-gold;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  a {
+    text-decoration: underline;
+  }
+}
+
+// Sign-in, sign-up, password and e-mail link pages
+
+.authMain {
+  padding-block: clamp(2rem, 5vw, 4.5rem);
+}
+
+.authGrid {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 68rem;
+  margin-inline: auto;
+  @media (min-width: 60rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+    gap: 2rem;
+  }
+}
+
+.authCard {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
   background: v.$color-surface;
   border: 1px solid v.$color-border;
   border-radius: v.$radius-medium;
-  padding: clamp(1.25rem, 4vw, 2rem);
+  box-shadow: v.$shadow-soft;
+  .notice {
+    background: v.$color-background;
+  }
 }
 
-.subheading {
+.authTitle {
+  font-family: v.$font-heading;
+  font-size: clamp(2.1rem, 5vw, 2.8rem);
+  line-height: 1.1;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+  padding: 0.25rem;
+  background: v.$color-background-secondary;
+  border-radius: v.$radius-pill;
+  a {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    border-radius: v.$radius-pill;
+    color: v.$color-text-muted;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    transition:
+      background v.$transition-fast,
+      color v.$transition-fast;
+    &:hover {
+      color: v.$color-text;
+    }
+    &[aria-current='page'] {
+      background: v.$color-green-dark;
+      color: v.$color-text-on-dark;
+    }
+  }
+}
+
+.brandPanel {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  min-width: 0;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: v.$color-green-dark;
+  border-radius: v.$radius-medium;
+  color: v.$color-text-on-dark;
+  @media (min-width: 60rem) {
+    min-height: 32rem;
+    &::after {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgb(0 47 34 / 20%) 0%,
+        rgb(0 47 34 / 70%) 45%,
+        rgb(0 47 34 / 96%) 100%
+      );
+      content: '';
+    }
+  }
+}
+
+.brandImage {
+  display: none;
+  object-fit: cover;
+  @media (min-width: 60rem) {
+    display: block;
+  }
+}
+
+.brandContent {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+}
+
+.brandEyebrow {
   @include m.eyebrow;
-  color: v.$color-text-muted;
-  margin-block: 2.5rem 1rem;
+  color: v.$color-gold;
+}
+
+.brandTitle {
+  color: v.$color-cream;
+  font: 500 clamp(1.8rem, 4vw, 2.3rem) / 1.1 v.$font-heading;
+}
+
+.benefits {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  svg {
+    margin-top: 0.15rem;
+    color: v.$color-gold-light;
+  }
 }
 
 .links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
-  margin-top: 1.5rem;
+  gap: 0 1.5rem;
   font-size: 0.85rem;
   a {
     display: inline-flex;
@@ -56,61 +188,150 @@
   }
 }
 
+.legal {
+  color: v.$color-text-muted;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+  }
+}
+
+.resend {
+  margin-top: 0.5rem;
+  summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 700;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  &[open] summary svg {
+    transform: rotate(180deg);
+  }
+  > form {
+    margin-top: 0.75rem;
+  }
+}
+
+// Forms
+
 .form {
   min-width: 0;
 }
 
 .fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
   display: grid;
   gap: 1.1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .field {
   min-width: 0;
   label {
     display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
     margin-bottom: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
   }
   input {
     width: 100%;
     min-height: 48px;
+    padding: 0.75rem 0.9rem;
+    background: v.$color-background;
     border: 1px solid v.$color-border;
     border-radius: v.$radius-small;
-    padding: 0.75rem;
-    background: v.$color-background;
     color: v.$color-text;
     font-size: 1rem;
+    transition: border-color v.$transition-fast;
+    &:hover {
+      border-color: v.$color-text-muted;
+    }
+    &:focus-visible {
+      border-color: v.$color-green;
+      outline: 2px solid v.$color-green;
+      outline-offset: 1px;
+    }
     &[aria-invalid='true'] {
       border-color: v.$color-danger;
     }
   }
 }
 
+.passwordInput {
+  position: relative;
+  input {
+    padding-right: 3.25rem;
+  }
+}
+
+.reveal {
+  position: absolute;
+  top: 50%;
+  right: 0.2rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: v.$radius-small;
+  color: v.$color-text-muted;
+  cursor: pointer;
+  transform: translateY(-50%);
+  &:hover,
+  &[aria-pressed='true'] {
+    color: v.$color-text;
+  }
+  &:focus-visible {
+    outline: 2px solid v.$color-green;
+  }
+}
+
 .hint {
+  margin-bottom: 0.45rem;
   color: v.$color-text-muted;
   font-size: 0.75rem;
   line-height: 1.6;
-  margin-bottom: 0.45rem;
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+  }
 }
 
 .fieldError {
+  margin-top: 0.4rem;
   color: v.$color-danger;
   font-size: 0.75rem;
-  margin-top: 0.4rem;
+}
+
+.pair {
+  display: grid;
+  gap: 1.1rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
 }
 
 .success,
 .error {
-  padding: 1rem;
-  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.1rem;
   background: v.$color-background;
   border-left: 3px solid v.$color-green;
+  border-radius: 0 v.$radius-small v.$radius-small 0;
   font-size: 0.85rem;
   line-height: 1.7;
   &:focus {
@@ -118,8 +339,8 @@
     outline-offset: 2px;
   }
   ul {
-    padding-left: 1.25rem;
     margin-top: 0.5rem;
+    padding-left: 1.25rem;
   }
   a {
     text-decoration: underline;
@@ -134,25 +355,32 @@
 .submit,
 .dangerButton,
 .secondary {
+  display: inline-flex;
   justify-self: start;
-  min-height: 3.2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3.1rem;
   padding: 0.85rem 1.5rem;
   border: 1px solid transparent;
   border-radius: v.$radius-small;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
-  transition: background v.$transition-fast;
+  transition:
+    background v.$transition-fast,
+    border-color v.$transition-fast;
   &:disabled {
-    opacity: 0.6;
     cursor: wait;
+    opacity: 0.6;
   }
 }
 
 .submit {
   background: v.$color-green-dark;
   color: v.$color-text-on-dark;
-  &:hover:enabled {
+  &:hover:not(:disabled) {
     background: v.$color-green;
   }
 }
@@ -164,124 +392,612 @@
 
 .secondary {
   background: transparent;
-  color: v.$color-text;
   border-color: v.$color-border;
+  color: v.$color-text;
   &:hover {
     border-color: v.$color-text;
   }
 }
 
-.notice {
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  background: v.$color-surface;
-  border-left: 3px solid v.$color-gold;
-  font-size: 0.85rem;
-  line-height: 1.7;
+.wide {
+  justify-self: stretch;
+  width: 100%;
 }
 
-// Dashboard
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  .title {
-    margin-bottom: 0.25rem;
-  }
-  p {
-    color: v.$color-text-muted;
-    overflow-wrap: anywhere;
-  }
+// Signed-in space
+
+.main {
+  padding-block: clamp(1.5rem, 4vw, 3.5rem);
 }
 
-.sections {
+.area {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.75rem;
   @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-columns: 17rem minmax(0, 1fr);
+    gap: 3rem;
     align-items: start;
   }
 }
 
-.column {
+.sidebar {
+  min-width: 0;
+  @include m.from(v.$breakpoint-desktop) {
+    position: sticky;
+    top: 1.5rem;
+    padding: 1.25rem;
+    background: v.$color-surface;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-medium;
+  }
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+  > div {
+    min-width: 0;
+  }
+}
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: v.$color-green-dark;
+  border-radius: 50%;
+  color: v.$color-gold-light;
+  font: 600 1.05rem/1 v.$font-heading;
+}
+
+.identityName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.identityEmail {
+  color: v.$color-text-muted;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.accountNav {
+  margin-top: 1rem;
+  ul {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0 0 0.25rem;
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+    // The row scrolls: its right edge fades out to show there is more.
+    mask-image: linear-gradient(90deg, #000 82%, transparent);
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  li {
+    flex: none;
+  }
+  a,
+  .signOut {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.5rem 0.95rem;
+    background: v.$color-surface;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-pill;
+    color: v.$color-text;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background v.$transition-fast;
+    svg {
+      flex-shrink: 0;
+    }
+  }
+  a[aria-current='page'] {
+    background: v.$color-green-dark;
+    border-color: v.$color-green-dark;
+    color: v.$color-text-on-dark;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid v.$color-border;
+    ul {
+      display: grid;
+      gap: 0.25rem;
+      padding: 0;
+      overflow: visible;
+      mask-image: none;
+    }
+    a,
+    .signOut {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      background: transparent;
+      border: 0;
+      border-radius: v.$radius-small;
+      &:hover {
+        background: v.$color-background;
+      }
+    }
+    a[aria-current='page'] {
+      background: v.$color-green-dark;
+    }
+    li:last-child {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid v.$color-border;
+    }
+  }
+}
+
+.signOut {
+  cursor: pointer;
+  font: inherit;
+  color: v.$color-text-muted !important;
+}
+
+.content {
   display: grid;
   gap: 1.5rem;
   min-width: 0;
 }
 
-.section {
+.pageHeader {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.title {
+  font-family: v.$font-heading;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1.1;
+}
+
+.tiles {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  // Phones: one compact row (icon, label and hint, value on the right).
+  display: grid;
+  grid-template-areas:
+    'icon label value'
+    'icon hint value';
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.15rem 0.85rem;
+  height: 100%;
+  padding: 0.9rem 1.1rem;
   background: v.$color-surface;
   border: 1px solid v.$color-border;
   border-radius: v.$radius-medium;
-  padding: clamp(1.25rem, 3vw, 1.75rem);
-  min-width: 0;
-  h2 {
-    font-family: v.$font-heading;
-    font-size: 1.8rem;
-    line-height: 1.2;
-    margin-bottom: 0.5rem;
+  transition: border-color v.$transition-fast;
+  &:hover {
+    border-color: v.$color-green-secondary;
   }
+  svg {
+    grid-area: icon;
+    color: v.$color-green-secondary;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-areas: 'icon' 'label' 'value' 'hint';
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.3rem;
+    padding: 1.25rem;
+  }
+}
+
+.tileLabel {
+  @include m.eyebrow;
+  grid-area: label;
+  color: v.$color-text-muted;
+}
+
+.tileValue {
+  grid-area: value;
+  color: v.$color-text;
+  font: 500 1.6rem/1.1 v.$font-heading;
+  text-align: right;
+  overflow-wrap: anywhere;
+  @include m.from(v.$breakpoint-tablet) {
+    font-size: 2rem;
+    text-align: left;
+  }
+}
+
+.tileHint {
+  grid-area: hint;
+  color: v.$color-text-muted;
+  font-size: 0.75rem;
+}
+
+.block {
+  display: grid;
+  gap: 1rem;
+}
+
+.blockHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  h2 {
+    font: 500 1.8rem/1.15 v.$font-heading;
+  }
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.empty {
+  display: grid;
+  gap: 0.6rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: v.$color-surface;
+  border: 1px dashed v.$color-border;
+  border-radius: v.$radius-medium;
+  h2 {
+    font: 500 1.8rem/1.15 v.$font-heading;
+  }
+  p {
+    color: v.$color-text-muted;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.panel {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  h2 {
+    font: 500 1.6rem/1.2 v.$font-heading;
+  }
+}
+
+.panelLead {
+  margin-top: -0.6rem;
+  color: v.$color-text-muted;
+  font-size: 0.85rem;
+}
+
+.readonly {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid v.$color-border;
+  .hint {
+    margin: 0.2rem 0 0;
+  }
+}
+
+.readonlyLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.readonlyValue {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.75rem 0.9rem;
+  background: v.$color-background-secondary;
+  border-radius: v.$radius-small;
+  overflow-wrap: anywhere;
+  svg {
+    flex-shrink: 0;
+    color: v.$color-text-muted;
+  }
+}
+
+.dangerZone {
+  background: v.$color-surface;
+  border: 1px solid rgb(169 54 28 / 35%);
+  border-radius: v.$radius-medium;
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 56px;
+    padding: 0.9rem clamp(1.25rem, 3vw, 2rem);
+    color: v.$color-danger;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    svg {
+      flex-shrink: 0;
+      transition: transform v.$transition-fast;
+    }
+  }
+  &[open] summary svg {
+    transform: rotate(180deg);
+  }
+}
+
+.dangerBody {
+  display: grid;
+  gap: 1rem;
+  padding: 0 clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2rem);
   > p {
     color: v.$color-text-muted;
     font-size: 0.85rem;
     line-height: 1.7;
-    margin-bottom: 1.25rem;
   }
 }
 
-.orders {
-  list-style: none;
-  padding: 0;
+// Orders
+
+.orderList {
+  display: grid;
+  gap: 1.25rem;
   margin: 0;
-  li + li {
-    border-top: 1px solid v.$color-border;
+  padding: 0;
+  list-style: none;
+}
+
+.orderCard {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+}
+
+.orderHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  > div {
+    min-width: 0;
   }
-  a,
-  .orderRow {
+}
+
+.orderDate {
+  font: 500 1.35rem/1.2 v.$font-heading;
+}
+
+.orderNumber {
+  margin-top: 0.2rem;
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: v.$radius-pill;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tonePayment {
+  background: v.$color-background-secondary;
+  color: v.$color-text-muted;
+}
+
+.toneProgress {
+  background: #f6e7b8;
+  color: #5c4300;
+}
+
+.toneShipped {
+  background: rgb(11 102 80 / 12%);
+  color: v.$color-green-secondary;
+}
+
+.toneDelivered {
+  background: v.$color-green-dark;
+  color: v.$color-text-on-dark;
+}
+
+.toneCancelled {
+  background: rgb(169 54 28 / 10%);
+  color: v.$color-danger;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  li {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.25rem 1rem;
-    padding-block: 1rem;
+    justify-items: center;
+    gap: 0.45rem;
+    color: v.$color-text-muted;
+    font-size: 0.7rem;
+    text-align: center;
+    &::before {
+      position: absolute;
+      top: 11px;
+      right: 50%;
+      width: 100%;
+      height: 2px;
+      background: v.$color-border;
+      content: '';
+    }
+    &:first-child::before {
+      display: none;
+    }
   }
-  a:hover strong {
-    text-decoration: underline;
+  .done::before,
+  .current::before {
+    background: v.$color-green-secondary;
+  }
+  .current {
+    color: v.$color-text;
+    font-weight: 700;
+  }
+}
+
+.dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  background: v.$color-surface;
+  border: 2px solid v.$color-border;
+  border-radius: 50%;
+  .done & {
+    background: v.$color-green-secondary;
+    border-color: v.$color-green-secondary;
+    color: v.$color-text-on-dark;
+  }
+  .current & {
+    background: v.$color-gold;
+    border-color: v.$color-gold;
+    box-shadow: 0 0 0 4px rgb(232 194 97 / 30%);
+    color: v.$color-ink;
+  }
+}
+
+.orderItems {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: center;
+    font-size: 0.88rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.orderThumb {
+  width: 48px;
+  height: 60px;
+  object-fit: cover;
+  background: v.$color-background-secondary;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-small;
+}
+
+.quantity {
+  color: v.$color-text-muted;
+  white-space: nowrap;
+}
+
+.orderMore {
+  margin-top: -0.5rem;
+  color: v.$color-text-muted;
+  font-size: 0.8rem;
+}
+
+.orderFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid v.$color-border;
+  > p:first-child {
+    display: grid;
+    gap: 0.1rem;
   }
   strong {
-    font-size: 0.95rem;
-  }
-  span {
-    font-size: 0.8rem;
-    color: v.$color-text-muted;
-  }
-  .total {
-    grid-column: 2;
-    grid-row: 1;
-    font-weight: 700;
-    color: v.$color-text;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
   }
 }
 
-.status {
-  display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: v.$radius-pill;
-  background: v.$color-background-secondary;
-  color: v.$color-text !important;
-  font-weight: 600;
+.orderTotalLabel {
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
 }
 
-.empty {
-  font-size: 0.9rem;
-  line-height: 1.7;
-  a {
-    text-decoration: underline;
+.orderLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.6rem 1.1rem;
+  background: v.$color-green-dark;
+  border-radius: v.$radius-small;
+  color: v.$color-text-on-dark;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: background v.$transition-fast;
+  &:hover {
+    background: v.$color-green;
   }
 }
 
-.danger {
-  border-color: rgb(169 54 28 / 35%);
+.orderPending {
+  color: v.$color-text-muted;
+  font-size: 0.78rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs a,
+  .tile,
+  .field input,
+  .submit,
+  .orderLink,
+  .accountNav a {
+    transition: none;
+  }
 }

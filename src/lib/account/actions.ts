@@ -104,7 +104,11 @@ export async function signInAction(
       return failure(
         'Confirmez d’abord votre adresse e-mail : un nouveau lien de confirmation vient de vous être envoyé.',
       );
-    if (!isAPIError(error)) logUnexpected('sign_in_failed', error);
+    // A configuration or database failure is not a wrong password.
+    if (!isAPIError(error)) {
+      logUnexpected('sign_in_failed', error);
+      return failure(UNAVAILABLE);
+    }
     return failure('Adresse e-mail ou mot de passe incorrect.');
   }
   redirect(destination);

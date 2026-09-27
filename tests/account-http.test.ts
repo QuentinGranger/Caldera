@@ -116,6 +116,15 @@ test('compte client HTTP : pages privées, connexion, historique, adresse, suppr
           response.headers.get('location'),
           '/compte/connexion?retour=%2Fcompte',
         );
+        // Each section sends back to itself after signing in.
+        for (const section of ['commandes', 'adresse', 'profil']) {
+          const result = await page(`/compte/${section}`, '');
+          assert.equal(result.response.status, 307, section);
+          assert.equal(
+            result.response.headers.get('location'),
+            `/compte/connexion?retour=%2Fcompte%2F${section}`,
+          );
+        }
         for (const path of [
           '/compte/connexion',
           '/compte/inscription',
@@ -240,6 +249,14 @@ test('compte client HTTP : pages privées, connexion, historique, adresse, suppr
         assert.equal(detail.response.status, 200);
         assert.ok(detail.html.includes(guestOrder.orderNumber));
         // Signed-in visitors reach sign-in pages only to be sent back.
+        for (const section of ['commandes', 'adresse', 'profil']) {
+          const result = await page(`/compte/${section}`);
+          assert.equal(result.response.status, 200, section);
+          assert.ok(result.html.includes(email), section);
+        }
+        const list = await page('/compte/commandes');
+        assert.ok(list.html.includes(guestOrder.orderNumber));
+        assert.match(list.html, /Commande reçue/);
         const signIn = await page('/compte/connexion');
         assert.equal(signIn.response.status, 307);
       },

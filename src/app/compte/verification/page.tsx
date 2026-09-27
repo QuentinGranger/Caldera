@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ChevronDown } from 'lucide-react';
 import { AccountField, AccountForm } from '@/components/account/AccountForm';
 import { AccountShell } from '@/components/account/AccountShell';
 import {
@@ -17,27 +18,35 @@ type Props = {
 // Confirmation needs a click: mail scanners that open links do not consume it.
 export default async function VerifyEmailPage({ searchParams }: Props) {
   const { token } = await searchParams;
+  const hasToken = typeof token === 'string' && token !== '';
   return (
     <AccountShell
       title="Confirmer votre adresse"
-      lead="Une dernière étape : confirmez votre adresse e-mail pour activer votre compte."
+      lead={
+        hasToken
+          ? 'Une dernière étape : confirmez votre adresse e-mail pour activer votre compte.'
+          : 'Demandez un nouveau lien de confirmation : il est valable 24 heures.'
+      }
     >
-      {typeof token === 'string' && token && (
-        <div className={styles.card}>
-          <AccountForm
-            action={verifyEmailAction}
-            submit="Confirmer mon adresse"
-          >
-            <input type="hidden" name="token" value={token} />
-          </AccountForm>
-        </div>
+      {hasToken && (
+        <AccountForm
+          action={verifyEmailAction}
+          submit="Confirmer mon adresse"
+          wide
+        >
+          <input type="hidden" name="token" value={token} />
+        </AccountForm>
       )}
-      <h2 className={styles.subheading}>Lien expiré ou perdu ?</h2>
-      <div className={styles.card}>
+      <details className={styles.resend} open={!hasToken}>
+        <summary>
+          Lien expiré ou perdu ?
+          <ChevronDown size={16} aria-hidden="true" />
+        </summary>
         <AccountForm
           action={resendVerificationAction}
           submit="Recevoir un nouveau lien"
           done
+          wide
         >
           <AccountField
             label="Adresse e-mail du compte"
@@ -47,10 +56,10 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
             maxLength={254}
           />
         </AccountForm>
-      </div>
-      <div className={styles.links}>
+      </details>
+      <p className={styles.links}>
         <Link href="/compte/connexion">Se connecter</Link>
-      </div>
+      </p>
     </AccountShell>
   );
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { renderAccountEmail } from '../src/emails/account';
 import { customerOrdersWhere } from '../src/lib/account/queries';
+import { isOpenOrder, orderStatus } from '../src/lib/account/orderStatus';
 import {
   PASSWORD_MAX,
   PASSWORD_MIN,
@@ -91,4 +92,36 @@ test('compte : e-mails échappés, lien unique, version texte', () => {
   });
   assert.match(existing.text, /Mot de passe oublié : https:/);
   assert.doesNotMatch(existing.html, /<script/i);
+});
+
+test('compte : statut lisible, couleur et étape de suivi de chaque commande', () => {
+  const paid = (fulfillmentStatus: string) =>
+    orderStatus({ status: 'PAID', fulfillmentStatus });
+  assert.deepEqual(paid('UNFULFILLED'), {
+    label: 'Commande reçue',
+    tone: 'progress',
+    step: 0,
+  });
+  assert.equal(paid('PREPARING').step, 1);
+  assert.equal(paid('READY_TO_SHIP').step, 1);
+  assert.deepEqual(paid('SHIPPED'), {
+    label: 'Expédiée',
+    tone: 'shipped',
+    step: 2,
+  });
+  assert.deepEqual(paid('DELIVERED'), {
+    label: 'Livrée',
+    tone: 'delivered',
+    step: 3,
+  });
+  // Payment still being confirmed, or cancelled: no delivery steps.
+  for (const status of ['PAYMENT_PROCESSING', 'PAYMENT_REVIEW', 'CANCELLED'])
+    assert.equal(
+      orderStatus({ status, fulfillmentStatus: 'UNFULFILLED' }).step,
+      null,
+      status,
+    );
+  assert.equal(isOpenOrder('shipped'), true);
+  assert.equal(isOpenOrder('delivered'), false);
+  assert.equal(isOpenOrder('cancelled'), false);
 });

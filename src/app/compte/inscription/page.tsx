@@ -20,42 +20,38 @@ export default async function SignUpPage() {
   return (
     <AccountShell
       title="Créer un compte"
-      lead="Un compte n’est jamais obligatoire pour commander. Il réunit vos commandes, y compris celles passées sans compte avec la même adresse e-mail, et garde votre adresse de livraison."
+      lead="Gratuit et jamais obligatoire pour commander. Vos commandes passées avec la même adresse e-mail y seront réunies."
+      tabs="inscription"
     >
-      <div className={styles.card}>
-        <AccountForm action={signUpAction} submit="Créer mon compte" done>
-          <AccountField
-            label="Nom"
-            name="name"
-            autoComplete="name"
-            maxLength={NAME_MAX}
-          />
-          <AccountField
-            label="Adresse e-mail"
-            name="email"
-            type="email"
-            autoComplete="email"
-            hint="Un lien de confirmation y sera envoyé."
-            maxLength={254}
-          />
-          <AccountField
-            label="Mot de passe"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            hint={`${PASSWORD_MIN} caractères minimum. Une phrase de plusieurs mots est plus sûre et plus facile à retenir.`}
-            minLength={PASSWORD_MIN}
-            maxLength={PASSWORD_MAX}
-          />
-          <p className={styles.hint}>
-            Vos données servent uniquement à gérer votre compte et vos commandes
-            : <Link href="/confidentialite">politique de confidentialité</Link>.
-          </p>
-        </AccountForm>
-      </div>
-      <div className={styles.links}>
-        <Link href="/compte/connexion">J’ai déjà un compte</Link>
-      </div>
+      <AccountForm action={signUpAction} submit="Créer mon compte" done wide>
+        <AccountField
+          label="Nom"
+          name="name"
+          autoComplete="name"
+          maxLength={NAME_MAX}
+        />
+        <AccountField
+          label="Adresse e-mail"
+          name="email"
+          type="email"
+          autoComplete="email"
+          hint="Un lien de confirmation y sera envoyé."
+          maxLength={254}
+        />
+        <AccountField
+          label="Mot de passe"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          hint={`${PASSWORD_MIN} caractères minimum. Une phrase de plusieurs mots est plus sûre et plus facile à retenir.`}
+          minLength={PASSWORD_MIN}
+          maxLength={PASSWORD_MAX}
+        />
+        <p className={styles.legal}>
+          Vos données servent uniquement à gérer votre compte et vos commandes :{' '}
+          <Link href="/confidentialite">politique de confidentialité</Link>.
+        </p>
+      </AccountForm>
     </AccountShell>
   );
 }

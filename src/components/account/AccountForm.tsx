@@ -1,12 +1,15 @@
 'use client';
 import {
   createContext,
+  startTransition,
   useActionState,
   useContext,
   useEffect,
   useRef,
+  useState,
   type ReactNode,
 } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import {
   initialAccountState,
   type AccountActionState,
@@ -26,8 +29,10 @@ const FormContext = createContext<{
 /**
  * Server-action form of the account pages: one message zone announced to
  * screen readers, field errors linked to their inputs, fields locked while
- * the action runs. `done` replaces the form once the action succeeds; `id`
- * prefixes field ids when a page holds several forms.
+ * the action runs. Typed values stay after an error (React would clear a form
+ * given to `action`). `done` replaces the form once the action succeeds,
+ * `resetOnSuccess` empties it (passwords), `id` prefixes field ids when a page
+ * holds several forms.
  */
 export function AccountForm({
   action,
@@ -35,6 +40,8 @@ export function AccountForm({
   children,
   danger = false,
   done = false,
+  resetOnSuccess = false,
+  wide = false,
   id,
 }: {
   action: Action;
@@ -42,6 +49,9 @@ export function AccountForm({
   children: ReactNode;
   danger?: boolean;
   done?: boolean;
+  resetOnSuccess?: boolean;
+  /** Full-width submit button (sign-in and sign-up cards). */
+  wide?: boolean;
   id?: string;
 }) {
   const prefix = id ? `${id}-` : '';
@@ -49,11 +59,13 @@ export function AccountForm({
     action,
     initialAccountState,
   );
+  const form = useRef<HTMLFormElement>(null);
   const message = useRef<HTMLDivElement>(null);
   const errors = state.errors ?? {};
   useEffect(() => {
+    if (state.success && resetOnSuccess) form.current?.reset();
     if (state.message) message.current?.focus();
-  }, [state]);
+  }, [state, resetOnSuccess]);
   const feedback = state.message && (
     <div
       ref={message}
@@ -75,14 +87,28 @@ export function AccountForm({
   );
   if (done && state.success) return feedback;
   return (
-    <form action={formAction} noValidate className={styles.form}>
+    <form
+      ref={form}
+      // Without JavaScript the browser posts to the action; with it, the
+      // action runs from here so React does not clear the fields.
+      action={formAction}
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        startTransition(() => formAction(data));
+      }}
+      noValidate
+      className={styles.form}
+    >
       {feedback}
       <FormContext value={{ errors, prefix }}>
         <fieldset disabled={pending} className={styles.fieldset}>
           {children}
           <button
             type="submit"
-            className={danger ? styles.dangerButton : styles.submit}
+            className={`${danger ? styles.dangerButton : styles.submit} ${
+              wide ? styles.wide : ''
+            }`}
           >
             {pending ? 'Un instant…' : submit}
           </button>
@@ -112,11 +138,13 @@ export function AccountField({
   maxLength: number;
 }) {
   const { errors, prefix } = useContext(FormContext);
+  const [visible, setVisible] = useState(false);
   const error = errors[name];
   const id = `${prefix}${name}`;
   const described = [hint && `${id}-hint`, error && `${id}-error`]
     .filter(Boolean)
     .join(' ');
+  const password = type === 'password';
   return (
     <div className={styles.field}>
       <label htmlFor={id}>{label}</label>
@@ -125,19 +153,40 @@ export function AccountField({
           {hint}
         </p>
       )}
-      <input
-        id={id}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        defaultValue={defaultValue}
-        minLength={minLength}
-        maxLength={maxLength}
-        required
-        spellCheck={type === 'text' ? undefined : false}
-        aria-invalid={Boolean(error)}
-        aria-describedby={described || undefined}
-      />
+      <div className={password ? styles.passwordInput : undefined}>
+        <input
+          id={id}
+          name={name}
+          type={password && visible ? 'text' : type}
+          autoComplete={autoComplete}
+          defaultValue={defaultValue}
+          minLength={minLength}
+          maxLength={maxLength}
+          required
+          autoCapitalize={type === 'text' ? undefined : 'none'}
+          spellCheck={type === 'text' ? undefined : false}
+          aria-invalid={Boolean(error)}
+          aria-describedby={described || undefined}
+        />
+        {password && (
+          <button
+            type="button"
+            className={styles.reveal}
+            aria-controls={id}
+            aria-pressed={visible}
+            aria-label={
+              visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+            }
+            onClick={() => setVisible(!visible)}
+          >
+            {visible ? (
+              <EyeOff size={18} aria-hidden="true" />
+            ) : (
+              <Eye size={18} aria-hidden="true" />
+            )}
+          </button>
+        )}
+      </div>
       {error && (
         <p id={`${id}-error`} className={styles.fieldError}>
           {error}

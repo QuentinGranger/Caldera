@@ -1,10 +1,10 @@
 import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
-import { fulfillmentLabels } from '@/lib/fulfillment/carriers';
 import { orderAccessUrl } from '@/lib/orders/access';
 import { emptyAddress, type AddressValues } from '@/lib/checkout/types';
 import type { CurrentCustomer } from './auth';
+import { orderStatus, type OrderTone } from './orderStatus';
 
 const HISTORY_LIMIT = 50;
 
@@ -43,16 +43,12 @@ export function customerOrdersWhere(
   };
 }
 
-function orderLabel(order: { status: string; fulfillmentStatus: string }) {
-  if (order.status === 'PAYMENT_PROCESSING') return 'Paiement en cours';
-  if (order.status === 'PAYMENT_REVIEW') return 'Paiement en vérification';
-  if (order.status === 'CANCELLED') return 'Annulée';
-  return fulfillmentLabels[order.fulfillmentStatus] ?? 'Commande reçue';
-}
-
 export type AccountOrder = {
   orderNumber: string;
   label: string;
+  tone: OrderTone;
+  step: number | null;
+  items: { name: string; quantity: number; imageUrl: string }[];
   total: string;
   createdAt: Date;
   itemCount: number;
@@ -74,7 +70,10 @@ export async function getCustomerOrders(
       fulfillmentStatus: true,
       totalAmount: true,
       createdAt: true,
-      items: { select: { quantity: true } },
+      items: {
+        select: { productName: true, quantity: true, imageUrl: true },
+        orderBy: { createdAt: 'asc' },
+      },
       payment: { select: { status: true } },
     },
   });
@@ -86,7 +85,12 @@ export async function getCustomerOrders(
     const url = viewable ? new URL(orderAccessUrl(order.publicId)) : null;
     return {
       orderNumber: order.orderNumber,
-      label: orderLabel(order),
+      ...orderStatus(order),
+      items: order.items.map((item) => ({
+        name: item.productName,
+        quantity: item.quantity,
+        imageUrl: item.imageUrl,
+      })),
       total: order.totalAmount.toFixed(2),
       createdAt: order.createdAt,
       itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
