@@ -106,6 +106,13 @@ export function CatalogResults({
       <>
         {emptyState ?? <EmptyCatalog filters={filters} path={path} />}
         {links}
+        <NewsletterCta
+          eyebrow="Réassorts et nouveautés"
+          title="Soyez prévenu quand de nouvelles cartes arrivent"
+        >
+          Recevez les prochains réassorts, sorties et sélections sans avoir à
+          surveiller le catalogue.
+        </NewsletterCta>
       </>
     );
   return (
@@ -141,6 +148,13 @@ export function CatalogResults({
         </div>
       </div>
       {links}
+      <NewsletterCta
+        eyebrow="Réassorts et nouveautés"
+        title="Soyez prévenu quand de nouvelles cartes arrivent"
+      >
+        Recevez les prochains réassorts, sorties et sélections sans avoir à
+        surveiller le catalogue.
+      </NewsletterCta>
     </>
   );
 }
@@ -177,13 +191,6 @@ export async function CatalogPage({
         />
         {children}
         <CatalogResults load={load} path={path} />
-        <NewsletterCta
-          eyebrow="Réassorts et nouveautés"
-          title="Soyez prévenu quand de nouvelles cartes arrivent"
-        >
-          Recevez les prochains réassorts, sorties et sélections sans avoir à
-          surveiller le catalogue.
-        </NewsletterCta>
       </Container>
       {structuredData && (
         <JsonLd
