@@ -642,6 +642,14 @@ La commande traite au plus 50 emails par exécution et n’envoie rien avec `EMA
 
 Les aperçus `/admin/emails/[id]/preview` exigent une session admin, sont privés/no-store/noindex et interdisent les scripts. Avant tentative, ils rendent le snapshot ; après tentative, ils montrent exactement le HTML figé. L’outbox contient des données personnelles de commande : appliquer les protections et sauvegardes de la base, et éviter sa copie vers un environnement de test avec envois activés.
 
+### Campagnes newsletter
+
+L’administrateur écrit les campagnes depuis `/admin/newsletter` → **Nouvelle campagne**. L’éditeur propose objet, texte d’aperçu, grand titre, contenu Markdown sûr, bouton d’action et aperçu en direct. Le brouillon doit être enregistré avant l’envoi d’un test vers l’adresse de l’administrateur. L’action définitive demande une confirmation explicite et fige la liste des seuls abonnés `ACTIVE` à cet instant ; le texte ne peut ensuite plus être modifié.
+
+Les campagnes utilisent l’API d’envoi Resend déjà configurée, sans nouvelle clé ni second fournisseur. Chaque destinataire possède une livraison, une enveloppe figée, un lien de désinscription signé et une clé d’idempotence `caldera-newsletter:<deliveryId>`. Une désinscription enregistrée avant la prise en charge transforme la livraison en `SKIPPED`. Les baux, cinq tentatives, reprises exponentielles et limite de 23 heures suivent les garanties des e-mails de commande.
+
+Le plan Resend gratuit autorise 100 envois transactionnels par jour. Par défaut, les campagnes en utilisent au plus **80 sur une fenêtre glissante de 24 heures**, afin de conserver une marge pour les confirmations et les commandes. La file reprend automatiquement le lendemain. `NEWSLETTER_DAILY_LIMIT` peut ajuster cette limite entre 1 et 500 si le plan change ; augmenter cette valeur exige d’abord d’adapter le quota Resend. Le planificateur traite au plus 10 newsletters par minute en plus des e-mails transactionnels.
+
 ## Préparation et expédition
 
 Le statut financier `Order.status` et `Payment.status` reste indépendant de `Order.fulfillmentStatus`. Le webhook confirme uniquement le paiement et initialise `UNFULFILLED`.
@@ -691,7 +699,7 @@ Recette et inventaire exact des fichiers : [docs/phase-10.md](docs/phase-10.md).
 
 ## Tâches planifiées (production)
 
-`npm run stock:expire` et `npm run emails:process` partagent leur code avec la route `GET /api/cron/maintenance` (`src/lib/maintenance/`) : mêmes lots (100 commandes, 50 emails), mêmes garanties d’idempotence. La route :
+`npm run stock:expire` et `npm run emails:process` partagent leur code avec la route `GET /api/cron/maintenance` (`src/lib/maintenance/`) : mêmes lots (100 commandes, 50 e-mails transactionnels et 10 newsletters), mêmes garanties d’idempotence. La route :
 
 - exige `Authorization: Bearer <CRON_SECRET>` (comparaison à temps constant). Secret absent ou de moins de 16 caractères : **503** sans rien exécuter ; en-tête invalide : **401** ;
 - répond immédiatement **202** `Cache-Control: no-store`, puis exécute les deux tâches indépendamment via `after()` (`maxDuration` 60 s). Une panne de l’une n’empêche pas l’autre ;

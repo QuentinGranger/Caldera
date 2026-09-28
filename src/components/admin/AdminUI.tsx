@@ -26,9 +26,15 @@ export function PageHeader({
 export function Badge({ value }: { value: string }) {
   const tone = ['PAYMENT_FAILED', 'FAILED', 'PAYMENT_REVIEW'].includes(value)
     ? styles.danger
-    : ['ACTIVE', 'PAID', 'SUCCEEDED', 'CONSUMED', 'DELIVERED', 'SENT'].includes(
-          value,
-        )
+    : [
+          'ACTIVE',
+          'PAID',
+          'SUCCEEDED',
+          'CONSUMED',
+          'DELIVERED',
+          'SENT',
+          'COMPLETED',
+        ].includes(value)
       ? styles.success
       : [
             'PENDING_PAYMENT',
@@ -36,6 +42,7 @@ export function Badge({ value }: { value: string }) {
             'REQUIRES_ACTION',
             'UNFULFILLED',
             'PENDING',
+            'QUEUED',
           ].includes(value)
         ? styles.pending
         : [

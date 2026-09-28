@@ -97,6 +97,61 @@ export async function getAdminNewsletter(params: SearchParams) {
   ) as Partial<Record<NewsletterStatus, number>>;
   return { subscribers, total, page, counts };
 }
+
+export async function getAdminNewsletterCampaigns() {
+  await requireAdmin();
+  const db = getPrisma();
+  const campaigns = await db.newsletterCampaign.findMany({
+    take: 20,
+    orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    select: {
+      id: true,
+      internalName: true,
+      subject: true,
+      status: true,
+      recipientCount: true,
+      createdAt: true,
+      queuedAt: true,
+      completedAt: true,
+    },
+  });
+  const grouped = campaigns.length
+    ? await db.newsletterCampaignDelivery.groupBy({
+        by: ['campaignId', 'status'],
+        where: { campaignId: { in: campaigns.map((campaign) => campaign.id) } },
+        _count: { _all: true },
+      })
+    : [];
+  return campaigns.map((campaign) => ({
+    ...campaign,
+    deliveryCounts: Object.fromEntries(
+      grouped
+        .filter((row) => row.campaignId === campaign.id)
+        .map((row) => [row.status, row._count._all]),
+    ),
+  }));
+}
+
+export async function getAdminNewsletterCampaign(id: string) {
+  await requireAdmin();
+  if (!validId(id)) return null;
+  const campaign = await getPrisma().newsletterCampaign.findUnique({
+    where: { id },
+    include: {
+      createdBy: { select: { name: true, email: true } },
+    },
+  });
+  if (!campaign) return null;
+  const grouped = await getPrisma().newsletterCampaignDelivery.groupBy({
+    by: ['status'],
+    where: { campaignId: campaign.id },
+    _count: { _all: true },
+  });
+  const deliveryCounts = Object.fromEntries(
+    grouped.map((row) => [row.status, row._count._all]),
+  );
+  return { ...campaign, deliveryCounts };
+}
 export async function getAdminProducts(params: SearchParams) {
   await requireAdmin();
   const db = getPrisma();

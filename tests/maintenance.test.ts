@@ -92,6 +92,11 @@ test('emails désactivés : succès explicite sans accès base', async (t) => {
       sent: 0,
       failed: 0,
       disabled: true,
+      newsletterSent: 0,
+      newsletterFailed: 0,
+      newsletterSkipped: 0,
+      newsletterCompleted: 0,
+      newsletterQuotaLimited: false,
     },
   );
 });

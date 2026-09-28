@@ -1,5 +1,6 @@
 import 'server-only';
 import { processPendingEmails } from '@/lib/email/processor';
+import { processNewsletterDeliveries } from '@/lib/newsletter/processor';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
@@ -27,10 +28,25 @@ const tasks: Record<
     if (counts.inspected > 0) invalidateCatalogCache();
     return { ok: counts.failures === 0, counts };
   },
-  'process-emails': async ({ provider }) => ({
-    ok: true,
-    counts: await processPendingEmails({ limit: 50, provider }),
-  }),
+  'process-emails': async ({ provider }) => {
+    const [transactional, newsletter] = await Promise.all([
+      processPendingEmails({ limit: 50, provider }),
+      processNewsletterDeliveries({ limit: 10, provider }),
+    ]);
+    return {
+      ok: true,
+      counts: {
+        sent: transactional.sent,
+        failed: transactional.failed,
+        disabled: transactional.disabled,
+        newsletterSent: newsletter.sent,
+        newsletterFailed: newsletter.failed,
+        newsletterSkipped: newsletter.skipped,
+        newsletterCompleted: newsletter.completed,
+        newsletterQuotaLimited: newsletter.quotaLimited,
+      },
+    };
+  },
 };
 
 /** Only a controlled code is logged: raw messages may carry personal data or secrets. */

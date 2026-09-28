@@ -502,20 +502,21 @@ enum InventoryAdjustmentType {
 }
 
 model AdminUser {
-  id            String                @id @default(uuid()) @db.Uuid
-  email         String                @unique
-  emailVerified Boolean               @default(false)
-  name          String
-  image         String?
-  role          AdminRole             @default(ADMIN)
-  isActive      Boolean               @default(true)
-  lastLoginAt   DateTime?
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  sessions      AdminSession[]
-  accounts      AdminAccount[]
-  adjustments   InventoryAdjustment[]
-  auditLogs     AdminAuditLog[]
+  id                  String                @id @default(uuid()) @db.Uuid
+  email               String                @unique
+  emailVerified       Boolean               @default(false)
+  name                String
+  image               String?
+  role                AdminRole             @default(ADMIN)
+  isActive            Boolean               @default(true)
+  lastLoginAt         DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  sessions            AdminSession[]
+  accounts            AdminAccount[]
+  adjustments         InventoryAdjustment[]
+  auditLogs           AdminAuditLog[]
+  newsletterCampaigns NewsletterCampaign[]
 }
 
 model AdminSession {
@@ -807,23 +808,93 @@ enum NewsletterStatus {
   UNSUBSCRIBED
 }
 
+enum NewsletterCampaignStatus {
+  DRAFT
+  QUEUED
+  SENDING
+  COMPLETED
+}
+
+enum NewsletterDeliveryStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 /// Voluntary newsletter subscriptions. Confirmation tokens are stored hashed;
 /// the explicit consent and its version remain auditable.
 model NewsletterSubscriber {
-  id                    String           @id @default(uuid()) @db.Uuid
-  email                 String           @unique
-  status                NewsletterStatus @default(PENDING)
+  id                    String                       @id @default(uuid()) @db.Uuid
+  email                 String                       @unique
+  status                NewsletterStatus             @default(PENDING)
   consentAt             DateTime
-  consentSource         String           @default("homepage")
+  consentSource         String                       @default("homepage")
   consentVersion        String
-  confirmationTokenHash String?          @unique @db.Char(64)
+  confirmationTokenHash String?                      @unique @db.Char(64)
   confirmationExpiresAt DateTime?
   confirmedAt           DateTime?
   unsubscribedAt        DateTime?
   lastInterestAt        DateTime
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  deliveries            NewsletterCampaignDelivery[]
 
   @@index([status, createdAt])
   @@index([confirmationExpiresAt])
+}
+
+/// Newsletter copy is kept locally so the admin can prepare and preview a
+/// campaign before freezing its audience. Delivery is handled by the same
+/// idempotent Resend queue as the transactional e-mails.
+model NewsletterCampaign {
+  id             String                       @id @default(uuid()) @db.Uuid
+  internalName   String
+  subject        String
+  preheader      String?
+  heading        String
+  bodyMarkdown   String                       @db.Text
+  ctaLabel       String?
+  ctaUrl         String?
+  status         NewsletterCampaignStatus     @default(DRAFT)
+  recipientCount Int                          @default(0)
+  createdById    String                       @db.Uuid
+  createdBy      AdminUser                    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  queuedAt       DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+  deliveries     NewsletterCampaignDelivery[]
+
+  @@index([status, createdAt])
+  @@index([createdById])
+}
+
+model NewsletterCampaignDelivery {
+  id                String                   @id @default(uuid()) @db.Uuid
+  campaignId        String                   @db.Uuid
+  campaign          NewsletterCampaign       @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  subscriberId      String                   @db.Uuid
+  subscriber        NewsletterSubscriber     @relation(fields: [subscriberId], references: [id], onDelete: Restrict)
+  recipient         String
+  status            NewsletterDeliveryStatus @default(PENDING)
+  provider          String                   @default("resend")
+  providerMessageId String?
+  envelope          Json?
+  attemptCount      Int                      @default(0)
+  firstAttemptAt    DateTime?
+  nextAttemptAt     DateTime                 @default(now())
+  leaseUntil        DateTime?
+  leaseToken        String?                  @db.Uuid
+  retryBlocked      Boolean                  @default(false)
+  lastError         String?
+  sentAt            DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  @@unique([campaignId, subscriberId])
+  @@index([status, nextAttemptAt])
+  @@index([leaseUntil])
+  @@index([subscriberId])
 }
