@@ -61,7 +61,7 @@ export default function ConfidentialitePage() {
           <p className={styles.eyebrow}>Vie privée & données</p>
           <h1>Politique de confidentialité</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
-          <p className={styles.version}>Dernière mise à jour : 26 septembre 2026</p>
+          <p className={styles.version}>Dernière mise à jour : 28 septembre 2026</p>
         </Container>
       </section>
 
@@ -431,6 +431,11 @@ export default function ConfidentialitePage() {
               <p>
                 La case permettant de recevoir les communications commerciales
                 n’est pas cochée par défaut.
+              </p>
+              <p>
+                L’inscription devient active après confirmation de l’adresse au
+                moyen du lien à usage unique envoyé par e-mail. Sans confirmation,
+                aucune newsletter n’est envoyée.
               </p>
               <p>
                 Le consentement à la newsletter n’est pas une condition permettant

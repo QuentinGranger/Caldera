@@ -9,6 +9,7 @@ import {
   FolderTree,
   Layers3,
   LayoutDashboard,
+  Mail,
   Menu,
   Package,
   ShoppingBag,
@@ -27,6 +28,7 @@ const groups = [
       },
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
+      { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
     ],
   },
   {

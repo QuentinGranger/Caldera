@@ -1,0 +1,73 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.main {
+  min-height: 55vh;
+  padding-block: clamp(2.5rem, 7vw, 6rem);
+}
+.card {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  max-width: 42rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  box-shadow: v.$shadow-soft;
+  > svg {
+    color: v.$color-green;
+  }
+  h1 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.1;
+  }
+  form {
+    width: 100%;
+  }
+  button {
+    min-height: 48px;
+    padding: 0.75rem 1.2rem;
+    background: v.$color-green-dark;
+    border: 0;
+    border-radius: v.$radius-small;
+    color: v.$color-text-on-dark;
+    cursor: pointer;
+    font-weight: 700;
+    &:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-text-muted;
+}
+.lead {
+  color: v.$color-text-muted;
+  line-height: 1.7;
+}
+.success,
+.error {
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  border-left: 3px solid v.$color-green;
+  background: v.$color-background;
+  line-height: 1.6;
+  &:focus {
+    outline: 2px solid v.$color-gold;
+    outline-offset: 2px;
+  }
+}
+.error {
+  border-color: v.$color-danger;
+  color: v.$color-danger;
+}
+.back a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  text-decoration: underline;
+}

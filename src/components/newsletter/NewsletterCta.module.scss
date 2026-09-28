@@ -1,0 +1,55 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.cta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem 1rem;
+  align-items: center;
+  margin-block: clamp(2.5rem, 6vw, 5rem) 0;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  color: v.$color-text-on-dark;
+  background: v.$color-green-dark;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: v.$radius-medium;
+  > svg {
+    color: v.$color-gold-light;
+  }
+  h2 {
+    margin-top: 0.3rem;
+    color: v.$color-cream;
+    font: 500 clamp(1.65rem, 3vw, 2.2rem) / 1.08 v.$font-heading;
+  }
+  div > p:last-child {
+    max-width: 43rem;
+    margin-top: 0.45rem;
+    color: v.$color-muted-on-dark;
+    font-size: 0.75rem;
+    line-height: 1.7;
+  }
+  > a {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    justify-self: start;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 44px;
+    padding-inline: 1rem;
+    color: v.$color-green-dark;
+    background: v.$color-gold-light;
+    border-radius: v.$radius-small;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 1.25rem;
+    > a {
+      grid-column: auto;
+    }
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}

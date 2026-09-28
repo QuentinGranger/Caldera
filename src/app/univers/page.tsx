@@ -4,6 +4,7 @@ import { ArrowRight, Compass } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
 import { universeIndexMetadata } from '@/components/universe/metadata';
 import {
   universeChapterPath,
@@ -126,6 +127,13 @@ export default function UniversePage() {
             boutique. Les univers et marques des produits proposés restent la
             propriété de leurs ayants droit respectifs.
           </p>
+          <NewsletterCta
+            eyebrow="Carnet d’exploration"
+            title="Recevez la suite des chroniques"
+          >
+            Les nouvelles histoires, sélections et arrivages de Caldera,
+            directement dans votre boîte mail.
+          </NewsletterCta>
         </Container>
       </section>
       <JsonLd

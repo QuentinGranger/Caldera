@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
 import { editorialMetadata } from '@/components/editorial/editorial';
 import {
   ContentCards,
@@ -31,6 +32,10 @@ export default async function NewsPage() {
           lead={index.summary}
         />
         <ContentCards entries={index.entries} showKind={false} published wide />
+        <NewsletterCta title="Ne manquez aucune nouvelle de Caldera">
+          Recevez les prochaines actualités, les réassorts et les nouvelles
+          extensions après confirmation de votre adresse.
+        </NewsletterCta>
       </Container>
       {index.entries.length > 0 && (
         <JsonLd

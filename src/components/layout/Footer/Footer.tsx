@@ -13,6 +13,7 @@ export async function Footer() {
       links: [
         { label: 'Notre univers', href: navigation.universe.href },
         { label: 'Notre sélection', href: '/#selection' },
+        { label: 'Newsletter', href: '/#newsletter' },
       ],
     },
     {

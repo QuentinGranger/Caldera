@@ -7,6 +7,7 @@ import {
   OrderStatus,
   PaymentStatus,
   FulfillmentStatus,
+  NewsletterStatus,
 } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { parisDate } from './dates';
@@ -52,6 +53,49 @@ export async function getAdminOptions() {
     }),
   ]);
   return { categories, sets, games };
+}
+
+export async function getAdminNewsletter(params: SearchParams) {
+  await requireAdmin();
+  const db = getPrisma();
+  const page = pageNumber(params);
+  const search = param(params, 'search');
+  const status = enumValue(
+    param(params, 'status'),
+    Object.values(NewsletterStatus),
+  );
+  const where: Prisma.NewsletterSubscriberWhereInput = {
+    ...(search
+      ? { email: { contains: search, mode: 'insensitive' as const } }
+      : {}),
+    ...(status ? { status } : {}),
+  };
+  const [subscribers, total, grouped] = await Promise.all([
+    db.newsletterSubscriber.findMany({
+      where,
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        email: true,
+        status: true,
+        consentAt: true,
+        consentSource: true,
+        confirmedAt: true,
+        unsubscribedAt: true,
+      },
+    }),
+    db.newsletterSubscriber.count({ where }),
+    db.newsletterSubscriber.groupBy({
+      by: ['status'],
+      _count: { _all: true },
+    }),
+  ]);
+  const counts = Object.fromEntries(
+    grouped.map((item) => [item.status, item._count._all]),
+  ) as Partial<Record<NewsletterStatus, number>>;
+  return { subscribers, total, page, counts };
 }
 export async function getAdminProducts(params: SearchParams) {
   await requireAdmin();

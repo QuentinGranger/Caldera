@@ -107,7 +107,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   const { pathname } = request.nextUrl;
   if (
-    ['/admin', '/compte'].some(
+    ['/admin', '/compte', '/newsletter'].some(
       (area) => pathname === area || pathname.startsWith(`${area}/`),
     )
   ) {

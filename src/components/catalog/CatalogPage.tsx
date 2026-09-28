@@ -32,6 +32,7 @@ import { ActiveFilters } from './ActiveFilters';
 import { CatalogGrid } from './CatalogGrid';
 import { CatalogPagination } from './CatalogPagination';
 import { EmptyCatalog } from './EmptyCatalog';
+import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
 import styles from './Catalog.module.scss';
 
 export {
@@ -176,6 +177,13 @@ export async function CatalogPage({
         />
         {children}
         <CatalogResults load={load} path={path} />
+        <NewsletterCta
+          eyebrow="Réassorts et nouveautés"
+          title="Soyez prévenu quand de nouvelles cartes arrivent"
+        >
+          Recevez les prochains réassorts, sorties et sélections sans avoir à
+          surveiller le catalogue.
+        </NewsletterCta>
       </Container>
       {structuredData && (
         <JsonLd

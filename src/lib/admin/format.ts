@@ -17,6 +17,7 @@ export const labels: Record<string, string> = {
   SENT: 'Envoyé',
   DRAFT: 'Brouillon',
   ACTIVE: 'Actif',
+  UNSUBSCRIBED: 'Désinscrit',
   ARCHIVED: 'Archivé',
   PENDING_PAYMENT: 'En attente de paiement',
   PAYMENT_PROCESSING: 'Paiement en cours',

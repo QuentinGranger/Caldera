@@ -7,6 +7,7 @@ import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { UpdatedOn } from '@/components/editorial/UpdatedOn';
+import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
 import {
   universeChapterPath,
   universeChapters,
@@ -167,6 +168,15 @@ export async function UniverseChapterShell({
               </nav>
             )}
           </article>
+        </Container>
+        <Container>
+          <NewsletterCta
+            eyebrow="Prochaines chroniques"
+            title="Poursuivez l’expédition par e-mail"
+          >
+            Recevez les nouveaux récits de Caldera ainsi que les découvertes de
+            la boutique.
+          </NewsletterCta>
         </Container>
       </section>
       <JsonLd
