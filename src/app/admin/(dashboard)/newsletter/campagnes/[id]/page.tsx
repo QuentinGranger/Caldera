@@ -96,7 +96,7 @@ export default async function NewsletterCampaignPage({
           </div>
           <div className={styles.card}>
             <h3>2. Envoyer</h3>
-            {campaign.status === 'DRAFT' ? (
+            {campaign.status === 'DRAFT' && audience.total > 0 ? (
               <>
                 <p>
                   La liste est figée au clic. Les désabonnements survenus avant
@@ -110,6 +110,12 @@ export default async function NewsletterCampaignPage({
                   <input type="hidden" name="id" value={campaign.id} />
                 </AdminForm>
               </>
+            ) : campaign.status === 'DRAFT' ? (
+              <p>
+                Aucun abonné confirmé pour le moment. Le brouillon et l’envoi
+                test restent disponibles ; l’envoi définitif apparaîtra après la
+                première confirmation.
+              </p>
             ) : (
               <p>
                 La campagne est déjà figée. Le planificateur traite les envois
