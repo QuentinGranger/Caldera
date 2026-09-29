@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import { getPrisma } from '../src/lib/db/prisma';
 import { cartTokenHash } from '../src/lib/cart/identity';
+import { mockPwnedPasswords } from './helpers/pwned';
 
 if (
   process.env.NODE_ENV === 'production' ||
@@ -15,10 +16,14 @@ if (
 // Test-only secrets when the local environment has none.
 process.env.BETTER_AUTH_SECRET ||= randomBytes(32).toString('hex');
 process.env.ORDER_ACCESS_SECRET ||= randomBytes(32).toString('hex');
+// The breach check stays on, answered offline by the stand-in below.
+delete process.env.PASSWORD_BREACH_CHECK;
+const pwned = mockPwnedPasswords();
 
 const { getCustomerAuth } = await import('../src/lib/account/auth');
 const { setAccountMailer } = await import('../src/lib/account/emails');
 const { allowAccountAttempt } = await import('../src/lib/account/limits');
+const { isBreachedPassword } = await import('../src/lib/auth/passwordPolicy');
 const { getCustomerOrders } = await import('../src/lib/account/queries');
 type Mail = { kind: string; to: string; action: string };
 
@@ -85,7 +90,11 @@ test('comptes clients : inscription, confirmation, connexion, historique, suppre
   const token = (kind: string) => {
     const mail = mails.findLast((entry) => entry.kind === kind);
     assert.ok(mail, `e-mail ${kind} absent`);
-    return new URL(mail.action).searchParams.get('token')!;
+    // Links carry the token in the fragment, never in the query string.
+    assert.equal(new URL(mail.action).search, '');
+    return new URLSearchParams(new URL(mail.action).hash.slice(1)).get(
+      'token',
+    )!;
   };
   const created: string[] = [];
   try {
@@ -201,17 +210,55 @@ test('comptes clients : inscription, confirmation, connexion, historique, suppre
     );
 
     await t.test(
-      'mot de passe oublié : lien unique, sessions révoquées',
+      'mot de passe oublié : lien unique, haché, remplacé, confirmé',
       async () => {
         const customer = await db.customer.findUniqueOrThrow({
           where: { email },
         });
         await auth.api.requestPasswordReset({ body: { email } });
+        const first = token('reset');
+        await auth.api.requestPasswordReset({ body: { email } });
         const reset = token('reset');
+        assert.notEqual(first, reset);
+        // Only a hash is stored, and only the latest link remains.
+        const rows = await db.customerVerification.findMany({
+          where: { value: customer.id },
+        });
+        assert.equal(rows.length, 1);
+        assert.ok(!rows[0]!.identifier.includes(reset));
+        assert.ok(!rows[0]!.identifier.includes(first));
+        await assert.rejects(
+          auth.api.resetPassword({
+            body: { newPassword: `phrase remplacée ${key}`, token: first },
+          }),
+          (error: { body?: { code?: string } }) =>
+            error.body?.code === 'INVALID_TOKEN',
+        );
+        // A leaked password is caught before the link is used (the reset
+        // action checks first: better-auth consumes the link before hashing).
+        const leaked = `phrase fuitée ${key}`;
+        pwned.breach(leaked);
+        assert.equal(await isBreachedPassword(leaked), true);
+        assert.equal(await isBreachedPassword(`nouvelle phrase ${key}`), false);
+        // Sign-in lockout from earlier failures is lifted by the reset.
+        for (let attempt = 0; attempt < 6; attempt++)
+          await allowAccountAttempt('sign-in', email);
+        assert.equal(await allowAccountAttempt('sign-in', email), false);
         const next = `nouvelle phrase ${key}`;
+        const before = mails.length;
         await auth.api.resetPassword({
           body: { newPassword: next, token: reset },
         });
+        assert.equal(await allowAccountAttempt('sign-in', email), true);
+        assert.equal(mails.length, before + 1);
+        assert.equal(mails.at(-1)?.kind, 'password-changed');
+        assert.equal(mails.at(-1)?.to, email);
+        assert.equal(
+          await db.customerVerification.count({
+            where: { value: customer.id },
+          }),
+          0,
+        );
         assert.equal(
           await db.customerSession.count({ where: { userId: customer.id } }),
           0,
@@ -227,13 +274,37 @@ test('comptes clients : inscription, confirmation, connexion, historique, suppre
           }),
         );
         // Unknown address: same answer, no e-mail.
-        const before = mails.length;
+        const count = mails.length;
         await auth.api.requestPasswordReset({
           body: { email: `inconnu-${key}@example.com` },
         });
-        assert.equal(mails.length, before);
+        assert.equal(mails.length, count);
+        // The breach service only ever saw 5-character hash prefixes.
+        assert.ok(pwned.ranges.every((range) => /^[0-9A-F]{5}$/.test(range)));
       },
     );
+
+    await t.test('inscription : mot de passe fuité refusé', async () => {
+      const leaked = `phrase connue ${key}`;
+      pwned.breach(leaked);
+      await assert.rejects(
+        auth.api.signUpEmail({
+          body: {
+            name: 'Fuite',
+            email: `fuite-${key}@example.com`,
+            password: leaked,
+          },
+        }),
+        (error: { body?: { code?: string } }) =>
+          error.body?.code === 'PASSWORD_COMPROMISED',
+      );
+      assert.equal(
+        await db.customer.count({
+          where: { email: `fuite-${key}@example.com` },
+        }),
+        0,
+      );
+    });
 
     await t.test('tentatives limitées par adresse', async () => {
       const target = `limite-${key}@example.com`;
@@ -303,6 +374,7 @@ test('comptes clients : inscription, confirmation, connexion, historique, suppre
     );
   } finally {
     setAccountMailer(null);
+    pwned.restore();
     const orders = await db.order.findMany({
       where: { orderNumber: { startsWith: `ACC-${key}-` } },
       select: { id: true, checkoutSessionId: true },

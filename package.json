@@ -44,6 +44,8 @@
     "test:stripe:sandbox": "node --conditions=react-server --import tsx scripts/test-stripe-sandbox.ts",
     "admin:create": "node --conditions=react-server --import tsx scripts/create-admin.ts",
     "test:admin:db": "node --conditions=react-server --import tsx --test tests/admin-db.test.ts",
+    "test:admin:reset:db": "node --conditions=react-server --import tsx --test tests/admin-password-reset-db.test.ts",
+    "test:password-reset:http": "node --conditions=react-server --import tsx --test tests/password-reset-http.test.ts",
     "test:admin:http": "node --conditions=react-server --import tsx --test tests/admin-http.test.ts",
     "emails:process": "node --conditions=react-server --import tsx scripts/process-emails.ts",
     "media:migrate": "node --conditions=react-server --import tsx scripts/migrate-uploads-to-blob.ts",

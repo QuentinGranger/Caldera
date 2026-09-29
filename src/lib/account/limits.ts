@@ -43,3 +43,15 @@ export async function allowAccountAttempt(
     rule.seconds,
   );
 }
+
+/** A new password was set through a reset link: sign-in can start afresh. */
+export async function clearAccountAttempts(
+  scope: AccountAttemptScope,
+  email: string,
+) {
+  await getPrisma().customerAuthAttempt.deleteMany({
+    where: {
+      key: `${scope}:${createHash('sha256').update(email).digest('hex')}`,
+    },
+  });
+}

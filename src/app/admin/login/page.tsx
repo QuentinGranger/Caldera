@@ -6,8 +6,13 @@ import { loginAction } from '@/lib/admin/actions';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { Field } from '@/components/admin/AdminFields';
 import styles from '@/components/admin/Admin.module.scss';
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   if (await currentAdmin()) redirect('/admin');
+  const params = await searchParams;
   return (
     <main id="contenu" className={styles.login}>
       <div className={styles.brand}>
@@ -50,6 +55,14 @@ export default async function LoginPage() {
             </div>
           </div>
         </AdminForm>
+        {params['mot-de-passe'] === 'modifie' && (
+          <p className={styles.message} role="status">
+            Mot de passe modifié. Vous pouvez maintenant vous connecter.
+          </p>
+        )}
+        <p>
+          <Link href="/admin/mot-de-passe-oublie">Mot de passe oublié ?</Link>
+        </p>
       </div>
       <p className={styles.muted}>
         Accès réservé à l’équipe Caldera.

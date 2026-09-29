@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { AccountField, AccountForm } from '@/components/account/AccountForm';
 import { AccountShell } from '@/components/account/AccountShell';
+import { LinkTokenInput } from '@/components/auth/LinkTokenInput';
 import {
   resendVerificationAction,
   verifyEmailAction,
@@ -18,26 +19,23 @@ type Props = {
 // Confirmation needs a click: mail scanners that open links do not consume it.
 export default async function VerifyEmailPage({ searchParams }: Props) {
   const { token } = await searchParams;
-  const hasToken = typeof token === 'string' && token !== '';
   return (
     <AccountShell
       title="Confirmer votre adresse"
-      lead={
-        hasToken
-          ? 'Une dernière étape : confirmez votre adresse e-mail pour activer votre compte.'
-          : 'Demandez un nouveau lien de confirmation : il est valable 24 heures.'
-      }
+      lead="Une dernière étape : confirmez votre adresse e-mail pour activer votre compte. Le lien reçu est valable 24 heures."
     >
-      {hasToken && (
-        <AccountForm
-          action={verifyEmailAction}
-          submit="Confirmer mon adresse"
-          wide
-        >
-          <input type="hidden" name="token" value={token} />
-        </AccountForm>
-      )}
-      <details className={styles.resend} open={!hasToken}>
+      <AccountForm
+        action={verifyEmailAction}
+        submit="Confirmer mon adresse"
+        wide
+      >
+        <LinkTokenInput
+          fallback={typeof token === 'string' ? token : ''}
+          className={styles.error}
+          missing="Ce lien est incomplet : ouvrez le lien complet reçu par e-mail, ou demandez-en un nouveau ci-dessous."
+        />
+      </AccountForm>
+      <details className={styles.resend}>
         <summary>
           Lien expiré ou perdu ?
           <ChevronDown size={16} aria-hidden="true" />

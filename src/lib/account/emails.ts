@@ -6,6 +6,7 @@ import {
   emailSettings,
   resendProvider,
 } from '@/lib/email/provider';
+import { deliverAfterResponse } from '@/lib/auth/deliver';
 import { appOrigin } from '@/lib/orders/access';
 
 export type AccountEmail = {
@@ -25,25 +26,33 @@ export function setAccountMailer(mailer: Mailer | null) {
   testMailer = mailer;
 }
 
+// Tokens travel in the fragment (#token=): never sent to the server, so never
+// in access logs nor Referer headers (src/components/auth/LinkTokenInput.tsx).
 function actionUrl(kind: AccountEmailKind, token?: string) {
   const origin = appOrigin();
-  if (kind === 'verify')
-    return `${origin}/compte/verification?token=${encodeURIComponent(token ?? '')}`;
+  const fragment = `#token=${encodeURIComponent(token ?? '')}`;
+  if (kind === 'verify') return `${origin}/compte/verification${fragment}`;
   if (kind === 'reset')
-    return `${origin}/compte/nouveau-mot-de-passe?token=${encodeURIComponent(token ?? '')}`;
+    return `${origin}/compte/nouveau-mot-de-passe${fragment}`;
   return `${origin}/compte/connexion`;
 }
 
 /**
- * Sends synchronously, never throws: a failed delivery is logged with a code
- * only (no address, no token) and the visitor can ask for a new link. Throwing
- * would also tell a sign-up form which addresses already have an account.
+ * Never throws: a failed delivery is logged with a code only (no address, no
+ * token) and the visitor can ask for a new link. Throwing, or answering later
+ * when an e-mail is sent, would tell which addresses have an account: inside a
+ * request the delivery runs after the response.
  */
 export async function sendAccountEmail(
   kind: AccountEmailKind,
   to: string,
   token?: string,
 ) {
+  if (testMailer) return deliver(kind, to, token);
+  await deliverAfterResponse(() => deliver(kind, to, token));
+}
+
+async function deliver(kind: AccountEmailKind, to: string, token?: string) {
   try {
     const origin = appOrigin();
     const action = actionUrl(kind, token);

@@ -7,7 +7,9 @@ import { headers } from 'next/headers';
 import { cache } from 'react';
 import { getPrisma } from '@/lib/db/prisma';
 import { appOrigin } from '@/lib/orders/access';
+import { breachedPasswordCheck } from '@/lib/auth/passwordPolicy';
 import { sendAccountEmail } from './emails';
+import { clearAccountAttempts } from './limits';
 import { PASSWORD_MAX, PASSWORD_MIN } from './validation';
 
 /** Distinct from the administration's « caldera_admin » cookies. */
@@ -23,6 +25,20 @@ function customerSecret() {
   return createHmac('sha256', secret)
     .update('caldera:customer-accounts')
     .digest('hex');
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * After a reset: no other link stays usable, sign-in attempts start afresh
+ * and the owner is told (sessions are revoked by better-auth).
+ */
+async function afterPasswordReset(user: { id: string; email: string }) {
+  await getPrisma().customerVerification.deleteMany({
+    where: { value: user.id },
+  });
+  await clearAccountAttempts('sign-in', user.email);
+  await sendAccountEmail('password-changed', user.email);
 }
 
 function createCustomerAuth() {
@@ -41,6 +57,7 @@ function createCustomerAuth() {
       revokeSessionsOnPasswordReset: true,
       sendResetPassword: ({ user, token }) =>
         sendAccountEmail('reset', user.email, token),
+      onPasswordReset: ({ user }) => afterPasswordReset(user),
       onExistingUserSignUp: ({ user }) =>
         sendAccountEmail('existing', user.email),
     },
@@ -54,7 +71,27 @@ function createCustomerAuth() {
     },
     user: { modelName: 'customer', deleteUser: { enabled: true } },
     account: { modelName: 'customerAccount' },
-    verification: { modelName: 'customerVerification' },
+    // Only a hash of each link token is stored: a database copy opens nothing.
+    verification: {
+      modelName: 'customerVerification',
+      storeIdentifier: 'hashed',
+    },
+    databaseHooks: {
+      verification: {
+        create: {
+          // A reset link stores its account id: a new link replaces the older ones.
+          after: async (verification) => {
+            if (!UUID.test(verification.value)) return;
+            await getPrisma().customerVerification.deleteMany({
+              where: {
+                value: verification.value,
+                id: { not: verification.id },
+              },
+            });
+          },
+        },
+      },
+    },
     session: {
       modelName: 'customerSession',
       expiresIn: SESSION_SECONDS,
@@ -72,7 +109,8 @@ function createCustomerAuth() {
         secure: process.env.NODE_ENV === 'production',
       },
     },
-    plugins: [nextCookies()],
+    // nextCookies must stay last.
+    plugins: [breachedPasswordCheck(), nextCookies()],
     logger: { disabled: true },
   });
 }

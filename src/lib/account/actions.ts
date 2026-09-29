@@ -5,7 +5,14 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { CheckoutError, parseAddress } from '@/lib/checkout/schemas';
 import { getPrisma } from '@/lib/db/prisma';
+import {
+  BREACH_CHECK_UNAVAILABLE,
+  COMPROMISED_MESSAGE,
+  PASSWORD_COMPROMISED,
+  isBreachedPassword,
+} from '@/lib/auth/passwordPolicy';
 import { getCustomerAuth } from './auth';
+import { sendAccountEmail } from './emails';
 import { requireCustomer } from './guard';
 import { allowAccountAttempt } from './limits';
 import { getShippingCountries } from './queries';
@@ -74,6 +81,11 @@ export async function signUpAction(
     if (['PASSWORD_TOO_SHORT', 'PASSWORD_TOO_LONG'].includes(code(error) ?? ''))
       return failure('Vérifiez les champs indiqués.', {
         password: PASSWORD_RULE,
+      });
+    // Same answer for a taken address: its password goes through the check too.
+    if (code(error) === PASSWORD_COMPROMISED)
+      return failure('Vérifiez les champs indiqués.', {
+        password: COMPROMISED_MESSAGE,
       });
     logUnexpected('sign_up_failed', error);
     return failure(UNAVAILABLE);
@@ -159,14 +171,29 @@ export async function resetPasswordAction(
     return failure('Vérifiez le champ indiqué.', {
       confirmation: 'Les deux mots de passe ne sont pas identiques.',
     });
+  // Checked before the link is used: better-auth consumes it first.
+  let breached: boolean;
+  try {
+    breached = await isBreachedPassword(password);
+  } catch {
+    return failure(BREACH_CHECK_UNAVAILABLE);
+  }
+  if (breached)
+    return failure('Vérifiez le champ indiqué.', {
+      password: COMPROMISED_MESSAGE,
+    });
   try {
     await getCustomerAuth().api.resetPassword({
       body: { newPassword: password, token },
     });
   } catch (error) {
-    if (code(error) !== 'INVALID_TOKEN') logUnexpected('reset_failed', error);
+    if (code(error) === 'INVALID_TOKEN')
+      return failure(
+        'Ce lien n’est plus valable (il sert une fois, pendant 1 heure, et seul le dernier envoyé fonctionne). Demandez-en un nouveau.',
+      );
+    logUnexpected('reset_failed', error);
     return failure(
-      'Ce lien n’est plus valable (il sert une fois, pendant 1 heure). Demandez-en un nouveau.',
+      'Le mot de passe n’a pas pu être enregistré. Réessayez, ou demandez un nouveau lien si celui-ci ne fonctionne plus.',
     );
   }
   redirect(`${SIGN_IN_PATH}?mot-de-passe=modifie`);
@@ -275,7 +302,7 @@ export async function changePasswordAction(
   _previous: AccountActionState,
   form: FormData,
 ): Promise<AccountActionState> {
-  await requireCustomer();
+  const customer = await requireCustomer('/compte/profil');
   const current = form.get('currentPassword');
   const password = accountPassword(form.get('password'));
   if (typeof current !== 'string' || !current)
@@ -305,9 +332,15 @@ export async function changePasswordAction(
       return failure('Vérifiez les champs indiqués.', {
         currentPassword: 'Mot de passe actuel incorrect.',
       });
+    if (code(error) === PASSWORD_COMPROMISED)
+      return failure('Vérifiez les champs indiqués.', {
+        password: COMPROMISED_MESSAGE,
+      });
     logUnexpected('password_change_failed', error);
     return failure(UNAVAILABLE);
   }
+  // The owner is told, in case the session was not theirs.
+  await sendAccountEmail('password-changed', customer.email);
   return {
     success: true,
     message: 'Mot de passe modifié. Vos autres appareils ont été déconnectés.',

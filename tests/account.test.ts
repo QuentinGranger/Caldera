@@ -125,3 +125,14 @@ test('compte : statut lisible, couleur et étape de suivi de chaque commande', (
   assert.equal(isOpenOrder('delivered'), false);
   assert.equal(isOpenOrder('cancelled'), false);
 });
+
+test('compte : e-mail « mot de passe modifié » avec issue de secours', () => {
+  const email = renderAccountEmail('password-changed', {
+    action: 'https://lesterresdecaldera.fr/compte/connexion',
+    logo: 'https://lesterresdecaldera.fr/logo.png',
+    reset: 'https://lesterresdecaldera.fr/compte/mot-de-passe-oublie',
+  });
+  assert.equal(email.subject, 'Votre mot de passe a été modifié');
+  assert.match(email.text, /Mot de passe oublié : https:/);
+  assert.match(email.html, /Ce n’était pas moi/);
+});
