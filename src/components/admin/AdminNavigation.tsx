@@ -8,6 +8,7 @@ import {
   Dices,
   FileText,
   FolderTree,
+  Landmark,
   Layers3,
   LayoutDashboard,
   Mail,
@@ -47,7 +48,10 @@ const groups = [
   },
   {
     label: 'Comptabilité',
-    links: [{ href: '/admin/factures', label: 'Factures', icon: FileText }],
+    links: [
+      { href: '/admin/factures', label: 'Factures', icon: FileText },
+      { href: '/admin/fiscalite', label: 'Fiscalité', icon: Landmark },
+    ],
   },
   {
     label: 'Catalogue',

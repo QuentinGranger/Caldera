@@ -124,6 +124,7 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
       { ok: false, job: 'process-emails', action: 'job_failed' },
       // Without a Stripe key nothing is read nor sent.
       { ok: true, job: 'sync-refunds', action: 'job_completed' },
+      { ok: true, job: 'sync-tax', action: 'job_completed' },
     ],
   );
   // Tâches concurrentes : l’ordre des lignes de log n’est pas garanti.

@@ -5,6 +5,8 @@ import { processStockAlerts } from '@/lib/stock-alerts/processor';
 import type { RefundGateway } from '@/lib/refunds/gateway';
 import { syncRefunds } from '@/lib/refunds/service';
 import { stripeMode } from '@/lib/stripe/stripe';
+import type { TaxGateway } from '@/lib/tax/gateway';
+import { syncTax, taxWorkPending } from '@/lib/tax/service';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
@@ -14,6 +16,7 @@ export const maintenanceJobs = [
   'expire-reservations',
   'process-emails',
   'sync-refunds',
+  'sync-tax',
 ] as const;
 
 export type MaintenanceJob = (typeof maintenanceJobs)[number];
@@ -22,6 +25,7 @@ type Dependencies = {
   gateway?: PaymentGateway;
   provider?: EmailProvider;
   refunds?: RefundGateway;
+  tax?: TaxGateway;
 };
 
 // Bounded batches: a missed, duplicated or interrupted run is caught up by the next one.
@@ -66,6 +70,13 @@ const tasks: Record<
     if (!refunds && !stripeMode())
       return { ok: true, counts: { disabled: true, synced: 0, failed: 0 } };
     const counts = await syncRefunds({ gateway: refunds });
+    return { ok: counts.failed === 0, counts: { disabled: false, ...counts } };
+  },
+  // Stripe Tax records (sales, refund reversals) not made on the spot.
+  'sync-tax': async ({ tax }) => {
+    if ((!tax && !stripeMode()) || !(await taxWorkPending()))
+      return { ok: true, counts: { disabled: true, synced: 0, failed: 0 } };
+    const counts = await syncTax({ gateway: tax });
     return { ok: counts.failed === 0, counts: { disabled: false, ...counts } };
   },
 };

@@ -75,7 +75,10 @@ test('factures et avoirs, PostgreSQL', async (t) => {
   });
   const variant = product.variants[0]!;
   const carts: string[] = [];
-  async function paidOrder(status: 'PAID' | 'PAYMENT_REVIEW' = 'PAID') {
+  async function paidOrder(
+    status: 'PAID' | 'PAYMENT_REVIEW' = 'PAID',
+    taxMode: 'NONE' | 'LOCAL' = 'NONE',
+  ) {
     const cart = await db.cart.create({
       data: {
         tokenHash: cartTokenHash(randomUUID().replaceAll('-', '').repeat(2))!,
@@ -92,6 +95,7 @@ test('factures et avoirs, PostgreSQL', async (t) => {
         publicId: randomUUID().replaceAll('-', '').repeat(2),
         orderNumber: `INVOICE-${randomUUID()}`,
         status,
+        taxMode,
         email: `client-${key}@example.com`,
         currency: 'EUR',
         subtotalAmount: '59.90',
@@ -305,7 +309,20 @@ test('factures et avoirs, PostgreSQL', async (t) => {
         );
         assert.equal(saved.siren, '123456789');
         assert.equal(saved.vatNumber, 'FR12123456789');
-        const order = await paidOrder();
+        // Commande passée en franchise : sa facture reste sans TVA, même
+        // émise après le changement de régime.
+        const before = await paidOrder();
+        orders.push(before.id);
+        const untaxed = await issueMissingInvoice(
+          admin.id,
+          form({ id: before.id }),
+        );
+        assert.equal(untaxed.taxAmount.toFixed(2), '0.00');
+        assert.match(
+          parseInvoiceSnapshot(untaxed.snapshot).vatMention ?? '',
+          /293 B/,
+        );
+        const order = await paidOrder('PAID', 'LOCAL');
         orders.push(order.id);
         const invoice = await issueMissingInvoice(
           admin.id,
@@ -313,6 +330,13 @@ test('factures et avoirs, PostgreSQL', async (t) => {
         );
         // 64,80 € TTC à 20 % : 10,80 € de TVA.
         assert.equal(invoice.taxAmount.toFixed(2), '10.80');
+        const snapshot = parseInvoiceSnapshot(invoice.snapshot);
+        assert.equal(snapshot.vatMention, null);
+        assert.ok(
+          snapshot.seller.lines.includes(
+            'TVA intracommunautaire FR12123456789',
+          ),
+        );
         const first = await db.invoice.findFirstOrThrow({
           where: { orderId: orders[0]! },
         });

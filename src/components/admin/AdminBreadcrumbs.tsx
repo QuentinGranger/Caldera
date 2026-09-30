@@ -15,6 +15,7 @@ const sections: Record<string, string> = {
   promotions: 'Codes promo',
   retours: 'Retours',
   factures: 'Factures',
+  fiscalite: 'Fiscalité',
 };
 export function AdminBreadcrumbs() {
   const parts = usePathname().split('/').filter(Boolean);

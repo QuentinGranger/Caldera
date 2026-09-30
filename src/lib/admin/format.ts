@@ -50,6 +50,7 @@ export const labels: Record<string, string> = {
   RETURN_STATE_REJECTED: 'Refusé',
   RETURN_STATE_CANCELED: 'Clos',
   INVOICE_ISSUED: 'Facture émise',
+  TAX_SETTINGS_UPDATED: 'Réglages fiscaux modifiés',
   INVOICE_SETTINGS_UPDATED: 'Mentions de facture modifiées',
   RETURN_CREATED: 'Retour créé',
   RETURN_APPROVED: 'Retour accepté',

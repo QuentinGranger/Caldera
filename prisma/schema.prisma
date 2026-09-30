@@ -389,6 +389,16 @@ model Order {
   /// Snapshot of the code used: the promotion may change or disappear later.
   promotionCode          String?
   promotionLabel         String?
+  /// VAT regime when the order was placed: NONE (franchise), LOCAL (default
+  /// rate), STRIPE_TAX (calculated by Stripe Tax). Prices are VAT inclusive.
+  taxMode                TaxMode              @default(NONE)
+  /// VAT included in totalAmount.
+  taxAmount              Decimal              @default(0) @db.Decimal(10, 2)
+  shippingTaxAmount      Decimal              @default(0) @db.Decimal(10, 2)
+  shippingTaxRate        Decimal?             @db.Decimal(5, 2)
+  taxCalculationId       String?
+  /// Stripe Tax transaction recording the sale in the tax reports.
+  taxTransactionId       String?              @unique
   /// subtotal − discount + shipping.
   totalAmount            Decimal              @db.Decimal(10, 2)
   fulfillmentStatus      FulfillmentStatus    @default(UNFULFILLED)
@@ -441,6 +451,9 @@ model OrderItem {
   unitCost       Decimal?        @db.Decimal(10, 2)
   quantity       Int
   lineTotal      Decimal         @db.Decimal(10, 2)
+  /// Share of the order discount on this line: the line cost lineTotal − discountAmount.
+  taxAmount      Decimal         @default(0) @db.Decimal(10, 2)
+  taxRate        Decimal?        @db.Decimal(5, 2)
   discountAmount Decimal         @default(0) @db.Decimal(10, 2)
   imageUrl       String
   createdAt      DateTime        @default(now())
@@ -1017,6 +1030,8 @@ model Refund {
   note             String?        @db.Text
   status           RefundStatus   @default(PENDING)
   providerRefundId String?        @unique
+  /// Stripe Tax reversal of the refunded part (Stripe Tax orders only).
+  taxReversalId    String?        @unique
   failureReason    String?
   /// Refunded items go back on sale once the refund succeeds.
   restock          Boolean        @default(false)
@@ -1212,28 +1227,36 @@ enum VatRegime {
 /// Identity printed on invoices (singleton « caldera »), edited in the
 /// administration. Invoices keep a copy: editing it never changes them.
 model InvoiceSettings {
-  id             String    @id @default("caldera")
-  legalName      String    @default("CALDERA")
-  tradeName      String    @default("Les Terres de Caldera")
-  legalForm      String    @default("SASU")
+  id                        String    @id @default("caldera")
+  legalName                 String    @default("CALDERA")
+  tradeName                 String    @default("Les Terres de Caldera")
+  legalForm                 String    @default("SASU")
   /// « 1 000 € »: mandatory on the invoices of a company.
-  shareCapital   String?
-  street         String    @default("74 rue Pierre Valdo")
-  postalCode     String    @default("69005")
-  city           String    @default("Lyon")
-  country        String    @default("France")
-  siren          String?
-  siret          String?
+  shareCapital              String?
+  street                    String    @default("74 rue Pierre Valdo")
+  postalCode                String    @default("69005")
+  city                      String    @default("Lyon")
+  country                   String    @default("France")
+  siren                     String?
+  siret                     String?
   /// City of the trade register, e.g. « Lyon ».
-  rcsCity        String?
-  vatNumber      String?
-  email          String    @default("contact@lesterresdecaldera.fr")
-  vatRegime      VatRegime @default(FRANCHISE)
+  rcsCity                   String?
+  vatNumber                 String?
+  email                     String    @default("contact@lesterresdecaldera.fr")
+  vatRegime                 VatRegime @default(FRANCHISE)
   /// Rate applied without Stripe Tax once VAT is charged (percent).
-  defaultVatRate Decimal   @default(20) @db.Decimal(5, 2)
+  defaultVatRate            Decimal   @default(20) @db.Decimal(5, 2)
   /// Free text at the bottom of every invoice.
-  footer         String?   @db.Text
-  updatedAt      DateTime  @updatedAt
+  footer                    String?   @db.Text
+  /// Calculate and record VAT with Stripe Tax (only with vatRegime STANDARD).
+  stripeTaxEnabled          Boolean   @default(false)
+  productTaxCode            String    @default("txcd_99999999")
+  shippingTaxCode           String    @default("txcd_92010001")
+  /// VAT franchise thresholds for sales of goods (art. 293 B du CGI), editable
+  /// because the law changes them.
+  franchiseThreshold        Decimal   @default(85000) @db.Decimal(12, 2)
+  franchiseMajoredThreshold Decimal   @default(93500) @db.Decimal(12, 2)
+  updatedAt                 DateTime  @updatedAt
 }
 
 enum InvoiceKind {
@@ -1276,4 +1299,10 @@ model Invoice {
   @@index([orderId])
   @@index([kind, issuedAt])
   @@index([invoiceId])
+}
+
+enum TaxMode {
+  NONE
+  LOCAL
+  STRIPE_TAX
 }

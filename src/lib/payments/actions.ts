@@ -17,6 +17,7 @@ import { cancelOrder, currentOrder } from './cancel';
 import { reconcilePaymentIntent } from './events';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { currentCustomer } from '@/lib/account/auth';
+import { tryTaxCalculation } from '@/lib/tax/service';
 
 const payableIntentStatuses = new Set([
   'requires_payment_method',
@@ -182,6 +183,9 @@ export async function retryPaymentAction(publicId: unknown) {
     } else {
       retryLog('retryPaymentAction: creating new Stripe PaymentIntent');
     }
+
+    // VAT is included in the prices: calculated before paying, never blocking.
+    if (order.taxMode === 'STRIPE_TAX') await tryTaxCalculation(order.id);
 
     const intent = await ensureIntent(order.id);
 

@@ -5,6 +5,7 @@ import { readCheckout } from '@/lib/checkout/queries';
 import { promotionLines, validateCheckout } from '@/lib/checkout/validation';
 import { evaluatePromotion } from '@/lib/promotions/pricing';
 import { promotionUsage } from '@/lib/promotions/service';
+import { currentTaxMode } from '@/lib/tax/service';
 import { fromCents, toCents } from '@/lib/refunds/amounts';
 import { parseId } from '@/lib/checkout/schemas';
 import { Prisma } from '@/generated/prisma/client';
@@ -107,6 +108,7 @@ export async function prepareOrder(
           'Un article vient d’être réservé. Vérifiez les quantités de votre panier.',
         );
     }
+    const taxMode = await currentTaxMode(tx);
     const expiresAt = new Date(Date.now() + STOCK_RESERVATION_TTL);
     const { contact } = view;
     const order = await tx.order.create({
@@ -126,6 +128,7 @@ export async function prepareOrder(
         shippingDiscountAmount: shippingDiscount,
         promotionCode: view.promotion?.code ?? null,
         promotionLabel: view.promotion?.label ?? null,
+        taxMode,
         totalAmount: total,
         shippingMethodCode: method.code,
         shippingMethodName: method.name,

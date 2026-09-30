@@ -5,6 +5,7 @@ import type {
   Prisma,
 } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
+import { toCents } from '@/lib/refunds/amounts';
 import {
   buildCreditNote,
   buildInvoice,
@@ -81,7 +82,13 @@ export async function issueInvoice(
   });
   if (order.status !== 'PAID')
     throw new Error('Facture réservée aux commandes payées.');
-  const seller = sellerFrom(await invoiceSettings(tx));
+  // The regime the order was placed under, whatever the settings say today.
+  const seller = {
+    ...sellerFrom(await invoiceSettings(tx)),
+    vatRegime:
+      order.taxMode === 'NONE' ? ('FRANCHISE' as const) : ('STANDARD' as const),
+  };
+  const stripeTax = order.taxMode === 'STRIPE_TAX' && order.taxCalculationId;
   const issuedAt = new Date();
   const number = await nextNumber(tx, 'INVOICE', issuedAt);
   const billing =
@@ -111,7 +118,18 @@ export async function issueInvoice(
         unitPrice: item.unitPrice.toFixed(2),
         lineTotal: item.lineTotal.toFixed(2),
         discountAmount: item.discountAmount.toFixed(2),
+        tax:
+          stripeTax && item.taxRate
+            ? { rate: item.taxRate.toFixed(2), cents: toCents(item.taxAmount) }
+            : null,
       })),
+      shippingTax:
+        stripeTax && order.shippingTaxRate
+          ? {
+              rate: order.shippingTaxRate.toFixed(2),
+              cents: toCents(order.shippingTaxAmount),
+            }
+          : null,
       billing,
     },
   });
