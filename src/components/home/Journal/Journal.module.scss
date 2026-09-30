@@ -1,0 +1,98 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+// Reading, not shopping: a typographic list, no boxes.
+.section {
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  background: v.$color-background;
+  color: v.$color-text;
+}
+.inner {
+  @include m.container;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+  h2 {
+    margin-top: 0.75rem;
+    font-size: v.$heading-section;
+    letter-spacing: -0.02em;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+}
+.all {
+  @include m.underline-link(v.$color-green-secondary);
+}
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid v.$color-border;
+  @include m.from(v.$breakpoint-desktop) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 2.5rem;
+    border-top: 0;
+    > li {
+      border-top: 1px solid v.$color-border;
+    }
+  }
+}
+.entry {
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.5rem 3rem 1.75rem 0;
+  border-bottom: 1px solid v.$color-border;
+  @include m.from(v.$breakpoint-desktop) {
+    height: 100%;
+    border-bottom: 0;
+  }
+  &:hover,
+  &:focus-visible {
+    .title {
+      color: v.$color-green-secondary;
+    }
+    .arrow {
+      transform: translate(3px, -3px);
+      color: v.$color-volcanic;
+    }
+  }
+}
+.meta {
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.title {
+  font-family: v.$font-heading;
+  font-size: v.$heading-card;
+  line-height: 1.15;
+  transition: color v.$duration-short v.$ease-out;
+}
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: v.$color-text-muted;
+  font-size: 0.92rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+.arrow {
+  position: absolute;
+  top: 1.5rem;
+  right: 0.25rem;
+  color: v.$color-text-muted;
+  transition:
+    transform v.$duration-short v.$ease-out,
+    color v.$duration-short v.$ease-out;
+}

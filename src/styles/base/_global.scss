@@ -1,5 +1,14 @@
 @use '../abstracts/variables' as v;
 
+:root {
+  // Height of the sticky header: anchors and sticky asides sit below it.
+  --header-height: 3.75rem;
+
+  @media (min-width: 75rem) {
+    --header-height: 5.25rem;
+  }
+}
+
 html {
   color-scheme: light;
   background: v.$color-background;
@@ -35,7 +44,31 @@ body:has([data-caldera-not-found]) .storefront-chrome {
 
 section[id],
 a[id] {
-  scroll-margin-top: 1.5rem;
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+}
+
+// Content revealed as it enters the viewport, driven by the scroll itself:
+// no script, nothing hidden where the browser lacks scroll timelines, and
+// nothing moving for visitors who prefer reduced motion.
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [data-reveal] {
+      animation: caldera-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 24%;
+    }
+  }
+}
+
+@keyframes caldera-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(2.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 :focus-visible {

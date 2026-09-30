@@ -1,0 +1,118 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+// Dusk: the parchment darkens into the night (the dawn of the page in
+// reverse), then the landscape rises out of it and runs into the footer.
+$dusk: clamp(6rem, 12vw, 10rem);
+.section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-block: calc(#{$dusk} + clamp(4rem, 8vw, 6rem)) clamp(4rem, 8vw, 7rem);
+  background: linear-gradient(
+    180deg,
+    v.$color-background 0,
+    #a89f86 calc(#{$dusk} * 0.35),
+    #25322a calc(#{$dusk} * 0.75),
+    v.$color-night $dusk
+  );
+  color: v.$color-text-on-dark;
+  // Legibility: darker at the bottom and on the left, where the text is.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: $dusk 0 0;
+    z-index: -1;
+    background:
+      linear-gradient(
+        180deg,
+        rgb(3 20 14 / 20%) 0%,
+        rgb(3 20 14 / 78%) 55%,
+        v.$color-night 100%
+      ),
+      linear-gradient(90deg, rgb(3 20 14 / 55%) 0%, transparent 70%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8rem);
+    mask-image: linear-gradient(180deg, transparent 0, #000 8rem);
+  }
+}
+.media {
+  position: absolute;
+  inset: calc(#{$dusk} * 0.6) 0 0;
+  z-index: -2;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 clamp(8rem, 16vw, 14rem)
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 clamp(8rem, 16vw, 14rem)
+  );
+  img {
+    object-fit: cover;
+    object-position: center 35%;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .media img {
+      animation: settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 0%;
+    }
+  }
+}
+@keyframes settle {
+  from {
+    transform: scale(1.12) translateY(-3%);
+  }
+  to {
+    transform: scale(1) translateY(3%);
+  }
+}
+.inner {
+  @include m.container;
+  display: grid;
+  gap: 2.5rem;
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    align-items: end;
+    gap: 5rem;
+  }
+}
+.copy {
+  display: grid;
+  gap: 1rem;
+  max-width: 36rem;
+  h2 {
+    font-size: v.$heading-section;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 24px rgb(3 20 14 / 50%);
+    em {
+      display: block;
+      color: v.$color-gold-light;
+      font-weight: 400;
+    }
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+.lead {
+  color: #e6ebdf;
+  font-size: v.$text-lead;
+}
+.catalogue {
+  @include m.underline-link(v.$color-gold-light);
+  justify-self: start;
+  color: v.$color-text-on-dark;
+}
+.form {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border-radius: v.$radius-card;
+  background: rgb(3 20 14 / 55%);
+  box-shadow: v.$shadow-night;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}

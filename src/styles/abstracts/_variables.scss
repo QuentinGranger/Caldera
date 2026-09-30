@@ -42,3 +42,29 @@ $transition-base: 280ms ease;
 $z-index-header: 10;
 $z-index-skip-link: 100;
 $shadow-soft: 0 12px 36px rgb(7 28 23 / 8%);
+
+// Immersive surfaces: the night of the landscapes, from the hero down.
+$color-night: #03140e;
+$color-night-soft: #072419;
+$color-ember: #e0763f;
+$color-muted-on-night: #a9b8ad;
+
+// Motion: one easing family, three durations. Everything stays short.
+$ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+$ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+$duration-short: 200ms;
+$duration-medium: 420ms;
+$duration-long: 900ms;
+
+// Depth instead of borders.
+$radius-card: 0.35rem;
+$shadow-lift: 0 26px 60px -28px rgb(3 20 14 / 55%);
+$shadow-night: 0 30px 80px -30px rgb(0 0 0 / 70%);
+
+// Type scale: editorial headings, readable functional text (≥ 12 px).
+$text-small: 0.78rem;
+$text-base: 1rem;
+$text-lead: clamp(1.02rem, 0.95rem + 0.3vw, 1.18rem);
+$heading-display: clamp(3rem, 1.6rem + 5.6vw, 6.6rem);
+$heading-section: clamp(2.3rem, 1.5rem + 3.2vw, 4.2rem);
+$heading-card: clamp(1.45rem, 1.2rem + 0.9vw, 2rem);

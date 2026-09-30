@@ -1,0 +1,175 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+// Still the night of the hero: no edge between the two, only depth.
+.section {
+  position: relative;
+  padding-block: clamp(3rem, 7vw, 6.5rem) clamp(4rem, 9vw, 8rem);
+  background:
+    radial-gradient(
+      ellipse 60% 45% at 85% 10%,
+      rgb(224 118 63 / 12%),
+      transparent 70%
+    ),
+    linear-gradient(180deg, v.$color-night 0%, v.$color-night-soft 100%);
+  color: v.$color-text-on-dark;
+}
+.inner {
+  @include m.container;
+}
+.head {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  h2 {
+    font-size: v.$heading-section;
+    letter-spacing: -0.02em;
+    em {
+      display: block;
+      color: v.$color-gold-light;
+      font-weight: 400;
+    }
+  }
+  p:last-child {
+    color: v.$color-muted-on-night;
+    font-size: v.$text-lead;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+// Editorial mosaic: the first family leads, never half a grid left empty.
+.grid {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    &[data-count='1'] {
+      grid-template-columns: 1fr;
+    }
+    &[data-count='3'] > li:first-child {
+      grid-row: span 2;
+    }
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    &[data-count='2'] {
+      grid-template-columns: 1.35fr 1fr;
+    }
+    &[data-count='4'] {
+      grid-template-columns: 1.3fr 1fr 1fr;
+      > li:first-child {
+        grid-row: span 2;
+      }
+      > li:last-child {
+        grid-column: span 2;
+      }
+    }
+  }
+}
+.card {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  min-height: 22rem;
+  overflow: hidden;
+  border-radius: v.$radius-card;
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 50% 35%,
+      rgb(255 244 214 / 13%),
+      transparent 72%
+    ),
+    linear-gradient(160deg, #0d3527 0%, #06231a 100%);
+  box-shadow: v.$shadow-night;
+  transition: transform v.$duration-medium v.$ease-out;
+  // A warm light rises from the bottom on hover.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+      ellipse 80% 55% at 50% 100%,
+      rgb(232 194 97 / 16%),
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity v.$duration-medium v.$ease-out;
+  }
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-4px);
+    &::before {
+      opacity: 1;
+    }
+    .stage img {
+      transform: translateY(-6px) scale(1.04);
+    }
+    .arrow {
+      color: v.$color-ink;
+      background: v.$color-gold;
+      transform: rotate(45deg);
+    }
+  }
+  &:focus-visible {
+    outline-color: v.$color-gold;
+  }
+}
+.stage {
+  position: relative;
+  min-height: 14rem;
+  img {
+    padding: clamp(1.5rem, 4vw, 3rem);
+    object-fit: contain;
+    filter: drop-shadow(0 24px 30px rgb(0 0 0 / 45%));
+    transition: transform v.$duration-long v.$ease-out;
+  }
+}
+.caption {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0 1.5rem 1.6rem;
+  @include m.from(v.$breakpoint-tablet) {
+    padding: 0 2rem 2rem;
+  }
+}
+.count {
+  color: v.$color-gold;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.name {
+  font-family: v.$font-heading;
+  font-size: v.$heading-card;
+  line-height: 1.1;
+}
+.description {
+  max-width: 28rem;
+  color: v.$color-muted-on-night;
+  font-size: 0.9rem;
+}
+.arrow {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  color: v.$color-gold-light;
+  background: rgb(255 255 255 / 8%);
+  transition:
+    background v.$duration-short v.$ease-out,
+    color v.$duration-short v.$ease-out,
+    transform v.$duration-medium v.$ease-out;
+}

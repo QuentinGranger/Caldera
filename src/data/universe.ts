@@ -106,6 +106,60 @@ export const universeChapters = [
   },
 ] as const;
 
+/**
+ * The five territories as the home page shows them: name, tagline and image
+ * from /univers/territoires, which tells their full story under `#slug`.
+ */
+export const territories = [
+  {
+    slug: 'caldera',
+    name: 'La Caldera',
+    tagline: 'Le cœur des terres',
+    image: {
+      src: '/assets/images/GrandEffondrement.png',
+      alt: 'Grande vue du bassin central de la Caldera',
+    },
+  },
+  {
+    slug: 'braise',
+    name: 'Les Terres de Braise',
+    tagline: 'La roche garde la mémoire',
+    image: {
+      src: '/assets/images/TerresBraise.png',
+      alt: 'Plateaux volcaniques noirs et rougeoyants des Terres de Braise',
+    },
+  },
+  {
+    slug: 'forets',
+    name: 'Les Forêts anciennes',
+    tagline: 'Tout ne demande pas à être découvert',
+    image: {
+      src: '/assets/images/ForetsAnciennes.png',
+      alt: 'Forêt ancienne humide et brumeuse de Caldera',
+    },
+  },
+  {
+    slug: 'hautes-terres',
+    name: 'Les Hautes Terres',
+    tagline: 'Certaines recherches prennent du temps',
+    image: {
+      src: '/assets/images/HautesTerres.png',
+      alt: 'Plateaux froids et falaises des Hautes Terres de Caldera',
+    },
+  },
+  {
+    slug: 'rivages',
+    name: 'Les Rivages',
+    tagline: 'Là où le monde arrive à Caldera',
+    image: {
+      src: '/assets/images/Rivages.png',
+      alt: 'Village côtier et embarcations des Rivages de Caldera',
+    },
+  },
+] as const;
+
+export type Territory = (typeof territories)[number];
+
 export type UniverseChapter = (typeof universeChapters)[number];
 export type UniverseChapterSlug = UniverseChapter['slug'];
 

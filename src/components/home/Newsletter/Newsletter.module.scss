@@ -1,38 +1,6 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
-.section {
-  @include m.section;
-  background: v.$color-green-dark;
-  color: v.$color-text-on-dark;
-  overflow: hidden;
-}
-.grid {
-  position: relative;
-  display: grid;
-  align-items: center;
-  gap: 2rem;
-  > div,
-  form {
-    position: relative;
-    z-index: 1;
-  }
-  h2 {
-    font-size: clamp(2.5rem, 3.2vw, 3.3rem);
-    margin-block: 0.8rem 1rem;
-  }
-  @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-  }
-}
-.eyebrow {
-  @include m.eyebrow;
-  color: v.$color-gold;
-}
-.description {
-  color: v.$color-muted-on-dark;
-  font-size: 0.8rem;
-}
+// The newsletter form, on the landscape of the final call.
 .form {
   fieldset {
     min-width: 0;
@@ -43,7 +11,7 @@
   label {
     display: block;
     margin-bottom: 0.7rem;
-    font-size: 0.68rem;
+    font-size: 0.8rem;
   }
 }
 .consent {
@@ -67,7 +35,7 @@
 .fieldError {
   margin-top: 0.45rem;
   color: #ffd0ca;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
 }
 .honeypot {
   position: absolute !important;
@@ -85,12 +53,18 @@
     flex: 1;
     width: 100%;
     min-height: 3.2rem;
-    border: 1px solid #ffffff66;
-    border-radius: v.$radius-small;
+    border: 1px solid rgb(255 255 255 / 38%);
+    border-radius: v.$radius-card;
     padding: 0.8rem 1rem;
-    background: #002b20;
+    background: rgb(3 20 14 / 55%);
     color: v.$color-text-on-dark;
-    font-size: 0.8rem;
+    font-size: 0.95rem;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: border-color v.$duration-short v.$ease-out;
+    &:focus {
+      border-color: v.$color-gold;
+    }
     &::placeholder {
       color: v.$color-muted-on-dark;
     }
@@ -111,14 +85,14 @@
   }
 }
 .note {
-  font-size: 0.59rem;
+  font-size: 0.75rem;
   margin-top: 0.8rem;
   color: v.$color-muted-on-dark;
 }
 .feedback {
   min-height: 2.3rem;
   margin-top: 0.6rem;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   color: v.$color-gold-light;
   &:focus {
     outline: 2px solid v.$color-gold;
@@ -127,11 +101,4 @@
 }
 .feedbackError {
   color: #ffd0ca;
-}
-.compass {
-  position: absolute;
-  right: -9rem;
-  top: -4rem;
-  opacity: 0.055;
-  pointer-events: none;
 }

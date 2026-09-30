@@ -1,0 +1,247 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+$wide: 64rem;
+// Phones and tablets: a swipeable row of tall cards, each with its image.
+// Wide screens: a single landscape behind the list, changing with the name
+// under the pointer or the focus. The first territory shows by default.
+.section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-block: clamp(4rem, 9vw, 7rem);
+  background: v.$color-night;
+  color: v.$color-text-on-dark;
+  @include m.from($wide) {
+    display: flex;
+    align-items: flex-end;
+    min-height: min(100svh, 58rem);
+    padding-block: 7rem 4.5rem;
+    // Legibility of the list, on the left and at the bottom.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(
+          90deg,
+          rgb(3 20 14 / 88%) 0%,
+          rgb(3 20 14 / 55%) 38%,
+          transparent 70%
+        ),
+        linear-gradient(
+          0deg,
+          rgb(3 20 14 / 90%) 0%,
+          rgb(3 20 14 / 62%) 45%,
+          transparent 78%
+        ),
+        linear-gradient(180deg, v.$color-night-soft 0%, transparent 18%);
+    }
+  }
+}
+.inner {
+  @include m.container;
+}
+.head {
+  display: grid;
+  gap: 1rem;
+  max-width: 34rem;
+  margin-bottom: 2.5rem;
+  h2 {
+    font-size: v.$heading-section;
+    letter-spacing: -0.02em;
+    em {
+      display: block;
+      color: v.$color-gold-light;
+      font-weight: 400;
+    }
+  }
+  p:last-child {
+    color: v.$color-muted-on-night;
+    font-size: v.$text-lead;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+
+// --- Phones and tablets: cards to swipe ------------------------------------
+.list {
+  display: grid;
+  grid-auto-columns: min(78%, 22rem);
+  grid-auto-flow: column;
+  gap: 1rem;
+  margin: 0 calc(-1 * #{v.$space-6});
+  padding: 0 v.$space-6 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: v.$space-6;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  list-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+.item {
+  scroll-snap-align: start;
+}
+.link {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  min-height: 27rem;
+  padding: 1.5rem;
+  overflow: hidden;
+  border-radius: v.$radius-card;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      0deg,
+      rgb(3 20 14 / 92%) 0%,
+      rgb(3 20 14 / 35%) 45%,
+      transparent 70%
+    );
+  }
+}
+.visual {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  img {
+    object-fit: cover;
+  }
+}
+.number {
+  color: v.$color-gold;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.text {
+  display: grid;
+  gap: 0.3rem;
+}
+.name {
+  font-family: v.$font-heading;
+  font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.4rem);
+  line-height: 1.05;
+}
+.tagline {
+  color: v.$color-muted-on-night;
+  font-size: 0.9rem;
+}
+.more {
+  @include m.underline-link(v.$color-gold-light);
+  margin-top: 1.75rem;
+  color: v.$color-text-on-dark;
+}
+
+// --- Wide screens: one landscape, five names -------------------------------
+@include m.from($wide) {
+  .inner {
+    display: grid;
+    grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+    align-items: end;
+    column-gap: 4rem;
+  }
+  .head {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+  .more {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .list {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+    border-top: 1px solid rgb(255 255 255 / 14%);
+  }
+  // Not positioned: each image fills the whole section behind the list.
+  .link {
+    position: static;
+    isolation: auto;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 1.5rem;
+    min-height: 0;
+    padding: 1.15rem 0.25rem;
+    overflow: visible;
+    border-radius: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+    transition: padding v.$duration-medium v.$ease-out;
+    &::after {
+      display: none;
+    }
+    &:focus-visible {
+      outline-offset: 2px;
+    }
+  }
+  .text {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    flex: 1;
+    gap: 1.5rem;
+  }
+  .name,
+  .tagline {
+    text-shadow: 0 1px 14px rgb(3 20 14 / 85%);
+  }
+  .name {
+    color: rgb(251 244 223 / 72%);
+    transition: color v.$duration-medium v.$ease-out;
+  }
+  .tagline {
+    color: rgb(251 244 223 / 84%);
+    text-align: right;
+    opacity: 0;
+    transform: translateX(-0.5rem);
+    transition:
+      opacity v.$duration-medium v.$ease-out,
+      transform v.$duration-medium v.$ease-out;
+  }
+  .visual {
+    z-index: -2;
+    opacity: 0;
+    transition: opacity v.$duration-long v.$ease-in-out;
+    img {
+      transform: scale(1.06);
+      transition: transform 2.4s v.$ease-out;
+    }
+  }
+  // Active territory: under the pointer or the focus, else the first one.
+  .item:has(.link:is(:hover, :focus-visible)),
+  .list:not(:has(.link:is(:hover, :focus-visible))) .item:first-child {
+    .visual {
+      opacity: 1;
+      img {
+        transform: scale(1);
+      }
+    }
+    .name {
+      color: v.$color-gold-light;
+    }
+    .tagline {
+      opacity: 1;
+      transform: none;
+    }
+    .link {
+      padding-left: 0.9rem;
+    }
+  }
+}

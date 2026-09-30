@@ -9,12 +9,17 @@ import styles from './ProductCard.module.scss';
 export function ProductCard({
   product,
   compact = false,
+  tone = 'day',
 }: {
   product: CatalogProduct;
   compact?: boolean;
+  /** `night`: on the dark sections of the home page. */
+  tone?: 'day' | 'night';
 }) {
   return (
-    <article className={`${styles.card} ${compact ? styles.compact : ''}`}>
+    <article
+      className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''}`}
+    >
       <div className={styles.visual}>
         <div className={styles.badge}>
           {product.badge && <ProductBadge kind={product.badge} />}

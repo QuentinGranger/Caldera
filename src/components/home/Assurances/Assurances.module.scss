@@ -1,0 +1,88 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+// Reassurance as an editorial band: numbers instead of generic icons,
+// hairlines instead of boxes.
+.section {
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  background: v.$color-background-secondary;
+  color: v.$color-text;
+}
+.inner {
+  @include m.container;
+}
+.head {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 40rem;
+  margin-bottom: clamp(2.25rem, 4vw, 3.5rem);
+  h2 {
+    font-size: v.$heading-section;
+    letter-spacing: -0.02em;
+    em {
+      display: block;
+      color: v.$color-green-secondary;
+      font-weight: 400;
+    }
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+}
+.list {
+  display: grid;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem 3rem;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2.5rem;
+  }
+  li {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgb(23 62 50 / 22%);
+  }
+  h3 {
+    font-size: clamp(1.35rem, 1.2rem + 0.5vw, 1.6rem);
+    line-height: 1.15;
+  }
+  p {
+    color: v.$color-text-muted;
+    font-size: 0.92rem;
+  }
+}
+.number {
+  color: v.$color-volcanic;
+  font-family: v.$font-heading;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+.link {
+  @include m.underline-link(v.$color-green-secondary);
+  justify-self: start;
+  padding-block: 0.3rem;
+  font-size: 0.8rem;
+}
+.contact {
+  margin-top: clamp(2.25rem, 4vw, 3rem);
+  color: v.$color-text-muted;
+  a {
+    color: v.$color-text;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgb(23 62 50 / 35%);
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color v.$duration-short v.$ease-out;
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}

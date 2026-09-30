@@ -1,15 +1,21 @@
 @use '../../../styles/abstracts/variables' as v;
+// A quiet line above the header: part of the night, not a banner.
 .bar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
-  padding: 0.55rem 1rem;
-  background: v.$color-cream;
-  color: v.$color-green-dark;
-  font-size: 0.625rem;
-  letter-spacing: 0.055em;
+  min-height: 2rem;
+  padding: 0.4rem 1rem;
+  background: v.$color-night;
+  color: v.$color-muted-on-night;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   text-align: center;
+  svg {
+    flex-shrink: 0;
+    color: v.$color-gold;
+  }
   span {
     display: none;
   }

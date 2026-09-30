@@ -1,21 +1,25 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUp } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
+import {
+  DELIVERY_PATH,
+  DELIVERY_ZONE,
+  handlingLabel,
+} from '@/components/editorial/delivery';
 import { getSiteNavigation, type NavLink } from '@/data/navigation';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
+import { ORGANIZATION } from '@/lib/seo/policies';
 import styles from './Footer.module.scss';
+
+/**
+ * The end of every page: the brand and its two ways to stay in touch (the
+ * newsletter, a real address), then the whole site in four columns. The
+ * service line only repeats what the CGV state.
+ */
 export async function Footer() {
   const navigation = await getSiteNavigation();
   const groups: { title: string; links: NavLink[] }[] = [
-    {
-      title: 'Caldera',
-      links: [
-        { label: 'Notre univers', href: navigation.universe.href },
-        { label: 'Notre sélection', href: '/#selection' },
-        { label: 'Newsletter', href: '/#newsletter' },
-      ],
-    },
     {
       title: 'Boutique',
       links: [
@@ -23,25 +27,33 @@ export async function Footer() {
         ...navigation.games.map(({ href, label }) => ({ href, label })),
         ...navigation.familyHubs,
         ...navigation.listings,
+      ],
+    },
+    {
+      title: 'Explorer',
+      links: [
+        navigation.universe,
+        { label: 'Les territoires', href: '/univers/territoires' },
         navigation.extensions,
         navigation.calendar,
+        navigation.guides,
+        ...(navigation.news ? [navigation.news] : []),
       ],
     },
     {
       title: 'Aide',
-      // Guides and glossary stay in the header and mobile menus.
       links: [
         navigation.delivery,
         ...(navigation.questions ? [navigation.questions] : []),
-        ...(navigation.news ? [navigation.news] : []),
         navigation.contact,
+        navigation.account,
       ],
     },
     {
       title: 'Légal',
       links: [
         { label: 'Mentions légales', href: '/mentions-legales' },
-        { label: 'CGV', href: '/cgv' },
+        { label: 'Conditions de vente', href: '/cgv' },
         { label: 'Confidentialité', href: '/confidentialite' },
       ],
     },
@@ -49,27 +61,43 @@ export async function Footer() {
   return (
     <footer className={styles.footer}>
       <Container>
-        <div className={styles.top}>
+        <div className={styles.lead}>
           <div className={styles.brand}>
-            <Link href="/" aria-label="Caldera — Accueil">
+            <Link href="/" aria-label="Les Terres de Caldera — Accueil">
               <Image
                 src="/assets/brand/logo-header-no-bg.png"
-                alt="Les Terres de Caldera"
+                alt=""
                 width={1774}
                 height={887}
-                sizes="230px"
+                sizes="176px"
               />
             </Link>
-            <p>
-              Pour ceux qui collectionnent
-              <br />
-              bien plus que des cartes.
+            <p className={styles.statement}>
+              Pour ceux qui collectionnent <em>bien plus que des cartes.</em>
             </p>
-            <Link className={styles.backTop} href="#contenu">
-              Retour à l’exploration{' '}
-              <ArrowUpRight size={14} aria-hidden="true" />
-            </Link>
           </div>
+          <div className={styles.contact}>
+            <div className={styles.letter}>
+              <p className={styles.label}>La lettre de Caldera</p>
+              <p>Réassorts, nouvelles extensions et sélections, par e-mail.</p>
+              <Link href="/#newsletter" className={styles.link}>
+                S’inscrire <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+            <div>
+              <p className={styles.label}>Une question ?</p>
+              <p>
+                <a href={`mailto:${ORGANIZATION.email}`}>
+                  {ORGANIZATION.email}
+                </a>
+              </p>
+              <Link href={navigation.contact.href} className={styles.link}>
+                Nous écrire <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        </div>
+        <nav className={styles.nav} aria-label="Plan du site">
           {groups.map((group) => (
             <div key={group.title}>
               <h2>{group.title}</h2>
@@ -82,14 +110,22 @@ export async function Footer() {
               </ul>
             </div>
           ))}
-        </div>
+        </nav>
         <div className={styles.bottom}>
           <p>
             © {new Date().getFullYear()} Les Terres de Caldera ·{' '}
             <Link href={PRODUCTION_SITE_URL}>{PRODUCTION_HOST}</Link>
           </p>
-          <p>Boutique en préparation · Ouverture prochaine</p>
-          <span>Explorez. Collectionnez.</span>
+          <p>
+            Paiement sécurisé par Stripe ·{' '}
+            <Link href={DELIVERY_PATH}>
+              Expédition sous {handlingLabel()} en {DELIVERY_ZONE}
+            </Link>
+          </p>
+          {/* « #top » without a target: the browser scrolls to the very top. */}
+          <a href="#top" className={styles.top}>
+            Haut de page <ArrowUp size={14} aria-hidden="true" />
+          </a>
         </div>
       </Container>
     </footer>

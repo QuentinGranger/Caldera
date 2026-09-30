@@ -27,7 +27,7 @@ export async function Header() {
             alt="Les Terres de Caldera"
             width={1774}
             height={887}
-            sizes="(min-width: 1200px) 240px, (min-width: 480px) 210px, 160px"
+            sizes="(min-width: 1200px) 152px, 116px"
             loading="eager"
           />
         </Link>

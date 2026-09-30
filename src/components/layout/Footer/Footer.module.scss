@@ -1,79 +1,154 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
+// The night the home page ends on, so the landscape runs into the footer;
+// on the other pages, a calm dark base under the parchment.
 .footer {
-  background: v.$color-ink;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: v.$color-night;
   color: v.$color-text-on-dark;
-  padding-top: 3.5rem;
+  // A low ember glow behind the brand; nothing at the top edge, so the
+  // night of the page above runs on without a seam.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+      45% 55% at 16% 40%,
+      rgb(224 118 63 / 8%),
+      transparent 70%
+    );
+  }
 }
-.top {
+.lead {
+  display: grid;
+  gap: 2.5rem;
+  padding-block: clamp(3.5rem, 7vw, 5.5rem) clamp(2.5rem, 5vw, 3.5rem);
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 5rem;
+  }
+}
+.brand {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: start;
+  img {
+    width: 11rem;
+    height: auto;
+  }
+}
+.statement {
+  max-width: 30rem;
+  font-family: v.$font-heading;
+  font-size: clamp(1.9rem, 1.4rem + 1.8vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  em {
+    display: block;
+    color: v.$color-gold-light;
+    font-weight: 400;
+  }
+}
+.contact {
+  display: grid;
+  gap: 2rem 3rem;
+  color: v.$color-muted-on-night;
+  font-size: 0.92rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  > div {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    justify-items: start;
+  }
+  a[href^='mailto:'] {
+    color: v.$color-text-on-dark;
+    overflow-wrap: anywhere;
+    transition: color v.$duration-short v.$ease-out;
+    &:hover {
+      color: v.$color-gold-light;
+    }
+  }
+}
+// On the home page the form sits just above: no second invitation.
+:global(body:has(#newsletter)) .letter {
+  display: none;
+}
+.label {
+  @include m.eyebrow;
+  color: v.$color-gold;
+}
+.link {
+  @include m.underline-link(v.$color-gold-light);
+  margin-top: 0.4rem;
+  color: v.$color-text-on-dark;
+}
+.nav {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2.5rem 1.5rem;
-  padding-bottom: 3.5rem;
+  padding-block: clamp(2.5rem, 5vw, 3.5rem);
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2.5rem;
+  }
   h2 {
     @include m.eyebrow;
     font-family: v.$font-body;
     color: v.$color-gold;
   }
   ul {
-    margin: 1.25rem 0 0;
+    display: grid;
+    gap: 0.15rem;
+    margin: 1rem 0 0;
     padding: 0;
     list-style: none;
   }
-  li {
-    margin-bottom: 0.55rem;
-    font-size: 0.75rem;
-    color: v.$color-muted-on-dark;
-  }
-  li a {
+  a {
     display: inline-block;
-    padding-block: 0.25rem;
+    padding-block: 0.4rem;
+    color: rgb(251 244 223 / 78%);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    transition: color v.$duration-short v.$ease-out;
+    &:hover {
+      color: v.$color-gold-light;
+    }
   }
-  a:hover {
-    color: v.$color-gold;
-  }
-  @include m.from(v.$breakpoint-tablet) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: 2fr repeat(4, 1fr);
-    gap: 3rem;
-  }
-}
-.brand {
-  grid-column: 1 / -1;
-  img {
-    width: 230px;
-  }
-  p {
-    font-family: v.$font-heading;
-    font-size: 1.6rem;
-    line-height: 1.2;
-    margin-top: 1rem;
-  }
-  @include m.from(v.$breakpoint-desktop) {
-    grid-column: auto;
-  }
-}
-.backTop {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.4rem;
-  font-size: 0.65rem;
-  color: v.$color-gold;
 }
 .bottom {
   display: flex;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.8rem 2rem;
-  border-top: 1px solid v.$color-border-on-dark;
-  padding-block: 1.5rem;
-  color: v.$color-muted-on-dark;
-  font-size: 0.6rem;
-  span {
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  padding-block: 1.5rem 2rem;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  color: v.$color-muted-on-night;
+  font-size: v.$text-small;
+  a:hover {
+    color: v.$color-gold-light;
+  }
+}
+.top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: v.$color-text-on-dark;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  svg {
+    transition: transform v.$duration-short v.$ease-out;
+  }
+  &:hover svg {
+    transform: translateY(-3px);
   }
 }

@@ -15,8 +15,47 @@
   padding-block: clamp(3.5rem, 6vw, 6rem);
 }
 @mixin eyebrow {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.19em;
   text-transform: uppercase;
+}
+
+/** Link with a gold underline that grows on hover and focus. */
+@mixin underline-link($color: v.$color-gold) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-block: 0.55rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0.15rem;
+    left: 0;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.35;
+    transform-origin: left;
+    transition:
+      opacity v.$duration-short v.$ease-out,
+      background v.$duration-short v.$ease-out;
+  }
+  svg {
+    transition: transform v.$duration-short v.$ease-out;
+  }
+  &:hover,
+  &:focus-visible {
+    color: $color;
+    &::after {
+      opacity: 1;
+      background: $color;
+    }
+    svg {
+      transform: translateX(3px);
+    }
+  }
 }

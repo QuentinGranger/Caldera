@@ -424,7 +424,7 @@
   min-width: 0;
   @include m.from(v.$breakpoint-desktop) {
     position: sticky;
-    top: 1.5rem;
+    top: calc(var(--header-height) + 1.5rem);
     padding: 1.25rem;
     background: v.$color-surface;
     border: 1px solid v.$color-border;

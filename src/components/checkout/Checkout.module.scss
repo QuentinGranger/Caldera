@@ -767,7 +767,7 @@
   }
   .summary {
     position: sticky;
-    top: 2rem;
+    top: calc(var(--header-height) + 2rem);
   }
 }
 

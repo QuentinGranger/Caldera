@@ -90,7 +90,7 @@
 
   @include m.from(v.$breakpoint-desktop) {
     position: sticky;
-    top: 2rem;
+    top: calc(var(--header-height) + 2rem);
     padding: 0;
     background: none;
     border: 0;
@@ -457,7 +457,7 @@
 
   @include m.from(v.$breakpoint-tablet) {
     position: sticky;
-    top: 0;
+    top: var(--header-height);
     z-index: 1;
   }
 

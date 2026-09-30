@@ -31,6 +31,9 @@ import {
   type ListingKind,
 } from '@/lib/seo/metadata';
 import { getLandingIndex } from '@/lib/seo/registry';
+import { getAllContent } from '@/lib/content';
+import type { ContentKind } from '@/lib/content/types';
+import type { CatalogProduct } from '@/types/product';
 
 export interface HomeFamily {
   id: string;
@@ -261,6 +264,78 @@ async function getHomeCollections(limit: number): Promise<HomeCollection[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Journal: the latest news, else the latest guides (never glossary entries
+// or questions, which are reference pages rather than reading).
+
+export interface HomeJournalEntry {
+  href: string;
+  title: string;
+  description: string;
+  kind: ContentKind;
+  published: Date;
+}
+
+export interface HomeJournal {
+  /** Section index: /actualites or /guides. */
+  href: string;
+  news: boolean;
+  entries: HomeJournalEntry[];
+}
+
+const READING_KINDS: readonly ContentKind[] = [
+  'guide',
+  'dossier',
+  'comparatif',
+];
+
+async function getHomeJournal(limit: number): Promise<HomeJournal | null> {
+  const content = await getAllContent();
+  const latest = (kinds: readonly ContentKind[]) =>
+    content
+      .filter((entry) => kinds.includes(entry.kind))
+      .sort((a, b) => b.published.getTime() - a.published.getTime())
+      .slice(0, limit)
+      .map(({ href, title, description, kind, published }) => ({
+        href,
+        title,
+        description,
+        kind,
+        published,
+      }));
+  const news = latest(['actualite']);
+  if (news.length) return { href: '/actualites', news: true, entries: news };
+  const guides = latest(READING_KINDS);
+  return guides.length
+    ? { href: '/guides', news: false, entries: guides }
+    : null;
+}
+
+// ---------------------------------------------------------------------------
+// Products shown in several sections
+
+/**
+ * Each product once on the page: a later section drops what an earlier one
+ * already shows, so the visitor never meets the same card twice.
+ */
+export function distinctSections<
+  const Sections extends readonly (readonly CatalogProduct[])[],
+>(sections: Sections): { [Index in keyof Sections]: CatalogProduct[] } {
+  const seen = new Set<string>();
+  return sections.map((products) =>
+    products.filter((product) => {
+      if (seen.has(product.id)) return false;
+      seen.add(product.id);
+      return true;
+    }),
+  ) as { [Index in keyof Sections]: CatalogProduct[] };
+}
+
+/** Demonstration data is named « [Démo] … » by the development seed. */
+export function isDemoCatalogue(products: readonly CatalogProduct[]) {
+  return products.some((product) => product.name.startsWith('[Démo]'));
+}
+
+// ---------------------------------------------------------------------------
 
 export interface HomeData {
   hub: ListingHub;
@@ -268,6 +343,7 @@ export interface HomeData {
   families: HomeFamily[];
   collections: HomeCollection[];
   links: HomeLinks;
+  journal: HomeJournal | null;
 }
 
 async function getHomeLinks(): Promise<HomeLinks> {
@@ -278,11 +354,12 @@ async function getHomeLinks(): Promise<HomeLinks> {
 }
 
 export async function getHomeData(): Promise<HomeData> {
-  const [hub, navigation, collections, links] = await Promise.all([
+  const [hub, navigation, collections, links, journal] = await Promise.all([
     getListingHub('catalogue'),
     getNavigation(),
     getHomeCollections(2),
     getHomeLinks(),
+    getHomeJournal(3),
   ]);
   return {
     hub,
@@ -290,5 +367,6 @@ export async function getHomeData(): Promise<HomeData> {
     families: await getHomeFamilies(navigation),
     collections,
     links,
+    journal,
   };
 }
