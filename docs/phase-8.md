@@ -128,7 +128,7 @@ Tax et Invoicing figurent dans le plan demandé mais ne sont pas activés. Aucun
 
 `prisma generate` : réussi. Migration : appliquée sans reset, second `prisma migrate dev` déjà synchronisé. `npm run lint` et `npm run build` : réussis. TypeScript strict et Prettier : vérifiés. Les routes paiement, confirmation et webhook figurent bien dans le build. Une collision entre les types générés dev/build a été résolue en arrêtant les serveurs et supprimant uniquement `.next` et `tsconfig.tsbuildinfo`, puis le build final complet a réussi. Les résultats de validation ne constituent pas une recette réelle Stripe.
 
-Voir le [README](../README.md#paiement-stripe-phase-8) pour l’installation des clés, la CLI, les tests et la commande d’expiration. Application locale : <http://localhost:3000> ; santé : <http://localhost:3000/api/health>.
+Voir le [README](../README.md#paiement-stripe) pour l’installation des clés, la CLI, les tests et la commande d’expiration. Application locale : <http://localhost:3000> ; santé : <http://localhost:3000/api/health>.
 
 ## Recette avec les clés TEST fournies
 
