@@ -172,22 +172,28 @@ export function shopGroups(site: SiteNavigation): NavGroup[] {
   ];
 }
 
-/** Desktop header: the compact storefront navigation from the original design. */
+/**
+ * Desktop header: the compact storefront navigation from the original design,
+ * under the rule of every other menu. A game, a product family or a listing
+ * shows only once its page exists and is indexable, so an empty catalogue
+ * (production before opening) never links to a 404.
+ */
 export function headerItems(site: SiteNavigation): NavItem[] {
   const pokemon = site.games.find((game) =>
     game.label.toLocaleLowerCase('fr').includes('pokémon'),
-  ) ?? {
-    href: '/pokemon',
-    label: 'Pokémon',
-    children: [],
-  };
+  );
+  const shown = (links: readonly NavLink[], href: string, label: string) =>
+    links.some((link) => link.href === href)
+      ? [{ href, label, children: [] }]
+      : [];
 
   return [
-    pokemon,
-    { href: '/nouveautes', label: 'Nouveautés', children: [] },
-    { href: '/categorie/scelles', label: 'Scellés', children: [] },
-    { href: '/categorie/cartes', label: 'Cartes', children: [] },
-    { href: '/categorie/accessoires', label: 'Accessoires', children: [] },
+    // Until Pokémon has its page, the whole catalogue leads the menu.
+    pokemon ?? { href: site.catalogue.href, label: 'Catalogue', children: [] },
+    ...shown(site.listings, '/nouveautes', 'Nouveautés'),
+    ...shown(site.productTypes, '/categorie/scelles', 'Scellés'),
+    ...shown(site.productTypes, '/categorie/cartes', 'Cartes'),
+    ...shown(site.productTypes, '/categorie/accessoires', 'Accessoires'),
     { href: site.extensions.href, label: 'Collections', children: [] },
     { ...site.universe, children: [] },
   ];
