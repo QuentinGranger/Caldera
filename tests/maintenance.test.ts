@@ -125,6 +125,7 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
       // Without a Stripe key nothing is read nor sent.
       { ok: true, job: 'sync-refunds', action: 'job_completed' },
       { ok: true, job: 'sync-tax', action: 'job_completed' },
+      { ok: false, job: 'purge-supplier-imports', action: 'job_failed' },
     ],
   );
   // Tâches concurrentes : l’ordre des lignes de log n’est pas garanti.
@@ -143,6 +144,11 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
         scope: 'maintenance',
         job: 'process-emails',
         code: 'CONFIGURATION_EXPEDITEUR',
+      },
+      {
+        scope: 'maintenance',
+        job: 'purge-supplier-imports',
+        code: 'MAINTENANCE_JOB_FAILED',
       },
     ],
   );

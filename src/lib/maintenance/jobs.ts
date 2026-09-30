@@ -7,6 +7,7 @@ import { syncRefunds } from '@/lib/refunds/service';
 import { stripeMode } from '@/lib/stripe/stripe';
 import type { TaxGateway } from '@/lib/tax/gateway';
 import { syncTax, taxWorkPending } from '@/lib/tax/service';
+import { purgeSupplierImports } from '@/lib/supplier-import/service';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
@@ -17,6 +18,7 @@ export const maintenanceJobs = [
   'process-emails',
   'sync-refunds',
   'sync-tax',
+  'purge-supplier-imports',
 ] as const;
 
 export type MaintenanceJob = (typeof maintenanceJobs)[number];
@@ -79,6 +81,11 @@ const tasks: Record<
     const counts = await syncTax({ gateway: tax });
     return { ok: counts.failed === 0, counts: { disabled: false, ...counts } };
   },
+  // Supplier files never validated, and uploads kept after the end.
+  'purge-supplier-imports': async () => ({
+    ok: true,
+    counts: await purgeSupplierImports(),
+  }),
 };
 
 /** Only a controlled code is logged: raw messages may carry personal data or secrets. */

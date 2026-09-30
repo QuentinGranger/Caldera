@@ -108,6 +108,10 @@ model Product {
   orderItems       OrderItem[]
   wishlistItems    WishlistItem[]
   pilotageLaunches BusinessPilotageLaunchProduct[]
+  /// Draft created from a supplier catalogue: publication needs the shop's own
+  /// data first (image, description, price, category).
+  sourceImportId   String?                         @db.Uuid
+  sourceImport     SupplierImport?                 @relation(fields: [sourceImportId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([productType])
@@ -115,33 +119,36 @@ model Product {
   @@index([tcgSetId])
   @@index([gameId])
   @@index([releaseDate])
+  @@index([sourceImportId])
 }
 
 model ProductVariant {
-  id                String                @id @default(uuid()) @db.Uuid
-  productId         String                @db.Uuid
-  product           Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
-  sku               String                @unique
-  barcode           String?               @unique
-  language          ProductLanguage       @default(FR)
-  condition         ProductCondition      @default(NEW)
-  price             Decimal               @db.Decimal(10, 2)
-  compareAtPrice    Decimal?              @db.Decimal(10, 2)
-  costPrice         Decimal?              @db.Decimal(10, 2)
-  stockQuantity     Int                   @default(0)
-  reservedQuantity  Int                   @default(0)
-  availableQuantity Int                   @default(dbgenerated())
-  orderItems        OrderItem[]
-  reservations      StockReservation[]
-  stockAlerts       StockAlert[]
-  lowStockThreshold Int                   @default(2)
-  isActive          Boolean               @default(true)
-  isDefault         Boolean               @default(false)
-  adjustments       InventoryAdjustment[]
-  cartItems         CartItem[]
-  weightGrams       Int?
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  id                 String                @id @default(uuid()) @db.Uuid
+  productId          String                @db.Uuid
+  product            Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sku                String                @unique
+  barcode            String?               @unique
+  language           ProductLanguage       @default(FR)
+  condition          ProductCondition      @default(NEW)
+  price              Decimal               @db.Decimal(10, 2)
+  compareAtPrice     Decimal?              @db.Decimal(10, 2)
+  costPrice          Decimal?              @db.Decimal(10, 2)
+  stockQuantity      Int                   @default(0)
+  reservedQuantity   Int                   @default(0)
+  availableQuantity  Int                   @default(dbgenerated())
+  orderItems         OrderItem[]
+  reservations       StockReservation[]
+  stockAlerts        StockAlert[]
+  supplierOffers     SupplierOffer[]
+  supplierImportRows SupplierImportRow[]
+  lowStockThreshold  Int                   @default(2)
+  isActive           Boolean               @default(true)
+  isDefault          Boolean               @default(false)
+  adjustments        InventoryAdjustment[]
+  cartItems          CartItem[]
+  weightGrams        Int?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
 
   @@index([productId])
 }
@@ -540,24 +547,26 @@ enum InventoryAdjustmentType {
 }
 
 model AdminUser {
-  id                  String                @id @default(uuid()) @db.Uuid
-  email               String                @unique
-  emailVerified       Boolean               @default(false)
-  name                String
-  image               String?
-  role                AdminRole             @default(ADMIN)
-  isActive            Boolean               @default(true)
-  lastLoginAt         DateTime?
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  sessions            AdminSession[]
-  accounts            AdminAccount[]
-  adjustments         InventoryAdjustment[]
-  auditLogs           AdminAuditLog[]
-  newsletterCampaigns NewsletterCampaign[]
-  refunds             Refund[]
-  promotions          Promotion[]
-  returns             ReturnRequest[]
+  id                     String                @id @default(uuid()) @db.Uuid
+  email                  String                @unique
+  emailVerified          Boolean               @default(false)
+  name                   String
+  image                  String?
+  role                   AdminRole             @default(ADMIN)
+  isActive               Boolean               @default(true)
+  lastLoginAt            DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  sessions               AdminSession[]
+  accounts               AdminAccount[]
+  adjustments            InventoryAdjustment[]
+  auditLogs              AdminAuditLog[]
+  newsletterCampaigns    NewsletterCampaign[]
+  refunds                Refund[]
+  promotions             Promotion[]
+  returns                ReturnRequest[]
+  supplierImports        SupplierImport[]      @relation("ImportCreatedBy")
+  appliedSupplierImports SupplierImport[]      @relation("ImportAppliedBy")
 }
 
 model AdminSession {
@@ -1305,4 +1314,302 @@ enum TaxMode {
   NONE
   LOCAL
   STRIPE_TAX
+}
+
+enum SupplierImportStatus {
+  UPLOADING
+  /// PDF pages still being read (OCR runs page by page).
+  EXTRACTING
+  /// Table ready: columns to map.
+  MAPPING
+  /// Rows analysed: decisions and preview before import.
+  REVIEW
+  APPLIED
+  REVERTED
+  CANCELED
+  FAILED
+}
+
+enum SupplierFileKind {
+  CSV
+  XLSX
+  XLS
+  PDF
+  JSON
+}
+
+enum SupplierImportScope {
+  /// The whole catalogue: offers absent from the file are flagged as missing.
+  FULL
+  /// An extract: absent offers are left alone.
+  PARTIAL
+}
+
+enum SupplierPageMethod {
+  TEXT
+  OCR
+  AI
+}
+
+enum SupplierPageStatus {
+  PENDING
+  DONE
+  NEEDS_REVIEW
+  FAILED
+  IGNORED
+}
+
+enum SupplierMatch {
+  CERTAIN
+  PROBABLE
+  NEW
+  AMBIGUOUS
+  INVALID
+}
+
+enum SupplierRowAction {
+  CREATE_PRODUCT
+  CREATE_OFFER
+  UPDATE_OFFER
+  UNCHANGED
+  REVIEW
+  REJECT
+  IGNORE
+}
+
+enum SupplierAvailability {
+  IN_STOCK
+  OUT_OF_STOCK
+  PREORDER
+  ON_ORDER
+  DISCONTINUED
+  UNKNOWN
+}
+
+enum SupplierOfferStatus {
+  ACTIVE
+  /// Absent from the last full catalogue of the supplier.
+  MISSING
+}
+
+enum SupplierChangeKind {
+  NEW_OFFER
+  PRICE_DOWN
+  PRICE_UP
+  BACK_IN_STOCK
+  OUT_OF_STOCK
+  STOCK
+  DISAPPEARED
+  REAPPEARED
+  RELEASE_DATE
+  PACKAGING
+  INFO
+}
+
+/// Supplier of the shop (src/lib/supplier-import).
+model Supplier {
+  id        String            @id @default(uuid()) @db.Uuid
+  name      String            @unique
+  /// Short upper case code, used in the SKU of drafts created from its catalogue.
+  code      String            @unique
+  email     String?
+  website   String?
+  notes     String?           @db.Text
+  isActive  Boolean           @default(true)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  profiles  SupplierProfile[]
+  imports   SupplierImport[]
+  offers    SupplierOffer[]
+}
+
+/// A validated column mapping, recognised again by the file's header signature.
+model SupplierProfile {
+  id         String           @id @default(uuid()) @db.Uuid
+  supplierId String           @db.Uuid
+  supplier   Supplier         @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  name       String
+  fileKind   SupplierFileKind
+  /// sha256 of the normalised column names.
+  signature  String           @db.Char(64)
+  mapping    Json
+  options    Json
+  useCount   Int              @default(0)
+  lastUsedAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  imports    SupplierImport[]
+
+  @@unique([supplierId, signature])
+  @@index([signature])
+}
+
+/// One file, from upload to import (never applied without validation).
+model SupplierImport {
+  id          String                @id @default(uuid()) @db.Uuid
+  supplierId  String                @db.Uuid
+  supplier    Supplier              @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  profileId   String?               @db.Uuid
+  profile     SupplierProfile?      @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  status      SupplierImportStatus  @default(UPLOADING)
+  fileName    String
+  fileKind    SupplierFileKind
+  fileSize    Int
+  /// sha256 of the whole file, checked when the last chunk arrives.
+  fileHash    String                @db.Char(64)
+  scope       SupplierImportScope   @default(FULL)
+  /// Extracted table: column names and where the data came from.
+  headers     Json?
+  extraction  Json?
+  mapping     Json?
+  options     Json?
+  /// Counts shown in the preview and the report.
+  summary     Json?
+  error       String?
+  createdById String                @db.Uuid
+  createdBy   AdminUser             @relation("ImportCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  appliedById String?               @db.Uuid
+  appliedBy   AdminUser?            @relation("ImportAppliedBy", fields: [appliedById], references: [id], onDelete: Restrict)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  extractedAt DateTime?
+  analyzedAt  DateTime?
+  appliedAt   DateTime?
+  revertedAt  DateTime?
+  durationMs  Int?
+  chunks      SupplierImportChunk[]
+  pages       SupplierImportPage[]
+  rows        SupplierImportRow[]
+  changes     SupplierOfferChange[]
+  offers      SupplierOffer[]
+  products    Product[]
+
+  @@index([supplierId, createdAt])
+  @@index([status, updatedAt])
+  @@index([createdById])
+  @@index([appliedById])
+  @@index([profileId])
+}
+
+/// Uploaded file, in chunks under the request size limit; purged once imported.
+model SupplierImportChunk {
+  importId       String         @db.Uuid
+  supplierImport SupplierImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  index          Int
+  data           Bytes
+
+  @@id([importId, index])
+}
+
+/// PDF page: read as text, by OCR or, on request, by AI.
+model SupplierImportPage {
+  importId       String             @db.Uuid
+  supplierImport SupplierImport     @relation(fields: [importId], references: [id], onDelete: Cascade)
+  page           Int
+  method         SupplierPageMethod
+  status         SupplierPageStatus @default(PENDING)
+  /// 0 to 1: how well the page fits a table.
+  confidence     Float?
+  /// Positioned words (text layer or OCR), assembled with the other pages.
+  words          Json?
+  /// Table read by AI: { headers, rows }.
+  rows           Json?
+  note           String?
+  updatedAt      DateTime           @updatedAt
+
+  @@id([importId, page])
+}
+
+model SupplierImportRow {
+  id             String             @id @default(uuid()) @db.Uuid
+  importId       String             @db.Uuid
+  supplierImport SupplierImport     @relation(fields: [importId], references: [id], onDelete: Cascade)
+  /// Line number in the file (or « page.line » for a PDF), as the supplier sees it.
+  rowNumber      Int
+  source         String?
+  raw            Json
+  values         Json?
+  issues         Json               @default("[]")
+  match          SupplierMatch?
+  variantId      String?            @db.Uuid
+  variant        ProductVariant?    @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  candidates     Json?
+  offerId        String?            @db.Uuid
+  action         SupplierRowAction?
+  /// Set by the administrator on a row to verify.
+  decidedAt      DateTime?
+  changes        Json?
+  /// Offer as it was before the import: restored if the import is reverted.
+  before         Json?
+  appliedAt      DateTime?
+
+  @@unique([importId, rowNumber])
+  @@index([importId, action])
+  @@index([variantId])
+}
+
+/// What one supplier offers for one reference; a product may have several.
+model SupplierOffer {
+  id                   String                @id @default(uuid()) @db.Uuid
+  supplierId           String                @db.Uuid
+  supplier             Supplier              @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  supplierSku          String
+  ean                  String?
+  /// Caldera variant; null while the reference is not in the catalogue.
+  variantId            String?               @db.Uuid
+  variant              ProductVariant?       @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  name                 String
+  brand                String?
+  game                 String?
+  series               String?
+  category             String?
+  language             ProductLanguage?
+  condition            String?
+  /// Excluding VAT.
+  purchasePrice        Decimal?              @db.Decimal(10, 2)
+  purchasePriceInclTax Decimal?              @db.Decimal(10, 2)
+  msrp                 Decimal?              @db.Decimal(10, 2)
+  vatRate              Decimal?              @db.Decimal(5, 2)
+  stock                Int?
+  availability         SupplierAvailability  @default(UNKNOWN)
+  releaseDate          DateTime?             @db.Date
+  restockDate          DateTime?             @db.Date
+  minOrderQty          Int?
+  packaging            String?
+  packSize             Int?
+  description          String?               @db.Text
+  imageUrl             String?
+  productUrl           String?
+  status               SupplierOfferStatus   @default(ACTIVE)
+  missingSince         DateTime?
+  lastImportId         String?               @db.Uuid
+  lastImport           SupplierImport?       @relation(fields: [lastImportId], references: [id], onDelete: SetNull)
+  lastSeenAt           DateTime              @default(now())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  changes              SupplierOfferChange[]
+
+  @@unique([supplierId, supplierSku])
+  @@index([ean])
+  @@index([variantId])
+  @@index([lastImportId])
+  @@index([supplierId, status])
+}
+
+/// History of what changed in an offer, import after import.
+model SupplierOfferChange {
+  id             String             @id @default(uuid()) @db.Uuid
+  offerId        String             @db.Uuid
+  offer          SupplierOffer      @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  importId       String             @db.Uuid
+  supplierImport SupplierImport     @relation(fields: [importId], references: [id], onDelete: Cascade)
+  kind           SupplierChangeKind
+  field          String?
+  before         Json?
+  after          Json?
+  createdAt      DateTime           @default(now())
+
+  @@index([offerId, createdAt])
+  @@index([importId])
+  @@index([kind, createdAt])
 }

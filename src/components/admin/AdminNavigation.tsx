@@ -17,6 +17,7 @@ import {
   PackageOpen,
   ShoppingBag,
   TicketPercent,
+  Warehouse,
   X,
 } from 'lucide-react';
 import styles from './Admin.module.scss';
@@ -60,6 +61,7 @@ const groups = [
       { href: '/admin/jeux', label: 'Jeux', icon: Dices },
       { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
       { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
+      { href: '/admin/fournisseurs', label: 'Fournisseurs', icon: Warehouse },
     ],
   },
 ] as const;

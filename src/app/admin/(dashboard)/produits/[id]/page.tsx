@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAdminProduct, getAdminOptions } from '@/lib/admin/queries';
+import { getProductSupplierOffers } from '@/lib/supplier-import/admin';
 import { publicationAction } from '@/lib/admin/actions';
 import { euros, formatDate, label } from '@/lib/admin/format';
 import { PageHeader, Badge } from '@/components/admin/AdminUI';
@@ -20,6 +21,7 @@ export default async function ProductAdminPage({
     getAdminOptions(),
   ]);
   if (!product) notFound();
+  const offers = await getProductSupplierOffers(product.id);
   return (
     <>
       <PageHeader
@@ -40,6 +42,7 @@ export default async function ProductAdminPage({
         <a href="#informations">Informations & organisation</a>
         <a href="#variantes">Variantes</a>
         <a href="#images">Images</a>
+        <a href="#fournisseurs">Fournisseurs</a>
         <a href="#publication">Publication</a>
       </nav>
       <details className={styles.card} id="informations" open>
@@ -76,12 +79,50 @@ export default async function ProductAdminPage({
         <h2>Images</h2>
         <ImageManager product={product} />
       </section>
+      <section className={styles.card} id="fournisseurs">
+        <h2>Offres fournisseurs · {offers.length}</h2>
+        {offers.length ? (
+          <ul className={styles.plainList}>
+            {offers.map((offer) => (
+              <li key={offer.id}>
+                <Link href={`/admin/fournisseurs/${offer.supplier.id}`}>
+                  {offer.supplier.name}
+                </Link>{' '}
+                · <code>{offer.supplierSku}</code> · achat HT{' '}
+                {euros(offer.purchasePrice)}
+                {offer.msrp ? ` · PVC ${euros(offer.msrp)}` : ''} ·{' '}
+                {label(`AVAIL_${offer.availability}`)}
+                {offer.stock !== null ? ` (${offer.stock})` : ''} · variante{' '}
+                {offer.variant?.sku}
+                {offer.status === 'MISSING' && (
+                  <>
+                    {' '}
+                    <Badge value="OFFER_MISSING" tone="danger" />
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>
+            Aucune offre fournisseur liée : elles apparaissent après un import
+            de catalogue validé.
+          </p>
+        )}
+      </section>
       <section className={styles.card} id="publication">
         <h2>Publication</h2>
         <p>
           Les brouillons et produits archivés sont masqués sur la boutique. Les
           commandes historiques restent intactes.
         </p>
+        {product.sourceImportId && product.status === 'DRAFT' && (
+          <p>
+            Créé depuis un catalogue fournisseur : avant publication, ajoutez
+            une image, une description, sa vraie catégorie et un prix de vente,
+            et relisez son titre.
+          </p>
+        )}
         <div className={styles.actions}>
           {(['ACTIVE', 'DRAFT', 'ARCHIVED'] as const)
             .filter((status) => status !== product.status)

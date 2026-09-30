@@ -5,6 +5,7 @@ import {
   ProductType,
 } from '@/generated/prisma/client';
 import { createSlug } from '@/lib/catalog/createSlug';
+import { IMPORT_CATEGORY_SLUG } from '@/lib/supplier-import/records';
 import { recordSlugChange } from '@/lib/seo/redirects';
 import { adminTransaction, audit, lockProduct } from './common';
 import { changeStock } from './inventory';
@@ -203,6 +204,27 @@ export async function changePublication(adminId: string, form: FormData) {
       const category = await tx.category.findUnique({
         where: { id: previous.categoryId },
       });
+      // A draft from a supplier catalogue only has the supplier's data.
+      if (previous.sourceImportId) {
+        const [images, priced] = await Promise.all([
+          tx.productImage.count({ where: { productId } }),
+          tx.productVariant.count({
+            where: { productId, isActive: true, price: { gt: 0 } },
+          }),
+        ]);
+        const missing = [
+          ...(category?.slug === IMPORT_CATEGORY_SLUG
+            ? ['sa vraie catégorie']
+            : []),
+          ...(images ? [] : ['une image']),
+          ...(previous.description?.trim() ? [] : ['une description']),
+          ...(priced ? [] : ['un prix de vente']),
+        ];
+        if (missing.length)
+          throw new AdminError(
+            `Produit créé depuis un catalogue fournisseur : ajoutez ${missing.join(', ')} et relisez son titre avant de le publier.`,
+          );
+      }
       const set = previous.tcgSetId
         ? await tx.tcgSet.findUnique({ where: { id: previous.tcgSetId } })
         : null;

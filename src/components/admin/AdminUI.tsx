@@ -23,7 +23,27 @@ export function PageHeader({
     </header>
   );
 }
-export function Badge({ value }: { value: string }) {
+const TONES = {
+  danger: styles.danger,
+  success: styles.success,
+  pending: styles.pending,
+  info: styles.info,
+  neutral: '',
+} as const;
+export function Badge({
+  value,
+  tone: explicit,
+}: {
+  value: string;
+  /** Overrides the colour chosen from the value. */
+  tone?: keyof typeof TONES;
+}) {
+  if (explicit)
+    return (
+      <span className={`${styles.badge} ${TONES[explicit]}`}>
+        {label(value)}
+      </span>
+    );
   const tone = ['PAYMENT_FAILED', 'FAILED', 'PAYMENT_REVIEW'].includes(value)
     ? styles.danger
     : [
