@@ -275,7 +275,20 @@ export default function ConfidentialitePage() {
                 </li>
               </ul>
 
-              <h3>2.9 Données techniques et de sécurité</h3>
+              <h3>2.9 Alertes de retour en stock</h3>
+              <p>
+                Lorsqu’une personne demande à être prévenue du retour d’un
+                produit épuisé, CALDERA traite son adresse e-mail, la version
+                du produit concernée, les dates de demande, de confirmation et
+                d’envoi, ainsi que, si elle est connectée, l’identifiant de son
+                compte client. Une personne non connectée confirme d’abord son
+                adresse par un lien valable 24 heures. Un seul e-mail est envoyé
+                par alerte, lorsque le produit est de nouveau disponible ;
+                l’alerte peut être annulée à tout moment depuis le lien reçu ou
+                l’espace client.
+              </p>
+
+              <h3>2.10 Données techniques et de sécurité</h3>
               <p>
                 Le fonctionnement et la sécurisation du site peuvent entraîner le
                 traitement de certaines données techniques, notamment :
@@ -293,7 +306,7 @@ export default function ConfidentialitePage() {
                 </li>
               </ul>
 
-              <h3>2.10 Mesure d’audience</h3>
+              <h3>2.11 Mesure d’audience</h3>
               <p>
                 CALDERA utilise ou prévoit d’utiliser{' '}
                 <strong>Vercel Web Analytics</strong> afin d’obtenir des
@@ -313,7 +326,7 @@ export default function ConfidentialitePage() {
                 les visiteurs à des fins de publicité.
               </p>
 
-              <h3>2.11 Supervision technique</h3>
+              <h3>2.12 Supervision technique</h3>
               <p>
                 Afin de détecter et corriger les erreurs techniques et de
                 mesurer les performances du site, CALDERA utilise{' '}
@@ -395,6 +408,10 @@ export default function ConfidentialitePage() {
                     <tr>
                       <td>Newsletter et prospection électronique sur consentement</td>
                       <td>Consentement</td>
+                    </tr>
+                    <tr>
+                      <td>Alertes de retour en stock</td>
+                      <td>Consentement, retirable à tout moment</td>
                     </tr>
                     <tr>
                       <td>Mesure d’audience et amélioration technique du site</td>
@@ -483,7 +500,7 @@ export default function ConfidentialitePage() {
               <p>
                 Sentry (Functional Software, Inc.) est utilisé pour la détection
                 des erreurs techniques et le suivi des performances du site,
-                dans les conditions décrites à l’article 2.11. Les données sont
+                dans les conditions décrites à l’article 2.12. Les données sont
                 hébergées dans l’Union européenne (région de données européenne
                 de Sentry).
               </p>
@@ -527,6 +544,7 @@ export default function ConfidentialitePage() {
                 <li>des confirmations liées aux commandes ;</li>
                 <li>des communications liées aux comptes ;</li>
                 <li>des e-mails du service client ;</li>
+                <li>des alertes de retour en stock ;</li>
                 <li>de la newsletter.</li>
               </ul>
 
@@ -650,6 +668,15 @@ export default function ConfidentialitePage() {
                 Certaines informations strictement nécessaires à la preuve du
                 retrait ou au respect durable d’une opposition peuvent cependant
                 être conservées dans les conditions permises par la réglementation.
+              </p>
+
+              <h3>Alertes de retour en stock</h3>
+              <p>
+                Une alerte non confirmée est effacée après{' '}
+                <strong>24 heures</strong>. Une alerte envoyée est effacée{' '}
+                <strong>30 jours</strong> après l’envoi, et toute alerte au plus
+                tard <strong>12 mois</strong> après la demande. La suppression du
+                compte client efface les alertes demandées depuis ce compte.
               </p>
 
               <h3>Service client</h3>

@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ProductGallery } from '@/components/product/ProductGallery/ProductGallery';
+import { currentCustomer } from '@/lib/account/auth';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel/ProductPurchasePanel';
 import { ProductWishlistButton } from '@/components/product/ProductWishlistButton/ProductWishlistButton';
 import { ProductDetails } from '@/components/product/ProductDetails/ProductDetails';
@@ -40,6 +41,12 @@ export default async function ProductPage({ params }: Props) {
     ? product.images
     : [{ url: product.image, alt: product.imageAlt }];
   const purchasable = product.availability !== 'OUT_OF_STOCK';
+  // Back-in-stock alerts go to a signed-in customer's address.
+  const alertEmail = product.variants.some(
+    (variant) => variant.availability === 'OUT_OF_STOCK',
+  )
+    ? ((await currentCustomer())?.email ?? null)
+    : null;
   const alternatives = purchasable
     ? []
     : page.related.filter((item) => item.availability !== 'OUT_OF_STOCK');
@@ -88,6 +95,7 @@ export default async function ProductPage({ params }: Props) {
               releaseDate={product.releaseDate}
               typeLabel={productTypeLabels[product.productType]}
               shipping={page.shipping}
+              accountEmail={alertEmail}
             />
             {!purchasable &&
               (product.variants.length > 0 || alternatives.length > 0) && (

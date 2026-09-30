@@ -75,6 +75,7 @@ export const STATUS_LABELS: Readonly<Record<StatusSlug, string>> = {
 export const RESERVED_ROOT_SLUGS: ReadonlySet<string> = new Set([
   // src/app
   'admin',
+  'alertes',
   'api',
   'catalogue',
   'categorie',

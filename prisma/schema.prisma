@@ -132,6 +132,7 @@ model ProductVariant {
   availableQuantity Int                   @default(dbgenerated())
   orderItems        OrderItem[]
   reservations      StockReservation[]
+  stockAlerts       StockAlert[]
   lowStockThreshold Int                   @default(2)
   isActive          Boolean               @default(true)
   isDefault         Boolean               @default(false)
@@ -586,6 +587,7 @@ model Customer {
   address       CustomerAddress?
   orders        Order[]
   wishlistItems WishlistItem[]
+  stockAlerts   StockAlert[]
 }
 
 model WishlistItem {
@@ -898,3 +900,47 @@ model NewsletterCampaignDelivery {
   @@index([leaseUntil])
   @@index([subscriberId])
 }
+
+enum StockAlertStatus {
+  /// Waiting for the e-mail confirmation of a visitor (24 hours).
+  PENDING
+  /// Confirmed: one e-mail will be sent when the variant can be bought again.
+  ACTIVE
+  /// Leased by the maintenance job while the e-mail is being sent.
+  SENDING
+  NOTIFIED
+  /// Delivery attempts exhausted.
+  FAILED
+}
+
+/// Back-in-stock alert for one variant (language) and one e-mail address
+/// (src/lib/stock-alerts). Personal data kept only as long as useful: pending
+/// 24 hours, notified 30 days, any alert 12 months at most.
+model StockAlert {
+  id                    String           @id @default(uuid()) @db.Uuid
+  email                 String
+  variantId             String           @db.Uuid
+  variant               ProductVariant   @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  /// Signed-in customer who asked; deleted with the account.
+  customerId            String?          @db.Uuid
+  customer              Customer?        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status                StockAlertStatus @default(PENDING)
+  confirmationTokenHash String?          @unique @db.Char(64)
+  confirmationExpiresAt DateTime?
+  confirmedAt           DateTime?
+  attemptCount          Int              @default(0)
+  nextAttemptAt         DateTime         @default(now())
+  leaseUntil            DateTime?
+  lastError             String?
+  providerMessageId     String?
+  notifiedAt            DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@unique([email, variantId])
+  @@index([variantId, status])
+  @@index([status, nextAttemptAt])
+  @@index([customerId])
+  @@index([confirmationExpiresAt])
+}
+

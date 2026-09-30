@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { getPrisma } from '@/lib/db/prisma';
 
 export type AccountAttemptScope =
-  'sign-in' | 'sign-up' | 'reset' | 'verify' | 'newsletter';
+  'sign-in' | 'sign-up' | 'reset' | 'verify' | 'newsletter' | 'stock-alert';
 
 // Per e-mail address: a password cannot be guessed and nobody's inbox can be
 // flooded with links. The global ceiling caps a spread-out attack.
@@ -14,6 +14,7 @@ const RULES: Record<AccountAttemptScope, { maximum: number; seconds: number }> =
     reset: { maximum: 3, seconds: 3600 },
     verify: { maximum: 3, seconds: 3600 },
     newsletter: { maximum: 3, seconds: 3600 },
+    'stock-alert': { maximum: 5, seconds: 3600 },
   };
 const GLOBAL = { maximum: 120, seconds: 60 };
 

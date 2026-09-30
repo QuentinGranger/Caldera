@@ -772,6 +772,45 @@
   }
 }
 
+// Back-in-stock alerts
+
+.alertList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alertItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-medium;
+  > div {
+    min-width: 0;
+  }
+}
+
+.alertName {
+  font: 500 1.25rem/1.25 v.$font-heading;
+  overflow-wrap: anywhere;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.alertMeta {
+  margin-top: 0.2rem;
+  color: v.$color-text-muted;
+  font-size: 0.8rem;
+}
+
 // Orders
 
 .orderList {

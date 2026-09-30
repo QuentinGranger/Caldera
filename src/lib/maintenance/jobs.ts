@@ -1,6 +1,7 @@
 import 'server-only';
 import { processPendingEmails } from '@/lib/email/processor';
 import { processNewsletterDeliveries } from '@/lib/newsletter/processor';
+import { processStockAlerts } from '@/lib/stock-alerts/processor';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
@@ -29,9 +30,10 @@ const tasks: Record<
     return { ok: counts.failures === 0, counts };
   },
   'process-emails': async ({ provider }) => {
-    const [transactional, newsletter] = await Promise.all([
+    const [transactional, newsletter, alerts] = await Promise.all([
       processPendingEmails({ limit: 50, provider }),
       processNewsletterDeliveries({ limit: 10, provider }),
+      processStockAlerts({ limit: 20, provider }),
     ]);
     return {
       ok: true,
@@ -44,6 +46,10 @@ const tasks: Record<
         newsletterSkipped: newsletter.skipped,
         newsletterCompleted: newsletter.completed,
         newsletterQuotaLimited: newsletter.quotaLimited,
+        stockAlertsNotified: alerts.notified,
+        stockAlertsFailed: alerts.failed,
+        stockAlertsPurged: alerts.purged,
+        stockAlertsQuotaLimited: alerts.quotaLimited,
       },
     };
   },

@@ -97,6 +97,10 @@ test('emails désactivés : succès explicite sans accès base', async (t) => {
       newsletterSkipped: 0,
       newsletterCompleted: 0,
       newsletterQuotaLimited: false,
+      stockAlertsNotified: 0,
+      stockAlertsFailed: 0,
+      stockAlertsPurged: 0,
+      stockAlertsQuotaLimited: false,
     },
   );
 });

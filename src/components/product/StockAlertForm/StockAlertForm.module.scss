@@ -1,0 +1,129 @@
+@use '../../../styles/abstracts/variables' as v;
+
+.alert {
+  display: grid;
+  gap: 0.9rem;
+  margin-bottom: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-left: 3px solid v.$color-gold;
+  border-radius: v.$radius-small;
+}
+
+.heading {
+  display: flex;
+  gap: 0.8rem;
+  svg {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    color: v.$color-green-secondary;
+  }
+  h2 {
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+  p {
+    margin-top: 0.2rem;
+    color: v.$color-text-muted;
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+}
+
+.form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.field {
+  label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  input {
+    width: 100%;
+    min-height: 46px;
+    padding: 0.7rem 0.85rem;
+    background: v.$color-background;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-small;
+    color: v.$color-text;
+    font-size: 1rem;
+    &:focus-visible {
+      border-color: v.$color-green;
+      outline: 2px solid v.$color-green;
+      outline-offset: 1px;
+    }
+    &[aria-invalid='true'] {
+      border-color: v.$color-danger;
+    }
+  }
+}
+
+.account {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.submit {
+  justify-self: start;
+  min-height: 46px;
+  padding: 0.75rem 1.3rem;
+  background: v.$color-green-dark;
+  border: 0;
+  border-radius: v.$radius-small;
+  color: v.$color-text-on-dark;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  &:hover:not(:disabled) {
+    background: v.$color-green;
+  }
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+}
+
+.legal {
+  color: v.$color-text-muted;
+  font-size: 0.7rem;
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+  }
+}
+
+.success,
+.error,
+.fieldError {
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.success {
+  color: v.$color-green-secondary;
+  font-weight: 600;
+}
+
+.error,
+.fieldError {
+  color: v.$color-danger;
+}
+
+.fieldError {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+// Invisible to people and assistive technology; filled only by bots.
+.trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

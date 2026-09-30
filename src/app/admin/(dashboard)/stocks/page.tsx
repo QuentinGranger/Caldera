@@ -57,6 +57,7 @@ export default async function StocksPage({
             'Disponible',
             'Seuil',
             'État',
+            'Alertes',
             'Ajustements',
           ]}
         >
@@ -92,6 +93,16 @@ export default async function StocksPage({
                         ? 'Stock faible'
                         : 'En stock'}
                 </span>
+              </td>
+              <td>
+                {variant._count.stockAlerts}
+                <small>
+                  {variant._count.stockAlerts > 1
+                    ? 'clients en attente'
+                    : variant._count.stockAlerts === 1
+                      ? 'client en attente'
+                      : 'aucune demande'}
+                </small>
               </td>
               <td>
                 <details>

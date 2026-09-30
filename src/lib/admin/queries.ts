@@ -320,7 +320,13 @@ export async function getAdminStocks(params: SearchParams) {
         lowStockThreshold: true,
         isActive: true,
         product: { select: { name: true } },
-        _count: { select: { reservations: { where: { status: 'ACTIVE' } } } },
+        _count: {
+          select: {
+            reservations: { where: { status: 'ACTIVE' } },
+            // Confirmed back-in-stock requests: demand to restock first.
+            stockAlerts: { where: { status: 'ACTIVE' } },
+          },
+        },
       },
     }),
     db.productVariant.count({ where }),

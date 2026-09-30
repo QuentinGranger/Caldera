@@ -8,6 +8,7 @@ import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { ProductVariantSelector } from '@/components/product/ProductVariantSelector/ProductVariantSelector';
 import { QuantitySelector } from '@/components/product/QuantitySelector/QuantitySelector';
 import { AddToCartButton } from '@/components/product/AddToCartButton/AddToCartButton';
+import { StockAlertForm } from '@/components/product/StockAlertForm/StockAlertForm';
 import { languageLabels } from '@/lib/catalog/params';
 import {
   getProductBadge,
@@ -39,6 +40,8 @@ type Props = {
   typeLabel: string;
   /** Shipping methods offered at checkout (ShippingMethod). */
   shipping: ShippingOptionView[];
+  /** Signed-in customer's e-mail, for back-in-stock alerts. */
+  accountEmail: string | null;
 };
 function SelectedVariant({
   variant,
@@ -47,6 +50,7 @@ function SelectedVariant({
   releaseDate,
   typeLabel,
   shipping,
+  accountEmail,
 }: Omit<Props, 'variants'> & { variant: ProductVariantView }) {
   const [quantity, setQuantity] = useState(1);
   const badge = getProductBadge(variant.availability, newArrival);
@@ -92,9 +96,11 @@ function SelectedVariant({
         />
       </div>
       {soldOut && (
-        <p className={styles.future}>
-          Les alertes de retour seront disponibles ultérieurement.
-        </p>
+        <StockAlertForm
+          variantId={variant.id}
+          language={languageLabels[variant.language]}
+          accountEmail={accountEmail}
+        />
       )}
       <div className={styles.service}>
         <Truck size={20} aria-hidden="true" />

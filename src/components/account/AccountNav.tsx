@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  BellRing,
   LayoutDashboard,
   LogOut,
   MapPin,
@@ -14,6 +15,7 @@ import styles from './Account.module.scss';
 const LINKS = [
   { href: '/compte', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/compte/commandes', label: 'Mes commandes', icon: Package },
+  { href: '/compte/alertes', label: 'Alertes de stock', icon: BellRing },
   { href: '/compte/adresse', label: 'Adresse de livraison', icon: MapPin },
   { href: '/compte/profil', label: 'Profil et sécurité', icon: ShieldCheck },
 ];
