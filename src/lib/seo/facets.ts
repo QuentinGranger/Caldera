@@ -93,6 +93,7 @@ export const RESERVED_ROOT_SLUGS: ReadonlySet<string> = new Set([
   'panier',
   'precommandes',
   'produit',
+  'retractation',
   'univers',
   'icon.png',
   'robots.txt',

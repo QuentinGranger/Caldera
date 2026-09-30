@@ -12,6 +12,7 @@ import {
   Mail,
   Menu,
   Package,
+  PackageOpen,
   ShoppingBag,
   TicketPercent,
   X,
@@ -35,6 +36,7 @@ const groups = [
     label: 'Ventes',
     links: [
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
+      { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
       {
         href: '/admin/promotions',
         label: 'Codes promo',

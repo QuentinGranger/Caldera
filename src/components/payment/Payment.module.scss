@@ -71,6 +71,12 @@
     font-size: 0.9rem;
     color: v.$color-text-muted;
   }
+  a {
+    color: v.$color-green-dark;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
 }
 .feedback {
   margin: 1rem 0;

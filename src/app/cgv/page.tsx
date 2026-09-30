@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { Container } from '@/components/ui/Container/Container';
@@ -438,8 +439,13 @@ export default function CgvPage() {
                 <li>par e-mail à contact@lesterresdecaldera.fr ;</li>
                 <li>ou au moyen de toute déclaration non ambiguë exprimant sa volonté de se rétracter.</li>
               </ul>
-              <p className={styles.warning}>
-                <strong>Fonctionnalité de rétractation en ligne : [URL À COMPLÉTER AVANT OUVERTURE]</strong>
+              <p>
+                <strong>
+                  Fonctionnalité de rétractation en ligne :{' '}
+                  <Link href="/retractation">lesterresdecaldera.fr/retractation</Link>
+                </strong>{' '}
+                (ou le lien « Se rétracter du contrat ici » de la page de chaque
+                commande).
               </p>
               <p>
                 Lorsque la rétractation est effectuée en ligne dans les conditions

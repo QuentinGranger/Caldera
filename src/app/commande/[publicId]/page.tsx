@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { getCartCookie } from '@/lib/cart/cartCookie';
 import { getPrisma } from '@/lib/db/prisma';
 import { formatPrice } from '@/utils/formatPrice';
+import { canReportProblem, canWithdraw } from '@/lib/returns/rules';
 import { getCustomerOrder } from '@/lib/orders/queries';
 import { reconcileOwnedOrder } from '@/lib/payments/reconcile';
 import { Container } from '@/components/ui/Container/Container';
@@ -59,16 +60,13 @@ export default async function OrderPage({
   searchParams: Promise<{ access?: string }>;
 }) {
   const { publicId } = await params;
+  const access = (await searchParams).access;
   const token = await getCartCookie();
 
   let order = await reconcileOwnedOrder(publicId, token, { force: true });
 
   if (!order) {
-    order = await getCustomerOrder(
-      publicId,
-      token,
-      (await searchParams).access,
-    );
+    order = await getCustomerOrder(publicId, token, access);
   }
 
   if (!order) notFound();
@@ -132,6 +130,26 @@ export default async function OrderPage({
                 </p>
               </div>
             )}
+            {order.status === 'PAID' &&
+              (canWithdraw(order.deliveredAt) || canReportProblem(order)) && (
+                <div className={styles.refunds}>
+                  <h3>Retour ou rétractation</h3>
+                  <p>
+                    {canWithdraw(order.deliveredAt)
+                      ? 'Vous pouvez vous rétracter sans justification dans les 14 jours suivant la réception, ou nous signaler un article abîmé.'
+                      : 'Un article abîmé, défectueux ou différent de votre commande ? Signalez-le ici.'}
+                  </p>
+                  <p>
+                    <Link
+                      href={`/commande/${publicId}/retour${access ? `?access=${encodeURIComponent(access)}` : ''}`}
+                    >
+                      {canWithdraw(order.deliveredAt)
+                        ? 'Se rétracter du contrat ici'
+                        : 'Signaler un problème'}
+                    </Link>
+                  </p>
+                </div>
+              )}
             <div className={styles.actions}>
               {['PENDING_PAYMENT', 'PAYMENT_FAILED'].includes(order.status) && (
                 <Link href={`/checkout/paiement/${publicId}`}>

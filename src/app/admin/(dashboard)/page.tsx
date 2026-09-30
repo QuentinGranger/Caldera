@@ -9,13 +9,15 @@ import {
   Truck,
 } from 'lucide-react';
 import { getDashboard, getFulfillmentDashboard } from '@/lib/admin/queries';
+import { countOpenReturns } from '@/lib/returns/admin';
 import { euros, formatDate, label } from '@/lib/admin/format';
 import { PageHeader, Badge, AdminTable } from '@/components/admin/AdminUI';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardPage() {
-  const [data, fulfillment] = await Promise.all([
+  const [data, fulfillment, returns] = await Promise.all([
     getDashboard(),
     getFulfillmentDashboard(),
+    countOpenReturns(),
   ]);
   const stats = [
     {
@@ -56,6 +58,11 @@ export default async function DashboardPage() {
       label: 'Commandes à vérifier',
       count: data.review,
       href: '/admin/commandes?status=PAYMENT_REVIEW',
+    },
+    {
+      label: 'Retours à examiner ou à rembourser',
+      count: returns,
+      href: '/admin/retours?open=1',
     },
     {
       label: 'Emails en échec',

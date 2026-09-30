@@ -38,6 +38,8 @@ export type RefundRequest = {
   reason: RefundReason;
   note: string;
   restock: boolean;
+  /** The customer return this refund settles (linked in the same transaction). */
+  returnId?: string;
 };
 
 function statusOf(provider: ProviderRefund): RefundStatus {
@@ -157,6 +159,24 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
       shippingCents,
       amountCents: nominal ? amountCents : 0,
     });
+    if (request.returnId) {
+      await tx.$queryRaw`SELECT id FROM "ReturnRequest" WHERE id = ${request.returnId}::uuid FOR UPDATE`;
+      const linked = await tx.returnRequest.findUnique({
+        where: { id: request.returnId },
+        include: { refund: { select: { status: true } } },
+      });
+      if (!linked || linked.orderId !== order.id)
+        throw new AdminError('Retour introuvable pour cette commande.');
+      if (!['REQUESTED', 'APPROVED', 'RECEIVED'].includes(linked.status))
+        throw new AdminError('Ce retour est déjà clos.');
+      if (
+        linked.refund &&
+        ['PENDING', 'REQUIRES_ACTION', 'SUCCEEDED'].includes(
+          linked.refund.status,
+        )
+      )
+        throw new AdminError('Ce retour a déjà un remboursement en cours.');
+    }
     const refund = await tx.refund.create({
       data: {
         orderId: order.id,
@@ -178,11 +198,17 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
         },
       },
     });
+    if (request.returnId)
+      await tx.returnRequest.update({
+        where: { id: request.returnId },
+        data: { refundId: refund.id },
+      });
     await audit(tx, adminId, 'REFUND_REQUESTED', 'Order', order.id, {
       refundId: refund.id,
       amount: fromCents(amountCents),
       reason: request.reason,
       restock: request.restock,
+      ...(request.returnId ? { returnId: request.returnId } : {}),
     });
     return refund;
   });
@@ -363,6 +389,14 @@ export async function applyProviderRefund(
       await tx.refund.update({
         where: { id: refund.id },
         data: { settledAt: now, restockedAt: restockedNow ? now : null },
+      });
+      // The return it settles is closed.
+      await tx.returnRequest.updateMany({
+        where: {
+          refundId: refund.id,
+          status: { in: ['REQUESTED', 'APPROVED', 'RECEIVED'] },
+        },
+        data: { status: 'REFUNDED', refundedAt: now, closedAt: now },
       });
     }
     if (eventId)

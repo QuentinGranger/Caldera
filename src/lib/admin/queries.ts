@@ -473,6 +473,16 @@ export async function getAdminOrder(id: string) {
         include: { variant: { select: { sku: true } } },
         orderBy: { createdAt: 'asc' },
       },
+      returns: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          number: true,
+          status: true,
+          reason: true,
+          createdAt: true,
+        },
+      },
       refunds: {
         orderBy: { createdAt: 'asc' },
         include: {

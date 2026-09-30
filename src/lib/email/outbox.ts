@@ -9,20 +9,46 @@ export type RefundEmailInput = {
   items: { name: string; quantity: number; amount: string }[];
 };
 
+/** What a return e-mail tells: number, reason, items and the shop's answer. */
+export type ReturnEmailInput = {
+  id: string;
+  number: string;
+  reason: string;
+  withdrawal: boolean;
+  requestedAt: string;
+  items: { name: string; quantity: number }[];
+  resolution: string | null;
+};
+
+const RETURN_EMAILS: readonly EmailType[] = [
+  'RETURN_REQUESTED',
+  'RETURN_APPROVED',
+  'RETURN_REJECTED',
+];
+
 /**
- * One e-mail per event: per (order, type), and per refund for ORDER_REFUNDED
- * (several partial refunds may follow each other).
+ * One e-mail per event: per (order, type), per refund for ORDER_REFUNDED
+ * (several partial refunds may follow each other) and per return request.
  */
 export async function enqueueOrderEmail(
   tx: Prisma.TransactionClient,
   orderId: string,
   type: EmailType,
-  refund?: RefundEmailInput,
+  detail?: RefundEmailInput | ReturnEmailInput,
 ) {
-  if ((type === 'ORDER_REFUNDED') !== Boolean(refund))
-    throw new Error('Un e-mail de remboursement décrit un remboursement.');
-  const dedupeKey = refund
-    ? `${orderId}:${type}:${refund.id}`
+  const refund =
+    type === 'ORDER_REFUNDED' ? (detail as RefundEmailInput) : undefined;
+  const returnRequest = RETURN_EMAILS.includes(type)
+    ? (detail as ReturnEmailInput)
+    : undefined;
+  // A refund or return e-mail describes one refund or return; the others none.
+  if (
+    (type === 'ORDER_REFUNDED' || RETURN_EMAILS.includes(type)) !==
+    Boolean(detail)
+  )
+    throw new Error('Détail d’e-mail inattendu.');
+  const dedupeKey = detail
+    ? `${orderId}:${type}:${detail.id}`
     : `${orderId}:${type}`;
   const existing = await tx.emailDelivery.findUnique({
     where: { dedupeKey },
@@ -96,6 +122,18 @@ export async function enqueueOrderEmail(
             amount: refund.amount,
             shipping: refund.shippingAmount,
             items: refund.items,
+          },
+        }
+      : {}),
+    ...(returnRequest
+      ? {
+          returnRequest: {
+            number: returnRequest.number,
+            reason: returnRequest.reason,
+            withdrawal: returnRequest.withdrawal,
+            requestedAt: returnRequest.requestedAt,
+            items: returnRequest.items,
+            resolution: returnRequest.resolution,
           },
         }
       : {}),

@@ -35,6 +35,7 @@ export function Badge({ value }: { value: string }) {
           'SENT',
           'COMPLETED',
           'PROMO_ACTIVE',
+          'RETURN_STATE_REFUNDED',
         ].includes(value)
       ? styles.success
       : [
@@ -46,6 +47,7 @@ export function Badge({ value }: { value: string }) {
             'QUEUED',
             'RESERVED',
             'PROMO_SCHEDULED',
+            'RETURN_STATE_REQUESTED',
           ].includes(value)
         ? styles.pending
         : [
@@ -55,6 +57,8 @@ export function Badge({ value }: { value: string }) {
               'READY_TO_SHIP',
               'SHIPPED',
               'SENDING',
+              'RETURN_STATE_APPROVED',
+              'RETURN_STATE_RECEIVED',
             ].includes(value)
           ? styles.info
           : '';

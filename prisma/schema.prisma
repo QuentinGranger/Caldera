@@ -416,6 +416,7 @@ model Order {
   reservations           StockReservation[]
   refunds                Refund[]
   promotionRedemption    PromotionRedemption?
+  returns                ReturnRequest[]
 
   @@index([status])
   @@index([fulfillmentStatus, paidAt])
@@ -444,6 +445,7 @@ model OrderItem {
   createdAt      DateTime        @default(now())
 
   refundItems RefundItem[]
+  returnItems ReturnItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -541,6 +543,7 @@ model AdminUser {
   newsletterCampaigns NewsletterCampaign[]
   refunds             Refund[]
   promotions          Promotion[]
+  returns             ReturnRequest[]
 }
 
 model AdminSession {
@@ -770,6 +773,10 @@ enum EmailType {
   ORDER_CONFIRMATION
   ORDER_SHIPPED
   ORDER_REFUNDED
+  /// Acknowledgment of a return or withdrawal (durable medium).
+  RETURN_REQUESTED
+  RETURN_APPROVED
+  RETURN_REJECTED
 }
 
 enum EmailStatus {
@@ -995,35 +1002,36 @@ enum RefundReason {
 /// Refund of a paid order through Stripe (src/lib/refunds). Several partial
 /// refunds may follow each other; together they never exceed the payment.
 model Refund {
-  id               String       @id @default(uuid()) @db.Uuid
-  orderId          String       @db.Uuid
-  order            Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  paymentId        String       @db.Uuid
-  payment          Payment      @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  amount           Decimal      @db.Decimal(10, 2)
+  id               String         @id @default(uuid()) @db.Uuid
+  orderId          String         @db.Uuid
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  paymentId        String         @db.Uuid
+  payment          Payment        @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  amount           Decimal        @db.Decimal(10, 2)
   /// Part of `amount` refunding the shipping costs.
-  shippingAmount   Decimal      @default(0) @db.Decimal(10, 2)
-  currency         String       @db.Char(3)
+  shippingAmount   Decimal        @default(0) @db.Decimal(10, 2)
+  currency         String         @db.Char(3)
   reason           RefundReason
   /// Internal note, never shown to the customer.
-  note             String?      @db.Text
-  status           RefundStatus @default(PENDING)
-  providerRefundId String?      @unique
+  note             String?        @db.Text
+  status           RefundStatus   @default(PENDING)
+  providerRefundId String?        @unique
   failureReason    String?
   /// Refunded items go back on sale once the refund succeeds.
-  restock          Boolean      @default(false)
+  restock          Boolean        @default(false)
   restockedAt      DateTime?
   /// Side effects (restock, e-mail, audit) applied exactly once.
   settledAt        DateTime?
   succeededAt      DateTime?
   /// Null when the refund was made directly in the Stripe Dashboard.
-  createdById      String?      @db.Uuid
-  createdBy        AdminUser?   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById      String?        @db.Uuid
+  createdBy        AdminUser?     @relation(fields: [createdById], references: [id], onDelete: Restrict)
   /// One key per form display: a double submission creates one refund.
-  idempotencyKey   String       @unique
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  idempotencyKey   String         @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
   items            RefundItem[]
+  returnRequest    ReturnRequest?
 
   @@index([orderId, createdAt])
   @@index([status, updatedAt])
@@ -1116,4 +1124,78 @@ model PromotionRedemption {
 
   @@index([promotionId, status])
   @@index([promotionId, email])
+}
+
+enum ReturnStatus {
+  /// Declared by the customer (or created by the shop), not answered yet.
+  REQUESTED
+  /// Accepted: return instructions sent.
+  APPROVED
+  /// Parcel received and checked.
+  RECEIVED
+  /// Refund confirmed by Stripe.
+  REFUNDED
+  REJECTED
+  /// Withdrawn by the customer or closed by the shop.
+  CANCELED
+}
+
+enum ReturnReason {
+  /// Legal right of withdrawal (14 days after delivery).
+  WITHDRAWAL
+  DAMAGED
+  DEFECTIVE
+  WRONG_ITEM
+  OTHER
+}
+
+enum ReturnSource {
+  CUSTOMER
+  ADMIN
+}
+
+/// Customer return or withdrawal (src/lib/returns), settled by a refund.
+model ReturnRequest {
+  id              String       @id @default(uuid()) @db.Uuid
+  /// « RET-2026-XXXXXXXX », given to the customer.
+  number          String       @unique
+  orderId         String       @db.Uuid
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  status          ReturnStatus @default(REQUESTED)
+  reason          ReturnReason
+  source          ReturnSource
+  /// Written by the customer; shown in the administration only.
+  customerMessage String?      @db.Text
+  /// Instructions or answer sent to the customer by e-mail.
+  resolution      String?      @db.Text
+  /// Never shown to the customer.
+  internalNote    String?      @db.Text
+  createdById     String?      @db.Uuid
+  createdBy       AdminUser?   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  approvedAt      DateTime?
+  receivedAt      DateTime?
+  refundedAt      DateTime?
+  closedAt        DateTime?
+  /// The refund settling this return (a failed one can be replaced).
+  refundId        String?      @unique @db.Uuid
+  refund          Refund?      @relation(fields: [refundId], references: [id], onDelete: SetNull)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  items           ReturnItem[]
+
+  @@index([orderId])
+  @@index([status, createdAt])
+  @@index([createdById])
+}
+
+model ReturnItem {
+  id            String        @id @default(uuid()) @db.Uuid
+  returnId      String        @db.Uuid
+  returnRequest ReturnRequest @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItemId   String        @db.Uuid
+  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  quantity      Int
+
+  @@unique([returnId, orderItemId])
+  @@index([orderItemId])
 }

@@ -1,0 +1,155 @@
+@use '@/styles/abstracts/variables' as v;
+
+.form {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+
+  fieldset {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+  }
+
+  label {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  input:not([type='radio']),
+  select,
+  textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-small;
+    background: #fff;
+    color: v.$color-text;
+    font: inherit;
+  }
+
+  button {
+    justify-self: start;
+    min-height: 48px;
+    padding: 0.75rem 1.2rem;
+    border: 0;
+    border-radius: v.$radius-small;
+    background: v.$color-green-dark;
+    color: v.$color-text-on-dark;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+  }
+}
+
+.choice {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.6rem !important;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-small;
+  background: v.$color-surface;
+  cursor: pointer;
+
+  &:has(input:checked) {
+    border-color: v.$color-green-secondary;
+    background: v.$color-background;
+  }
+
+  input {
+    margin-top: 0.3rem;
+    accent-color: v.$color-green;
+  }
+
+  span {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  small {
+    color: v.$color-text-muted;
+  }
+}
+
+.line {
+  grid-template-columns: 1fr 5rem;
+  align-items: center;
+  gap: 1rem !important;
+  padding-block: 0.5rem;
+  border-bottom: 1px solid v.$color-border;
+
+  span {
+    display: grid;
+    gap: 0.15rem;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    color: v.$color-text-muted;
+    font-size: 0.85rem;
+  }
+}
+
+.message {
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0;
+  color: v.$color-text-muted;
+  font-size: 0.9rem;
+}
+
+.success,
+.error {
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border-left: 3px solid v.$color-green;
+  background: v.$color-background;
+  line-height: 1.6;
+
+  &:focus {
+    outline: 2px solid v.$color-gold;
+    outline-offset: 2px;
+  }
+}
+
+.error {
+  border-color: v.$color-danger;
+  color: v.$color-danger;
+}
+
+.history {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid v.$color-border;
+  }
+
+  small {
+    color: v.$color-text-muted;
+  }
+}

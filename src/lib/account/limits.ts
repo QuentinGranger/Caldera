@@ -9,7 +9,8 @@ export type AccountAttemptScope =
   | 'verify'
   | 'newsletter'
   | 'stock-alert'
-  | 'promotion';
+  | 'promotion'
+  | 'return';
 
 // Per e-mail address: a password cannot be guessed and nobody's inbox can be
 // flooded with links. The global ceiling caps a spread-out attack.
@@ -23,6 +24,7 @@ const RULES: Record<AccountAttemptScope, { maximum: number; seconds: number }> =
     'stock-alert': { maximum: 5, seconds: 3600 },
     // Per cart: codes cannot be found by trying them one after another.
     promotion: { maximum: 10, seconds: 3600 },
+    return: { maximum: 5, seconds: 3600 },
   };
 const GLOBAL = { maximum: 120, seconds: 60 };
 

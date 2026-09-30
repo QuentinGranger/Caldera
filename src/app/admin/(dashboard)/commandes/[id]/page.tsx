@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { FulfillmentPanel } from '@/components/admin/FulfillmentPanel';
 import { RefundForm } from '@/components/admin/RefundForm';
 import { syncOrderRefundsAction } from '@/lib/refunds/admin-actions';
+import { returnReasonLabels } from '@/lib/returns/rules';
 import {
   fromCents,
   refundFailureLabel,
@@ -390,6 +391,42 @@ export default async function OrderAdminPage({
               }))}
             />
           </details>
+        )}
+      </section>
+      <section className={styles.card} id="retours">
+        <h2>Retours</h2>
+        {order.returns.length > 0 ? (
+          <AdminTable
+            caption="Retours de cette commande"
+            headings={['Retour', 'Motif', 'Date', 'État']}
+          >
+            {order.returns.map((request) => (
+              <tr key={request.id}>
+                <td>
+                  <Link href={`/admin/retours/${request.id}`}>
+                    {request.number}
+                  </Link>
+                </td>
+                <td>{returnReasonLabels[request.reason]}</td>
+                <td>{formatDate(request.createdAt)}</td>
+                <td>
+                  <Badge value={`RETURN_STATE_${request.status}`} />
+                </td>
+              </tr>
+            ))}
+          </AdminTable>
+        ) : (
+          <p className={styles.muted}>Aucun retour sur cette commande.</p>
+        )}
+        {order.status === 'PAID' && (
+          <p>
+            <Link
+              className={`${styles.button} ${styles.secondaryButton}`}
+              href={`/admin/retours/nouveau?commande=${order.id}`}
+            >
+              Créer un retour
+            </Link>
+          </p>
         )}
       </section>
       <section className={styles.card}>

@@ -54,6 +54,8 @@
     "test:refunds:http": "node --conditions=react-server --import tsx --test tests/refunds-http.test.ts",
     "test:promotions": "node --conditions=react-server --import tsx --test tests/promotions.test.ts",
     "test:promotions:db": "node --conditions=react-server --import tsx --test tests/promotions-db.test.ts",
+    "test:returns": "node --conditions=react-server --import tsx --test tests/returns.test.ts",
+    "test:returns:db": "node --conditions=react-server --import tsx --test tests/returns-db.test.ts",
     "test:admin:http": "node --conditions=react-server --import tsx --test tests/admin-http.test.ts",
     "emails:process": "node --conditions=react-server --import tsx scripts/process-emails.ts",
     "media:migrate": "node --conditions=react-server --import tsx scripts/migrate-uploads-to-blob.ts",
