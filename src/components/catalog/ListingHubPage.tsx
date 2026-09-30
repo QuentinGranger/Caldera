@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { Compass } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
@@ -137,6 +138,8 @@ export async function listingHubMetadata(
   listing: ListingKind,
   searchParams: Promise<SearchParams>,
 ): Promise<Metadata> {
+  // Rendered per request: no catalog read may start during the build.
+  await connection();
   const hub = await getListingHub(listing);
   return catalogListingMetadata({
     path: hub.config.path,
@@ -155,6 +158,8 @@ export async function ListingHubPage({
   listing: ListingKind;
   searchParams: Promise<SearchParams>;
 }) {
+  // Before the hub statistics, which would otherwise query during the build.
+  await connection();
   const config = LISTING_HUBS[listing];
   const [load, hub] = await Promise.all([
     loadCatalog({
