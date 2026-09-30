@@ -1,0 +1,116 @@
+# Every push to main and every pull request: types, lint, unit and
+# PostgreSQL tests, production build, then the HTTP tests and the SEO audit
+# against that build. No production secret is used: the database is a
+# throwaway container, secrets are generated per run, Stripe, e-mails and
+# AI stay disabled.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Vérifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: caldera
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d caldera"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/caldera
+      SITE_URL: http://localhost:3001
+      APP_URL: http://localhost:3001
+      TEST_BASE_URL: http://localhost:3001
+      SEO_BASE_URL: http://localhost:3001
+      EMAILS_ENABLED: 'false'
+      PASSWORD_BREACH_CHECK: 'off'
+      # Fixed value expected by tests/maintenance-http.test.ts, test only.
+      CRON_SECRET: cron_local_http_test_only
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same major version as production (package.json engines, used by Vercel).
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: Secrets de test (générés à chaque exécution)
+        run: |
+          auth="$(openssl rand -hex 32)"
+          access="$(openssl rand -hex 32)"
+          echo "::add-mask::$auth"
+          echo "::add-mask::$access"
+          {
+            echo "BETTER_AUTH_SECRET=$auth"
+            echo "ORDER_ACCESS_SECRET=$access"
+            echo "UPLOAD_DIR=$RUNNER_TEMP/uploads"
+          } >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/uploads"
+
+      - name: Installation
+        run: npm ci
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Base de données de test
+        run: |
+          npx prisma migrate deploy
+          npx prisma db seed
+
+      - name: Tests unitaires et PostgreSQL
+        run: >-
+          node --conditions=react-server --import tsx --test
+          --test-concurrency=1
+          $(ls tests/*.test.ts | grep -v -- '-http.test.ts')
+
+      - name: Build de production
+        run: npm run build
+
+      - name: Démarrage du serveur
+        run: |
+          nohup npm run start -- --port 3001 > "$RUNNER_TEMP/server.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3001/ && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/server.log"
+          exit 1
+
+      - name: Tests HTTP
+        run: >-
+          node --conditions=react-server --import tsx --test
+          --test-concurrency=1 tests/*-http.test.ts
+
+      - name: Audit SEO
+        run: npm run seo -- --all
+
+      - name: Journal du serveur
+        if: failure()
+        run: cat "$RUNNER_TEMP/server.log" || true

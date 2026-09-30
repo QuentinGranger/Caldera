@@ -4,6 +4,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { hashPassword } from 'better-auth/crypto';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { renderPageAsImage } from 'unpdf';
 import { getPrisma } from '../src/lib/db/prisma';
 import { IMPORT_CATEGORY_SLUG } from '../src/lib/supplier-import/records';
 import {
@@ -238,6 +240,101 @@ test('imports fournisseurs en HTTP : accès, analyse, import, annulation', async
         assert.equal(
           await db.supplierOffer.count({ where: { supplierId: supplier.id } }),
           0,
+        );
+      },
+    );
+
+    // OCR only breaks inside a built server (bundler, traced model files):
+    // the scanned page is read through the Server Action, as in the browser.
+    await t.test(
+      'PDF scanné lu par OCR dans le serveur construit',
+      async () => {
+        const source = await PDFDocument.create();
+        const font = await source.embedFont(StandardFonts.Helvetica);
+        const drawn = source.addPage([595, 842]);
+        [
+          ['Référence', 'Désignation', 'PA HT', 'Stock'],
+          ['OCR-1', 'Classeur scanné', '12,50', '4'],
+          ['OCR-2', 'Portfolio scanné', '8,90', '0'],
+        ].forEach((row, line) =>
+          row.forEach((cell, column) =>
+            drawn.drawText(cell, {
+              x: [40, 130, 360, 470][column]!,
+              y: 760 - line * 24,
+              size: 11,
+              font,
+            }),
+          ),
+        );
+        const png = await renderPageAsImage(
+          new Uint8Array(await source.save()),
+          1,
+          { canvasImport: () => import('@napi-rs/canvas'), scale: 2.5 },
+        );
+        const scan = await PDFDocument.create();
+        const image = await scan.embedPng(new Uint8Array(png));
+        scan
+          .addPage([595, 842])
+          .drawImage(image, { x: 0, y: 0, width: 595, height: 842 });
+        const pdf = new Uint8Array(await scan.save());
+        const { id: pdfImportId } = await startImport(adminId, {
+          supplierId: supplier.id,
+          fileName: 'scan.pdf',
+          fileSize: pdf.byteLength,
+          fileHash: createHash('sha256').update(pdf).digest('hex'),
+          scope: 'PARTIAL',
+        });
+        await uploadChunk(pdfImportId, 0, pdf);
+        await finishUpload(pdfImportId);
+        assert.equal(
+          (
+            await db.supplierImport.findUniqueOrThrow({
+              where: { id: pdfImportId },
+            })
+          ).status,
+          'EXTRACTING',
+        );
+        const actionId = Object.entries(manifest.node).find(
+          ([, value]) => value.exportedName === 'ocrStepAction',
+        )?.[0];
+        assert.ok(actionId, 'Action absente : ocrStepAction');
+        const response = await fetch(
+          `${base}/admin/fournisseurs/imports/${pdfImportId}`,
+          {
+            method: 'POST',
+            headers: {
+              'Next-Action': actionId,
+              'Content-Type': 'text/plain;charset=UTF-8',
+              Accept: 'text/x-component',
+              Origin: origin,
+              Cookie: cookie,
+            },
+            body: JSON.stringify([pdfImportId]),
+          },
+        );
+        const body = await response.text();
+        assert.ok(body.includes('"remaining":0'), body.slice(-300));
+        const read = await db.supplierImport.findUniqueOrThrow({
+          where: { id: pdfImportId },
+          include: {
+            pages: true,
+            rows: { orderBy: { rowNumber: 'asc' } },
+          },
+        });
+        assert.equal(read.status, 'MAPPING');
+        assert.deepEqual(
+          read.pages.map((page) => [page.method, page.status]),
+          [['OCR', 'DONE']],
+        );
+        assert.deepEqual(
+          read.rows.map((row) => [
+            row.source,
+            (row.raw as { cells: string[] }).cells[0],
+          ]),
+          [
+            ['page 1 · OCR', 'OCR-1'],
+            ['page 1 · OCR', 'OCR-2'],
+          ],
         );
       },
     );
