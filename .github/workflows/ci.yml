@@ -21,7 +21,8 @@ concurrency:
 jobs:
   checks:
     name: Vérifications
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to a new release on its own schedule.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     services:
       postgres:
@@ -39,7 +40,8 @@ jobs:
           --health-retries 20
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/caldera
-      SITE_URL: http://localhost:3001
+      # Origin of the local server (admin auth, signed links). SITE_URL stays
+      # unset: public URLs fall back to production, as the SEO tests expect.
       APP_URL: http://localhost:3001
       TEST_BASE_URL: http://localhost:3001
       SEO_BASE_URL: http://localhost:3001
@@ -49,10 +51,10 @@ jobs:
       CRON_SECRET: cron_local_http_test_only
       NEXT_TELEMETRY_DISABLED: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Same major version as production (package.json engines, used by Vercel).
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: package.json
           cache: npm
@@ -61,11 +63,16 @@ jobs:
         run: |
           auth="$(openssl rand -hex 32)"
           access="$(openssl rand -hex 32)"
+          # Never a real Stripe secret: the webhook route only has to exist
+          # so forged signatures are refused (payments stay off, no API key).
+          webhook="whsec_$(openssl rand -hex 24)"
           echo "::add-mask::$auth"
           echo "::add-mask::$access"
+          echo "::add-mask::$webhook"
           {
             echo "BETTER_AUTH_SECRET=$auth"
             echo "ORDER_ACCESS_SECRET=$access"
+            echo "STRIPE_WEBHOOK_SECRET=$webhook"
             echo "UPLOAD_DIR=$RUNNER_TEMP/uploads"
           } >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/uploads"
