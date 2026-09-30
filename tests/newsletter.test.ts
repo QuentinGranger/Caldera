@@ -21,10 +21,11 @@ test('newsletter : jetons aléatoires hachés et désinscription signée', () =>
   const id = randomUUID();
   const unsubscribe = newsletterUnsubscribeToken(id);
   assert.equal(verifyNewsletterUnsubscribeToken(unsubscribe), id);
-  assert.equal(
-    verifyNewsletterUnsubscribeToken(`${unsubscribe.slice(0, -1)}0`),
-    null,
-  );
+  // Always a different last hex digit: a signature ending in 0 must not
+  // give back the genuine token (that made this test fail 1 time in 16).
+  const tampered = `${unsubscribe.slice(0, -1)}${unsubscribe.endsWith('0') ? '1' : '0'}`;
+  assert.notEqual(tampered, unsubscribe);
+  assert.equal(verifyNewsletterUnsubscribeToken(tampered), null);
   assert.equal(verifyNewsletterUnsubscribeToken('invalide'), null);
 });
 
