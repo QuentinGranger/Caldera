@@ -13,6 +13,7 @@ import {
   releaseReservations,
 } from '@/lib/inventory/reservations';
 import { consumePromotion, releasePromotion } from '@/lib/promotions/service';
+import { issueInvoice } from '@/lib/invoices/service';
 import type { Intent } from '@/lib/stripe/stripe';
 import { validateIntent } from './validation';
 
@@ -121,6 +122,8 @@ async function applyIntentState(
         where: { id: order.checkoutSession.cartId },
         data: { status: 'CONVERTED' },
       });
+      // Issued with the payment, in the same transaction: numbered once.
+      await issueInvoice(tx, orderId);
       await enqueueOrderEmail(tx, orderId, 'ORDER_CONFIRMATION');
 
       return 'PAID';

@@ -6,6 +6,7 @@ import { getCartCookie } from '@/lib/cart/cartCookie';
 import { getPrisma } from '@/lib/db/prisma';
 import { formatPrice } from '@/utils/formatPrice';
 import { canReportProblem, canWithdraw } from '@/lib/returns/rules';
+import { orderDocuments } from '@/lib/invoices/service';
 import { getCustomerOrder } from '@/lib/orders/queries';
 import { reconcileOwnedOrder } from '@/lib/payments/reconcile';
 import { Container } from '@/components/ui/Container/Container';
@@ -86,6 +87,8 @@ export default async function OrderPage({
       createdAt: true,
     },
   });
+  const documents =
+    order.status === 'PAID' ? await orderDocuments(order.id) : [];
   return (
     <main id="contenu" className={styles.main}>
       <Container>
@@ -128,6 +131,26 @@ export default async function OrderPage({
                   Le montant revient sur le moyen de paiement utilisé, sous 5 à
                   10 jours ouvrés selon votre banque.
                 </p>
+              </div>
+            )}
+            {documents.length > 0 && (
+              <div className={styles.refunds}>
+                <h3>Vos documents</h3>
+                <ul>
+                  {documents.map((document) => (
+                    <li key={document.id}>
+                      <a
+                        href={`/commande/${publicId}/documents/${document.id}${access ? `?access=${encodeURIComponent(access)}` : ''}`}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        {document.kind === 'INVOICE' ? 'Facture' : 'Avoir'}{' '}
+                        {document.number}
+                      </a>{' '}
+                      ({formatPrice(document.totalAmount.toFixed(2))})
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             {order.status === 'PAID' &&

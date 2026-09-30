@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import { getPrisma } from '../src/lib/db/prisma';
+import { purgeTestInvoices } from './helpers/invoices';
 import { cartTokenHash } from '../src/lib/cart/identity';
 import { mutateCart } from '../src/lib/cart/service';
 import { getCartByToken } from '../src/lib/cart/queries';
@@ -577,6 +578,10 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
       where: { items: { some: { productId: product.id } } },
       include: orderInclude,
     });
+    await purgeTestInvoices(
+      db,
+      orders.map((row) => row.id),
+    );
     for (const row of orders) {
       await db.stockReservation.deleteMany({ where: { orderId: row.id } });
       await db.orderItem.deleteMany({ where: { orderId: row.id } });

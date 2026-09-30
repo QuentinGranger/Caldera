@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { getPrisma } from '../src/lib/db/prisma';
+import { purgeTestInvoices } from './helpers/invoices';
 import { mutateCart } from '../src/lib/cart/service';
 import { mutateCheckout } from '../src/lib/checkout/service';
 import { getCheckoutData } from '../src/lib/checkout/queries';
@@ -229,6 +230,7 @@ test('paiement HTTP : confidentialité, confirmation serveur et webhook invalide
     await db.orderAddress.deleteMany({ where: { orderId: order.id } });
     await db.payment.deleteMany({ where: { orderId: order.id } });
     await db.emailDelivery.deleteMany({ where: { orderId: order.id } });
+    await purgeTestInvoices(db, [order.id]);
     await db.order.delete({ where: { id: order.id } });
     await db.cart.deleteMany({ where: { tokenHash: cartTokenHash(token)! } });
     await db.productVariant.delete({ where: { id: variant.id } });

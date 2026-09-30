@@ -14,6 +14,7 @@ const sections: Record<string, string> = {
   newsletter: 'Newsletter',
   promotions: 'Codes promo',
   retours: 'Retours',
+  factures: 'Factures',
 };
 export function AdminBreadcrumbs() {
   const parts = usePathname().split('/').filter(Boolean);
@@ -25,15 +26,17 @@ export function AdminBreadcrumbs() {
         ? 'Nouveau code'
         : parts[1] === 'retours' && parts[2] === 'nouveau'
           ? 'Nouveau retour'
-          : parts[3] === 'nouvelle'
-            ? 'Nouvelle campagne'
-            : parts[2] === 'nouveau'
-              ? 'Nouveau produit'
-              : parts[2] === 'campagnes' && parts[3]
-                ? 'Campagne'
-                : parts[2]
-                  ? 'Détail'
-                  : null;
+          : parts[1] === 'factures' && parts[2] === 'reglages'
+            ? 'Mentions légales'
+            : parts[3] === 'nouvelle'
+              ? 'Nouvelle campagne'
+              : parts[2] === 'nouveau'
+                ? 'Nouveau produit'
+                : parts[2] === 'campagnes' && parts[3]
+                  ? 'Campagne'
+                  : parts[2]
+                    ? 'Détail'
+                    : null;
   return (
     <nav aria-label="Fil d’Ariane" className={styles.breadcrumb}>
       <Link href="/admin">Console</Link>

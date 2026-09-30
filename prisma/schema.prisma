@@ -417,6 +417,7 @@ model Order {
   refunds                Refund[]
   promotionRedemption    PromotionRedemption?
   returns                ReturnRequest[]
+  invoices               Invoice[]
 
   @@index([status])
   @@index([fulfillmentStatus, paidAt])
@@ -1032,6 +1033,7 @@ model Refund {
   updatedAt        DateTime       @updatedAt
   items            RefundItem[]
   returnRequest    ReturnRequest?
+  creditNote       Invoice?       @relation("CreditNoteRefund")
 
   @@index([orderId, createdAt])
   @@index([status, updatedAt])
@@ -1198,4 +1200,80 @@ model ReturnItem {
 
   @@unique([returnId, orderItemId])
   @@index([orderItemId])
+}
+
+enum VatRegime {
+  /// Franchise en base (art. 293 B du CGI): no VAT charged nor shown.
+  FRANCHISE
+  /// VAT charged; prices stay VAT inclusive.
+  STANDARD
+}
+
+/// Identity printed on invoices (singleton « caldera »), edited in the
+/// administration. Invoices keep a copy: editing it never changes them.
+model InvoiceSettings {
+  id             String    @id @default("caldera")
+  legalName      String    @default("CALDERA")
+  tradeName      String    @default("Les Terres de Caldera")
+  legalForm      String    @default("SASU")
+  /// « 1 000 € »: mandatory on the invoices of a company.
+  shareCapital   String?
+  street         String    @default("74 rue Pierre Valdo")
+  postalCode     String    @default("69005")
+  city           String    @default("Lyon")
+  country        String    @default("France")
+  siren          String?
+  siret          String?
+  /// City of the trade register, e.g. « Lyon ».
+  rcsCity        String?
+  vatNumber      String?
+  email          String    @default("contact@lesterresdecaldera.fr")
+  vatRegime      VatRegime @default(FRANCHISE)
+  /// Rate applied without Stripe Tax once VAT is charged (percent).
+  defaultVatRate Decimal   @default(20) @db.Decimal(5, 2)
+  /// Free text at the bottom of every invoice.
+  footer         String?   @db.Text
+  updatedAt      DateTime  @updatedAt
+}
+
+enum InvoiceKind {
+  INVOICE
+  CREDIT_NOTE
+}
+
+/// Gap-free numbering per kind and calendar year (« INVOICE:2026 »).
+model InvoiceSequence {
+  id   String @id
+  next Int    @default(1)
+}
+
+/// Invoice issued when an order is paid, credit note when a refund succeeds
+/// (src/lib/invoices). Never edited nor deleted: `snapshot` holds everything
+/// printed, the PDF is rendered from it.
+model Invoice {
+  id          String      @id @default(uuid()) @db.Uuid
+  kind        InvoiceKind
+  /// « F-2026-000001 » or « AV-2026-000001 ».
+  number      String      @unique
+  /// « INVOICE:orderId » or « CREDIT_NOTE:refundId »: one document per event.
+  dedupeKey   String      @unique
+  orderId     String      @db.Uuid
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  refundId    String?     @unique @db.Uuid
+  refund      Refund?     @relation("CreditNoteRefund", fields: [refundId], references: [id], onDelete: Restrict)
+  /// The invoice a credit note corrects.
+  invoiceId   String?     @db.Uuid
+  invoice     Invoice?    @relation("CreditNoteInvoice", fields: [invoiceId], references: [id], onDelete: Restrict)
+  creditNotes Invoice[]   @relation("CreditNoteInvoice")
+  issuedAt    DateTime    @default(now())
+  currency    String      @db.Char(3)
+  /// VAT included; a credit note's amount is positive (the sum credited).
+  totalAmount Decimal     @db.Decimal(10, 2)
+  taxAmount   Decimal     @default(0) @db.Decimal(10, 2)
+  snapshot    Json
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId])
+  @@index([kind, issuedAt])
+  @@index([invoiceId])
 }

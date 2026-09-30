@@ -6,6 +6,7 @@ import { AdminError } from '@/lib/admin/validation';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { getPrisma } from '@/lib/db/prisma';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
+import { issueCreditNote } from '@/lib/invoices/service';
 import { lockOrder, transaction } from '@/lib/orders/common';
 import {
   allocateRefund,
@@ -398,6 +399,7 @@ export async function applyProviderRefund(
         },
         data: { status: 'REFUNDED', refundedAt: now, closedAt: now },
       });
+      await issueCreditNote(tx, refund.id);
     }
     if (eventId)
       await tx.stripeWebhookEvent.create({

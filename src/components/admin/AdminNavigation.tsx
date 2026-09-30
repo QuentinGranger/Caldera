@@ -6,6 +6,7 @@ import {
   BarChart3,
   Boxes,
   Dices,
+  FileText,
   FolderTree,
   Layers3,
   LayoutDashboard,
@@ -43,6 +44,10 @@ const groups = [
         icon: TicketPercent,
       },
     ],
+  },
+  {
+    label: 'Comptabilité',
+    links: [{ href: '/admin/factures', label: 'Factures', icon: FileText }],
   },
   {
     label: 'Catalogue',

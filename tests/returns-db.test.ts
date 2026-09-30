@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import { getPrisma } from '../src/lib/db/prisma';
+import { purgeTestInvoices } from './helpers/invoices';
 import { cartTokenHash } from '../src/lib/cart/identity';
 import { parseEmailSnapshot } from '../src/emails/templates';
 import type { ProviderRefund, RefundGateway } from '../src/lib/refunds/gateway';
@@ -417,6 +418,7 @@ test('retours et rétractations, PostgreSQL', async (t) => {
       },
     );
   } finally {
+    await purgeTestInvoices(db, [order.id]);
     await db.returnRequest.deleteMany({ where: { orderId: order.id } });
     await db.refund.deleteMany({ where: { orderId: order.id } });
     await db.emailDelivery.deleteMany({ where: { orderId: order.id } });

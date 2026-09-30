@@ -168,3 +168,13 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
+.plainList {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  li {
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed t.$border;
+  }
+}

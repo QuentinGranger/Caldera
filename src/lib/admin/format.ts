@@ -49,6 +49,8 @@ export const labels: Record<string, string> = {
   RETURN_STATE_REFUNDED: 'Remboursé',
   RETURN_STATE_REJECTED: 'Refusé',
   RETURN_STATE_CANCELED: 'Clos',
+  INVOICE_ISSUED: 'Facture émise',
+  INVOICE_SETTINGS_UPDATED: 'Mentions de facture modifiées',
   RETURN_CREATED: 'Retour créé',
   RETURN_APPROVED: 'Retour accepté',
   RETURN_REJECTED: 'Retour refusé',

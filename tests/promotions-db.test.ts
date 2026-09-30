@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import { getPrisma } from '../src/lib/db/prisma';
+import { purgeTestInvoices } from './helpers/invoices';
 import { mutateCart } from '../src/lib/cart/service';
 import { cartTokenHash } from '../src/lib/cart/identity';
 import { mutateCheckout } from '../src/lib/checkout/service';
@@ -479,6 +480,7 @@ test('codes promo : checkout, commande, limites et remboursement', async (t) => 
       select: { id: true },
     });
     const ids = orders.map((row) => row.id);
+    await purgeTestInvoices(db, ids);
     await db.refund.deleteMany({ where: { orderId: { in: ids } } });
     await db.promotionRedemption.deleteMany({
       where: { orderId: { in: ids } },

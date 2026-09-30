@@ -3,6 +3,7 @@ import { FulfillmentPanel } from '@/components/admin/FulfillmentPanel';
 import { RefundForm } from '@/components/admin/RefundForm';
 import { syncOrderRefundsAction } from '@/lib/refunds/admin-actions';
 import { returnReasonLabels } from '@/lib/returns/rules';
+import { issueInvoiceAction } from '@/lib/invoices/admin-actions';
 import {
   fromCents,
   refundFailureLabel,
@@ -392,6 +393,41 @@ export default async function OrderAdminPage({
             />
           </details>
         )}
+      </section>
+      <section className={styles.card} id="factures">
+        <h2>Factures et avoirs</h2>
+        {order.invoices.length > 0 ? (
+          <ul className={styles.plainList}>
+            {order.invoices.map((invoice) => (
+              <li key={invoice.id}>
+                <a
+                  href={`/admin/factures/${invoice.id}/pdf`}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {invoice.kind === 'INVOICE' ? 'Facture' : 'Avoir'}{' '}
+                  {invoice.number}
+                </a>{' '}
+                · {formatDate(invoice.issuedAt)} ·{' '}
+                {invoice.kind === 'CREDIT_NOTE' ? '−' : ''}
+                {euros(invoice.totalAmount)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.muted}>Aucune facture émise.</p>
+        )}
+        {order.status === 'PAID' &&
+          payment?.status === 'SUCCEEDED' &&
+          !order.invoices.some((invoice) => invoice.kind === 'INVOICE') && (
+            <AdminForm
+              action={issueInvoiceAction}
+              submit="Émettre la facture"
+              confirm="Émettre maintenant la facture de cette commande ? Elle prendra le prochain numéro et ne pourra plus être modifiée."
+            >
+              <Hidden name="id" value={order.id} />
+            </AdminForm>
+          )}
       </section>
       <section className={styles.card} id="retours">
         <h2>Retours</h2>
