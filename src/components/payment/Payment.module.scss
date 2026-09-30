@@ -49,6 +49,29 @@
   gap: 1rem;
   margin-top: 1.5rem;
 }
+.refunds {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: v.$color-background;
+  border-left: 3px solid v.$color-green-secondary;
+  border-radius: v.$radius-small;
+  h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  li {
+    margin: 0.25rem 0;
+  }
+  p {
+    margin: 0.75rem 0 0;
+    font-size: 0.9rem;
+    color: v.$color-text-muted;
+  }
+}
 .feedback {
   margin: 1rem 0;
   overflow-wrap: anywhere;

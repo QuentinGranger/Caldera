@@ -398,10 +398,12 @@ La première exécution télécharge `@stripe/cli@1.51.0` dans le cache npm. Red
 
 ```bash
 stripe login
-stripe listen --events payment_intent.succeeded,payment_intent.processing,payment_intent.payment_failed,payment_intent.canceled,payment_intent.requires_action --forward-to localhost:3000/api/stripe/webhook
+stripe listen --events payment_intent.succeeded,payment_intent.processing,payment_intent.payment_failed,payment_intent.canceled,payment_intent.requires_action,refund.created,refund.updated,refund.failed,charge.refund.updated --forward-to localhost:3000/api/stripe/webhook
 ```
 
 Copier le secret `whsec_` affiché par cette commande dans `STRIPE_WEBHOOK_SECRET`, puis redémarrer Next.js. Le secret CLI est propre à cette écoute : ne pas le confondre avec celui d’un endpoint Dashboard. Le webhook est obligatoire. Le serveur vérifie la signature sur le corps brut, refuse un événement d’un autre mode que la clé serveur et relit l’état du PaymentIntent avant traitement. Réponse 400 pour signature invalide, 500 pour traitement à réessayer, 200 pour succès ou doublon. Les appels réseau Stripe restent hors transaction SQL.
+
+**Remboursements** (`/admin/commandes/[id]`, section « Remboursements ») : articles et quantités, frais de port, montant libre plus bas (geste commercial), motif, note interne et remise en stock optionnelle. Tout est calculé en centimes ; la commande est verrouillée pendant la vérification, et un remboursement en cours compte déjà : deux administrateurs ne peuvent pas dépasser le montant payé. Stripe reçoit une clé d’idempotence par remboursement (`caldera-refund:<id>`) : un double clic ou une nouvelle tentative ne rembourse jamais deux fois. Le stock n’est remis et l’e-mail `ORDER_REFUNDED` n’est envoyé qu’une fois Stripe confirmé (réponse directe, webhook ou tâche de maintenance `sync-refunds`). Un remboursement fait depuis le Dashboard Stripe est enregistré automatiquement. Une commande entièrement remboursée ne peut plus être préparée ni expédiée. En production : clé restreinte avec la permission **Refunds : écriture**, et endpoint webhook abonné à `refund.created`, `refund.updated`, `refund.failed` et `charge.refund.updated`. Tests : `npm run test:refunds`, `test:refunds:db`, `test:refunds:http`.
 
 Parcours : ajouter un article disponible → `/checkout` → coordonnées → livraison → récapitulatif → « Continuer vers le paiement » → `/checkout/paiement/[publicId]` → Payment Element → `confirmPayment` → `/commande/[publicId]`. Le Payment Element gère données bancaires et authentification 3DS ; aucun champ bancaire maison ni donnée carte enregistrée. Moyens de paiement dynamiques selon le Dashboard ; Apple Pay / Google Pay dépendent de la configuration et ne sont pas déclarés testés.
 

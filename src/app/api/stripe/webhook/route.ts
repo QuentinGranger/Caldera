@@ -4,6 +4,16 @@ import { safelyProcessEmails } from '@/lib/email/processor';
 import { getStripe, stripeMode } from '@/lib/stripe/stripe';
 import { verifyWebhook } from '@/lib/stripe/webhook';
 import { paymentEvents, processPaymentEvent } from '@/lib/payments/events';
+import { stripeRefundGateway } from '@/lib/refunds/gateway';
+import { processRefundEvent } from '@/lib/refunds/service';
+
+// Refunds made from the administration or the Stripe Dashboard.
+const refundEvents = new Set([
+  'refund.created',
+  'refund.updated',
+  'refund.failed',
+  'charge.refund.updated',
+]);
 export const runtime = 'nodejs';
 export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -27,6 +37,34 @@ export async function POST(request: Request) {
   }
   if (event.livemode !== (stripeMode() === 'live'))
     return Response.json({ error: 'Mode non pris en charge' }, { status: 400 });
+  if (refundEvents.has(event.type)) {
+    const object = event.data.object;
+    if (object.object !== 'refund')
+      return Response.json({ error: 'Événement invalide' }, { status: 400 });
+    try {
+      // Re-read Stripe rather than trusting the event body.
+      await processRefundEvent(
+        event.id,
+        await stripeRefundGateway.retrieve(object.id),
+      );
+      after(async () => {
+        await safelyProcessEmails();
+      });
+      return Response.json({ received: true });
+    } catch {
+      console.error(
+        JSON.stringify({
+          scope: 'refunds',
+          action: 'webhook_retry_needed',
+          eventId: event.id,
+        }),
+      );
+      return Response.json(
+        { error: 'Traitement à réessayer' },
+        { status: 500 },
+      );
+    }
+  }
   if (!paymentEvents.has(event.type)) return Response.json({ received: true });
   try {
     // Re-read Stripe: old/delayed events cannot force an obsolete state transition.

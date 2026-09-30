@@ -23,6 +23,12 @@ export type EmailSnapshot = {
     trackingNumber: string | null;
     trackingUrl: string | null;
   } | null;
+  /** ORDER_REFUNDED only: this refund, not the running total. */
+  refund?: {
+    amount: string;
+    shipping: string;
+    items: { name: string; quantity: number; amount: string }[];
+  };
 };
 export function parseEmailSnapshot(value: unknown): EmailSnapshot {
   if (!value || typeof value !== 'object')
@@ -66,6 +72,24 @@ export function parseEmailSnapshot(value: unknown): EmailSnapshot {
     )
       throw new Error('Snapshot email invalide.');
   }
+  if (row.refund !== undefined) {
+    const refund = row.refund as Record<string, unknown> | null;
+    if (
+      !refund ||
+      typeof refund.amount !== 'string' ||
+      typeof refund.shipping !== 'string' ||
+      !Array.isArray(refund.items) ||
+      refund.items.some(
+        (item) =>
+          !item ||
+          typeof item.name !== 'string' ||
+          typeof item.amount !== 'string' ||
+          !Number.isInteger(item.quantity) ||
+          item.quantity < 1,
+      )
+    )
+      throw new Error('Snapshot email invalide.');
+  }
   return value as EmailSnapshot;
 }
 export function escapeHtml(value: string | number) {
@@ -84,11 +108,49 @@ const money = (value: string) =>
 function link(url: string, text: string) {
   return `<a href="${escapeHtml(url)}" style="display:inline-block;margin:12px 0;padding:14px 22px;background:#003c2d;color:#fff;text-decoration:none;border-radius:4px">${escapeHtml(text)}</a>`;
 }
+/** The customer is told what was refunded and when to expect it. */
+function renderRefundEmail(
+  data: EmailSnapshot,
+  urls: { order: string; logo: string },
+) {
+  const refund = data.refund;
+  if (!refund) throw new Error('Snapshot de remboursement absent.');
+  const subject =
+    `Remboursement de ${money(refund.amount)} — ${data.orderNumber}`.replace(
+      /[\r\n]/g,
+      ' ',
+    );
+  const title = 'Votre remboursement est en route';
+  const lines = refund.items
+    .map(
+      (item) =>
+        `<tr><td style="border-top:1px solid #d8d5c7">${escapeHtml(item.name)}</td><td align="center" style="border-top:1px solid #d8d5c7">${item.quantity}</td><td align="right" style="border-top:1px solid #d8d5c7;white-space:nowrap">${escapeHtml(money(item.amount))}</td></tr>`,
+    )
+    .join('');
+  const content = `<p>Nous avons remboursé <strong>${escapeHtml(money(refund.amount))}</strong> sur le moyen de paiement utilisé pour la commande. Selon votre banque, le montant apparaît sous 5 à 10 jours ouvrés.</p>${lines ? `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px"><thead><tr><th align="left">Article</th><th>Qté</th><th align="right">Remboursé</th></tr></thead><tbody>${lines}</tbody></table>` : ''}${Number(refund.shipping) > 0 ? `<p>Frais de livraison remboursés : ${escapeHtml(money(refund.shipping))}</p>` : ''}`;
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:20px 8px;background:#f6f1e4;font-family:Arial,sans-serif;color:#173e32;line-height:1.6"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffcf5"><tr><td style="padding:26px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(urls.logo)}" width="240" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:24px"><p style="font-size:13px">Commande ${escapeHtml(data.orderNumber)}</p><h1 style="font-family:Georgia,serif;font-size:30px;line-height:1.2">${title}</h1>${content}${link(urls.order, 'Voir ma commande')}<p style="font-size:12px;color:#60665d">Une question sur ce remboursement ? Écrivez-nous depuis la page contact du site en indiquant votre numéro de commande.</p></td></tr><tr><td style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera<br><a href="${PRODUCTION_SITE_URL}" style="color:#173e32">${PRODUCTION_HOST}</a></td></tr></table></td></tr></table></body></html>`;
+  const text = [
+    title,
+    `Commande ${data.orderNumber}`,
+    `Montant remboursé : ${money(refund.amount)}, sur le moyen de paiement de la commande. Selon votre banque, il apparaît sous 5 à 10 jours ouvrés.`,
+    ...refund.items.map(
+      (item) => `${item.quantity} × ${item.name} — ${money(item.amount)}`,
+    ),
+    ...(Number(refund.shipping) > 0
+      ? [`Frais de livraison remboursés : ${money(refund.shipping)}`]
+      : []),
+    `Voir ma commande : ${urls.order}`,
+    'Les Terres de Caldera',
+    `Site : ${PRODUCTION_SITE_URL}`,
+  ];
+  return { subject, html, text: text.join('\n\n') };
+}
 export function renderEmail(
   type: EmailType,
   data: EmailSnapshot,
   urls: { order: string; logo: string },
 ) {
+  if (type === 'ORDER_REFUNDED') return renderRefundEmail(data, urls);
   const shipped = type === 'ORDER_SHIPPED';
   const shipment = data.shipment;
   const trackingUrl = shipment?.trackingUrl

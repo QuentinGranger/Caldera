@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCartCookie } from '@/lib/cart/cartCookie';
+import { getPrisma } from '@/lib/db/prisma';
+import { formatPrice } from '@/utils/formatPrice';
 import { getCustomerOrder } from '@/lib/orders/queries';
 import { reconcileOwnedOrder } from '@/lib/payments/reconcile';
 import { Container } from '@/components/ui/Container/Container';
@@ -10,6 +12,10 @@ import { OrderSummary } from '@/components/payment/OrderSummary';
 import { OrderStatusRefresh } from '@/components/payment/OrderStatusRefresh';
 import styles from '@/components/payment/Payment.module.scss';
 export const dynamic = 'force-dynamic';
+const refundDate = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeZone: 'Europe/Paris',
+});
 export const metadata: Metadata = {
   title: 'Votre commande',
   robots: { index: false, follow: false },
@@ -67,6 +73,21 @@ export default async function OrderPage({
 
   if (!order) notFound();
   const [title, description] = copy[order.status];
+  // Refunds confirmed or on their way; failed attempts are the shop's business.
+  const refunds = await getPrisma().refund.findMany({
+    where: {
+      orderId: order.id,
+      status: { in: ['PENDING', 'REQUIRES_ACTION', 'SUCCEEDED'] },
+    },
+    orderBy: { createdAt: 'asc' },
+    select: {
+      id: true,
+      amount: true,
+      status: true,
+      succeededAt: true,
+      createdAt: true,
+    },
+  });
   return (
     <main id="contenu" className={styles.main}>
       <Container>
@@ -92,6 +113,24 @@ export default async function OrderPage({
                 publicId={publicId}
                 status={order.status}
               />
+            )}
+            {refunds.length > 0 && (
+              <div className={styles.refunds} role="status">
+                <h3>Remboursements</h3>
+                <ul>
+                  {refunds.map((refund) => (
+                    <li key={refund.id}>
+                      {refund.status === 'SUCCEEDED'
+                        ? `${formatPrice(refund.amount.toFixed(2))} remboursés le ${refundDate.format(refund.succeededAt ?? refund.createdAt)}`
+                        : `${formatPrice(refund.amount.toFixed(2))} en cours de remboursement`}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Le montant revient sur le moyen de paiement utilisé, sous 5 à
+                  10 jours ouvrés selon votre banque.
+                </p>
+              </div>
             )}
             <div className={styles.actions}>
               {['PENDING_PAYMENT', 'PAYMENT_FAILED'].includes(order.status) && (

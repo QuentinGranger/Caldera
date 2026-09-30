@@ -35,7 +35,7 @@ export async function getBusinessPilotage() {
     status: 'PAID' as const,
     ...(trackingStartDate ? { paidAt: { gte: trackingStartDate } } : {}),
   };
-  const [items, variants, productOptions] = await Promise.all([
+  const [rawItems, variants, productOptions, refunds] = await Promise.all([
     db.orderItem.findMany({
       where: { order: orderWhere },
       select: {
@@ -45,6 +45,14 @@ export async function getBusinessPilotage() {
         unitCost: true,
         quantity: true,
         order: { select: { paidAt: true } },
+        refundItems: {
+          where: { refund: { status: 'SUCCEEDED' } },
+          select: {
+            amount: true,
+            quantity: true,
+            refund: { select: { restockedAt: true } },
+          },
+        },
       },
     }),
     db.productVariant.findMany({
@@ -68,7 +76,44 @@ export async function getBusinessPilotage() {
       select: { id: true, name: true, productType: true, status: true },
       orderBy: [{ name: 'asc' }, { id: 'asc' }],
     }),
+    db.refund.findMany({
+      where: { status: 'SUCCEEDED', order: orderWhere },
+      select: {
+        amount: true,
+        shippingAmount: true,
+        items: { select: { amount: true } },
+      },
+    }),
   ]);
+
+  // Revenue net of refunds. Items put back in stock are no longer sold (nor
+  // their cost spent); refunded but lost ones still cost their purchase price.
+  const items = rawItems.map((item) => {
+    const returned = item.refundItems.reduce(
+      (sum, refund) => sum + (refund.refund.restockedAt ? refund.quantity : 0),
+      0,
+    );
+    return {
+      ...item,
+      lineTotal:
+        number(item.lineTotal) -
+        item.refundItems.reduce((sum, refund) => sum + number(refund.amount), 0),
+      quantity: item.quantity - returned,
+    };
+  });
+  // A goodwill refund without items: taken off the revenue and the margin.
+  const goodwill = refunds.reduce(
+    (sum, refund) =>
+      sum +
+      number(refund.amount) -
+      number(refund.shippingAmount) -
+      refund.items.reduce((total, item) => total + number(item.amount), 0),
+    0,
+  );
+  const refunded = refunds.reduce(
+    (sum, refund) => sum + number(refund.amount),
+    0,
+  );
 
   const settings = {
     revenueTarget: stored?.revenueTarget.toFixed(2) ?? '10000.00',
@@ -95,6 +140,8 @@ export async function getBusinessPilotage() {
     if (item.order.paidAt && item.order.paidAt.getTime() >= since30)
       soldUnits30 += item.quantity;
   }
+  revenue -= goodwill;
+  if (coveredRevenue > 0) coveredRevenue = Math.max(0, coveredRevenue - goodwill);
 
   let stockValue = 0;
   let stockUnits = 0;
@@ -167,6 +214,7 @@ export async function getBusinessPilotage() {
     launchProducts,
     metrics: {
       revenue,
+      refunded,
       revenueTarget: target,
       targetProgress: percent(revenue, target),
       coveredRevenue,

@@ -11,6 +11,7 @@ import {
 } from '@/lib/admin/validation';
 import { lockOrder } from '@/lib/orders/common';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
+import { refundState } from '@/lib/refunds/amounts';
 import { carriers, validTrackingUrl } from './carriers';
 const nextStatus: Partial<Record<FulfillmentStatus, FulfillmentStatus>> = {
   UNFULFILLED: 'PREPARING',
@@ -53,6 +54,31 @@ export async function transitionFulfillment(adminId: string, form: FormData) {
     const order = await paidOrder(tx, orderId);
     if (order.fulfillmentStatus === next) return order;
     validateFulfillmentTransition(order.fulfillmentStatus, next);
+    // A fully refunded order is never prepared nor sent (delivery may still
+    // be confirmed for a parcel already on its way).
+    if (next !== 'DELIVERED' && order.payment) {
+      const refunds = await tx.refund.findMany({
+        where: { orderId },
+        select: {
+          amount: true,
+          shippingAmount: true,
+          status: true,
+          items: { select: { orderItemId: true, quantity: true } },
+        },
+      });
+      if (
+        refundState(
+          {
+            amount: order.payment.amount.toFixed(2),
+            shipping: order.shippingAmount.toFixed(2),
+          },
+          refunds,
+        ).full
+      )
+        throw new AdminError(
+          'Cette commande est intégralement remboursée : elle ne doit plus être préparée ni expédiée.',
+        );
+    }
     const now = new Date();
     if (next === 'SHIPPED' || next === 'DELIVERED') {
       const shipment = await tx.shipment.findFirst({

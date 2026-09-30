@@ -14,6 +14,7 @@ import {
   FilterSelect,
 } from '@/components/admin/AdminUI';
 import styles from '@/components/admin/Admin.module.scss';
+import { toCents } from '@/lib/refunds/amounts';
 export default async function OrdersPage({
   searchParams,
 }: {
@@ -182,6 +183,18 @@ export default async function OrdersPage({
               <td>{order.email}</td>
               <td>
                 <Badge value={order.status} />
+                {order.refunds.length > 0 && order.payment && (
+                  <Badge
+                    value={
+                      order.refunds.reduce(
+                        (sum, refund) => sum + toCents(refund.amount),
+                        0,
+                      ) >= toCents(order.payment.amount)
+                        ? 'REFUNDED'
+                        : 'PARTIALLY_REFUNDED'
+                    }
+                  />
+                )}
               </td>
               <td>
                 {order.payment ? <Badge value={order.payment.status} /> : '—'}

@@ -12,6 +12,7 @@ for (const key of [
   'EMAILS_ENABLED',
   'EMAIL_FROM',
   'EMAIL_TEST_RECIPIENT',
+  'STRIPE_SECRET_KEY',
 ])
   delete process.env[key];
 const secret = 'cron_local_unit_test_only';
@@ -121,6 +122,8 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
     [
       { ok: false, job: 'expire-reservations', action: 'job_failed' },
       { ok: false, job: 'process-emails', action: 'job_failed' },
+      // Without a Stripe key nothing is read nor sent.
+      { ok: true, job: 'sync-refunds', action: 'job_completed' },
     ],
   );
   // Tâches concurrentes : l’ordre des lignes de log n’est pas garanti.

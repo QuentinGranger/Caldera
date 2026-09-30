@@ -427,7 +427,13 @@ export async function getAdminOrders(params: SearchParams) {
         totalAmount: true,
         shippingMethodName: true,
         fulfillmentStatus: true,
-        payment: { select: { status: true } },
+        payment: { select: { status: true, amount: true } },
+        refunds: {
+          where: {
+            status: { in: ['PENDING', 'REQUIRES_ACTION', 'SUCCEEDED'] },
+          },
+          select: { amount: true },
+        },
         _count: { select: { items: true } },
       },
     }),
@@ -466,6 +472,20 @@ export async function getAdminOrder(id: string) {
       reservations: {
         include: { variant: { select: { sku: true } } },
         orderBy: { createdAt: 'asc' },
+      },
+      refunds: {
+        orderBy: { createdAt: 'asc' },
+        include: {
+          createdBy: { select: { name: true } },
+          items: {
+            select: {
+              orderItemId: true,
+              quantity: true,
+              amount: true,
+              orderItem: { select: { productName: true } },
+            },
+          },
+        },
       },
     },
   });

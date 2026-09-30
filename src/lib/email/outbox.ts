@@ -1,12 +1,31 @@
 import 'server-only';
 import type { Prisma, EmailType } from '@/generated/prisma/client';
+
+/** What a refund e-mail tells: amount, shipping part and refunded lines. */
+export type RefundEmailInput = {
+  id: string;
+  amount: string;
+  shippingAmount: string;
+  items: { name: string; quantity: number; amount: string }[];
+};
+
+/**
+ * One e-mail per event: per (order, type), and per refund for ORDER_REFUNDED
+ * (several partial refunds may follow each other).
+ */
 export async function enqueueOrderEmail(
   tx: Prisma.TransactionClient,
   orderId: string,
   type: EmailType,
+  refund?: RefundEmailInput,
 ) {
+  if ((type === 'ORDER_REFUNDED') !== Boolean(refund))
+    throw new Error('Un e-mail de remboursement décrit un remboursement.');
+  const dedupeKey = refund
+    ? `${orderId}:${type}:${refund.id}`
+    : `${orderId}:${type}`;
   const existing = await tx.emailDelivery.findUnique({
-    where: { orderId_type: { orderId, type } },
+    where: { dedupeKey },
   });
   if (existing) return existing;
   const order = await tx.order.findUniqueOrThrow({
@@ -62,8 +81,17 @@ export async function enqueueOrderEmail(
             trackingUrl: shipment.trackingUrl,
           }
         : null,
+    ...(refund
+      ? {
+          refund: {
+            amount: refund.amount,
+            shipping: refund.shippingAmount,
+            items: refund.items,
+          },
+        }
+      : {}),
   };
   return tx.emailDelivery.create({
-    data: { orderId, type, recipient: order.email, snapshot },
+    data: { orderId, type, dedupeKey, recipient: order.email, snapshot },
   });
 }

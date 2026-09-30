@@ -37,6 +37,8 @@ export default async function PilotagePage() {
           <strong>{euros(metrics.revenue)}</strong>
           <small>
             Objectif {euros(metrics.revenueTarget)} · {metrics.targetProgress.toFixed(1)} %
+            {metrics.refunded > 0 &&
+              ` · remboursements : ${euros(metrics.refunded)}`}
           </small>
           <progress
             value={targetProgress}

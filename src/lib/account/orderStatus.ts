@@ -14,15 +14,34 @@ export const ORDER_STEPS = [
   'Livrée',
 ] as const;
 
-export function orderStatus(order: {
-  status: string;
-  fulfillmentStatus: string;
-}): {
+type OrderStatus = {
   label: string;
   tone: OrderTone;
   /** Index in ORDER_STEPS, or null when the order is not following them. */
   step: number | null;
-} {
+};
+
+/**
+ * `refund`: 'full' when nothing is left to refund (the order stops there),
+ * 'partial' when some of it was refunded and the rest still follows its course.
+ */
+export function orderStatus(order: {
+  status: string;
+  fulfillmentStatus: string;
+  refund?: 'full' | 'partial' | null;
+}): OrderStatus {
+  if (order.refund === 'full')
+    return { label: 'Remboursée', tone: 'cancelled', step: null };
+  const status = paymentOrFulfillment(order);
+  return order.refund === 'partial'
+    ? { ...status, label: `${status.label} · remboursement partiel` }
+    : status;
+}
+
+function paymentOrFulfillment(order: {
+  status: string;
+  fulfillmentStatus: string;
+}): OrderStatus {
   if (order.status === 'PAYMENT_PROCESSING')
     return { label: 'Paiement en cours', tone: 'payment', step: null };
   if (order.status === 'PAYMENT_REVIEW')

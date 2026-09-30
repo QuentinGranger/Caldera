@@ -2,6 +2,9 @@ import 'server-only';
 import { processPendingEmails } from '@/lib/email/processor';
 import { processNewsletterDeliveries } from '@/lib/newsletter/processor';
 import { processStockAlerts } from '@/lib/stock-alerts/processor';
+import type { RefundGateway } from '@/lib/refunds/gateway';
+import { syncRefunds } from '@/lib/refunds/service';
+import { stripeMode } from '@/lib/stripe/stripe';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
@@ -10,11 +13,16 @@ import type { PaymentGateway } from '@/lib/stripe/stripe';
 export const maintenanceJobs = [
   'expire-reservations',
   'process-emails',
+  'sync-refunds',
 ] as const;
 
 export type MaintenanceJob = (typeof maintenanceJobs)[number];
 
-type Dependencies = { gateway?: PaymentGateway; provider?: EmailProvider };
+type Dependencies = {
+  gateway?: PaymentGateway;
+  provider?: EmailProvider;
+  refunds?: RefundGateway;
+};
 
 // Bounded batches: a missed, duplicated or interrupted run is caught up by the next one.
 const tasks: Record<
@@ -52,6 +60,13 @@ const tasks: Record<
         stockAlertsQuotaLimited: alerts.quotaLimited,
       },
     };
+  },
+  // Refunds Stripe has not confirmed yet (missed webhook, no answer).
+  'sync-refunds': async ({ refunds }) => {
+    if (!refunds && !stripeMode())
+      return { ok: true, counts: { disabled: true, synced: 0, failed: 0 } };
+    const counts = await syncRefunds({ gateway: refunds });
+    return { ok: counts.failed === 0, counts: { disabled: false, ...counts } };
   },
 };
 

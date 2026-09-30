@@ -399,6 +399,7 @@ model Order {
   addresses            OrderAddress[]
   payment              Payment?
   reservations         StockReservation[]
+  refunds              Refund[]
 
   @@index([status])
   @@index([fulfillmentStatus, paidAt])
@@ -424,6 +425,8 @@ model OrderItem {
   lineTotal   Decimal         @db.Decimal(10, 2)
   imageUrl    String
   createdAt   DateTime        @default(now())
+
+  refundItems RefundItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -462,6 +465,7 @@ model Payment {
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt
   paidAt                  DateTime?
+  refunds                 Refund[]
 }
 
 model StockReservation {
@@ -518,6 +522,7 @@ model AdminUser {
   adjustments         InventoryAdjustment[]
   auditLogs           AdminAuditLog[]
   newsletterCampaigns NewsletterCampaign[]
+  refunds             Refund[]
 }
 
 model AdminSession {
@@ -746,6 +751,7 @@ enum ShipmentStatus {
 enum EmailType {
   ORDER_CONFIRMATION
   ORDER_SHIPPED
+  ORDER_REFUNDED
 }
 
 enum EmailStatus {
@@ -798,7 +804,10 @@ model EmailDelivery {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
-  @@unique([orderId, type])
+  /// « orderId:TYPE », or « orderId:ORDER_REFUNDED:refundId »: one e-mail per event.
+  dedupeKey         String      @unique
+
+  @@index([orderId, type])
   @@index([status, nextAttemptAt])
   @@index([leaseUntil])
   @@index([type])
@@ -944,3 +953,76 @@ model StockAlert {
   @@index([confirmationExpiresAt])
 }
 
+enum RefundStatus {
+  /// Recorded, sent or about to be sent to Stripe, not settled yet.
+  PENDING
+  /// Stripe needs the customer (rare for cards).
+  REQUIRES_ACTION
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+enum RefundReason {
+  CUSTOMER_REQUEST
+  RETURN_RECEIVED
+  DAMAGED
+  MISSING_ITEM
+  OUT_OF_STOCK
+  DUPLICATE
+  FRAUD
+  OTHER
+}
+
+/// Refund of a paid order through Stripe (src/lib/refunds). Several partial
+/// refunds may follow each other; together they never exceed the payment.
+model Refund {
+  id               String       @id @default(uuid()) @db.Uuid
+  orderId          String       @db.Uuid
+  order            Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  paymentId        String       @db.Uuid
+  payment          Payment      @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  amount           Decimal      @db.Decimal(10, 2)
+  /// Part of `amount` refunding the shipping costs.
+  shippingAmount   Decimal      @default(0) @db.Decimal(10, 2)
+  currency         String       @db.Char(3)
+  reason           RefundReason
+  /// Internal note, never shown to the customer.
+  note             String?      @db.Text
+  status           RefundStatus @default(PENDING)
+  providerRefundId String?      @unique
+  failureReason    String?
+  /// Refunded items go back on sale once the refund succeeds.
+  restock          Boolean      @default(false)
+  restockedAt      DateTime?
+  /// Side effects (restock, e-mail, audit) applied exactly once.
+  settledAt        DateTime?
+  succeededAt      DateTime?
+  /// Null when the refund was made directly in the Stripe Dashboard.
+  createdById      String?      @db.Uuid
+  createdBy        AdminUser?   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  /// One key per form display: a double submission creates one refund.
+  idempotencyKey   String       @unique
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  items            RefundItem[]
+
+  @@index([orderId, createdAt])
+  @@index([status, updatedAt])
+  @@index([paymentId])
+  @@index([createdById])
+}
+
+model RefundItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  refundId    String    @db.Uuid
+  refund      Refund    @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  orderItemId String    @db.Uuid
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  quantity    Int
+  /// Share of the refund allocated to this line (euros).
+  amount      Decimal   @db.Decimal(10, 2)
+
+  @@unique([refundId, orderItemId])
+  @@index([orderItemId])
+}

@@ -1,4 +1,14 @@
+import { randomUUID } from 'node:crypto';
 import { FulfillmentPanel } from '@/components/admin/FulfillmentPanel';
+import { RefundForm } from '@/components/admin/RefundForm';
+import { syncOrderRefundsAction } from '@/lib/refunds/admin-actions';
+import {
+  fromCents,
+  refundFailureLabel,
+  refundReasonLabels,
+  refundState,
+  toCents,
+} from '@/lib/refunds/amounts';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -28,6 +38,26 @@ export default async function OrderAdminPage({
     (payment?.status !== 'SUCCEEDED' ||
       order.reservations.some((item) => item.status !== 'CONSUMED') ||
       !order.reservations.length);
+  const refunds = payment
+    ? refundState(
+        {
+          amount: payment.amount.toFixed(2),
+          shipping: order.shippingAmount.toFixed(2),
+        },
+        order.refunds,
+      )
+    : null;
+  const refundable = Boolean(
+    order.status === 'PAID' &&
+    payment?.status === 'SUCCEEDED' &&
+    payment.providerPaymentIntentId &&
+    refunds?.remainingCents,
+  );
+  const unsynced = order.refunds.some(
+    (refund) =>
+      refund.status === 'PENDING' || refund.status === 'REQUIRES_ACTION',
+  );
+  const centsLabel = (cents: number) => euros(fromCents(cents));
   const timeline = [
     { date: order.createdAt, text: 'Commande créée' },
     ...(payment
@@ -46,6 +76,10 @@ export default async function OrderAdminPage({
       date: reservation.updatedAt,
       text: `Réservation ${reservation.variant.sku} : ${label(reservation.status)}`,
     })),
+    ...order.refunds.map((refund) => ({
+      date: refund.succeededAt ?? refund.updatedAt,
+      text: `Remboursement de ${euros(refund.amount)} : ${label(refund.status)}`,
+    })),
   ].sort((a, b) => a.date.getTime() - b.date.getTime());
   return (
     <>
@@ -55,6 +89,8 @@ export default async function OrderAdminPage({
       >
         <div className={styles.inline}>
           <Badge value={order.status} />
+          {refunds?.full && <Badge value="REFUNDED" />}
+          {refunds?.partial && <Badge value="PARTIALLY_REFUNDED" />}
           <CopyButton value={order.orderNumber} label="le numéro de commande" />
           <Link href="/admin/commandes">Retour aux commandes</Link>
         </div>
@@ -207,11 +243,6 @@ export default async function OrderAdminPage({
         ) : (
           <p>Aucun paiement associé.</p>
         )}
-        {order.status === 'PAID' && (
-          <p className={styles.muted}>
-            Le remboursement sera implémenté ultérieurement.
-          </p>
-        )}
         {(order.status === 'PENDING_PAYMENT' ||
           order.status === 'PAYMENT_FAILED') && (
           <AdminForm
@@ -221,6 +252,129 @@ export default async function OrderAdminPage({
           >
             <Hidden name="id" value={order.id} />
           </AdminForm>
+        )}
+      </section>
+      <section className={styles.card} id="remboursements">
+        <h2>Remboursements</h2>
+        {refunds && payment ? (
+          <p>
+            Payé : <strong>{euros(payment.amount)}</strong> · remboursé :{' '}
+            <strong>{centsLabel(refunds.refundedCents)}</strong>
+            {refunds.pendingCents > 0 &&
+              ` · en cours : ${centsLabel(refunds.pendingCents)}`}{' '}
+            · reste remboursable :{' '}
+            <strong>{centsLabel(refunds.remainingCents)}</strong>
+          </p>
+        ) : (
+          <p className={styles.muted}>Aucun paiement à rembourser.</p>
+        )}
+        {refunds?.full &&
+          order.fulfillmentStatus !== 'SHIPPED' &&
+          order.fulfillmentStatus !== 'DELIVERED' && (
+            <IntegrityWarning>
+              Commande intégralement remboursée : elle ne doit plus être
+              préparée ni expédiée.
+            </IntegrityWarning>
+          )}
+        {order.refunds.length > 0 && (
+          <AdminTable
+            caption="Historique des remboursements"
+            headings={[
+              'Date',
+              'Montant',
+              'Motif',
+              'Statut',
+              'Détail',
+              'Stripe',
+            ]}
+          >
+            {order.refunds.map((refund) => (
+              <tr key={refund.id}>
+                <td>
+                  {formatDate(refund.createdAt)}
+                  <small>{refund.createdBy?.name ?? 'Dashboard Stripe'}</small>
+                </td>
+                <td>
+                  <strong>{euros(refund.amount)}</strong>
+                </td>
+                <td>{refundReasonLabels[refund.reason]}</td>
+                <td>
+                  <Badge value={refund.status} />
+                  {refund.failureReason && (
+                    <small title={refund.failureReason}>
+                      {refundFailureLabel(refund.failureReason)}
+                    </small>
+                  )}
+                </td>
+                <td>
+                  {refund.items.map((item) => (
+                    <small key={item.orderItemId}>
+                      {item.quantity} × {item.orderItem.productName} ·{' '}
+                      {euros(item.amount)}
+                    </small>
+                  ))}
+                  {toCents(refund.shippingAmount) > 0 && (
+                    <small>Livraison · {euros(refund.shippingAmount)}</small>
+                  )}
+                  {refund.restock && (
+                    <small>
+                      {refund.restockedAt
+                        ? 'Remis en stock'
+                        : 'Remise en stock à la confirmation'}
+                    </small>
+                  )}
+                  {refund.note && <small>Note : {refund.note}</small>}
+                </td>
+                <td>
+                  {refund.providerRefundId ? (
+                    <div className={styles.inline}>
+                      <code>{refund.providerRefundId}</code>
+                      <CopyButton
+                        value={refund.providerRefundId}
+                        label="le remboursement Stripe"
+                      />
+                    </div>
+                  ) : (
+                    <small>
+                      {refund.status === 'PENDING'
+                        ? 'En attente de Stripe'
+                        : 'Non transmis à Stripe'}
+                    </small>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </AdminTable>
+        )}
+        {unsynced && (
+          <AdminForm
+            action={syncOrderRefundsAction}
+            submit="Synchroniser avec Stripe"
+          >
+            <Hidden name="id" value={order.id} />
+          </AdminForm>
+        )}
+        {refundable && refunds && (
+          <details open={!order.refunds.length}>
+            <summary>Rembourser</summary>
+            <RefundForm
+              key={order.updatedAt.toISOString()}
+              orderId={order.id}
+              idempotencyKey={randomUUID()}
+              shippingCents={refunds.shippingRemainingCents}
+              remainingCents={refunds.remainingCents}
+              lines={order.items.map((item) => ({
+                id: item.id,
+                name: item.productName,
+                sku: item.sku,
+                unitCents: toCents(item.unitPrice),
+                left:
+                  item.quantity -
+                  (refunds.refundedQuantities.get(item.id) ?? 0),
+                restockable: Boolean(item.variantId),
+              }))}
+            />
+          </details>
         )}
       </section>
       <section className={styles.card}>

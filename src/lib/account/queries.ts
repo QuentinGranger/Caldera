@@ -2,6 +2,7 @@ import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { orderAccessUrl } from '@/lib/orders/access';
+import { refundState } from '@/lib/refunds/amounts';
 import { emptyAddress, type AddressValues } from '@/lib/checkout/types';
 import type { CurrentCustomer } from './auth';
 import { orderStatus, type OrderTone } from './orderStatus';
@@ -74,7 +75,17 @@ export async function getCustomerOrders(
         select: { productName: true, quantity: true, imageUrl: true },
         orderBy: { createdAt: 'asc' },
       },
-      payment: { select: { status: true } },
+      payment: { select: { status: true, amount: true } },
+      shippingAmount: true,
+      refunds: {
+        where: { status: { in: ['PENDING', 'REQUIRES_ACTION', 'SUCCEEDED'] } },
+        select: {
+          amount: true,
+          shippingAmount: true,
+          status: true,
+          items: { select: { orderItemId: true, quantity: true } },
+        },
+      },
     },
   });
   return orders.map((order) => {
@@ -83,9 +94,21 @@ export async function getCustomerOrders(
     const viewable =
       order.status === 'PAID' && order.payment?.status === 'SUCCEEDED';
     const url = viewable ? new URL(orderAccessUrl(order.publicId)) : null;
+    const refunds = order.refunds.length
+      ? refundState(
+          {
+            amount: (order.payment?.amount ?? order.totalAmount).toFixed(2),
+            shipping: order.shippingAmount.toFixed(2),
+          },
+          order.refunds,
+        )
+      : null;
     return {
       orderNumber: order.orderNumber,
-      ...orderStatus(order),
+      ...orderStatus({
+        ...order,
+        refund: refunds?.full ? 'full' : refunds?.partial ? 'partial' : null,
+      }),
       items: order.items.map((item) => ({
         name: item.productName,
         quantity: item.quantity,
