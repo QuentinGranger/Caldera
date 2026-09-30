@@ -7,10 +7,12 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
   prettier,
+  // Build output wherever it sits, and agent folders: their git worktrees
+  // are other checkouts, each with its own .next build and config.
   globalIgnores([
-    '.next/**',
-    '.claude/worktrees/**',
-    '.codex/worktrees/**',
+    '**/.next/**',
+    '.claude/**',
+    '.codex/**',
     'src/generated/**',
     'next-env.d.ts',
   ]),
