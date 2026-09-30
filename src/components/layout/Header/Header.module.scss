@@ -19,8 +19,9 @@
     animation-timeline: scroll(root);
     animation-range: 12vh 62vh;
   }
-  // A menu or the search is open: solid at once, whatever the scroll.
-  :global(body:has([data-home-hero])) .header:has([aria-expanded='true']) {
+  // The mobile menu is open: solid at once, whatever the scroll.
+  :global(body:has([data-home-hero]))
+    .header:has([aria-controls='mobile-navigation'][aria-expanded='true']) {
     animation: none;
   }
 }

@@ -61,24 +61,67 @@
   }
 }
 
-.mainLinks .subLinks {
+// A game: the same line as the other entries, opening onto its families.
+.accordion {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0 1.1rem;
-  margin: -0.35rem 0 0;
-  padding: 0 0 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.75rem 0;
+  border: 0;
+  background: none;
+  color: v.$color-text-on-dark;
+  font-family: v.$font-heading;
+  font-size: 1.55rem;
+  text-align: left;
+  cursor: pointer;
+  svg {
+    color: v.$color-gold-light;
+    transition: transform v.$duration-short v.$ease-out;
+  }
+  &[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+}
+// Height animated through the grid row, from 0fr to 1fr.
+.accordionPanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms v.$ease-out;
+  .accordion[aria-expanded='true'] + & {
+    grid-template-rows: 1fr;
+  }
+}
+.mainLinks .accordionLinks {
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 1px solid rgb(232 194 97 / 28%);
   list-style: none;
-
   li {
     border-bottom: 0;
   }
-
+  li:last-child {
+    padding-bottom: 0.9rem;
+  }
   a {
-    min-height: 40px;
-    padding-block: 0.5rem;
-    color: v.$color-muted-on-dark;
+    justify-content: flex-start;
+    min-height: 44px;
+    padding-block: 0.55rem;
+    color: rgb(251 244 223 / 82%);
     font-family: v.$font-body;
-    font-size: 0.8rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  // The whole game first, a little ahead of its families.
+  li:first-child a,
+  a[aria-current='page'] {
+    color: v.$color-gold-light;
+  }
+  li:first-child a {
+    font-weight: 600;
   }
 }
 

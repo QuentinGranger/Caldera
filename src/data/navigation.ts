@@ -21,6 +21,8 @@ import { isShopGame } from '@/lib/catalog/shopGame';
 export interface NavLink {
   href: string;
   label: string;
+  /** Without the game's name, under a menu that already shows it. */
+  shortLabel?: string;
 }
 export interface NavGroup {
   title: string;
@@ -40,7 +42,10 @@ export interface SiteNavigation {
    * families. Other games of the catalogue stay out of the menus.
    */
   games: NavItem[];
-  /** Indexable multi-game family hubs, by short name (« Accessoires »). */
+  /**
+   * Indexable multi-game family hubs the licence sold does not cover, by
+   * short name (« Accessoires »).
+   */
   productTypes: NavLink[];
   /** /catalogue: always reachable, even before it has enough products to be indexed. */
   catalogue: NavLink;
@@ -68,10 +73,13 @@ const LISTING_ORDER: readonly Exclude<ListingKind, 'catalogue'>[] = [
 /** A family then its descendants, depth first: menus show two levels. */
 function flattenFamilies(families: readonly NavigationFamily[]): NavLink[] {
   return families.flatMap((family) => [
-    { href: family.href, label: family.label },
+    { href: family.href, label: family.label, shortLabel: family.name },
     ...flattenFamilies(family.children),
   ]);
 }
+
+const familySlugs = (families: readonly NavigationFamily[]): string[] =>
+  families.flatMap((family) => [family.slug, ...familySlugs(family.children)]);
 
 /** Pure part of getSiteNavigation. */
 export function buildSiteNavigation(
@@ -86,24 +94,26 @@ export function buildSiteNavigation(
     href: LISTING_HUBS[kind].path,
     label: LISTING_HUBS[kind].label,
   });
+  const games = navigation.games.filter((game) => isShopGame([game.slug]));
+  // A family the licence sold covers is reached through its menu; the
+  // multi-game page only for the others (licence-free products).
+  const covered = new Set(games.flatMap((game) => familySlugs(game.families)));
   return {
-    games: navigation.games
-      .filter((game) => isShopGame([game.slug]))
-      .map((game) => {
-        const label = game.shortName?.trim() || game.name;
-        const families = flattenFamilies(game.families);
-        return {
-          href: game.href,
-          label,
-          children: families.length
-            ? [{ href: game.href, label: `Tout ${label}` }, ...families]
-            : [],
-        };
-      }),
-    productTypes: navigation.categoryHubs.map((family) => ({
-      href: family.href,
-      label: family.name,
-    })),
+    games: games.map((game) => {
+      const label = game.shortName?.trim() || game.name;
+      const families = flattenFamilies(game.families);
+      return {
+        href: game.href,
+        label,
+        // The game itself first: menus show it as their main entry.
+        children: families.length
+          ? [{ href: game.href, label: `Tout ${label}` }, ...families]
+          : [],
+      };
+    }),
+    productTypes: navigation.categoryHubs
+      .filter((family) => !covered.has(family.slug))
+      .map((family) => ({ href: family.href, label: family.name })),
     catalogue: {
       href: LISTING_HUBS.catalogue.path,
       label: 'Tout le catalogue',

@@ -1,11 +1,61 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Menu, X } from 'lucide-react';
-import type { NavLink, SiteNavigation } from '@/data/navigation';
+import { usePathname } from 'next/navigation';
+import { ArrowRight, ArrowUpRight, ChevronDown, Menu, X } from 'lucide-react';
+import type { NavItem, NavLink, SiteNavigation } from '@/data/navigation';
 import { universeChapters } from '@/data/universe';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import styles from './MobileNavigation.module.scss';
+
+/**
+ * A game as an accordion: its name opens the whole game and its families,
+ * by short name. Open from the start on one of its pages.
+ */
+function GameAccordion({
+  game,
+  onNavigate,
+}: {
+  game: NavItem;
+  onNavigate: () => void;
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(() =>
+    game.children.some(
+      ({ href }) => pathname === href || pathname.startsWith(`${href}/`),
+    ),
+  );
+  const id = useId();
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.accordion}
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen(!open)}
+      >
+        {game.label}
+        <ChevronDown size={20} aria-hidden="true" />
+      </button>
+      <div id={id} className={styles.accordionPanel} inert={!open}>
+        <ul className={styles.accordionLinks}>
+          {game.children.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                onClick={onNavigate}
+                aria-current={pathname === link.href ? 'page' : undefined}
+              >
+                {link.shortLabel ?? link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
 
 export function MobileNavigation({
   navigation,
@@ -113,24 +163,13 @@ export function MobileNavigation({
             </li>
             {navigation.games.map((game) => (
               <li key={game.href}>
-                <Link href={game.href} onClick={close}>
-                  {game.label}
-                  <ArrowUpRight size={17} aria-hidden="true" />
-                </Link>
-                {game.children.length > 0 && (
-                  <ul
-                    className={styles.subLinks}
-                    aria-label={`Familles ${game.label}`}
-                  >
-                    {/* The game link above already opens all its products. */}
-                    {game.children.slice(1).map((family) => (
-                      <li key={family.href}>
-                        <Link href={family.href} onClick={close}>
-                          {family.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                {game.children.length > 0 ? (
+                  <GameAccordion game={game} onNavigate={close} />
+                ) : (
+                  <Link href={game.href} onClick={close}>
+                    {game.label}
+                    <ArrowUpRight size={17} aria-hidden="true" />
+                  </Link>
                 )}
               </li>
             ))}

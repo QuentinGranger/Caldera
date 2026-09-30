@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import type { NavItem, NavLink } from '@/data/navigation';
 import styles from './Navigation.module.scss';
 
@@ -18,6 +18,41 @@ function isCurrent(pathname: string, item: NavItem) {
     ...(item.groups ?? []).flatMap((group) => group.links),
   ];
   return links.some((link) => within(pathname, link.href));
+}
+
+/**
+ * A game's menu, floating under the header: the whole game first, then its
+ * families side by side. `links[0]` is the game itself (buildSiteNavigation).
+ */
+function Dropdown({ links, pathname }: { links: NavLink[]; pathname: string }) {
+  const [all, ...families] = links;
+  if (!all) return null;
+  return (
+    <div className={styles.dropdown}>
+      <Link
+        href={all.href}
+        className={styles.featured}
+        aria-current={pathname === all.href ? 'page' : undefined}
+      >
+        <span>{all.label}</span>
+        <ArrowRight size={18} aria-hidden="true" />
+      </Link>
+      {families.length > 0 && (
+        <ul className={styles.families}>
+          {families.map((family) => (
+            <li key={family.href}>
+              <Link
+                href={family.href}
+                aria-current={pathname === family.href ? 'page' : undefined}
+              >
+                <span>{family.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 // Sub-links are real links in the HTML, revealed on hover and keyboard focus.
@@ -76,20 +111,7 @@ export function Navigation({ items }: { items: NavItem[] }) {
                 </div>
               ) : (
                 item.children.length > 0 && (
-                  <ul className={styles.submenu}>
-                    {item.children.map((child) => (
-                      <li key={child.href}>
-                        <Link
-                          href={child.href}
-                          aria-current={
-                            pathname === child.href ? 'page' : undefined
-                          }
-                        >
-                          {child.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                  <Dropdown links={item.children} pathname={pathname} />
                 )
               )}
             </li>

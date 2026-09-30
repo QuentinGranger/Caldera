@@ -88,3 +88,44 @@ test('menus : les autres jeux du catalogue restent hors des menus', () => {
     ['/pokemon'],
   );
 });
+
+test('menus : une famille couverte par Pokémon passe par son menu, pas par la page multi-jeux', () => {
+  const site = buildSiteNavigation(
+    {
+      games: [
+        {
+          slug: 'pokemon',
+          name: 'Pokémon',
+          shortName: null,
+          href: '/pokemon',
+          count: 20,
+          families: [
+            {
+              ...family('scelles', 'Produits scellés'),
+              href: '/pokemon/scelles',
+              children: [
+                {
+                  ...family('boosters', 'Boosters'),
+                  href: '/pokemon/boosters',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      categoryHubs: [
+        family('scelles', 'Produits scellés'),
+        family('accessoires', 'Accessoires'),
+      ],
+    },
+    new Set(),
+  );
+  assert.deepEqual(site.productTypes, [
+    { href: '/categorie/accessoires', label: 'Accessoires' },
+  ]);
+  // Short names for the menus that already name the game.
+  assert.deepEqual(
+    site.games[0]!.children.map((link) => link.shortLabel ?? link.label),
+    ['Tout Pokémon', 'Produits scellés', 'Boosters'],
+  );
+});
