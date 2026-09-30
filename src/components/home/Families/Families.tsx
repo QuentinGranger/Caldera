@@ -18,15 +18,10 @@ const products = (count: number) => `${count} produit${count > 1 ? 's' : ''}`;
  * What Caldera sells, right after the hero and in its night: the families
  * that have products, the first one given the most room.
  */
-export function Families({
-  families,
-  total,
-}: {
-  families: HomeFamily[];
-  /** Visible products of the whole catalogue. */
-  total: number;
-}) {
+export function Families({ families }: { families: HomeFamily[] }) {
   if (!families.length) return null;
+  // Root families never overlap: their counts add up.
+  const total = families.reduce((sum, family) => sum + family.count, 0);
   const names = families.map((family, index) =>
     index ? inSentence(family.name) : family.name,
   );
@@ -38,7 +33,7 @@ export function Families({
     >
       <div className={styles.inner}>
         <header className={styles.head} data-reveal="">
-          <p className={styles.eyebrow}>Ce que l’on trouve à Caldera</p>
+          <p className={styles.eyebrow}>Le Pokémon TCG à Caldera</p>
           <h2 id="families-title">
             Des pièces à ouvrir, <em>d’autres à garder.</em>
           </h2>

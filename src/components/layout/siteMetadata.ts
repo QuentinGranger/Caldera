@@ -7,12 +7,12 @@ import { absoluteUrl, siteOrigin } from '@/lib/site';
 
 /** Home title, and the title of any page without its own. */
 export const DEFAULT_TITLE =
-  'Les Terres de Caldera – boutique de cartes Pokémon et JCC';
+  'Les Terres de Caldera – boutique de cartes Pokémon';
 /** Added by the layout: page titles never repeat the brand. */
 export const TITLE_TEMPLATE = '%s | Caldera';
 
 // Delivery zone and preparation time from the CGV (art. 10.1 and 10.3).
-export const DEFAULT_DESCRIPTION = `Boutique en ligne de cartes Pokémon et de JCC. Livraison en France métropolitaine, commandes préparées sous ${HANDLING_TIME.minDays} à ${HANDLING_TIME.maxDays} jours ouvrés après paiement.`;
+export const DEFAULT_DESCRIPTION = `Boutique en ligne de cartes Pokémon. Livraison en France métropolitaine, commandes préparées sous ${HANDLING_TIME.minDays} à ${HANDLING_TIME.maxDays} jours ouvrés après paiement.`;
 
 export function rootMetadata(): Metadata {
   const image = {

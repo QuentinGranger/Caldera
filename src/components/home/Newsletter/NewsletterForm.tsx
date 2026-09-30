@@ -48,7 +48,7 @@ export function NewsletterForm() {
             }
           />
           <Button variant="gold" type="submit">
-            {pending ? 'Un instant…' : 'Rejoindre l’expédition'}{' '}
+            {pending ? 'Un instant…' : 'Recevoir la lettre'}{' '}
             <ArrowRight aria-hidden="true" />
           </Button>
         </div>

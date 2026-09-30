@@ -5,8 +5,8 @@ import { NewsletterForm } from '@/components/home/Newsletter/NewsletterForm';
 import styles from './FinalCall.module.scss';
 
 /**
- * The last word of the page, over the Route des Cinq at dusk: the invitation
- * to come back, through the newsletter, and to the catalogue when it is open.
+ * The last word of the page, over the Route des Cinq at dusk: the letter
+ * that brings the Pokémon releases, and the shop when it is open.
  */
 export function FinalCall({ catalogue }: { catalogue?: string }) {
   return (
@@ -20,18 +20,17 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
       </div>
       <div className={styles.inner}>
         <div className={styles.copy} data-reveal="">
-          <p className={styles.eyebrow}>Gardons le cap ensemble</p>
+          <p className={styles.eyebrow}>La lettre de Caldera</p>
           <h2 id="newsletter-title">
-            Votre prochaine découverte <em>commence ici.</em>
+            Les sorties Pokémon, <em>sans avoir à les guetter.</em>
           </h2>
           <p className={styles.lead}>
-            Réassorts, nouvelles extensions et sélections, directement dans
-            votre boîte mail.
+            Nouvelles extensions, réassorts et sélections de la boutique, par
+            e-mail.
           </p>
           {catalogue && (
             <Link href={catalogue} className={styles.catalogue}>
-              Ou parcourez le catalogue dès maintenant{' '}
-              <ArrowRight size={16} aria-hidden="true" />
+              Explorer la boutique <ArrowRight size={16} aria-hidden="true" />
             </Link>
           )}
         </div>

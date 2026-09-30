@@ -72,10 +72,11 @@
   padding-bottom: clamp(2rem, 5vh, 3.5rem);
 }
 .content {
-  max-width: 46rem;
+  max-width: 52rem;
   h1 {
     margin-block: 1.25rem 1.5rem;
-    font-size: v.$heading-display;
+    // « Entrez dans l’univers » holds on one line from tablets up.
+    font-size: clamp(2.9rem, 1.4rem + 5.2vw, 6.2rem);
     font-weight: 500;
     line-height: 0.98;
     letter-spacing: -0.035em;
@@ -93,17 +94,23 @@
   align-items: center;
   gap: 1rem;
   color: v.$color-gold-light;
+  // The rule only where the specialty still holds on one line with it.
   span {
+    display: none;
     width: 2.5rem;
     height: 1px;
     background: currentColor;
+    @include m.from(v.$breakpoint-mobile) {
+      display: block;
+    }
   }
 }
+// The promise that says what Caldera sells: read right after the title.
 .lead {
-  max-width: 34rem;
-  color: #e6ebdf;
-  font-size: v.$text-lead;
-  line-height: 1.7;
+  max-width: 36rem;
+  color: #eef1e8;
+  font-size: clamp(1.08rem, 0.98rem + 0.45vw, 1.32rem);
+  line-height: 1.6;
 }
 .actions {
   display: flex;
@@ -115,37 +122,6 @@
 .secondary {
   @include m.underline-link;
   color: v.$color-text-on-dark;
-}
-.facts {
-  // Each fact carries its dot on the left; the first 1.25rem of every line
-  // is clipped, so a wrapped line never starts with a separator.
-  $dot-space: 1.25rem;
-  display: flex;
-  flex-wrap: wrap;
-  row-gap: 0.5rem;
-  margin: 2.5rem 0 0 (-$dot-space);
-  padding: 0;
-  clip-path: inset(0 0 0 $dot-space);
-  color: v.$color-muted-on-night;
-  font-size: v.$text-small;
-  letter-spacing: 0.04em;
-  list-style: none;
-  li {
-    position: relative;
-    padding-left: $dot-space;
-    &::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0.5rem;
-      width: 4px;
-      height: 4px;
-      margin-top: -2px;
-      border-radius: 50%;
-      background: v.$color-gold;
-      opacity: 0.7;
-    }
-  }
 }
 .cue {
   display: none;
@@ -174,8 +150,7 @@
   .eyebrow,
   .content h1,
   .lead,
-  .actions,
-  .facts {
+  .actions {
     animation: rise 900ms v.$ease-out both;
   }
   .content h1 {
@@ -186,9 +161,6 @@
   }
   .actions {
     animation-delay: 380ms;
-  }
-  .facts {
-    animation-delay: 520ms;
   }
   // Ambient: the landscape breathes, the mist drifts. Barely.
   .image {

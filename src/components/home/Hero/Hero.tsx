@@ -2,38 +2,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowDown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
-import type { HomeCopy, HomeLinks } from '@/components/home/homeData';
-import type { ListingHub } from '@/components/catalog/listingHub';
-import { DELIVERY_ZONE, handlingLabel } from '@/components/editorial/delivery';
+import { HOME_PROMISE, type HomeLinks } from '@/components/home/homeData';
 import styles from './Hero.module.scss';
 
-const plural = (count: number, one: string, many: string) =>
-  `${count} ${count > 1 ? many : one}`;
-
-/** Real figures of the catalogue, shown as quiet facts under the promise. */
-function catalogueFacts(stats: ListingHub['stats']): string[] {
-  if (!stats.productCount) return [];
-  return [
-    `${plural(stats.productCount, 'produit', 'produits')} en ligne`,
-    stats.inStockCount > 0 && `${stats.inStockCount} en stock`,
-    stats.preorderCount > 0 &&
-      `${plural(stats.preorderCount, 'précommande', 'précommandes')}`,
-  ].filter((fact): fact is string => Boolean(fact));
-}
-
+/**
+ * The landscape and who Caldera is for, in one glance: the specialty above
+ * the title, the promise under it, the shop first and the universe second.
+ */
 export function Hero({
-  copy,
   links,
-  stats,
   next,
 }: {
-  copy: HomeCopy;
   links: HomeLinks;
-  stats: ListingHub['stats'];
   /** Anchor of the first section below, for the scroll cue. */
   next: string;
 }) {
-  const facts = catalogueFacts(stats);
   return (
     <section
       className={styles.hero}
@@ -55,20 +38,17 @@ export function Hero({
         <div className={styles.content}>
           <p className={styles.eyebrow}>
             <span aria-hidden="true" />
-            Les Terres de Caldera
+            Boutique spécialisée {'Pokémon\u00a0TCG'}
           </p>
           <h1 id="hero-title">
-            Cartes{copy.games ? ` ${copy.games}` : ''} <em>à collectionner.</em>
+            Entrez dans l’univers <em>de Caldera</em>
           </h1>
-          <p className={styles.lead}>
-            Boutique en ligne de cartes Pokémon et de JCC&nbsp;: produits
-            scellés, cartes et accessoires, préparés sous {handlingLabel()} et
-            livrés en {DELIVERY_ZONE}.
-          </p>
+          <p className={styles.lead}>{HOME_PROMISE}</p>
           <div className={styles.actions}>
+            {/* Nothing online yet: the invitation to hear of the opening. */}
             {links.catalogue ? (
               <Button href={links.catalogue} variant="gold">
-                Parcourir le catalogue <ArrowRight aria-hidden="true" />
+                Explorer la boutique <ArrowRight aria-hidden="true" />
               </Button>
             ) : (
               <Button href="#newsletter" variant="gold">
@@ -76,19 +56,12 @@ export function Hero({
               </Button>
             )}
             <Link href="/univers" className={styles.secondary}>
-              Explorer l’univers <ArrowRight size={16} aria-hidden="true" />
+              Découvrir Caldera <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
-          <ul className={styles.facts} aria-label="La boutique aujourd’hui">
-            {facts.length ? (
-              facts.map((fact) => <li key={fact}>{fact}</li>)
-            ) : (
-              <li>Ouverture prochaine</li>
-            )}
-          </ul>
         </div>
         <a className={styles.cue} href={next}>
-          <span>Entrer dans Caldera</span>
+          <span>Défiler</span>
           <ArrowDown size={16} aria-hidden="true" />
         </a>
       </div>

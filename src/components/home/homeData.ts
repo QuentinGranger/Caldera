@@ -1,16 +1,23 @@
 // Facts of the home page: every figure, name and link comes from the catalogue
-// and the landing index (docs/seo-architecture.md §1 and §7).
+// and the landing index (docs/seo-architecture.md §1 and §7), for the licence
+// the shop sells (SHOP_GAME) and licence-free products.
 import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
+import { getScopeFacets } from '@/components/catalog/catalogLoad';
 import {
   LISTING_HUBS,
   getIndexableListings,
-  getListingHub,
-  type ListingHub,
+  presentFamilies,
 } from '@/components/catalog/listingHub';
 import { getProductVisual } from '@/lib/catalog/images';
 import { getHomeCategories, visibleProductWhere } from '@/lib/catalog/queries';
 import {
+  SHOP_GAME,
+  isShopGame,
+  shopProductWhere,
+} from '@/lib/catalog/shopGame';
+import {
+  getCategories,
   getExtensions,
   getGames,
   toGameRef,
@@ -30,7 +37,8 @@ import {
   truncateAtWord,
   type ListingKind,
 } from '@/lib/seo/metadata';
-import { getLandingIndex } from '@/lib/seo/registry';
+import { getLandingIndex, getScopeStats } from '@/lib/seo/registry';
+import type { ScopeStats } from '@/lib/seo/types';
 import { getAllContent } from '@/lib/content';
 import type { ContentKind } from '@/lib/content/types';
 import type { CatalogProduct } from '@/types/product';
@@ -40,7 +48,7 @@ export interface HomeFamily {
   name: string;
   description: string | null;
   imageUrl: string;
-  /** Multi-game hub, or the game landing when a single game has it. */
+  /** Landing of the licence sold, else the multi-game hub. */
   href: string;
   count: number;
 }
@@ -59,17 +67,23 @@ export interface HomeCollection {
 /** Indexable listings by kind; absent kinds are not linked. */
 export type HomeLinks = Partial<Record<ListingKind, string>>;
 
-export interface HomeCopy {
-  /** Games named in the H1 (one or two), null otherwise. */
-  games: string | null;
-  /** Hero paragraph. */
-  summary: string;
-  /** Meta description. */
-  description: string;
+/** The promise of the hero, also the description of an empty shop. */
+export const HOME_PROMISE =
+  'Cartes Pokémon, collections et nouveautés sélectionnées pour les collectionneurs et les joueurs.';
+
+/** The offer of the licence sold, in figures. */
+export interface ShopOffer {
+  /** Null while the game does not exist in the catalogue. */
+  stats: Pick<
+    ScopeStats,
+    'productCount' | 'inStockCount' | 'preorderCount' | 'minPrice' | 'maxPrice'
+  > | null;
+  /** Most specific families present, most products first. */
+  families: readonly { name: string }[];
 }
 
 // ---------------------------------------------------------------------------
-// Copy
+// Meta description
 
 /** « Boosters » → « boosters » inside a sentence; keeps « ETB ». */
 function inSentence(name: string): string {
@@ -97,58 +111,49 @@ function fitSentences(sentences: readonly string[], max = DESCRIPTION_MAX) {
   return result || truncateAtWord(sentences[0] ?? '', max);
 }
 
-export function homeCopy(
-  hub: Pick<ListingHub, 'stats' | 'games' | 'families'>,
-): HomeCopy {
-  const { stats } = hub;
-  const gameNames = hub.games.games.map(({ game }) => game.name);
-  const games =
-    gameNames.length && gameNames.length <= 2 ? listFr(gameNames) : null;
-  const families = hub.families.slice(0, 4).map((family) => family.name);
+/** Figures of the licence sold first; the promise while nothing is online. */
+export function homeDescription({ stats, families }: ShopOffer): string {
   const familyList = families.length
-    ? capitalize(listFr(families.map(inSentence)))
+    ? capitalize(
+        listFr(families.slice(0, 4).map(({ name }) => inSentence(name))),
+      )
     : null;
+  if (!stats?.productCount)
+    return fitSentences([HOME_PROMISE, 'Livraison en France métropolitaine.']);
   const availability = [
     stats.inStockCount > 0 && `${stats.inStockCount} en stock`,
     stats.preorderCount > 0 && `${stats.preorderCount} en précommande`,
   ].filter((part): part is string => Boolean(part));
-  const count = stats.productCount
-    ? `${plural(stats.productCount, 'produit')}${
-        availability.length ? `, dont ${listFr(availability)}` : ''
-      }`
-    : null;
   const range =
     stats.minPrice && stats.maxPrice && stats.maxPrice !== stats.minPrice
       ? ` de ${formatEuro(stats.minPrice)} à ${formatEuro(stats.maxPrice)}`
       : stats.minPrice
         ? ` à ${formatEuro(stats.minPrice)}`
         : '';
-  const gamesSentence =
-    !games && gameNames.length ? `Jeux : ${listFr(gameNames)}.` : null;
-
-  const summary = count
-    ? [
-        gamesSentence,
-        familyList ? `${familyList} : ${count}.` : `${capitalize(count)}.`,
-      ]
-        .filter(Boolean)
-        .join(' ')
-    : 'Aucun produit n’est en ligne pour le moment.';
-
-  const subject = `Cartes ${games ?? 'à collectionner'}`;
-  const description = fitSentences(
+  return fitSentences(
     [
-      count
-        ? `${subject} : ${plural(stats.productCount, 'produit')}${range}${
-            availability.length ? `, dont ${listFr(availability)}` : ''
-          }.`
-        : `${subject}.`,
-      gamesSentence,
+      `Cartes ${SHOP_GAME.name} : ${plural(stats.productCount, 'produit')}${range}${
+        availability.length ? `, dont ${listFr(availability)}` : ''
+      }.`,
       familyList && `${familyList}.`,
       'Livraison en France métropolitaine.',
     ].filter((sentence): sentence is string => Boolean(sentence)),
   );
-  return { games, summary, description };
+}
+
+async function getShopOffer(): Promise<ShopOffer> {
+  const game = (await getGames()).find(({ slug }) => slug === SHOP_GAME.slug);
+  if (!game) return { stats: null, families: [] };
+  const [stats, facets, categories] = await Promise.all([
+    getScopeStats({ game: { id: game.id } }),
+    getScopeFacets({ game: game.slug }),
+    getCategories(),
+  ]);
+  return { stats, families: presentFamilies(facets, categories) };
+}
+
+export async function getHomeDescription(): Promise<string> {
+  return homeDescription(await getShopOffer());
 }
 
 // ---------------------------------------------------------------------------
@@ -160,22 +165,24 @@ function flatten(families: readonly NavigationFamily[]): NavigationFamily[] {
   return families.flatMap((family) => [family, ...flatten(family.children)]);
 }
 
-/** Target of each family slug: its multi-game hub, else its largest game landing. */
+/**
+ * Target of each family slug: its landing for the licence sold, else its
+ * multi-game hub, for a family of licence-free products only.
+ */
 export function familyTargets(navigation: Navigation): Map<string, Target> {
   const targets = new Map<string, Target>();
   for (const game of navigation.games)
-    for (const family of flatten(game.families)) {
-      const current = targets.get(family.slug);
-      if (!current || family.count > current.count)
+    if (game.slug === SHOP_GAME.slug)
+      for (const family of flatten(game.families))
         targets.set(family.slug, { href: family.href, count: family.count });
-    }
   for (const hub of flatten(navigation.categoryHubs))
-    targets.set(hub.slug, { href: hub.href, count: hub.count });
+    if (!targets.has(hub.slug))
+      targets.set(hub.slug, { href: hub.href, count: hub.count });
   return targets;
 }
 
 async function getHomeFamilies(navigation: Navigation): Promise<HomeFamily[]> {
-  const categories = await getHomeCategories();
+  const categories = await getHomeCategories(shopProductWhere);
   const targets = familyTargets(navigation);
   return categories.flatMap((category) => {
     const target = targets.get(category.slug);
@@ -203,7 +210,7 @@ const imageOrder = [
   { id: 'asc' },
 ] satisfies Prisma.ProductImageOrderByWithRelationInput[];
 
-/** Most recent sets whose landing is indexable, with one of their products. */
+/** Most recent sets of the licence sold whose landing is indexable, with one of their products. */
 async function getHomeCollections(limit: number): Promise<HomeCollection[]> {
   const [sets, games, index] = await Promise.all([
     getExtensions(),
@@ -215,7 +222,7 @@ async function getHomeCollections(limit: number): Promise<HomeCollection[]> {
   const picked = sets
     .flatMap((set) => {
       const game = set.gameId ? gamesById.get(set.gameId) : undefined;
-      if (!game) return [];
+      if (game?.slug !== SHOP_GAME.slug) return [];
       const href = landingPath({ game: toGameRef(game), set: toSetRef(set) });
       const page = pages.get(href);
       return page ? [{ set, game, href, count: page.productCount }] : [];
@@ -265,7 +272,8 @@ async function getHomeCollections(limit: number): Promise<HomeCollection[]> {
 
 // ---------------------------------------------------------------------------
 // Journal: the latest news, else the latest guides (never glossary entries
-// or questions, which are reference pages rather than reading).
+// or questions, which are reference pages rather than reading), about the
+// licence sold or about no licence in particular.
 
 export interface HomeJournalEntry {
   href: string;
@@ -292,7 +300,7 @@ async function getHomeJournal(limit: number): Promise<HomeJournal | null> {
   const content = await getAllContent();
   const latest = (kinds: readonly ContentKind[]) =>
     content
-      .filter((entry) => kinds.includes(entry.kind))
+      .filter((entry) => kinds.includes(entry.kind) && isShopGame(entry.games))
       .sort((a, b) => b.published.getTime() - a.published.getTime())
       .slice(0, limit)
       .map(({ href, title, description, kind, published }) => ({
@@ -338,8 +346,6 @@ export function isDemoCatalogue(products: readonly CatalogProduct[]) {
 // ---------------------------------------------------------------------------
 
 export interface HomeData {
-  hub: ListingHub;
-  copy: HomeCopy;
   families: HomeFamily[];
   collections: HomeCollection[];
   links: HomeLinks;
@@ -354,16 +360,13 @@ async function getHomeLinks(): Promise<HomeLinks> {
 }
 
 export async function getHomeData(): Promise<HomeData> {
-  const [hub, navigation, collections, links, journal] = await Promise.all([
-    getListingHub('catalogue'),
+  const [navigation, collections, links, journal] = await Promise.all([
     getNavigation(),
     getHomeCollections(2),
     getHomeLinks(),
     getHomeJournal(3),
   ]);
   return {
-    hub,
-    copy: homeCopy(hub),
     families: await getHomeFamilies(navigation),
     collections,
     links,

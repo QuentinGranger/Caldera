@@ -66,3 +66,25 @@ test('menu principal : jeux, familles et listes indexables seulement', () => {
     ['/pokemon', '/pokemon/boosters'],
   );
 });
+
+test('menus : les autres jeux du catalogue restent hors des menus', () => {
+  const game = (slug: string, name: string) => ({
+    slug,
+    name,
+    shortName: null,
+    href: `/${slug}`,
+    count: 10,
+    families: [],
+  });
+  const site = buildSiteNavigation(
+    {
+      games: [game('pokemon', 'Pokémon'), game('lorcana', 'Lorcana')],
+      categoryHubs: [],
+    },
+    new Set(),
+  );
+  assert.deepEqual(
+    site.games.map((item) => item.href),
+    ['/pokemon'],
+  );
+});

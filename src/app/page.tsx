@@ -12,42 +12,42 @@ import { FinalCall } from '@/components/home/FinalCall/FinalCall';
 import {
   distinctSections,
   getHomeData,
-  homeCopy,
+  getHomeDescription,
   isDemoCatalogue,
 } from '@/components/home/homeData';
 import { DEFAULT_TITLE } from '@/components/layout/siteMetadata';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { getListingHub } from '@/components/catalog/listingHub';
 import {
   getNewProducts,
   getFeaturedProducts,
   getRestockedProducts,
 } from '@/lib/catalog/queries';
+import { shopProductWhere } from '@/lib/catalog/shopGame';
 import { graph, organizationNode, websiteNode } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
 import styles from './page.module.scss';
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
-  const hub = await getListingHub('catalogue');
   return buildMetadata({
     title: DEFAULT_TITLE,
     absoluteTitle: true,
-    description: homeCopy(hub).description,
+    description: await getHomeDescription(),
     path: '/',
     index: true,
   });
 }
 // The page as a journey: enter the landscape, see what is sold, explore the
 // territories, then daylight for the products, the promises and the reading,
-// and dusk for the last call. A section without data is simply absent.
+// and dusk for the last call. A section without data is simply absent; the
+// products are those of the licence sold (shopProductWhere).
 export default async function HomePage() {
   await connection();
   const [home, newProducts, featuredProducts, restockProducts] =
     await Promise.all([
       getHomeData(),
-      getNewProducts(4),
-      getFeaturedProducts(2),
-      getRestockedProducts(4),
+      getNewProducts(4, shopProductWhere),
+      getFeaturedProducts(2, shopProductWhere),
+      getRestockedProducts(4, shopProductWhere),
     ]);
   // In reading order: a product appears once, where it is met first.
   const [selected, latest, restocked] = distinctSections([
@@ -59,12 +59,10 @@ export default async function HomePage() {
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <JsonLd data={graph(organizationNode(), websiteNode())} />
       <Hero
-        copy={home.copy}
         links={home.links}
-        stats={home.hub.stats}
         next={home.families.length ? '#familles' : '#territoires'}
       />
-      <Families families={home.families} total={home.hub.stats.productCount} />
+      <Families families={home.families} />
       <Showcase products={selected} catalogue={home.links.catalogue} />
       <Territories />
       <div className={styles.dawn} aria-hidden="true" />

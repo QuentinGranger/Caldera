@@ -152,12 +152,18 @@ async function list(
 export function getProducts(limit = 100) {
   return list({}, limit);
 }
-export function getFeaturedProducts(limit = 4) {
-  return list({ featured: true }, limit);
+export function getFeaturedProducts(
+  limit = 4,
+  where: Prisma.ProductWhereInput = {},
+) {
+  return list({ AND: [{ featured: true }, where] }, limit);
 }
 // newArrival est un choix éditorial ; publishedAt ordonne les nouveautés.
-export function getNewProducts(limit = 4) {
-  return list({ newArrival: true }, limit);
+export function getNewProducts(
+  limit = 4,
+  where: Prisma.ProductWhereInput = {},
+) {
+  return list({ AND: [{ newArrival: true }, where] }, limit);
 }
 export function getProductsBySet(slug: string, limit = 100) {
   return list({ tcgSet: { slug, isActive: true } }, limit);
@@ -170,12 +176,20 @@ export async function getProductsByCategory(slug: string, limit = 100) {
   return list({ categoryId: { in: descendantIds(categories, [slug]) } }, limit);
 }
 // Sélection éditoriale, pas un historique de mouvements de stock.
-export function getRestockedProducts(limit = 3) {
+export function getRestockedProducts(
+  limit = 3,
+  where: Prisma.ProductWhereInput = {},
+) {
   return list(
     {
-      preorder: false,
-      tags: { some: { slug: 'reassort' } },
-      variants: { some: { isActive: true, availableQuantity: { gt: 0 } } },
+      AND: [
+        {
+          preorder: false,
+          tags: { some: { slug: 'reassort' } },
+          variants: { some: { isActive: true, availableQuantity: { gt: 0 } } },
+        },
+        where,
+      ],
     },
     limit,
   );
@@ -403,8 +417,8 @@ export const getProductBySlug = cache(async (slug: string) => {
     : null;
 });
 
-/** Active root families holding at least one visible product in their subtree. */
-export async function getHomeCategories() {
+/** Active root families holding at least one visible product of `where` in their subtree. */
+export async function getHomeCategories(where: Prisma.ProductWhereInput = {}) {
   const db = getPrisma();
   const [categories, groups] = await Promise.all([
     db.category.findMany({
@@ -419,7 +433,10 @@ export async function getHomeCategories() {
       },
       orderBy: [{ sortOrder: 'asc' }, { slug: 'asc' }],
     }),
-    db.product.groupBy({ by: ['categoryId'], where: visibleProductWhere }),
+    db.product.groupBy({
+      by: ['categoryId'],
+      where: { AND: [visibleProductWhere, where] },
+    }),
   ]);
   const byId = new Map(categories.map((category) => [category.id, category]));
   const rootsWithProducts = new Set<string>();

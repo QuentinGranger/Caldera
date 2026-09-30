@@ -1,6 +1,6 @@
 // Header, mobile menu and footer links (docs/seo-architecture.md §7): the
-// catalogue always, games and families from the landing index, listings only
-// while indexable, then pages that always answer 200.
+// catalogue always, the licence sold and families from the landing index,
+// listings only while indexable, then pages that always answer 200.
 import 'server-only';
 import { getAllContent } from '@/lib/content';
 import { unstable_cache } from 'next/cache';
@@ -16,6 +16,7 @@ import {
 } from '@/lib/seo/links';
 import type { ListingKind } from '@/lib/seo/metadata';
 import { CATALOG_CACHE_TAG } from '@/lib/cache/catalogCache';
+import { isShopGame } from '@/lib/catalog/shopGame';
 
 export interface NavLink {
   href: string;
@@ -34,11 +35,12 @@ export interface NavItem extends NavLink {
   groups?: NavGroup[];
 }
 export interface SiteNavigation {
-  /** Games with an indexable hub, menu order; children: their families. */
+  /**
+   * The licence sold (SHOP_GAME) once its hub is indexable; children: its
+   * families. Other games of the catalogue stay out of the menus.
+   */
   games: NavItem[];
-  /** Indexable multi-game family hubs (« Accessoires pour tous les jeux »). */
-  familyHubs: NavLink[];
-  /** The same hubs by short name, under a « Par type de produit » title. */
+  /** Indexable multi-game family hubs, by short name (« Accessoires »). */
   productTypes: NavLink[];
   /** /catalogue: always reachable, even before it has enough products to be indexed. */
   catalogue: NavLink;
@@ -85,21 +87,19 @@ export function buildSiteNavigation(
     label: LISTING_HUBS[kind].label,
   });
   return {
-    games: navigation.games.map((game) => {
-      const label = game.shortName?.trim() || game.name;
-      const families = flattenFamilies(game.families);
-      return {
-        href: game.href,
-        label,
-        children: families.length
-          ? [{ href: game.href, label: `Tout ${label}` }, ...families]
-          : [],
-      };
-    }),
-    familyHubs: navigation.categoryHubs.map((family) => ({
-      href: family.href,
-      label: family.label,
-    })),
+    games: navigation.games
+      .filter((game) => isShopGame([game.slug]))
+      .map((game) => {
+        const label = game.shortName?.trim() || game.name;
+        const families = flattenFamilies(game.families);
+        return {
+          href: game.href,
+          label,
+          children: families.length
+            ? [{ href: game.href, label: `Tout ${label}` }, ...families]
+            : [],
+        };
+      }),
     productTypes: navigation.categoryHubs.map((family) => ({
       href: family.href,
       label: family.name,

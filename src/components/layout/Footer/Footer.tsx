@@ -25,7 +25,7 @@ export async function Footer() {
       links: [
         navigation.catalogue,
         ...navigation.games.map(({ href, label }) => ({ href, label })),
-        ...navigation.familyHubs,
+        ...navigation.productTypes,
         ...navigation.listings,
       ],
     },

@@ -54,7 +54,7 @@ export function MobileNavigation({
 
   const close = () => setOpen(false);
   const shopLinks: NavLink[] = [
-    ...navigation.familyHubs,
+    ...navigation.productTypes,
     ...navigation.listings,
   ];
   const secondary: { id: string; title: string; links: NavLink[] }[] = [
