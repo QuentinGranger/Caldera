@@ -155,13 +155,25 @@ export default async function OrderAdminPage({
               </td>
               <td>{euros(item.unitPrice)}</td>
               <td>{item.quantity}</td>
-              <td>{euros(item.lineTotal)}</td>
+              <td>
+                {euros(item.lineTotal)}
+                {item.discountAmount.greaterThan(0) && (
+                  <small>dont remise −{euros(item.discountAmount)}</small>
+                )}
+              </td>
             </tr>
           ))}
         </AdminTable>
         <p>
-          Sous-total : {euros(order.subtotalAmount)} · Livraison :{' '}
-          {euros(order.shippingAmount)} ·{' '}
+          Sous-total : {euros(order.subtotalAmount)} ·{' '}
+          {order.promotionCode && (
+            <>
+              Code <code>{order.promotionCode}</code> : −
+              {euros(order.discountAmount.plus(order.shippingDiscountAmount))}{' '}
+              ·{' '}
+            </>
+          )}
+          Livraison : {euros(order.shippingAmount)} ·{' '}
           <strong>Total : {euros(order.totalAmount)}</strong>
         </p>
         <small>
@@ -367,7 +379,10 @@ export default async function OrderAdminPage({
                 id: item.id,
                 name: item.productName,
                 sku: item.sku,
-                unitCents: toCents(item.unitPrice),
+                netCents:
+                  toCents(item.lineTotal) - toCents(item.discountAmount),
+                quantity: item.quantity,
+                refunded: refunds.refundedQuantities.get(item.id) ?? 0,
                 left:
                   item.quantity -
                   (refunds.refundedQuantities.get(item.id) ?? 0),

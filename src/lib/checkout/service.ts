@@ -2,8 +2,18 @@ import 'server-only';
 import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { cartTokenHash } from '@/lib/cart/identity';
+import {
+  evaluatePromotion,
+  normalizePromotionCode,
+} from '@/lib/promotions/pricing';
+import { promotionRule, promotionUsage } from '@/lib/promotions/service';
+import { toCents } from '@/lib/refunds/amounts';
 import { readCheckout } from './queries';
-import { getCheckoutSummary, validateCheckout } from './validation';
+import {
+  getCheckoutSummary,
+  promotionLines,
+  validateCheckout,
+} from './validation';
 import { CheckoutError, parseContact, parseId } from './schemas';
 
 const CHECKOUT_LIFETIME_MS = 24 * 60 * 60 * 1000;
@@ -11,6 +21,8 @@ type Mutation =
   | { kind: 'start' | 'sync' }
   | { kind: 'contact'; sessionId: unknown; contact: unknown }
   | { kind: 'shipping'; sessionId: unknown; methodId: unknown }
+  | { kind: 'promotion'; sessionId: unknown; code: unknown }
+  | { kind: 'promotion-remove'; sessionId: unknown }
   | { kind: 'prepare'; sessionId: unknown };
 export async function mutateCheckout(
   token: string | undefined,
@@ -125,6 +137,51 @@ export async function mutateCheckout(
             throw new CheckoutError(
               'Votre session a expiré. Recommencez depuis votre panier.',
             );
+          if (mutation.kind === 'promotion') {
+            const code = normalizePromotionCode(mutation.code);
+            const promotion = code
+              ? await tx.promotion.findUnique({ where: { code } })
+              : null;
+            // Same answer for an unknown and a disabled code.
+            if (!promotion)
+              throw new CheckoutError('Ce code n’est pas valable.', {
+                promotionCode: 'Ce code n’est pas valable.',
+              });
+            const result = evaluatePromotion(
+              await promotionRule(tx, promotion),
+              {
+                lines: promotionLines(data.cart),
+                shippingCents: view.selectedMethod
+                  ? toCents(view.selectedMethod.amount)
+                  : null,
+                usage: await promotionUsage(tx, promotion.id, session.email),
+              },
+            );
+            if (!result.ok)
+              throw new CheckoutError(result.reason, {
+                promotionCode: result.reason,
+              });
+            await tx.checkoutSession.update({
+              where: { id: session.id },
+              data: {
+                promotionId: promotion.id,
+                status: 'IN_PROGRESS',
+                readyFingerprint: null,
+              },
+            });
+            return view.requiredStep;
+          }
+          if (mutation.kind === 'promotion-remove') {
+            await tx.checkoutSession.update({
+              where: { id: session.id },
+              data: {
+                promotionId: null,
+                status: 'IN_PROGRESS',
+                readyFingerprint: null,
+              },
+            });
+            return view.requiredStep;
+          }
           if (mutation.kind === 'contact') {
             const contact = parseContact(
               mutation.contact,

@@ -37,8 +37,24 @@ export type CheckoutView = {
   methods: ShippingMethodView[];
   selectedMethod: ShippingMethodView | null;
   cart: CartView;
+  /** Price of the chosen delivery, before a free-shipping code. */
   shippingAmount: string | null;
+  /** Code applied and valid now. */
+  promotion: {
+    code: string;
+    label: string;
+    /** Taken off the items. */
+    discount: string;
+    /** Taken off the shipping. */
+    shippingDiscount: string;
+    items: { itemId: string; amount: string }[];
+  } | null;
+  /** Code applied that cannot be used any more, and why. */
+  promotionIssue: { code: string; message: string } | null;
+  /** subtotal − discount + shipping − shipping discount. */
   total: string | null;
+  /** Items after discount: what is shown while no delivery is chosen. */
+  provisionalTotal: string;
   requiredStep: CheckoutStep;
   blocked: boolean;
   notice: string | null;

@@ -13,6 +13,7 @@ import {
   Menu,
   Package,
   ShoppingBag,
+  TicketPercent,
   X,
 } from 'lucide-react';
 import styles from './Admin.module.scss';
@@ -26,9 +27,19 @@ const groups = [
         label: 'Pilotage économique',
         icon: BarChart3,
       },
-      { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
       { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
+    ],
+  },
+  {
+    label: 'Ventes',
+    links: [
+      { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
+      {
+        href: '/admin/promotions',
+        label: 'Codes promo',
+        icon: TicketPercent,
+      },
     ],
   },
   {

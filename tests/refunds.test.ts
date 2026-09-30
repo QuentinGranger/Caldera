@@ -5,6 +5,7 @@ import { parseEmailSnapshot, renderEmail } from '../src/emails/templates';
 import {
   allocateRefund,
   fromCents,
+  lineRefundCents,
   refundFailureLabel,
   refundState,
   stripeReason,
@@ -24,9 +25,9 @@ test('remboursements : montants en centimes, sans virgule flottante', () => {
 
 test('remboursements : répartition exacte au centime', () => {
   const lines = [
-    { orderItemId: 'a', unitCents: 1000, quantity: 1 },
-    { orderItemId: 'b', unitCents: 1000, quantity: 1 },
-    { orderItemId: 'c', unitCents: 1000, quantity: 1 },
+    { orderItemId: 'a', nominalCents: 1000, quantity: 1 },
+    { orderItemId: 'b', nominalCents: 1000, quantity: 1 },
+    { orderItemId: 'c', nominalCents: 1000, quantity: 1 },
   ];
   // Montant plein : chaque élément garde son prix.
   const full = allocateRefund({ lines, shippingCents: 490, amountCents: 3490 });
@@ -48,7 +49,7 @@ test('remboursements : répartition exacte au centime', () => {
   );
   assert.ok(partial.items.every((item) => [333, 334].includes(item.cents)));
   const odd = allocateRefund({
-    lines: [{ orderItemId: 'a', unitCents: 5990, quantity: 3 }],
+    lines: [{ orderItemId: 'a', nominalCents: 17970, quantity: 3 }],
     shippingCents: 690,
     amountCents: 101,
   });
@@ -63,6 +64,23 @@ test('remboursements : répartition exacte au centime', () => {
     allocateRefund({ lines: [], shippingCents: 0, amountCents: 0 }),
     { items: [], shippingCents: 0, nominalCents: 0 },
   );
+});
+
+test('remboursements : prix payé par unité après remise, exact au total', () => {
+  // Sans remise : le prix unitaire.
+  assert.equal(lineRefundCents(5990 * 3, 3, 0, 1), 5990);
+  assert.equal(lineRefundCents(5990 * 3, 3, 1, 2), 11980);
+  // 3 unités payées 100,00 € après remise : 33,33 + 33,33 + 33,34.
+  const parts = [0, 1, 2].map((refunded) =>
+    lineRefundCents(10000, 3, refunded, 1),
+  );
+  assert.deepEqual(parts, [3333, 3333, 3334]);
+  assert.equal(lineRefundCents(10000, 3, 0, 3), 10000);
+  assert.equal(
+    lineRefundCents(10000, 3, 0, 2) + lineRefundCents(10000, 3, 2, 1),
+    10000,
+  );
+  assert.equal(lineRefundCents(10000, 3, 1, 0), 0);
 });
 
 test('remboursements : état restant, remboursements en cours compris', () => {

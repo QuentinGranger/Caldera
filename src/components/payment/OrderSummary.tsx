@@ -74,6 +74,14 @@ export function OrderSummary({ order }: { order: OrderRecord }) {
             <dt>Sous-total</dt>
             <dd>{formatPrice(order.subtotalAmount.toFixed(2))}</dd>
           </div>
+          {order.discountAmount.greaterThan(0) && (
+            <div>
+              <dt>Réduction ({order.promotionCode})</dt>
+              <dd className={styles.orderFreeShipping}>
+                −{formatPrice(order.discountAmount.toFixed(2))}
+              </dd>
+            </div>
+          )}
           <div>
             <dt>Livraison</dt>
             <dd className={shippingIsFree ? styles.orderFreeShipping : undefined}>

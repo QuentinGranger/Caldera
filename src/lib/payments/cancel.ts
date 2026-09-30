@@ -7,6 +7,7 @@ import {
   orderLog,
 } from '@/lib/orders/common';
 import { releaseReservations } from '@/lib/inventory/reservations';
+import { releasePromotion } from '@/lib/promotions/service';
 import { stripeGateway, type PaymentGateway } from '@/lib/stripe/stripe';
 import { ensureIntent } from './intents';
 import { validateIntent } from './validation';
@@ -49,6 +50,7 @@ export async function cancelOrder(
 
     if (!order.payment!.intentStartedAt) {
       await releaseReservations(tx, order, expired);
+      await releasePromotion(tx, orderId);
       await tx.order.update({
         where: { id: orderId },
         data: {
@@ -115,6 +117,7 @@ export async function cancelOrder(
     }
 
     await releaseReservations(tx, order, expired);
+    await releasePromotion(tx, orderId);
     await tx.payment.update({
       where: { orderId },
       data: { status: 'CANCELLED' },

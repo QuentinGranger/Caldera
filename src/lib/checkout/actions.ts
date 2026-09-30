@@ -1,7 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { allowAccountAttempt } from '@/lib/account/limits';
 import { getCartCookie } from '@/lib/cart/cartCookie';
+import { cartTokenHash } from '@/lib/cart/identity';
 import { getActiveOrderForCheckoutRecovery } from '@/lib/orders/queries';
 import { cancelOrder } from '@/lib/payments/cancel';
 import { mutateCheckout } from './service';
@@ -31,6 +33,14 @@ async function run(
 
   try {
     const token = await getCartCookie();
+
+    if (
+      mutation.kind === 'promotion' &&
+      !(await allowAccountAttempt('promotion', cartTokenHash(token) ?? ''))
+    )
+      throw new CheckoutError(
+        'Trop de codes essayés. Réessayez dans une heure.',
+      );
 
     if (mutation.kind === 'start' || mutation.kind === 'sync') {
       await recoverExpiredPayment(token);
@@ -73,6 +83,14 @@ export async function setShippingMethodAction(
   methodId: unknown,
 ) {
   return run({ kind: 'shipping', sessionId, methodId });
+}
+
+export async function applyPromotionAction(sessionId: unknown, code: unknown) {
+  return run({ kind: 'promotion', sessionId, code });
+}
+
+export async function removePromotionAction(sessionId: unknown) {
+  return run({ kind: 'promotion-remove', sessionId });
 }
 
 export async function prepareCheckoutAction(sessionId: unknown) {

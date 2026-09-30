@@ -50,22 +50,23 @@ enum SlugEntity {
 }
 
 model Game {
-  id             String    @id @default(uuid()) @db.Uuid
+  id             String      @id @default(uuid()) @db.Uuid
   name           String
-  slug           String    @unique
+  slug           String      @unique
   shortName      String?
   description    String?
-  intro          String?   @db.Text
+  intro          String?     @db.Text
   seoTitle       String?
   seoDescription String?
   faq            Json?
   logoUrl        String?
-  sortOrder      Int       @default(0)
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  sortOrder      Int         @default(0)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   sets           TcgSet[]
   products       Product[]
+  promotions     Promotion[]
 }
 
 model SlugRedirect {
@@ -146,23 +147,24 @@ model ProductVariant {
 }
 
 model Category {
-  id             String     @id @default(uuid()) @db.Uuid
+  id             String      @id @default(uuid()) @db.Uuid
   name           String
-  slug           String     @unique
+  slug           String      @unique
   description    String?
-  intro          String?    @db.Text
+  intro          String?     @db.Text
   seoTitle       String?
   seoDescription String?
   faq            Json?
   imageUrl       String?
-  parentId       String?    @db.Uuid
-  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
-  children       Category[] @relation("CategoryTree")
-  sortOrder      Int        @default(0)
-  isActive       Boolean    @default(true)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  parentId       String?     @db.Uuid
+  parent         Category?   @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Category[]  @relation("CategoryTree")
+  sortOrder      Int         @default(0)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   products       Product[]
+  promotions     Promotion[]
 
   @@index([parentId])
 }
@@ -275,6 +277,9 @@ model CheckoutSession {
   shippingMethod   ShippingMethod?   @relation(fields: [shippingMethodId], references: [id], onDelete: Restrict)
   shippingAmount   Decimal?          @db.Decimal(10, 2)
   readyFingerprint String?           @db.Char(64)
+  /// Promotional code typed by the customer, checked again at each step.
+  promotionId      String?           @db.Uuid
+  promotion        Promotion?        @relation(fields: [promotionId], references: [id], onDelete: SetNull)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   expiresAt        DateTime
@@ -284,6 +289,7 @@ model CheckoutSession {
   @@index([cartId, status])
   @@index([expiresAt])
   @@index([shippingMethodId])
+  @@index([promotionId])
 }
 
 model CheckoutAddress {
@@ -366,40 +372,50 @@ enum ReservationStatus {
 }
 
 model Order {
-  id                   String             @id @default(uuid()) @db.Uuid
-  publicId             String             @unique @db.Char(64)
-  orderNumber          String             @unique
-  status               OrderStatus        @default(PENDING_PAYMENT)
-  email                String
-  phone                String?
-  currency             String             @db.Char(3)
-  subtotalAmount       Decimal            @db.Decimal(10, 2)
-  shippingAmount       Decimal            @db.Decimal(10, 2)
-  totalAmount          Decimal            @db.Decimal(10, 2)
-  fulfillmentStatus    FulfillmentStatus  @default(UNFULFILLED)
-  preparationStartedAt DateTime?
-  readyToShipAt        DateTime?
-  shippedAt            DateTime?
-  deliveredAt          DateTime?
-  shipments            Shipment[]
-  emails               EmailDelivery[]
-  internalNote         String?            @db.Text
-  shippingMethodCode   String
-  shippingMethodName   String
-  checkoutSessionId    String             @unique @db.Uuid
-  checkoutSession      CheckoutSession    @relation(fields: [checkoutSessionId], references: [id], onDelete: Restrict)
+  id                     String               @id @default(uuid()) @db.Uuid
+  publicId               String               @unique @db.Char(64)
+  orderNumber            String               @unique
+  status                 OrderStatus          @default(PENDING_PAYMENT)
+  email                  String
+  phone                  String?
+  currency               String               @db.Char(3)
+  subtotalAmount         Decimal              @db.Decimal(10, 2)
+  /// Shipping actually charged, after a free-shipping code.
+  shippingAmount         Decimal              @db.Decimal(10, 2)
+  /// Promotional discount on the items (sum of OrderItem.discountAmount).
+  discountAmount         Decimal              @default(0) @db.Decimal(10, 2)
+  /// Shipping price waived by a free-shipping code.
+  shippingDiscountAmount Decimal              @default(0) @db.Decimal(10, 2)
+  /// Snapshot of the code used: the promotion may change or disappear later.
+  promotionCode          String?
+  promotionLabel         String?
+  /// subtotal − discount + shipping.
+  totalAmount            Decimal              @db.Decimal(10, 2)
+  fulfillmentStatus      FulfillmentStatus    @default(UNFULFILLED)
+  preparationStartedAt   DateTime?
+  readyToShipAt          DateTime?
+  shippedAt              DateTime?
+  deliveredAt            DateTime?
+  shipments              Shipment[]
+  emails                 EmailDelivery[]
+  internalNote           String?              @db.Text
+  shippingMethodCode     String
+  shippingMethodName     String
+  checkoutSessionId      String               @unique @db.Uuid
+  checkoutSession        CheckoutSession      @relation(fields: [checkoutSessionId], references: [id], onDelete: Restrict)
   /// Account signed in when the order was placed; kept (null) if the account is deleted.
-  customerId           String?            @db.Uuid
-  customer             Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  paidAt               DateTime?
-  cancelledAt          DateTime?
-  items                OrderItem[]
-  addresses            OrderAddress[]
-  payment              Payment?
-  reservations         StockReservation[]
-  refunds              Refund[]
+  customerId             String?              @db.Uuid
+  customer               Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  paidAt                 DateTime?
+  cancelledAt            DateTime?
+  items                  OrderItem[]
+  addresses              OrderAddress[]
+  payment                Payment?
+  reservations           StockReservation[]
+  refunds                Refund[]
+  promotionRedemption    PromotionRedemption?
 
   @@index([status])
   @@index([fulfillmentStatus, paidAt])
@@ -408,23 +424,24 @@ model Order {
 }
 
 model OrderItem {
-  id          String          @id @default(uuid()) @db.Uuid
-  orderId     String          @db.Uuid
-  order       Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  productId   String?         @db.Uuid
-  product     Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
-  variantId   String?         @db.Uuid
-  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  productName String
-  productSlug String
-  sku         String
-  language    ProductLanguage
-  unitPrice   Decimal         @db.Decimal(10, 2)
-  unitCost    Decimal?        @db.Decimal(10, 2)
-  quantity    Int
-  lineTotal   Decimal         @db.Decimal(10, 2)
-  imageUrl    String
-  createdAt   DateTime        @default(now())
+  id             String          @id @default(uuid()) @db.Uuid
+  orderId        String          @db.Uuid
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  productId      String?         @db.Uuid
+  product        Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId      String?         @db.Uuid
+  variant        ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  productName    String
+  productSlug    String
+  sku            String
+  language       ProductLanguage
+  unitPrice      Decimal         @db.Decimal(10, 2)
+  unitCost       Decimal?        @db.Decimal(10, 2)
+  quantity       Int
+  lineTotal      Decimal         @db.Decimal(10, 2)
+  discountAmount Decimal         @default(0) @db.Decimal(10, 2)
+  imageUrl       String
+  createdAt      DateTime        @default(now())
 
   refundItems RefundItem[]
 
@@ -523,6 +540,7 @@ model AdminUser {
   auditLogs           AdminAuditLog[]
   newsletterCampaigns NewsletterCampaign[]
   refunds             Refund[]
+  promotions          Promotion[]
 }
 
 model AdminSession {
@@ -805,7 +823,7 @@ model EmailDelivery {
   updatedAt         DateTime    @updatedAt
 
   /// « orderId:TYPE », or « orderId:ORDER_REFUNDED:refundId »: one e-mail per event.
-  dedupeKey         String      @unique
+  dedupeKey String @unique
 
   @@index([orderId, type])
   @@index([status, nextAttemptAt])
@@ -1025,4 +1043,77 @@ model RefundItem {
 
   @@unique([refundId, orderItemId])
   @@index([orderItemId])
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum PromotionRedemptionStatus {
+  /// Order created, payment not settled yet: the use already counts.
+  RESERVED
+  CONSUMED
+  /// Order cancelled or expired before payment.
+  RELEASED
+}
+
+/// Promotional code typed at checkout (src/lib/promotions). Orders keep a
+/// snapshot, so a promotion can be edited or disabled at any time.
+model Promotion {
+  id              String                @id @default(uuid()) @db.Uuid
+  /// Upper case letters, digits and dashes: what the customer types.
+  code            String                @unique
+  /// Shown to the customer next to the discount.
+  label           String
+  type            PromotionType
+  /// PERCENTAGE only: 1 to 90.
+  percentOff      Int?
+  /// FIXED_AMOUNT only: euros off the eligible items.
+  amountOff       Decimal?              @db.Decimal(10, 2)
+  /// Eligible items subtotal required.
+  minimumSubtotal Decimal?              @db.Decimal(10, 2)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  maxRedemptions  Int?
+  /// Per e-mail address.
+  maxPerCustomer  Int?
+  isActive        Boolean               @default(true)
+  /// Only items of this game; null: every game.
+  gameId          String?               @db.Uuid
+  game            Game?                 @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  /// Only items of this category or its sub-categories.
+  categoryId      String?               @db.Uuid
+  category        Category?             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdById     String?               @db.Uuid
+  createdBy       AdminUser?            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  redemptions     PromotionRedemption[]
+  checkouts       CheckoutSession[]
+
+  @@index([isActive, endsAt])
+  @@index([gameId])
+  @@index([categoryId])
+  @@index([createdById])
+}
+
+/// One use of a code by one order; RESERVED and CONSUMED count against the limits.
+model PromotionRedemption {
+  id             String                    @id @default(uuid()) @db.Uuid
+  promotionId    String                    @db.Uuid
+  promotion      Promotion                 @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  orderId        String                    @unique @db.Uuid
+  order          Order                     @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  /// Lower case: the per-customer limit follows the e-mail address.
+  email          String
+  status         PromotionRedemptionStatus @default(RESERVED)
+  /// Items and shipping discount granted.
+  discountAmount Decimal                   @db.Decimal(10, 2)
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@index([promotionId, status])
+  @@index([promotionId, email])
 }

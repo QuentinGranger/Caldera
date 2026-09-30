@@ -42,6 +42,7 @@ export async function getBusinessPilotage() {
         productId: true,
         productName: true,
         lineTotal: true,
+        discountAmount: true,
         unitCost: true,
         quantity: true,
         order: { select: { paidAt: true } },
@@ -86,7 +87,7 @@ export async function getBusinessPilotage() {
     }),
   ]);
 
-  // Revenue net of refunds. Items put back in stock are no longer sold (nor
+  // Revenue net of promotional discounts and refunds. Items put back in stock are no longer sold (nor
   // their cost spent); refunded but lost ones still cost their purchase price.
   const items = rawItems.map((item) => {
     const returned = item.refundItems.reduce(
@@ -97,6 +98,7 @@ export async function getBusinessPilotage() {
       ...item,
       lineTotal:
         number(item.lineTotal) -
+        number(item.discountAmount) -
         item.refundItems.reduce((sum, refund) => sum + number(refund.amount), 0),
       quantity: item.quantity - returned,
     };

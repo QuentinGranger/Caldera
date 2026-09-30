@@ -3,10 +3,15 @@ import Link from 'next/link';
 import { languageLabels } from '@/lib/catalog/params';
 import type { CheckoutView } from '@/lib/checkout/types';
 import { formatPrice } from '@/utils/formatPrice';
+import { PromotionCodeField } from './PromotionCodeField';
 import styles from './Checkout.module.scss';
 
 export function CheckoutSummary({ view }: { view: CheckoutView }) {
-  const shippingIsFree = view.shippingAmount === '0.00';
+  const promotion = view.promotion;
+  const shippingIsFree =
+    view.shippingAmount !== null &&
+    Number(view.shippingAmount) - Number(promotion?.shippingDiscount ?? 0) <= 0;
+  const discounted = promotion && Number(promotion.discount) > 0;
   const itemLabel = view.cart.itemCount > 1 ? 'articles' : 'article';
   const selectedMethod = view.selectedMethod;
 
@@ -78,11 +83,22 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
       )}
 
       <div className={styles.summaryBottom}>
+        {view.sessionId && view.status !== 'EXPIRED' && !view.blocked && (
+          <PromotionCodeField view={view} />
+        )}
         <dl className={styles.summaryTotals}>
           <div>
             <dt>Sous-total</dt>
             <dd>{formatPrice(view.cart.subtotal)}</dd>
           </div>
+          {discounted && (
+            <div>
+              <dt>Réduction ({promotion.code})</dt>
+              <dd className={styles.freeShipping}>
+                −{formatPrice(promotion.discount)}
+              </dd>
+            </div>
+          )}
           <div>
             <dt>Livraison</dt>
             <dd className={shippingIsFree ? styles.freeShipping : undefined}>
@@ -106,9 +122,7 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
                 : 'Toutes taxes comprises'}
             </small>
           </div>
-          <strong>
-            {formatPrice(view.total === null ? view.cart.subtotal : view.total)}
-          </strong>
+          <strong>{formatPrice(view.total ?? view.provisionalTotal)}</strong>
         </div>
 
         <p className={styles.summaryAssurance}>

@@ -54,6 +54,15 @@ export async function enqueueOrderEmail(
     subtotal: order.subtotalAmount.toFixed(2),
     shipping: order.shippingAmount.toFixed(2),
     total: order.totalAmount.toFixed(2),
+    ...(order.promotionCode
+      ? {
+          discount: {
+            code: order.promotionCode,
+            amount: order.discountAmount.toFixed(2),
+            shipping: order.shippingDiscountAmount.toFixed(2),
+          },
+        }
+      : {}),
     address: address
       ? [
           `${address.firstName} ${address.lastName}`,

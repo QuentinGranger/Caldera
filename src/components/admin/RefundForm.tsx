@@ -3,14 +3,22 @@ import { useState } from 'react';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { Hidden } from '@/components/admin/AdminFields';
 import { refundOrderAction } from '@/lib/refunds/admin-actions';
-import { fromCents, refundReasonLabels } from '@/lib/refunds/amounts';
+import {
+  fromCents,
+  lineRefundCents,
+  refundReasonLabels,
+} from '@/lib/refunds/amounts';
 import styles from './Admin.module.scss';
 
 export type RefundableLine = {
   id: string;
   name: string;
   sku: string;
-  unitCents: number;
+  /** Line total minus its share of a promotional discount. */
+  netCents: number;
+  quantity: number;
+  /** Units already refunded or being refunded. */
+  refunded: number;
   /** Still refundable: ordered minus already refunded or pending. */
   left: number;
   /** A deleted variant cannot go back on sale. */
@@ -42,7 +50,14 @@ export function RefundForm({
   const [custom, setCustom] = useState('');
   const selected =
     lines.reduce(
-      (sum, line) => sum + line.unitCents * (quantities[line.id] ?? 0),
+      (sum, line) =>
+        sum +
+        lineRefundCents(
+          line.netCents,
+          line.quantity,
+          line.refunded,
+          quantities[line.id] ?? 0,
+        ),
       0,
     ) + (shipping ? shippingCents : 0);
   const customCents = /^\d{1,8}([.,]\d{1,2})?$/.test(custom.trim())
@@ -68,7 +83,7 @@ export function RefundForm({
             <thead>
               <tr>
                 <th scope="col">Article</th>
-                <th scope="col">Prix unitaire</th>
+                <th scope="col">Payé par unité</th>
                 <th scope="col">Quantité</th>
               </tr>
             </thead>
@@ -81,7 +96,7 @@ export function RefundForm({
                       <code>{line.sku}</code>
                     </small>
                   </td>
-                  <td>{euros(line.unitCents)}</td>
+                  <td>{euros(Math.round(line.netCents / line.quantity))}</td>
                   <td>
                     <label>
                       <span className={styles.visuallyHidden}>

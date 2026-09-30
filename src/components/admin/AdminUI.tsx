@@ -34,6 +34,7 @@ export function Badge({ value }: { value: string }) {
           'DELIVERED',
           'SENT',
           'COMPLETED',
+          'PROMO_ACTIVE',
         ].includes(value)
       ? styles.success
       : [
@@ -43,6 +44,8 @@ export function Badge({ value }: { value: string }) {
             'UNFULFILLED',
             'PENDING',
             'QUEUED',
+            'RESERVED',
+            'PROMO_SCHEDULED',
           ].includes(value)
         ? styles.pending
         : [

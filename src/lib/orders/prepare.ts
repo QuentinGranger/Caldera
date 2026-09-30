@@ -2,7 +2,10 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { cartTokenHash } from '@/lib/cart/identity';
 import { readCheckout } from '@/lib/checkout/queries';
-import { validateCheckout } from '@/lib/checkout/validation';
+import { promotionLines, validateCheckout } from '@/lib/checkout/validation';
+import { evaluatePromotion } from '@/lib/promotions/pricing';
+import { promotionUsage } from '@/lib/promotions/service';
+import { fromCents, toCents } from '@/lib/refunds/amounts';
 import { parseId } from '@/lib/checkout/schemas';
 import { Prisma } from '@/generated/prisma/client';
 import {
@@ -67,6 +70,30 @@ export async function prepareOrder(
       throw new OrderError(
         'Votre panier ou les tarifs ont changé. Vérifiez et validez à nouveau le récapitulatif.',
       );
+    // The last uses of a code go to one order at a time: counted again under
+    // the promotion lock, never from the earlier read.
+    const promotion = data.promotion;
+    if (promotion) {
+      await tx.$queryRaw`SELECT id FROM "Promotion" WHERE id = ${promotion.rule.id}::uuid FOR UPDATE`;
+      const result = evaluatePromotion(promotion.rule, {
+        lines: promotionLines(data.cart),
+        shippingCents: toCents(view.shippingAmount!),
+        usage: await promotionUsage(tx, promotion.rule.id, view.contact.email),
+      });
+      if (!result.ok)
+        throw new OrderError(
+          `${result.reason} Retirez le code ${promotion.rule.code} pour continuer.`,
+        );
+      if (
+        fromCents(result.itemsCents) !== view.promotion?.discount ||
+        fromCents(result.shippingCents) !== view.promotion.shippingDiscount
+      )
+        throw new OrderError(
+          'Votre panier ou les tarifs ont changé. Vérifiez et validez à nouveau le récapitulatif.',
+        );
+    }
+    const discount = view.promotion?.discount ?? '0.00';
+    const shippingDiscount = view.promotion?.shippingDiscount ?? '0.00';
     const total = new Prisma.Decimal(view.total!);
     toStripeAmount(total); // Validate Stripe range before reserving anything.
     const method = data.methods.find((m) => m.id === view.selectedMethod!.id)!;
@@ -92,7 +119,13 @@ export async function prepareOrder(
         phone: contact.phone || null,
         currency: STORE_CURRENCY,
         subtotalAmount: view.cart.subtotal,
-        shippingAmount: view.shippingAmount!,
+        discountAmount: discount,
+        shippingAmount: new Prisma.Decimal(view.shippingAmount!).minus(
+          shippingDiscount,
+        ),
+        shippingDiscountAmount: shippingDiscount,
+        promotionCode: view.promotion?.code ?? null,
+        promotionLabel: view.promotion?.label ?? null,
         totalAmount: total,
         shippingMethodCode: method.code,
         shippingMethodName: method.name,
@@ -108,6 +141,9 @@ export async function prepareOrder(
             unitCost: item.variant.costPrice,
             quantity: item.quantity,
             lineTotal: item.variant.price.mul(item.quantity),
+            discountAmount:
+              view.promotion?.items.find((line) => line.itemId === item.id)
+                ?.amount ?? '0.00',
             imageUrl: view.cart.items.find((i) => i.id === item.id)!.image,
           })),
         },
@@ -128,6 +164,19 @@ export async function prepareOrder(
           })),
         },
         payment: { create: { amount: total, currency: STORE_CURRENCY } },
+        ...(promotion
+          ? {
+              promotionRedemption: {
+                create: {
+                  promotionId: promotion.rule.id,
+                  email: contact.email.toLowerCase(),
+                  discountAmount: new Prisma.Decimal(discount).plus(
+                    shippingDiscount,
+                  ),
+                },
+              },
+            }
+          : {}),
       },
       include: orderInclude,
     });

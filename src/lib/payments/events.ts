@@ -12,6 +12,7 @@ import {
   consumeReservations,
   releaseReservations,
 } from '@/lib/inventory/reservations';
+import { consumePromotion, releasePromotion } from '@/lib/promotions/service';
 import type { Intent } from '@/lib/stripe/stripe';
 import { validateIntent } from './validation';
 
@@ -103,6 +104,7 @@ async function applyIntentState(
       }
 
       await consumeReservations(tx, order);
+      await consumePromotion(tx, orderId);
       await tx.order.update({
         where: { id: orderId },
         data: {
@@ -130,6 +132,7 @@ async function applyIntentState(
       const expired = order.reservations.every((r) => r.expiresAt <= now);
 
       await releaseReservations(tx, order, expired);
+      await releasePromotion(tx, orderId);
       await tx.payment.update({
         where: { orderId },
         data: { status: 'CANCELLED' },

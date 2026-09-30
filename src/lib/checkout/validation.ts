@@ -4,6 +4,8 @@ import { Prisma } from '@/generated/prisma/client';
 import { serializeCart } from '@/lib/cart/queries';
 import { MAX_CART_ITEM_QUANTITY } from '@/lib/cart/constants';
 import { validateCart } from '@/lib/cart/validation';
+import { evaluatePromotion } from '@/lib/promotions/pricing';
+import { fromCents, toCents } from '@/lib/refunds/amounts';
 import { parseContact, CheckoutError } from './schemas';
 import {
   emptyContact,
@@ -59,9 +61,22 @@ export function checkoutFingerprint(data: CheckoutData, view: CheckoutView) {
         methodVersion: data.methods.find(
           (m) => m.id === view.selectedMethod?.id,
         )?.updatedAt,
+        promotion: view.promotion,
+        promotionIssue: view.promotionIssue,
+        promotionVersion: data.promotion?.updatedAt,
       }),
     )
     .digest('hex');
+}
+/** Cart lines as the promotion rules see them (valid cart only). */
+export function promotionLines(record: CheckoutData['cart']) {
+  return record.items.map((item) => ({
+    id: item.id,
+    unitCents: toCents(item.variant.price),
+    quantity: item.quantity,
+    gameId: item.variant.product.gameId,
+    categoryId: item.variant.product.categoryId,
+  }));
 }
 export function getCheckoutSummary(data: CheckoutData): CheckoutView {
   const { cart: record, session, countries, methods: rules } = data;
@@ -92,12 +107,51 @@ export function getCheckoutSummary(data: CheckoutData): CheckoutView {
     /* An incomplete draft determines the first accessible step. */
   }
   const subtotal = new Prisma.Decimal(cart.subtotal);
-  const methods = contactValid
-    ? getAvailableShippingMethods(rules, contact.shipping.countryCode, subtotal)
-    : [];
-  const selectedMethod =
+  const lines = blocked ? [] : promotionLines(record);
+  const evaluate = (shippingCents: number | null) =>
+    data.promotion && !blocked
+      ? evaluatePromotion(data.promotion.rule, {
+          lines,
+          shippingCents,
+          usage: data.promotion.usage,
+        })
+      : null;
+  // The items discount comes first: free-shipping thresholds apply to what
+  // the customer really pays for the items.
+  const itemsOnly = evaluate(null);
+  const methodsFor = (itemsDiscount: number) =>
+    contactValid
+      ? getAvailableShippingMethods(
+          rules,
+          contact.shipping.countryCode,
+          subtotal.minus(fromCents(itemsDiscount)),
+        )
+      : [];
+  let methods = methodsFor(itemsOnly?.ok ? itemsOnly.itemsCents : 0);
+  let selectedMethod =
     methods.find((method) => method.id === session?.shippingMethodId) ?? null;
+  const result = evaluate(
+    selectedMethod ? toCents(selectedMethod.amount) : null,
+  );
+  if (itemsOnly?.ok && itemsOnly.itemsCents && !result?.ok) {
+    methods = methodsFor(0);
+    selectedMethod =
+      methods.find((method) => method.id === session?.shippingMethodId) ?? null;
+  }
   const shippingAmount = selectedMethod?.amount ?? null;
+  const promotion =
+    data.promotion && result?.ok
+      ? {
+          code: data.promotion.rule.code,
+          label: data.promotion.rule.label,
+          discount: fromCents(result.itemsCents),
+          shippingDiscount: fromCents(result.shippingCents),
+          items: result.items.map((item) => ({
+            itemId: item.id,
+            amount: fromCents(item.cents),
+          })),
+        }
+      : null;
   const view: CheckoutView = {
     sessionId: session?.id ?? null,
     status: expired ? 'EXPIRED' : 'IN_PROGRESS',
@@ -107,8 +161,20 @@ export function getCheckoutSummary(data: CheckoutData): CheckoutView {
     selectedMethod,
     cart,
     shippingAmount,
+    promotion,
+    promotionIssue:
+      data.promotion && result && !result.ok
+        ? { code: data.promotion.rule.code, message: result.reason }
+        : null,
+    provisionalTotal: subtotal.minus(promotion?.discount ?? 0).toFixed(2),
     total:
-      shippingAmount === null ? null : subtotal.plus(shippingAmount).toFixed(2),
+      shippingAmount === null
+        ? null
+        : subtotal
+            .minus(promotion?.discount ?? 0)
+            .plus(shippingAmount)
+            .minus(promotion?.shippingDiscount ?? 0)
+            .toFixed(2),
     requiredStep: !contactValid
       ? 'contact'
       : !selectedMethod
@@ -157,5 +223,9 @@ export function validateCheckout(data: CheckoutData) {
   );
   if (!view.selectedMethod)
     throw new CheckoutError('Choisissez un mode de livraison disponible.');
+  if (view.promotionIssue)
+    throw new CheckoutError(
+      `${view.promotionIssue.message} Retirez le code ${view.promotionIssue.code} pour continuer.`,
+    );
   return { view, fingerprint: checkoutFingerprint(data, view) };
 }

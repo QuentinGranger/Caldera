@@ -43,7 +43,7 @@ export function CheckoutFlow({
             Total provisoire :{' '}
             <strong>
               {view.total === null
-                ? `${formatPrice(view.cart.subtotal)} + livraison`
+                ? `${formatPrice(view.provisionalTotal)} + livraison`
                 : formatPrice(view.total)}
             </strong>
             <a href="#checkout-summary">Voir le détail</a>

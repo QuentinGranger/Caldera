@@ -75,9 +75,28 @@ export function refundState(
 
 export type RefundLine = {
   orderItemId: string;
-  unitCents: number;
+  /** What these units cost the customer (see lineRefundCents). */
+  nominalCents: number;
   quantity: number;
 };
+
+/**
+ * What `quantity` more units of a line cost the customer, `refunded` units
+ * being already refunded: `netCents` (line total minus its share of a
+ * promotional discount) is spread over the units so that refunding them all,
+ * in any number of steps, gives back exactly `netCents`.
+ */
+export function lineRefundCents(
+  netCents: number,
+  lineQuantity: number,
+  refunded: number,
+  quantity: number,
+) {
+  return (
+    Math.floor((netCents * (refunded + quantity)) / lineQuantity) -
+    Math.floor((netCents * refunded) / lineQuantity)
+  );
+}
 
 /**
  * Splits `amountCents` over the selected lines and shipping. When less than
@@ -97,7 +116,7 @@ export function allocateRefund({
   const parts = [
     ...lines.map((line) => ({
       key: line.orderItemId,
-      nominal: line.unitCents * line.quantity,
+      nominal: line.nominalCents,
     })),
     ...(shippingCents > 0 ? [{ key: 'shipping', nominal: shippingCents }] : []),
   ];

@@ -3,6 +3,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { cartSelect } from '@/lib/cart/queries';
 import { cartTokenHash } from '@/lib/cart/identity';
+import { promotionRule, promotionUsage } from '@/lib/promotions/service';
 
 export const checkoutInclude = {
   addresses: true,
@@ -43,7 +44,23 @@ export async function readCheckout(
     include: { countries: { select: { code: true, isActive: true } } },
     orderBy: [{ sortOrder: 'asc' }, { code: 'asc' }],
   });
-  return { cart, session, countries, methods };
+  // The code typed at checkout, with its current rules and uses.
+  const promotion = session?.promotionId
+    ? await tx.promotion.findUnique({ where: { id: session.promotionId } })
+    : null;
+  return {
+    cart,
+    session,
+    countries,
+    methods,
+    promotion: promotion
+      ? {
+          rule: await promotionRule(tx, promotion),
+          usage: await promotionUsage(tx, promotion.id, session?.email ?? null),
+          updatedAt: promotion.updatedAt,
+        }
+      : null,
+  };
 }
 export type CheckoutData = NonNullable<
   Awaited<ReturnType<typeof readCheckout>>

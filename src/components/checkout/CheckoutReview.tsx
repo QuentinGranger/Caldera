@@ -35,7 +35,9 @@ export function CheckoutReview({ view }: { view: CheckoutView }) {
           {view.selectedMethod?.name} ·{' '}
           {view.shippingAmount === '0.00'
             ? 'Offerte'
-            : formatPrice(view.shippingAmount ?? '0')}
+            : Number(view.promotion?.shippingDiscount ?? 0) > 0
+              ? `Offerte avec le code ${view.promotion!.code}`
+              : formatPrice(view.shippingAmount ?? '0')}
         </p>
         <Link href="/checkout?step=shipping">
           Modifier le mode de livraison

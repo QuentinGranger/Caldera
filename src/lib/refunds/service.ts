@@ -10,6 +10,7 @@ import { lockOrder, transaction } from '@/lib/orders/common';
 import {
   allocateRefund,
   fromCents,
+  lineRefundCents,
   refundState,
   stripeReason,
   toCents,
@@ -108,7 +109,8 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
       const item = order.items.find((row) => row.id === line.orderItemId);
       if (!item)
         throw new AdminError('Article introuvable dans cette commande.');
-      const left = item.quantity - (state.refundedQuantities.get(item.id) ?? 0);
+      const refunded = state.refundedQuantities.get(item.id) ?? 0;
+      const left = item.quantity - refunded;
       if (
         !Number.isInteger(line.quantity) ||
         line.quantity < 0 ||
@@ -119,7 +121,12 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
         );
       lines.push({
         orderItemId: item.id,
-        unitCents: toCents(item.unitPrice),
+        nominalCents: lineRefundCents(
+          toCents(item.lineTotal) - toCents(item.discountAmount),
+          item.quantity,
+          refunded,
+          line.quantity,
+        ),
         quantity: line.quantity,
       });
     }
@@ -129,8 +136,7 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
     if (request.includeShipping && !shippingCents)
       throw new AdminError('Les frais de livraison sont déjà remboursés.');
     const nominal =
-      lines.reduce((sum, line) => sum + line.unitCents * line.quantity, 0) +
-      shippingCents;
+      lines.reduce((sum, line) => sum + line.nominalCents, 0) + shippingCents;
     const amountCents = request.amountCents ?? nominal;
     if (!amountCents || amountCents < 1)
       throw new AdminError(

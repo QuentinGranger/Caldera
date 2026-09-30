@@ -27,6 +27,8 @@ export const cartVariantSelect = {
       productType: true,
       status: true,
       preorder: true,
+      gameId: true,
+      categoryId: true,
       category: { select: { isActive: true } },
       tcgSet: { select: { isActive: true } },
       game: { select: { isActive: true } },
