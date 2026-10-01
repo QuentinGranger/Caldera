@@ -317,6 +317,7 @@ const detail = (overrides: Partial<ProductDetail> = {}): ProductDetail => ({
   compareAtPrice: null,
   priceFrom: true,
   availability: 'IN_STOCK',
+  languages: ['FR', 'EN'],
   quickAddVariantId: 'v-fr',
   productType: 'ETB',
   preorder: false,

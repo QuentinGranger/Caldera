@@ -82,6 +82,7 @@ export function CatalogResults({
   path,
   nav,
   browse,
+  card,
   emptyState,
   interlude,
   widest,
@@ -90,6 +91,8 @@ export function CatalogResults({
   path: string;
   nav?: ReactNode;
   browse?: 'set';
+  /** The cards' layout, for aisles where the edition decides. */
+  card?: 'edition';
   emptyState: ReactNode;
   interlude?: ReactNode;
   widest?: EmptyAction;
@@ -149,6 +152,7 @@ export function CatalogResults({
           {result.products.length ? (
             <CatalogGrid
               products={result.products}
+              card={card}
               interlude={load.hasRefinements ? undefined : interlude}
             />
           ) : (

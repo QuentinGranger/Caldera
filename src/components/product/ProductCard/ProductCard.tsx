@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { ProductCardQuickAdd } from './ProductCardQuickAdd';
 import { ProductFavorite } from './ProductFavorite';
+import { languageLabels } from '@/lib/catalog/params';
 import type { CatalogProduct } from '@/types/product';
 import { formatPrice } from '@/utils/formatPrice';
 import styles from './ProductCard.module.scss';
@@ -15,6 +16,7 @@ export function ProductCard({
   compact = false,
   tone = 'day',
   sizes = GRID_SIZES,
+  layout = 'default',
 }: {
   product: CatalogProduct;
   compact?: boolean;
@@ -22,7 +24,15 @@ export function ProductCard({
   tone?: 'day' | 'night';
   /** Width of the card where it is shown; the listing grid by default. */
   sizes?: string;
+  /**
+   * `edition`: where the edition decides (displays), the set alone above
+   * the name (the family is the page's) and the languages on sale beside
+   * the availability. Same card, same height.
+   */
+  layout?: 'default' | 'edition';
 }) {
+  const edition = layout === 'edition';
+  const inStock = product.availability === 'IN_STOCK';
   return (
     <article
       className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''}`}
@@ -50,15 +60,32 @@ export function ProductCard({
       </div>
       <div className={styles.content}>
         <p className={styles.category}>
-          {product.category}
-          {product.tcgSet ? ` · ${product.tcgSet.name}` : ''}
+          {edition && product.tcgSet
+            ? product.tcgSet.name
+            : `${product.category}${product.tcgSet ? ` · ${product.tcgSet.name}` : ''}`}
         </p>
         <h3>
           <Link href={`/produit/${product.slug}`}>{product.name}</Link>
         </h3>
         {/* Pre-order, sold out and last pieces already show as a badge. */}
-        {product.availability === 'IN_STOCK' && (
-          <p className={styles.availability}>En stock</p>
+        {edition && product.languages.length > 0 ? (
+          <p className={styles.facts}>
+            <span className={styles.languages}>
+              {product.languages.map((language) => (
+                <span key={language} className={styles.language}>
+                  <span aria-hidden="true">
+                    {language === 'OTHER' ? 'Autre' : language}
+                  </span>
+                  <span className={styles.srOnly}>
+                    {languageLabels[language]}
+                  </span>
+                </span>
+              ))}
+            </span>
+            {inStock && <span className={styles.availability}>En stock</span>}
+          </p>
+        ) : (
+          inStock && <p className={styles.availability}>En stock</p>
         )}
         <div className={styles.bottom}>
           {/* The amount always ends the block: amounts align along a row. */}

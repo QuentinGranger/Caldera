@@ -2,7 +2,8 @@ import { availableQuantity } from '@/lib/inventory/availability';
 import 'server-only';
 import { descendantIds } from './categoryTree';
 import { cache } from 'react';
-import type { Prisma } from '@/generated/prisma/client';
+import type { Prisma, ProductLanguage } from '@/generated/prisma/client';
+import { languageLabels } from './params';
 import { getPrisma } from '@/lib/db/prisma';
 import { getAvailability, getProductBadge } from './getAvailability';
 import { getPricing } from './getPricing';
@@ -82,7 +83,7 @@ type Row = Prisma.ProductGetPayload<{ select: typeof catalogProductSelect }>;
 export function toCatalogProduct(
   product: Omit<Row, 'tags' | 'variants'> & {
     tags?: Row['tags'];
-    variants: Pick<
+    variants: (Pick<
       Row['variants'][number],
       | 'id'
       | 'sku'
@@ -93,7 +94,8 @@ export function toCatalogProduct(
       | 'stockQuantity'
       | 'reservedQuantity'
       | 'lowStockThreshold'
-    >[];
+    > &
+      Partial<Pick<Row['variants'][number], 'language'>>)[];
   },
 ): CatalogProduct {
   const image = getProductVisual(
@@ -123,10 +125,21 @@ export function toCatalogProduct(
     imageAlt: image.alt,
     ...getPricing(product.variants),
     availability,
+    languages: variantLanguages(product.variants),
     quickAddVariantId: quickAddVariant?.id ?? null,
     ...(badge ? { badge } : {}),
   };
 }
+/** The languages of the variants given, in the shop's order; none unknown. */
+function variantLanguages(
+  variants: readonly { language?: ProductLanguage }[],
+): ProductLanguage[] {
+  const present = new Set(variants.map((variant) => variant.language));
+  return (Object.keys(languageLabels) as ProductLanguage[]).filter((language) =>
+    present.has(language),
+  );
+}
+
 function boundedLimit(limit: number): number {
   if (!Number.isInteger(limit) || limit < 1 || limit > 100)
     throw new RangeError('La limite doit être un entier entre 1 et 100.');

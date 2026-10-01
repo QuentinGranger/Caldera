@@ -1,3 +1,4 @@
+import type { ProductLanguage } from '@/generated/prisma/client';
 export type ProductBadgeKind = 'new' | 'preorder' | 'sold-out' | 'limited';
 export type Availability =
   'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'PREORDER';
@@ -15,6 +16,8 @@ export type CatalogProduct = {
   image: string;
   imageAlt: string;
   availability: Availability;
+  /** Languages of the variants on sale here, in the shop's order. */
+  languages: ProductLanguage[];
   quickAddVariantId?: string | null;
   badge?: ProductBadgeKind;
 };

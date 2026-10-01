@@ -73,6 +73,8 @@ export interface AisleCopy {
   focus: string;
   /** A filter offered as chips above the products (by set). */
   browse?: 'set';
+  /** The cards' layout: `edition` shows the set and the languages first. */
+  card?: 'edition';
   teaser?: Teaser;
 }
 
@@ -113,6 +115,7 @@ export function shopAisleCopy(
         eyebrow: 'Pour aller plus loin',
         lead: 'Des displays pour multiplier les ouvertures et explorer une extension en profondeur.',
         focus: '50% 76%',
+        card: 'edition',
         teaser: {
           eyebrow: 'Garder ses displays intacts',
           guide: 'conserver-produits-scelles',

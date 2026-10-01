@@ -122,6 +122,7 @@ export function LandingPage({
           ) : undefined
         }
         browse={copy?.browse}
+        card={copy?.card}
         emptyState={
           <EmptyState
             title={

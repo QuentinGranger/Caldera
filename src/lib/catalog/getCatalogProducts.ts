@@ -140,6 +140,7 @@ export async function getCatalogProducts(
       select: {
         id: true,
         sku: true,
+        language: true,
         price: true,
         compareAtPrice: true,
         isDefault: true,

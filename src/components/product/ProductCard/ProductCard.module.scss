@@ -125,6 +125,45 @@
     background: currentColor;
   }
 }
+// Edition layout: the languages on sale, quiet chips beside the stock line,
+// on the line the stock alone would take.
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  margin-top: 0.3rem;
+  .availability {
+    margin-top: 0;
+  }
+}
+.languages {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.language {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.85rem;
+  height: 1.2rem;
+  padding: 0 0.4rem;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-pill;
+  color: v.$color-text;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .category {
   margin-bottom: 0.3rem;
   overflow: hidden;
@@ -227,6 +266,10 @@
   .category,
   .priceNote {
     color: v.$color-muted-on-night;
+  }
+  .language {
+    border-color: rgb(255 255 255 / 22%);
+    color: v.$color-text-on-dark;
   }
   .availability {
     color: #9fd3b4;

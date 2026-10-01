@@ -376,6 +376,20 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   assert.ok(one.includes('Retirer le filtre [Démo] Vallées Oubliées'));
   assert.equal(articles(one).length, 3);
 
+  // Displays: each card names its set alone and the languages it is sold
+  // in, from its variants (seed: the Aurores display is Japanese only).
+  const displays = articles((await page('/pokemon/displays')).html);
+  assert.ok(displays.length > 0);
+  for (const card of displays)
+    assert.match(card, /aria-hidden="true">(FR|EN|JP|DE|ES|IT|Autre)<\/span>/);
+  const japanese = displays.find((card) => card.includes('Aurores japonaises'));
+  assert.ok(japanese?.includes('>Japonais<'));
+  assert.ok(!japanese?.includes('>Français<'));
+  assert.ok(!japanese?.includes('Displays ·'));
+  // Elsewhere the card keeps its family line and no language chip.
+  assert.ok(articles(boosters).every((card) => !card.includes('>Français<')));
+  assert.ok(articles(boosters).some((card) => card.includes('Boosters ·')));
+
   // The sealed products lead to a real guide, by its own title.
   const sealed = (await page('/pokemon/scelles')).html;
   assert.ok(sealed.includes('href="/guides/etb-display-ou-booster"'));

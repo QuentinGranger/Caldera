@@ -78,3 +78,40 @@ test('prix : Decimal exact, minimum actif, prix barré cohérent et variante par
   assert.equal(new Prisma.Decimal('0.10').plus('0.20').toFixed(2), '0.30');
   assert.match(formatPrice('59.90'), /^59,90\s€$/u);
 });
+
+test('carte produit : langues réelles des variantes, dans l’ordre de la boutique', async () => {
+  const { toCatalogProduct } = await import('../src/lib/catalog/queries');
+  const variant = (sku: string, language?: 'FR' | 'EN' | 'JP') => ({
+    id: sku,
+    sku,
+    price: new Prisma.Decimal('149.90'),
+    compareAtPrice: null,
+    isDefault: false,
+    isActive: true,
+    stockQuantity: 3,
+    reservedQuantity: 0,
+    lowStockThreshold: 0,
+    ...(language ? { language } : {}),
+  });
+  const product = (variants: ReturnType<typeof variant>[]) =>
+    toCatalogProduct({
+      id: 'p-display',
+      name: 'Display',
+      slug: 'display',
+      productType: 'DISPLAY',
+      preorder: false,
+      newArrival: false,
+      category: { name: 'Displays', slug: 'displays' },
+      tcgSet: null,
+      images: [],
+      variants,
+    });
+  // Each language once, French first, whatever the order of the variants.
+  assert.deepEqual(
+    product([variant('a', 'JP'), variant('b', 'FR'), variant('c', 'FR')])
+      .languages,
+    ['FR', 'JP'],
+  );
+  // No language in the data: none shown, never French by default.
+  assert.deepEqual(product([variant('d')]).languages, []);
+});

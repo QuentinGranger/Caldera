@@ -15,9 +15,12 @@ const FEW = 3;
 export function CatalogGrid({
   products,
   interlude,
+  card,
 }: {
   products: CatalogProduct[];
   interlude?: ReactNode;
+  /** The cards' layout (`edition`: set and language first). */
+  card?: 'edition';
 }) {
   const inside = Boolean(interlude) && products.length > BEFORE_INTERLUDE;
   return (
@@ -32,7 +35,7 @@ export function CatalogGrid({
               <div className={styles.interludeSlot}>{interlude}</div>
             )}
             <div className={styles.item}>
-              <ProductCard product={product} />
+              <ProductCard product={product} layout={card} />
             </div>
           </Fragment>
         ))}
