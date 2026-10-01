@@ -6,7 +6,10 @@ import { getPrisma } from '../src/lib/db/prisma';
 import { purgeTestInvoices } from './helpers/invoices';
 import { mutateCart } from '../src/lib/cart/service';
 import { cartTokenHash } from '../src/lib/cart/identity';
-import { mutateCheckout } from '../src/lib/checkout/service';
+import {
+  applyPromotionFromCart,
+  mutateCheckout,
+} from '../src/lib/checkout/service';
 import { getCheckoutData } from '../src/lib/checkout/queries';
 import { getCheckoutSummary } from '../src/lib/checkout/validation';
 import { emptyAddress } from '../src/lib/checkout/types';
@@ -265,6 +268,40 @@ test('codes promo : checkout, commande, limites et remboursement', async (t) => 
         }),
       );
     });
+
+    await t.test(
+      'panier : code appliqué avant les coordonnées et conservé au checkout',
+      async () => {
+        const token = await mutateCart(undefined, {
+          kind: 'add',
+          variantId: boxVariant,
+          quantity: 1,
+        });
+        tokens.add(token);
+
+        const cartView = await applyPromotionFromCart(
+          token,
+          `  ${code.toLowerCase()}  `,
+        );
+        assert.equal(cartView.requiredStep, 'contact');
+        assert.equal(cartView.promotion?.code, code);
+        assert.equal(cartView.promotion?.discount, '11.98');
+        assert.equal(cartView.provisionalTotal, '47.92');
+
+        const persisted = await getCheckoutData(token);
+        assert.ok(persisted?.session);
+        assert.equal(persisted.session.promotionId, codeId);
+
+        // Starting the checkout again must reuse the same draft, not lose the code.
+        await mutateCheckout(token, { kind: 'start' });
+        const afterStart = await getCheckoutData(token);
+        assert.ok(afterStart);
+        const checkoutView = getCheckoutSummary(afterStart);
+        assert.equal(checkoutView.promotion?.code, code);
+        assert.equal(checkoutView.promotion?.discount, '11.98');
+        assert.equal(checkoutView.provisionalTotal, '47.92');
+      },
+    );
 
     await t.test(
       'checkout : réduction sur les articles concernés, seuil de port après remise',
