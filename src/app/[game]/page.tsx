@@ -8,12 +8,13 @@ import { getGuidesIndex } from '@/components/editorial/content';
 import { GameHubPage } from '@/components/landing/GameHubPage';
 import { requireLandingView } from '@/components/landing/routes';
 import type { SearchParams } from '@/lib/catalog/params';
+import { isShopGame } from '@/lib/catalog/shopGame';
 import {
   STATUS_LABELS,
   STATUS_SLUGS,
   statusListingPath,
 } from '@/lib/seo/facets';
-import { getGameHubShortcuts } from '@/lib/seo/links';
+import { getGameHubShortcuts, getShopAisles } from '@/lib/seo/links';
 import type { SeoLink } from '@/lib/seo/types';
 
 type Props = {
@@ -39,11 +40,12 @@ export async function generateMetadata({
 
 export default async function Page({ params, searchParams }: Props) {
   const view = await requireLandingView((await params).game, [], searchParams);
-  const [load, shortcuts, listings, guides] = await Promise.all([
+  const [load, shortcuts, listings, guides, aisles] = await Promise.all([
     loadCatalog({ path: view.path, searchParams, scope: view.catalogScope }),
     getGameHubShortcuts(view.scope.game),
     getIndexableListings(),
     getGuidesIndex(),
+    isShopGame([view.game.slug]) ? getShopAisles() : [],
   ]);
   // A status without its own page for the game (every product of the
   // status is of this game, or too few) leads to the shop's listing.
@@ -58,8 +60,12 @@ export default async function Page({ params, searchParams }: Props) {
     <GameHubPage
       view={view}
       load={load}
+      aisles={aisles}
+      // The families are the aisles above the products: not twice.
       shortcuts={[
-        { title: 'Explorer par format', links: shortcuts.formats },
+        ...(aisles.length
+          ? []
+          : [{ title: 'Explorer par format', links: shortcuts.formats }]),
         { title: 'Acheter par langue', links: shortcuts.languages },
         { title: 'Disponibilité', links: availability },
       ]}

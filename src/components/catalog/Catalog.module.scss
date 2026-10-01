@@ -57,12 +57,13 @@ $hairline: rgb(23 62 50 / 14%);
 
 // --- The counter: families, exploration bar, grid ---------------------------
 .explorer {
+  margin-top: v.$rhythm-after-hero;
   scroll-margin-top: calc(var(--header-height) + 0.5rem);
 }
 
 // The families at a glance: one row, swiped on phones.
 .quickNav {
-  margin: 0.25rem 0 0.5rem;
+  margin: 0 0 0.5rem;
   ul {
     display: flex;
     gap: 0.5rem;
@@ -109,7 +110,7 @@ $hairline: rgb(23 62 50 / 14%);
     &:hover {
       border-color: v.$color-green-secondary;
     }
-    &[aria-current='true'] {
+    &[aria-current] {
       border-color: v.$color-green-dark;
       background: v.$color-green-dark;
       color: v.$color-text-on-dark;
@@ -437,7 +438,7 @@ $hairline: rgb(23 62 50 / 14%);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 2rem 0.85rem;
-  margin-top: 1.5rem;
+  margin-top: v.$rhythm-grid;
   transition: opacity v.$duration-medium v.$ease-out;
   // Two columns down to the smallest phones: comparing side by side.
   @media (min-width: 300px) {
@@ -450,6 +451,10 @@ $hairline: rgb(23 62 50 / 14%);
   @include m.from(v.$breakpoint-desktop) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 2.75rem 1.5rem;
+    // A few products: three wider columns, never a row of empty slots.
+    &[data-few] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 }
 .explorer:has([aria-busy='true'], .pending) .grid {
@@ -478,10 +483,14 @@ $hairline: rgb(23 62 50 / 14%);
   }
 }
 
-// A window on the universe between two rows: image first, a few words.
+// A window between two rows: image first, a few words. After a short grid,
+// it follows it.
 .interludeSlot {
   grid-column: 1 / -1;
   margin-block: 0.5rem;
+}
+.interludeAfter {
+  margin-top: v.$rhythm-section-inner;
 }
 .interlude {
   position: relative;
@@ -898,59 +907,6 @@ $hairline: rgb(23 62 50 / 14%);
 }
 .filterSection [aria-disabled='true'] {
   opacity: 0.65;
-}
-
-// --- Internal links, under the listing ---------------------------------------
-.linkGroups {
-  display: grid;
-  gap: 2rem;
-  margin-top: 4rem;
-  padding-top: 2.5rem;
-  border-top: 1px solid v.$color-border;
-  @include m.from(v.$breakpoint-tablet) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.linkGroup {
-  min-width: 0;
-  h2 {
-    font-size: 1.6rem;
-    margin-bottom: 0.75rem;
-    overflow-wrap: anywhere;
-  }
-  ul {
-    list-style: none;
-    padding: 0;
-    display: grid;
-    gap: 0.15rem;
-  }
-  li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 0.6rem;
-    font-size: 0.8rem;
-    line-height: 1.5;
-  }
-  a {
-    display: inline-block;
-    padding: 0.35rem 0;
-    overflow-wrap: anywhere;
-    text-decoration: underline;
-    text-decoration-color: v.$color-border;
-    text-underline-offset: 4px;
-  }
-  a:hover {
-    color: v.$color-green;
-    text-decoration-color: currentcolor;
-  }
-}
-.linkCount {
-  color: v.$color-text-muted;
-  font-size: 0.72rem;
 }
 
 .srOnly {

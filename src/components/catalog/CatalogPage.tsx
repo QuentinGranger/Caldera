@@ -2,38 +2,23 @@ import type { Metadata } from 'next';
 import { permanentRedirect } from 'next/navigation';
 import { connection } from 'next/server';
 import type { ReactNode } from 'react';
-import { Container } from '@/components/ui/Container/Container';
-import {
-  Breadcrumb,
-  type BreadcrumbItem,
-} from '@/components/ui/Breadcrumb/Breadcrumb';
-import { JsonLd } from '@/components/seo/JsonLd';
 import { listingMetadata } from '@/lib/catalog/metadata';
-import {
-  activeFilterCount,
-  type CatalogScope,
-  type SearchParams,
-} from '@/lib/catalog/params';
-import { collectionPageNode, graph } from '@/lib/seo/jsonld';
+import { activeFilterCount } from '@/lib/catalog/params';
 import type { MetadataImage } from '@/lib/seo/metadata';
-import type { IndexDecision, SeoLinkGroup } from '@/lib/seo/types';
+import type { IndexDecision } from '@/lib/seo/types';
 import {
-  catalogItemListNode,
-  catalogLoadPath,
   resolveCatalog,
   type CatalogLoad,
   type CatalogLoadInput,
 } from './catalogLoad';
-import { CatalogHeader } from './CatalogHeader';
 import { CatalogFilters } from './CatalogFilters';
-import { CatalogLinks } from './CatalogLinks';
 import { CatalogToolbar } from './CatalogToolbar';
 import { ActiveFilters } from './ActiveFilters';
 import { CatalogGrid } from './CatalogGrid';
 import { CatalogPagination } from './CatalogPagination';
 import { CatalogQuickNav } from './CatalogQuickNav';
 import { EmptyCatalog } from './EmptyCatalog';
-import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
+import type { EmptyAction } from './EmptyState';
 import styles from './Catalog.module.scss';
 
 export {
@@ -82,154 +67,90 @@ export async function catalogListingMetadata({
 }
 
 /**
- * The products of a loaded listing: the families at a glance, the
+ * The products of a loaded listing, the same on every page: a row of ways
+ * in (`nav`: the shop's aisles; the listing's families by default), the
  * exploration bar (count, search, filters drawer, order), the active
- * filters, the grid and its crawlable pagination, then the internal links
- * and the newsletter (`newsletter={false}`: the page places its own).
- * A scope without any product and without refinement shows `emptyState`
- * (the default empty message otherwise), without filters. `interlude`, when
- * given, opens a window on the universe between two rows of products.
+ * filters, the grid and its crawlable pagination. A scope without any
+ * product and without refinement shows `emptyState` instead of the bar.
+ * `interlude` opens a window between two rows (after the grid when it is
+ * short); `widest` is the last way out of a search without result.
  */
 export function CatalogResults({
   load,
   path,
+  nav,
   emptyState,
-  linkGroups,
   interlude,
-  newsletter: withNewsletter = true,
+  widest,
 }: {
   load: CatalogLoad;
   path: string;
-  emptyState?: ReactNode;
-  linkGroups?: SeoLinkGroup[];
+  nav?: ReactNode;
+  emptyState: ReactNode;
   interlude?: ReactNode;
-  newsletter?: boolean;
+  widest?: EmptyAction;
 }) {
   const { filters, facets, result, total } = load;
-  const links = linkGroups?.length ? (
-    <CatalogLinks groups={linkGroups} />
-  ) : null;
-  const newsletter = withNewsletter && (
-    <NewsletterCta
-      eyebrow="Réassorts et nouveautés"
-      title="Soyez prévenu quand de nouvelles cartes arrivent"
+  const quickNav = nav ?? (
+    <CatalogQuickNav facets={facets} filters={filters} path={path} />
+  );
+  return (
+    <section
+      className={styles.explorer}
+      id="catalogue-resultats"
+      aria-labelledby="catalogue-produits"
     >
-      Recevez les prochains réassorts, sorties et sélections sans avoir à
-      surveiller le catalogue.
-    </NewsletterCta>
-  );
-  if (!total && !load.hasRefinements)
-    return (
-      <>
-        {emptyState ?? <EmptyCatalog filters={filters} path={path} />}
-        {links}
-        {newsletter}
-      </>
-    );
-  return (
-    <>
-      <section
-        className={styles.explorer}
-        id="catalogue-resultats"
-        aria-labelledby="catalogue-produits"
-      >
-        <h2 id="catalogue-produits" className={styles.srOnly}>
-          Produits
-        </h2>
-        <CatalogQuickNav facets={facets} filters={filters} path={path} />
-        <CatalogToolbar
-          filters={filters}
-          path={path}
-          total={total}
-          filterControl={
-            <CatalogFilters
-              filters={filters}
-              facets={facets}
-              scope={load.scope}
-              path={path}
-              total={total}
-            />
-          }
-        />
-        {activeFilterCount(filters) > 0 && (
-          <div className={styles.refinements}>
-            {total > 0 && (
-              <p className={styles.resultCount}>
-                {total}{' '}
-                {total > 1 ? 'produits correspondent' : 'produit correspond'} à
-                ces critères.
-              </p>
-            )}
-            <ActiveFilters filters={filters} facets={facets} path={path} />
-          </div>
-        )}
-        {result.products.length ? (
-          <CatalogGrid
-            products={result.products}
-            interlude={load.hasRefinements ? undefined : interlude}
+      <h2 id="catalogue-produits" className={styles.srOnly}>
+        Produits
+      </h2>
+      {quickNav}
+      {!total && !load.hasRefinements ? (
+        emptyState
+      ) : (
+        <>
+          <CatalogToolbar
+            filters={filters}
+            path={path}
+            total={total}
+            filterControl={
+              <CatalogFilters
+                filters={filters}
+                facets={facets}
+                scope={load.scope}
+                path={path}
+                total={total}
+              />
+            }
           />
-        ) : (
-          <EmptyCatalog filters={filters} path={path} />
-        )}
-        <CatalogPagination
-          filters={filters}
-          path={path}
-          pageCount={load.pageCount}
-          total={total}
-          pageSize={result.pageSize}
-        />
-      </section>
-      {links}
-      {newsletter}
-    </>
-  );
-}
-
-export async function CatalogPage({
-  title,
-  description,
-  path,
-  searchParams,
-  scope = {},
-  breadcrumb,
-  children,
-  structuredData = true,
-}: {
-  title: string;
-  description?: string | null;
-  path: string;
-  searchParams: Promise<SearchParams>;
-  scope?: CatalogScope;
-  breadcrumb: BreadcrumbItem[];
-  children?: ReactNode;
-  /** CollectionPage + ItemList of the products shown. */
-  structuredData?: boolean;
-}) {
-  const load = await loadCatalog({ path, searchParams, scope });
-  return (
-    <main id="contenu" tabIndex={-1} className={styles.main}>
-      <Container>
-        <Breadcrumb items={breadcrumb} currentPath={path} />
-        <CatalogHeader
-          title={title}
-          description={description}
-          total={load.total}
-        />
-        {children}
-        <CatalogResults load={load} path={path} />
-      </Container>
-      {structuredData && (
-        <JsonLd
-          data={graph(
-            collectionPageNode({
-              path: catalogLoadPath(load),
-              name: title,
-              description,
-              mainEntity: catalogItemListNode(load),
-            }),
+          {activeFilterCount(filters) > 0 && (
+            <div className={styles.refinements}>
+              {total > 0 && (
+                <p className={styles.resultCount}>
+                  {total}{' '}
+                  {total > 1 ? 'produits correspondent' : 'produit correspond'}{' '}
+                  à ces critères.
+                </p>
+              )}
+              <ActiveFilters filters={filters} facets={facets} path={path} />
+            </div>
           )}
-        />
+          {result.products.length ? (
+            <CatalogGrid
+              products={result.products}
+              interlude={load.hasRefinements ? undefined : interlude}
+            />
+          ) : (
+            <EmptyCatalog filters={filters} path={path} widest={widest} />
+          )}
+          <CatalogPagination
+            filters={filters}
+            path={path}
+            pageCount={load.pageCount}
+            total={total}
+            pageSize={result.pageSize}
+          />
+        </>
       )}
-    </main>
+    </section>
   );
 }

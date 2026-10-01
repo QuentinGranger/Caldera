@@ -8,7 +8,7 @@ import {
   getCalendarYears,
   getReleaseCalendar,
 } from '@/components/landing/releaseData';
-import { CatalogLinks } from '@/components/catalog/CatalogLinks';
+import { ExploreSection } from '@/components/catalog/ExploreSection';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { Container } from '@/components/ui/Container/Container';
@@ -64,7 +64,9 @@ export default async function Page() {
           title="Sorties des 12 derniers mois"
           entries={calendar.recent}
         />
-        <CatalogLinks
+        <ExploreSection
+          eyebrow="Calendrier des sorties"
+          title="Continuer l’exploration"
           groups={[
             {
               title: 'Calendriers par année',

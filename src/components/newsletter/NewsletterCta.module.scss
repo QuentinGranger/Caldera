@@ -6,7 +6,7 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.9rem 1rem;
   align-items: center;
-  margin-block: clamp(2.5rem, 6vw, 5rem) 0;
+  margin-block: v.$rhythm-section 0;
   padding: clamp(1.25rem, 4vw, 2rem);
   color: v.$color-text-on-dark;
   background: v.$color-green-dark;

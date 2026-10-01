@@ -1,24 +1,34 @@
-import Image from 'next/image';
-import { CatalogHeader } from '@/components/catalog/CatalogHeader';
+import { AisleNav } from '@/components/catalog/AisleNav';
+import {
+  CatalogInterlude,
+  type InterludeContent,
+} from '@/components/catalog/CatalogInterlude';
 import {
   CatalogResults,
   catalogItemListNode,
   catalogLoadPath,
   type CatalogLoad,
 } from '@/components/catalog/CatalogPage';
-import { JsonLd } from '@/components/seo/JsonLd';
-import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
-import { Container } from '@/components/ui/Container/Container';
+import { CatalogShell } from '@/components/catalog/CatalogShell';
+import { EmptyState } from '@/components/catalog/EmptyState';
+import { ExploreSection } from '@/components/catalog/ExploreSection';
+import {
+  EXPLORE_PRODUCTS,
+  VIEWS,
+  type AisleCopy,
+} from '@/components/catalog/pageCopy';
+import { HeroLogo, PageHero } from '@/components/catalog/PageHero';
+import { GUIDES_PATH } from '@/components/editorial/editorial';
+import { landingPath } from '@/lib/seo/facets';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
-import type { SeoLinkGroup } from '@/lib/seo/types';
-import type { LandingView } from './landingData';
-import { LandingEditorial } from './LandingEditorial';
-import { LandingEmpty } from './LandingEmpty';
-import { LandingFacts } from './LandingFacts';
+import type { SeoLink, SeoLinkGroup } from '@/lib/seo/types';
+import {
+  CALENDAR_PATH,
+  EXTENSIONS_PATH,
+  type LandingView,
+} from './landingData';
 import { LandingFaq } from './LandingFaq';
 import { LandingGuides } from './LandingGuides';
-import catalogStyles from '@/components/catalog/Catalog.module.scss';
-import styles from './Landing.module.scss';
 
 const EMPTY_TITLES: Partial<Record<LandingView['kind'], string>> = {
   set: 'Aucun produit en ligne pour cette extension',
@@ -26,75 +36,137 @@ const EMPTY_TITLES: Partial<Record<LandingView['kind'], string>> = {
 };
 
 /**
- * /{game}/{facets}: facts, editorial intro, products with their links,
- * guides and FAQ (the game hub has its own page, GameHubPage). Editorial
- * blocks and the FAQ are shown on the first page only.
+ * /{game}/{facets}: an aisle of the game. The hero (its own words for the
+ * shop's families), the aisles and the products at once; then a guide
+ * between the rows, where to go next, a few guides and the questions.
+ * Secondary blocks show on the first page only.
  */
 export function LandingPage({
   view,
   load,
   linkGroups,
+  aisles,
+  copy,
+  teaser,
+  guidesIndexable,
 }: {
   view: LandingView;
   load: CatalogLoad;
   linkGroups: readonly SeoLinkGroup[];
+  /** The shop's aisles, for its game's families; empty otherwise. */
+  aisles: readonly SeoLink[];
+  /** The aisle's own words, for the shop's families. */
+  copy?: AisleCopy;
+  teaser: InterludeContent | null;
+  guidesIndexable: boolean;
 }) {
   const firstPage = load.page === 1;
   const faq = firstPage ? view.faq : [];
+  const game = view.game;
+  const releases: SeoLinkGroup[] = view.setPaths.size
+    ? [
+        {
+          title: 'Sorties',
+          links: [
+            { href: EXTENSIONS_PATH, label: 'Toutes les extensions' },
+            ...(view.calendarIndexable
+              ? [{ href: CALENDAR_PATH, label: 'Calendrier des sorties' }]
+              : []),
+          ],
+        },
+      ]
+    : [];
   return (
-    <main id="contenu" tabIndex={-1} className={catalogStyles.main}>
-      <Container>
-        <Breadcrumb items={view.breadcrumb} currentPath={view.path} />
-        <CatalogHeader
-          eyebrow={view.eyebrow}
-          title={view.heading}
-          description={view.description}
-          intro={
-            <>
-              {view.logo && (
-                <Image
-                  src={view.logo.url}
-                  alt={view.logo.alt}
-                  width={180}
-                  height={90}
-                  className={styles.logo}
-                />
-              )}
-              <LandingFacts facts={view.facts} />
-            </>
-          }
-        />
-        {firstPage && <LandingEditorial html={view.editorialHtml} />}
-        <CatalogResults
-          load={load}
+    <CatalogShell
+      hero={
+        <PageHero
+          breadcrumb={view.breadcrumb}
           path={view.path}
-          emptyState={
-            <LandingEmpty
-              title={
-                EMPTY_TITLES[view.kind] ??
-                'Aucun produit en ligne pour le moment'
-              }
-              links={view.fallbackLinks}
-            />
+          eyebrow={copy?.eyebrow ?? view.eyebrow}
+          title={view.heading}
+          lead={
+            copy?.lead ??
+            view.description ??
+            `${view.heading}, au comptoir de Caldera.`
           }
-          linkGroups={[...linkGroups, ...view.emptyLinkGroups]}
-        />
-        {firstPage && (
-          <LandingGuides entries={view.guides} subject={view.heading} />
-        )}
-        <LandingFaq entries={faq} subject={view.heading} />
-      </Container>
-      <JsonLd
-        data={graph(
-          collectionPageNode({
-            path: catalogLoadPath(load),
-            name: view.heading,
-            description: view.text.description,
-            mainEntity: catalogItemListNode(load),
-          }),
-          faqPageNode(faq),
-        )}
+          view={{
+            src: VIEWS.forest,
+            frame: 'window',
+            focus: copy?.focus ?? '50% 45%',
+          }}
+          action={
+            load.total > 0
+              ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
+              : undefined
+          }
+        >
+          {view.logo && <HeroLogo src={view.logo.url} alt={view.logo.alt} />}
+        </PageHero>
+      }
+      jsonLd={graph(
+        collectionPageNode({
+          path: catalogLoadPath(load),
+          name: view.heading,
+          description: view.text.description,
+          mainEntity: catalogItemListNode(load),
+        }),
+        faqPageNode(faq),
+      )}
+    >
+      <CatalogResults
+        load={load}
+        path={view.path}
+        nav={
+          aisles.length ? (
+            <AisleNav aisles={aisles} current={view.path} />
+          ) : undefined
+        }
+        emptyState={
+          <EmptyState
+            title={
+              EMPTY_TITLES[view.kind] ?? 'Aucun produit en ligne pour le moment'
+            }
+            text={view.fallbackLinks.length ? 'À consulter aussi :' : undefined}
+            actions={view.fallbackLinks}
+          />
+        }
+        interlude={
+          firstPage && teaser ? (
+            <CatalogInterlude content={teaser} />
+          ) : undefined
+        }
+        widest={{
+          href: landingPath({ game: view.scope.game }),
+          label: `Voir tous les produits ${game.name}`,
+        }}
       />
-    </main>
+      <ExploreSection
+        eyebrow={view.heading}
+        title="Continuer l’exploration"
+        // The aisle's own words above: the admin's summary comes here.
+        lead={copy ? view.description : null}
+        groups={[...linkGroups, ...releases, ...view.emptyLinkGroups]}
+        about={
+          firstPage && view.editorialHtml
+            ? { label: 'Lire la présentation', html: view.editorialHtml }
+            : null
+        }
+      />
+      {firstPage && (
+        <LandingGuides
+          entries={view.guides.filter(
+            (entry) => entry.href !== teaser?.link.href,
+          )}
+          subject={view.heading}
+          limit={3}
+          more={
+            guidesIndexable
+              ? { href: GUIDES_PATH, label: 'Voir tous les guides' }
+              : undefined
+          }
+        />
+      )}
+      <LandingFaq entries={faq} subject={view.heading} />
+    </CatalogShell>
   );
 }

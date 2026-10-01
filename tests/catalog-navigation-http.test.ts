@@ -21,6 +21,17 @@ async function redirects(path: string, target: string) {
   assert.equal(`${location.pathname}${location.search}`, target, path);
 }
 const h1Count = (html: string) => (html.match(/<h1[\s>]/g) ?? []).length;
+/** The shop's aisles row of a page, and whether `path` is its current aisle. */
+function aisleRow(html: string) {
+  const start = html.indexOf('aria-label="Rayons de la boutique"');
+  assert.ok(start >= 0, 'rayons');
+  return html.slice(start, html.indexOf('</nav>', start));
+}
+const isCurrentAisle = (row: string, path: string) =>
+  [...row.matchAll(/<a\b[^>]*>/g)].some(
+    ([tag]) =>
+      tag.includes(`href="${path}"`) && tag.includes('aria-current="page"'),
+  );
 const articles = (html: string) =>
   [...html.matchAll(/<article\b[^>]*>[\s\S]*?<\/article>/g)].map(([a]) => a);
 const noindex = (html: string) =>
@@ -198,7 +209,9 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.doesNotMatch(preorders, /<summary>Disponibilité/);
 
   const stock = (await page('/en-stock')).html;
-  assert.match(strip(stock), /\d+ produits en stock/);
+  // The figures: in the bar and the search snippet, not told in prose.
+  assert.match(strip(stock), /\d+ produits/);
+  assert.match(stock, /<meta name="description" content="[^"]*\d+ produits/);
   assert.ok(articles(stock).length > 0);
   assert.ok(
     articles(stock).every(
@@ -206,7 +219,10 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
     ),
   );
 
-  assert.match(strip((await page('/nouveautes')).html), /\d+ nouveautés?/);
+  const arrivals = strip((await page('/nouveautes')).html);
+  assert.match(arrivals, /\d+ produits/);
+  // What « Nouveau » means on this page, said once under the title.
+  assert.ok(arrivals.includes('« Nouveau » : signalé comme nouveauté'));
 });
 
 test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () => {
@@ -252,18 +268,94 @@ test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () =
     jsonLdTypes(html).filter((type) => type === 'FAQPage').length,
     1,
   );
-  // Shortcuts: only indexable pages. Every preorder is a Pokémon one: the
-  // shop's listing stands for the game's.
+  // The families are the aisles above the products, the shortcuts below
+  // lead elsewhere: only indexable pages. Every preorder is a Pokémon one:
+  // the shop's listing stands for the game's.
+  const aisles = aisleRow(html);
+  assert.ok(isCurrentAisle(aisles, '/pokemon'));
+  assert.ok(aisles.includes('href="/pokemon/boosters"'));
   const explorer = html.slice(at('id="explorer"'), at('id="guides"'));
   for (const href of [
-    '/pokemon/boosters',
     '/pokemon/francais',
     '/pokemon/en-stock',
     '/precommandes',
   ])
     assert.ok(explorer.includes(`href="${href}"`), href);
-  for (const href of ['/pokemon/japonais', '/pokemon/precommandes'])
+  for (const href of [
+    '/pokemon/boosters',
+    '/pokemon/japonais',
+    '/pokemon/precommandes',
+  ])
     assert.ok(!explorer.includes(`href="${href}"`), href);
+});
+
+test('HTTP : un seul système de pages catalogue, des rayons reliés', async () => {
+  const pages = [
+    '/catalogue',
+    '/pokemon',
+    '/pokemon/scelles',
+    '/pokemon/boosters',
+    '/pokemon/displays',
+    '/pokemon/coffrets',
+    '/nouveautes',
+    '/precommandes',
+    '/en-stock',
+    '/categorie/accessoires',
+  ];
+  for (const path of pages) {
+    const { html } = await page(path);
+    assert.equal(h1Count(html), 1, path);
+    // The same hero, the way to the products, no figures told in prose.
+    assert.match(
+      html,
+      /<section[^>]+data-frame="(backdrop|arch|window)"/,
+      path,
+    );
+    assert.ok(html.includes('href="#catalogue-resultats"'), path);
+    assert.doesNotMatch(
+      strip(html),
+      /produits au catalogue|Disponibilité : \d|Langues? : /,
+      path,
+    );
+    // The products first, every secondary block after them, the newsletter
+    // last.
+    const products = html.indexOf('<article');
+    const newsletter = html.indexOf('aria-label="Réassorts et nouveautés"');
+    assert.ok(products > 0 && newsletter > products, path);
+    for (const id of ['id="explorer"', 'id="guides"', 'id="questions"']) {
+      const index = html.indexOf(id);
+      if (index >= 0)
+        assert.ok(index > products && index < newsletter, `${path} ${id}`);
+    }
+  }
+  // Each aisle of the shop is marked in the same row on its own page.
+  for (const path of [
+    '/pokemon/scelles',
+    '/pokemon/boosters',
+    '/pokemon/coffrets',
+    '/categorie/accessoires',
+  ]) {
+    const { html } = await page(path);
+    const row = aisleRow(html);
+    assert.ok(row.includes('href="/pokemon"'), path);
+    assert.ok(isCurrentAisle(row, path), path);
+  }
+  // The sealed products lead to a real guide, by its own title.
+  const sealed = (await page('/pokemon/scelles')).html;
+  assert.ok(sealed.includes('href="/guides/etb-display-ou-booster"'));
+  assert.ok(strip(sealed).includes('Lire le guide'));
+  // /extensions: the same entrance, each set once, on the shared card.
+  const extensions = (await page('/extensions')).html;
+  assert.equal(h1Count(extensions), 1);
+  assert.match(extensions, /<section[^>]+data-frame="backdrop"/);
+  // The announced set shows once, under « À venir », not again below.
+  assert.equal(
+    (extensions.match(/<h3[^>]*>[^<]*Sentiers d’Opale/g) ?? []).length,
+    1,
+  );
+  for (const href of ['href="#a-venir"', 'href="#pokemon"'])
+    assert.ok(extensions.includes(href), href);
+  assert.ok(strip(extensions).includes('Découvrir l’extension'));
 });
 
 test('HTTP : aucun résultat et filtres mobile / recherche accessibles', async () => {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { CatalogHeader } from '@/components/catalog/CatalogHeader';
-import { CatalogLinks } from '@/components/catalog/CatalogLinks';
+import { ExploreSection } from '@/components/catalog/ExploreSection';
 import { CALENDAR_PATH } from '@/components/landing/landingData';
 import { LandingFacts } from '@/components/landing/LandingFacts';
 import { ReleaseMonths } from '@/components/landing/ReleaseMonths';
@@ -74,7 +74,9 @@ export default async function Page({ params }: Props) {
           title={`Sorties ${calendar.year} déjà parues`}
           entries={calendar.released}
         />
-        <CatalogLinks
+        <ExploreSection
+          eyebrow="Calendrier des sorties"
+          title="Continuer l’exploration"
           groups={[
             {
               title: 'Autres calendriers',

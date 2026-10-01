@@ -3,7 +3,7 @@
 
 $hairline: rgb(23 62 50 / 14%);
 
-// --- Releases: the next one leads, the latest follow ------------------------
+// --- Set cards: the same card on the hub and on /extensions ---------------
 
 // Phones: swiped, the next card peeking. Wider: side by side, the next
 // release wider than the others.
@@ -35,14 +35,17 @@ $hairline: rgb(23 62 50 / 14%);
   }
 }
 
-.release {
+.card {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   height: 100%;
-  min-height: 12.5rem;
   padding: 1.15rem 1.2rem 1.1rem;
+  // Side by side in the rail: one height for the row.
+  .rail & {
+    min-height: 12.5rem;
+  }
   border-radius: v.$radius-medium;
   background: v.$color-surface;
   box-shadow: inset 0 0 0 1px v.$color-border;
@@ -73,28 +76,29 @@ $hairline: rgb(23 62 50 / 14%);
       0 18px 40px -30px rgb(7 28 23 / 55%);
   }
 }
-.releaseLabel {
+.label {
   @include m.eyebrow;
   color: v.$color-green-secondary;
   font-size: 0.66rem;
   letter-spacing: 0.14em;
 }
-.releaseLogo {
+.logo {
   width: auto;
   max-width: 120px;
   height: 48px;
   object-fit: contain;
 }
-.releaseMeta {
+.meta {
   color: v.$color-text-muted;
   font-size: 0.78rem;
   line-height: 1.5;
 }
-.releaseCount {
+.footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.25rem 0.75rem;
   margin-top: auto;
   padding-top: 0.75rem;
   border-top: 1px solid $hairline;
@@ -105,16 +109,16 @@ $hairline: rgb(23 62 50 / 14%);
     color: v.$color-green-secondary;
     transition: transform v.$duration-short v.$ease-out;
   }
-  .release:has(a:hover) & svg {
+  .card:has(a:hover) & svg {
     transform: translateX(3px);
   }
 }
-.releaseDate {
+.date {
   color: v.$color-gold-light;
   font: 500 clamp(1.6rem, 1.3rem + 1vw, 2.1rem) / 1.05 v.$font-heading;
 }
 // The next release: the night of the hero, its date in gold.
-.next {
+.featured {
   background:
     radial-gradient(
       ellipse 90% 70% at 100% 0%,
@@ -124,7 +128,7 @@ $hairline: rgb(23 62 50 / 14%);
     linear-gradient(160deg, v.$color-green-dark 0%, v.$color-night 100%);
   box-shadow: none;
   color: v.$color-text-on-dark;
-  .releaseLabel {
+  .label {
     align-self: flex-start;
     padding: 0.3rem 0.6rem;
     border-radius: v.$radius-pill;
@@ -135,10 +139,10 @@ $hairline: rgb(23 62 50 / 14%);
     color: v.$color-text-on-dark;
     font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.2rem);
   }
-  .releaseMeta {
+  .meta {
     color: v.$color-muted-on-night;
   }
-  .releaseCount {
+  .footer {
     border-top-color: rgb(255 255 255 / 14%);
     color: v.$color-text-on-dark;
     svg {
@@ -152,118 +156,28 @@ $hairline: rgb(23 62 50 / 14%);
     outline-color: v.$color-gold;
   }
 }
+// The way into the set, in words: « Découvrir l’extension ».
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: v.$color-green-secondary;
+  .featured & {
+    color: v.$color-gold-light;
+  }
+}
 
-// --- Shortcuts: format, language, availability -----------------------------
-
-// Phones: the heading, the shortcuts, then the presentation. Wide: the
-// presentation reads on the left, the shortcuts stand on the right.
-.explore {
+// /extensions: every card in a grid, the same card as on the hub.
+.grid {
   display: grid;
-  gap: 1.5rem;
-  @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-    grid-template-areas:
-      'heading shortcuts'
-      'about shortcuts';
-    grid-template-rows: auto 1fr;
-    column-gap: clamp(3rem, 6vw, 6rem);
-    row-gap: 0;
-  }
-}
-.exploreHeading {
-  > div {
-    margin-bottom: 0;
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
   }
   @include m.from(v.$breakpoint-desktop) {
-    grid-area: heading;
-  }
-}
-.exploreLead {
-  max-width: 34rem;
-  margin-top: 0.85rem;
-  color: v.$color-text-muted;
-  font-size: 0.92rem;
-  line-height: 1.7;
-}
-.about {
-  summary {
-    @include m.underline-link(v.$color-green-secondary);
-    min-height: 44px;
-    color: v.$color-green-dark;
-    list-style: none;
-    cursor: pointer;
-    &::-webkit-details-marker {
-      display: none;
-    }
-    &:focus-visible {
-      outline: 2px solid v.$color-green-secondary;
-      outline-offset: 2px;
-    }
-  }
-  &[open] summary svg {
-    transform: rotate(180deg);
-  }
-  > div {
-    margin: 0.75rem 0 0;
-  }
-  @include m.from(v.$breakpoint-desktop) {
-    grid-area: about;
-    margin-top: 0.75rem;
-  }
-}
-.shortcuts {
-  display: grid;
-  gap: 1.1rem;
-  @include m.from(v.$breakpoint-desktop) {
-    grid-area: shortcuts;
-    align-self: start;
-    gap: 1.5rem;
-    padding: 1.75rem;
-    border-radius: v.$radius-medium;
-    background: v.$color-surface;
-    box-shadow: inset 0 0 0 1px v.$color-border;
-  }
-}
-.shortcutGroup {
-  h3 {
-    margin-bottom: 0.55rem;
-    color: v.$color-green-secondary;
-    font: 700 0.7rem/1.4 v.$font-body;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-  ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0;
-    list-style: none;
-  }
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 44px;
-    padding: 0 0.95rem 0 1.05rem;
-    border: 1px solid $hairline;
-    border-radius: v.$radius-pill;
-    background: rgb(255 252 245 / 70%);
-    color: v.$color-text;
-    font-size: 0.86rem;
-    font-weight: 600;
-    transition:
-      border-color v.$duration-short v.$ease-out,
-      background-color v.$duration-short v.$ease-out;
-    svg {
-      color: v.$color-green-secondary;
-      transition: transform v.$duration-short v.$ease-out;
-    }
-    &:hover {
-      border-color: v.$color-green-secondary;
-      background: v.$color-surface;
-      svg {
-        transform: translateX(2px);
-      }
-    }
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { CatalogHeader } from '@/components/catalog/CatalogHeader';
+import { AisleNav } from '@/components/catalog/AisleNav';
+import { CatalogInterlude } from '@/components/catalog/CatalogInterlude';
 import {
   CatalogResults,
   catalogItemListNode,
@@ -7,17 +8,25 @@ import {
   catalogLoadPath,
   loadCatalog,
 } from '@/components/catalog/CatalogPage';
-import { requireCategoryHub } from '@/components/landing/routes';
-import { LandingEditorial } from '@/components/landing/LandingEditorial';
-import { LandingFacts } from '@/components/landing/LandingFacts';
+import { CatalogShell } from '@/components/catalog/CatalogShell';
+import { EmptyState } from '@/components/catalog/EmptyState';
+import { ExploreSection } from '@/components/catalog/ExploreSection';
+import {
+  EXPLORE_PRODUCTS,
+  VIEWS,
+  categoryCopy,
+} from '@/components/catalog/pageCopy';
+import { PageHero } from '@/components/catalog/PageHero';
+import { teaserContent } from '@/components/catalog/teaser';
+import { getGuidesIndex } from '@/components/editorial/content';
+import { GUIDES_PATH } from '@/components/editorial/editorial';
 import { LandingFaq } from '@/components/landing/LandingFaq';
 import { LandingGuides } from '@/components/landing/LandingGuides';
-import { JsonLd } from '@/components/seo/JsonLd';
-import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
-import { Container } from '@/components/ui/Container/Container';
+import { requireCategoryHub } from '@/components/landing/routes';
+import { inSentence } from '@/components/landing/landingText';
 import type { SearchParams } from '@/lib/catalog/params';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
-import styles from '@/components/catalog/Catalog.module.scss';
+import { getShopAisles } from '@/lib/seo/links';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -40,47 +49,103 @@ export async function generateMetadata({
   });
 }
 
+/**
+ * /categorie/{slug}: a family across the shop (accessories for every game).
+ * The same system as the game's aisles, its own words and view.
+ */
 export default async function Page({ params, searchParams }: Props) {
-  const view = await requireCategoryHub((await params).slug, searchParams);
-  const load = await loadCatalog({
-    path: view.path,
-    searchParams,
-    scope: view.catalogScope,
-  });
+  const { slug } = await params;
+  const view = await requireCategoryHub(slug, searchParams);
+  const copy = categoryCopy(slug);
+  const [load, aisles, teaser, guides] = await Promise.all([
+    loadCatalog({ path: view.path, searchParams, scope: view.catalogScope }),
+    getShopAisles(),
+    teaserContent(copy?.teaser),
+    getGuidesIndex(),
+  ]);
   const firstPage = load.page === 1;
   const faq = firstPage ? view.faq : [];
   return (
-    <main id="contenu" tabIndex={-1} className={styles.main}>
-      <Container>
-        <Breadcrumb items={view.breadcrumb} currentPath={view.path} />
-        <CatalogHeader
-          eyebrow="Famille de produits"
-          title={view.heading}
-          description={view.description}
-          intro={<LandingFacts facts={view.facts} />}
-        />
-        {firstPage && <LandingEditorial html={view.editorialHtml} />}
-        <CatalogResults
-          load={load}
+    <CatalogShell
+      hero={
+        <PageHero
+          breadcrumb={view.breadcrumb}
           path={view.path}
-          linkGroups={view.linkGroups}
+          eyebrow={copy?.eyebrow ?? 'Famille de produits'}
+          title={view.heading}
+          lead={
+            copy?.lead ??
+            view.description ??
+            `Les ${inSentence(view.name)} de Caldera, pour tous les jeux.`
+          }
+          view={{
+            src: VIEWS.archives,
+            frame: 'window',
+            focus: copy?.focus ?? '50% 45%',
+          }}
+          action={
+            load.total > 0
+              ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
+              : undefined
+          }
         />
-        {firstPage && (
-          <LandingGuides entries={view.guides} subject={view.heading} />
-        )}
-        <LandingFaq entries={faq} subject={view.heading} />
-      </Container>
-      <JsonLd
-        data={graph(
-          collectionPageNode({
-            path: catalogLoadPath(load),
-            name: view.heading,
-            description: view.text.description,
-            mainEntity: catalogItemListNode(load),
-          }),
-          faqPageNode(faq),
-        )}
+      }
+      jsonLd={graph(
+        collectionPageNode({
+          path: catalogLoadPath(load),
+          name: view.heading,
+          description: view.text.description,
+          mainEntity: catalogItemListNode(load),
+        }),
+        faqPageNode(faq),
+      )}
+    >
+      <CatalogResults
+        load={load}
+        path={view.path}
+        nav={
+          aisles.some((aisle) => aisle.href === view.path) ? (
+            <AisleNav aisles={aisles} current={view.path} />
+          ) : undefined
+        }
+        emptyState={
+          <EmptyState
+            title="Aucun produit en ligne dans cette famille"
+            actions={[{ href: '/catalogue', label: 'Voir tous les produits' }]}
+          />
+        }
+        interlude={
+          firstPage && teaser ? (
+            <CatalogInterlude content={teaser} />
+          ) : undefined
+        }
       />
-    </main>
+      <ExploreSection
+        eyebrow={view.heading}
+        title="Continuer l’exploration"
+        lead={copy ? view.description : null}
+        groups={view.linkGroups}
+        about={
+          firstPage && view.editorialHtml
+            ? { label: 'Lire la présentation', html: view.editorialHtml }
+            : null
+        }
+      />
+      {firstPage && (
+        <LandingGuides
+          entries={view.guides.filter(
+            (entry) => entry.href !== teaser?.link.href,
+          )}
+          subject={view.heading}
+          limit={3}
+          more={
+            guides.decision.index
+              ? { href: GUIDES_PATH, label: 'Voir tous les guides' }
+              : undefined
+          }
+        />
+      )}
+      <LandingFaq entries={faq} subject={view.heading} />
+    </CatalogShell>
   );
 }

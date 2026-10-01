@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { catalogUrl, type CatalogFilters } from '@/lib/catalog/params';
 import type { CatalogFacets } from '@/lib/catalog/facets';
+import { ChipRow } from './ChipRow';
 import { PendingHint } from './PendingHint';
 import styles from './Catalog.module.scss';
 
@@ -37,7 +38,7 @@ export function CatalogQuickNav({
   ];
   return (
     <nav className={styles.quickNav} aria-label="Familles de produits">
-      <ul>
+      <ChipRow key={only ?? 'all'}>
         {entries.map((entry) => (
           <li key={entry.key}>
             <Link
@@ -59,7 +60,7 @@ export function CatalogQuickNav({
             </Link>
           </li>
         ))}
-      </ul>
+      </ChipRow>
     </nav>
   );
 }

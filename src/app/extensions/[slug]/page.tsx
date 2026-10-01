@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import { CatalogHeader } from '@/components/catalog/CatalogHeader';
 import {
   CatalogResults,
   catalogItemListNode,
@@ -8,18 +6,17 @@ import {
   catalogLoadPath,
   loadCatalog,
 } from '@/components/catalog/CatalogPage';
-import { LandingEditorial } from '@/components/landing/LandingEditorial';
-import { LandingFacts } from '@/components/landing/LandingFacts';
+import { CatalogShell } from '@/components/catalog/CatalogShell';
+import { EmptyState } from '@/components/catalog/EmptyState';
+import { ExploreSection } from '@/components/catalog/ExploreSection';
+import { EXPLORE_PRODUCTS, VIEWS } from '@/components/catalog/pageCopy';
+import { HeroLogo, PageHero } from '@/components/catalog/PageHero';
+import { EXTENSIONS_PATH } from '@/components/landing/landingData';
 import { LandingFaq } from '@/components/landing/LandingFaq';
 import { LandingGuides } from '@/components/landing/LandingGuides';
 import { requireStandaloneSet } from '@/components/landing/routes';
-import { JsonLd } from '@/components/seo/JsonLd';
-import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
-import { Container } from '@/components/ui/Container/Container';
 import type { SearchParams } from '@/lib/catalog/params';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
-import styles from '@/components/catalog/Catalog.module.scss';
-import landingStyles from '@/components/landing/Landing.module.scss';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -55,46 +52,67 @@ export default async function Page({ params, searchParams }: Props) {
   const firstPage = load.page === 1;
   const faq = firstPage ? view.faq : [];
   return (
-    <main id="contenu" tabIndex={-1} className={styles.main}>
-      <Container>
-        <Breadcrumb items={view.breadcrumb} currentPath={view.path} />
-        <CatalogHeader
+    <CatalogShell
+      hero={
+        <PageHero
+          breadcrumb={view.breadcrumb}
+          path={view.path}
           eyebrow="Extension"
           title={set.name}
-          description={set.description}
-          intro={
-            <>
-              {set.logoUrl && (
-                <Image
-                  src={set.logoUrl}
-                  alt={`Logo ${set.name}`}
-                  width={180}
-                  height={90}
-                  className={landingStyles.logo}
-                />
-              )}
-              <LandingFacts facts={view.facts} />
-            </>
+          lead={set.description ?? `${set.name}, au comptoir de Caldera.`}
+          view={{ src: VIEWS.road, frame: 'window', focus: '50% 45%' }}
+          action={
+            load.total > 0
+              ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
+              : undefined
           }
-        />
-        {firstPage && <LandingEditorial html={view.editorialHtml} />}
-        <CatalogResults load={load} path={view.path} />
-        {firstPage && (
-          <LandingGuides entries={view.guides} subject={set.name} />
-        )}
-        <LandingFaq entries={faq} subject={set.name} />
-      </Container>
-      <JsonLd
-        data={graph(
-          collectionPageNode({
-            path: catalogLoadPath(load),
-            name: set.name,
-            description: view.text.description,
-            mainEntity: catalogItemListNode(load),
-          }),
-          faqPageNode(faq),
-        )}
+        >
+          {set.logoUrl && (
+            <HeroLogo src={set.logoUrl} alt={`Logo ${set.name}`} />
+          )}
+        </PageHero>
+      }
+      jsonLd={graph(
+        collectionPageNode({
+          path: catalogLoadPath(load),
+          name: set.name,
+          description: view.text.description,
+          mainEntity: catalogItemListNode(load),
+        }),
+        faqPageNode(faq),
+      )}
+    >
+      <CatalogResults
+        load={load}
+        path={view.path}
+        emptyState={
+          <EmptyState
+            title="Aucun produit en ligne pour cette extension"
+            actions={[
+              { href: EXTENSIONS_PATH, label: 'Voir toutes les extensions' },
+            ]}
+          />
+        }
       />
-    </main>
+      <ExploreSection
+        eyebrow={set.name}
+        title="Continuer l’exploration"
+        groups={[
+          {
+            title: 'Sorties',
+            links: [{ href: EXTENSIONS_PATH, label: 'Toutes les extensions' }],
+          },
+        ]}
+        about={
+          firstPage && view.editorialHtml
+            ? { label: 'Lire la présentation', html: view.editorialHtml }
+            : null
+        }
+      />
+      {firstPage && (
+        <LandingGuides entries={view.guides} subject={set.name} limit={3} />
+      )}
+      <LandingFaq entries={faq} subject={set.name} />
+    </CatalogShell>
   );
 }

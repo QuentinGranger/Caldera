@@ -3,10 +3,14 @@ import {
   catalogListingMetadata,
   loadCatalog,
 } from '@/components/catalog/CatalogPage';
+import { shopAisleCopy } from '@/components/catalog/pageCopy';
+import { teaserContent } from '@/components/catalog/teaser';
+import { getGuidesIndex } from '@/components/editorial/content';
 import { LandingPage } from '@/components/landing/LandingPage';
 import { requireLandingView } from '@/components/landing/routes';
 import type { SearchParams } from '@/lib/catalog/params';
-import { getLandingLinks } from '@/lib/seo/links';
+import { isShopGame } from '@/lib/catalog/shopGame';
+import { getLandingLinks, getShopAisles } from '@/lib/seo/links';
 
 type Props = {
   params: Promise<{ game: string; facets: string[] }>;
@@ -33,9 +37,28 @@ export async function generateMetadata({
 export default async function Page({ params, searchParams }: Props) {
   const { game, facets } = await params;
   const view = await requireLandingView(game, facets, searchParams);
-  const [load, linkGroups] = await Promise.all([
+  // The shop's families are its aisles: their own words, the aisles row.
+  const family =
+    view.kind === 'category' && isShopGame([view.game.slug])
+      ? view.scope.category
+      : undefined;
+  const copy = family ? shopAisleCopy(family.slug, view.game.name) : undefined;
+  const [load, linkGroups, aisles, teaser, guides] = await Promise.all([
     loadCatalog({ path: view.path, searchParams, scope: view.catalogScope }),
     getLandingLinks(view.scope),
+    family ? getShopAisles() : [],
+    teaserContent(copy?.teaser),
+    getGuidesIndex(),
   ]);
-  return <LandingPage view={view} load={load} linkGroups={linkGroups} />;
+  return (
+    <LandingPage
+      view={view}
+      load={load}
+      linkGroups={linkGroups}
+      aisles={aisles}
+      copy={copy}
+      teaser={teaser}
+      guidesIndexable={guides.decision.index}
+    />
+  );
 }

@@ -1,12 +1,12 @@
 @use '../../styles/abstracts/variables' as v;
 @use '../../styles/abstracts/mixins' as m;
 
-// From this width the view leaves the background for its arch.
+// From this width a framed view leaves the background for its frame.
 $split: 60rem;
 $gold-line: rgb(232 194 97 / 60%);
 
-// Deep green, a glow of gold behind the arch, a gold hairline where the
-// view meets the parchment of the shop.
+// Deep green, a glow of gold where the view stands, a gold hairline where
+// the hero meets the parchment of the shop. Same on every page.
 .hero {
   position: relative;
   isolation: isolate;
@@ -30,7 +30,7 @@ $gold-line: rgb(232 194 97 / 60%);
   }
 }
 
-// Wide screens only: the view, blurred, colours the night around the arch.
+// Wide screens, framed views: the view, blurred, around its frame.
 .atmosphere {
   display: none;
   @include m.from($split) {
@@ -46,13 +46,14 @@ $gold-line: rgb(232 194 97 / 60%);
   }
 }
 
+// One height everywhere: short on phones (the products follow), a little
+// more room on wide screens.
 .inner {
   @include m.container;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 2rem;
-  // Short on phones: the families and the first products follow.
   min-height: clamp(21rem, 52svh, 29rem);
   padding-block: 1.25rem 1.75rem;
   // The breadcrumb, light on the view.
@@ -67,15 +68,19 @@ $gold-line: rgb(232 194 97 / 60%);
     }
   }
   @include m.from($split) {
+    min-height: 31rem;
+    padding-block: 1.5rem 3rem;
+  }
+}
+.hero:not([data-frame='backdrop']) .inner {
+  @include m.from($split) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 23rem);
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'crumb view'
       'content view';
     column-gap: clamp(3rem, 7vw, 7rem);
-    min-height: 0;
-    padding-block: 1.5rem 3.25rem;
     > nav {
       grid-area: crumb;
     }
@@ -89,16 +94,23 @@ $gold-line: rgb(232 194 97 / 60%);
   max-width: 40rem;
   h1 {
     margin-bottom: 0.1rem;
-    font-size: clamp(3.2rem, 1.9rem + 5.4vw, 6.4rem);
+    font-size: clamp(2.6rem, 1.6rem + 4.4vw, 5.5rem);
     font-weight: 500;
-    line-height: 0.95;
-    letter-spacing: -0.035em;
+    line-height: 0.98;
+    letter-spacing: -0.03em;
     text-shadow: 0 2px 30px rgb(3 20 14 / 50%);
+    overflow-wrap: anywhere;
   }
+  align-self: flex-start;
+  @include m.from($split) {
+    padding-block: 1rem 1.5rem;
+  }
+}
+// Beside a frame: the words centred on its height.
+.hero:not([data-frame='backdrop']) .content {
   @include m.from($split) {
     grid-area: content;
     align-self: center;
-    padding-block: 1rem 2rem;
   }
 }
 .eyebrow {
@@ -108,6 +120,7 @@ $gold-line: rgb(232 194 97 / 60%);
   gap: 0.9rem;
   color: v.$color-gold-light;
   span {
+    flex-shrink: 0;
     width: 2rem;
     height: 1px;
     background: currentColor;
@@ -119,19 +132,62 @@ $gold-line: rgb(232 194 97 / 60%);
   font-size: v.$text-lead;
   line-height: 1.6;
 }
-.explore {
+.note {
+  max-width: min(100%, 29rem);
+  color: v.$color-muted-on-night;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.action {
   margin-top: 0.85rem;
 }
+.logo {
+  width: auto;
+  max-width: 160px;
+  height: auto;
+  max-height: 72px;
+  margin-top: 0.35rem;
+  object-fit: contain;
+}
+// The range: the first 1.1rem of every line is clipped, so no line starts
+// with a dot.
+.range {
+  $dot-space: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+  margin: 0.2rem 0 0 (-$dot-space);
+  padding: 0;
+  clip-path: inset(0 0 0 $dot-space);
+  color: v.$color-muted-on-night;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  list-style: none;
+  li {
+    position: relative;
+    padding-left: $dot-space;
+    white-space: nowrap;
+    &::before {
+      content: '·';
+      position: absolute;
+      left: 0.4rem;
+      color: v.$color-gold;
+    }
+    &:first-child {
+      color: v.$color-text-on-dark;
+      font-weight: 600;
+    }
+  }
+}
 
-// Phones: the whole background, darkened where the words are. Wide
-// screens: an arch, outlined in gold, the view a little apart.
+// Phones: the view is the whole background, darkened where the words are.
 .view {
   position: absolute;
   inset: 0;
   z-index: -1;
   img {
     object-fit: cover;
-    object-position: 50% 40%;
+    object-position: var(--focus);
   }
   &::after {
     content: '';
@@ -145,17 +201,30 @@ $gold-line: rgb(232 194 97 / 60%);
       v.$color-night 100%
     );
   }
+}
+// Wide screens, backdrop: the words on the left, where the view is darker.
+.hero[data-frame='backdrop'] .view::after {
+  @include m.from($split) {
+    background:
+      linear-gradient(
+        0deg,
+        v.$color-night 0%,
+        rgb(3 20 14 / 55%) 26%,
+        rgb(3 20 14 / 18%) 62%,
+        rgb(3 20 14 / 45%) 100%
+      ),
+      linear-gradient(90deg, rgb(3 20 14 / 78%) 0%, transparent 68%);
+  }
+}
+// Wide screens, framed: the view stands apart, outlined in gold.
+.hero:not([data-frame='backdrop']) .view {
   @include m.from($split) {
     grid-area: view;
     position: relative;
     inset: auto;
     z-index: auto;
-    align-self: end;
-    width: 100%;
-    aspect-ratio: 0.82;
-    margin-top: 0.75rem;
+    align-self: center;
     overflow: hidden;
-    border-radius: 50% 50% 0.6rem 0.6rem / 34% 34% 0.6rem 0.6rem;
     outline: 1px solid $gold-line;
     outline-offset: 10px;
     box-shadow: v.$shadow-night;
@@ -166,6 +235,22 @@ $gold-line: rgb(232 194 97 / 60%);
         rgb(3 20 14 / 45%) 100%
       );
     }
+  }
+}
+// An arch: the game, its world seen as through a door.
+.hero[data-frame='arch'] .view {
+  @include m.from($split) {
+    width: 21rem;
+    aspect-ratio: 0.82;
+    border-radius: 50% 50% 0.6rem 0.6rem / 34% 34% 0.6rem 0.6rem;
+  }
+}
+// A landscape: one part of that world, an aisle of the shop.
+.hero[data-frame='window'] .view {
+  @include m.from($split) {
+    width: clamp(24rem, 30vw, 30rem);
+    aspect-ratio: 1.4;
+    border-radius: 0.6rem;
   }
 }
 
@@ -182,8 +267,8 @@ $gold-line: rgb(232 194 97 / 60%);
   .content > :nth-child(n + 4) {
     animation-delay: 270ms;
   }
-  @include m.from($split) {
-    .view {
+  .hero:not([data-frame='backdrop']) .view {
+    @include m.from($split) {
       animation: open 1100ms v.$ease-out both;
     }
   }

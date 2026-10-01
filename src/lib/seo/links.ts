@@ -5,10 +5,12 @@ import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 import type { Prisma } from '@/generated/prisma/client';
 import { listProductsAvailableFirst } from '@/lib/catalog/queries';
+import { SHOP_GAME } from '@/lib/catalog/shopGame';
 import {
   getCategories,
   getGameSets,
   getGames,
+  toGameRef,
   type CatalogCategory,
 } from '@/lib/catalog/taxonomy';
 import { getPrisma } from '@/lib/db/prisma';
@@ -151,11 +153,45 @@ function landingAnchor(facets: Facets, names: Names, tone: Tone): string {
 
 type SetInfo = SetRef;
 
+/**
+ * Inside a page's own section the subject goes without saying: a link that
+ * changes one facet of the page (and drops none) is named by that facet
+ * alone (« Français », « En stock », the set's name).
+ */
+function changedFacetAnchor(
+  facets: Facets,
+  page: Facets,
+  names: { set?: string; category?: string },
+): string | null {
+  const keys = ['set', 'category', 'language', 'status'] as const;
+  if (keys.some((key) => page[key] !== undefined && facets[key] === undefined))
+    return null;
+  const changed = keys.filter(
+    (key) => facets[key] !== undefined && facets[key] !== page[key],
+  );
+  if (changed.length !== 1) return null;
+  switch (changed[0]) {
+    case 'set':
+      return names.set ?? null;
+    case 'category':
+      return names.category ?? null;
+    case 'language':
+      return facets.language
+        ? capitalizeFr(LANGUAGE_LABELS[facets.language])
+        : null;
+    case 'status':
+      return facets.status ? STATUS_LABELS[facets.status] : null;
+  }
+  return null;
+}
+
 function gameContext(
   game: GameRef,
   lookup: IndexLookup,
   sets: readonly SetRef[],
   categories: readonly CategoryRef[],
+  /** Facets of the page the links are shown on: shorter anchors. */
+  page?: Facets,
 ) {
   const refs = {
     sets: new Map(sets.map((set) => [set.slug, set])),
@@ -164,20 +200,19 @@ function gameContext(
   const find = (facets: Facets) => findLanding(lookup, game, facets, refs);
   /** Zero or one link: the landing is indexable or it is left out. */
   const to = (facets: Facets, tone: Tone = 'list'): SeoLink[] => {
-    const page = find(facets);
-    if (!page) return [];
-    const label = landingAnchor(
-      facets,
-      {
-        game: game.name,
-        set: facets.set ? refs.sets.get(facets.set)?.name : undefined,
-        category: facets.category
-          ? refs.categories.get(facets.category)?.name
-          : undefined,
-      },
-      tone,
-    );
-    return [{ href: page.path, label, count: page.productCount }];
+    const target = find(facets);
+    if (!target) return [];
+    const names = {
+      game: game.name,
+      set: facets.set ? refs.sets.get(facets.set)?.name : undefined,
+      category: facets.category
+        ? refs.categories.get(facets.category)?.name
+        : undefined,
+    };
+    const label =
+      (tone === 'list' && page && changedFacetAnchor(facets, page, names)) ||
+      landingAnchor(facets, names, tone);
+    return [{ href: target.path, label, count: target.productCount }];
   };
   return { find, to };
 }
@@ -304,6 +339,38 @@ export async function getGameHubShortcuts(
   };
 }
 
+/**
+ * The shop's aisles: all of its game, then each family with an indexable
+ * page, the game's own or else the shop-wide one (multi-game accessories).
+ * Empty while the game has no indexable hub.
+ */
+export async function getShopAisles(): Promise<SeoLink[]> {
+  const game = (await getGames()).find(
+    (candidate) => candidate.slug === SHOP_GAME.slug,
+  );
+  if (!game) return [];
+  const ref = toGameRef(game);
+  const [lookup, sets, categories] = await Promise.all([
+    getIndexLookup(),
+    getGameSets(game.id),
+    getCategories(),
+  ]);
+  const { find } = gameContext(ref, lookup, sets, categories);
+  const hub = find({});
+  if (!hub) return [];
+  return [
+    { href: hub.path, label: `Tout ${game.name}`, count: hub.productCount },
+    ...categories.flatMap((category): SeoLink[] => {
+      const page =
+        find({ category: category.slug }) ??
+        lookup.get(categoryHubPath(category.slug));
+      return page
+        ? [{ href: page.path, label: category.name, count: page.productCount }]
+        : [];
+    }),
+  ];
+}
+
 function capitalizeFr(text: string): string {
   return text.charAt(0).toLocaleUpperCase('fr-FR') + text.slice(1);
 }
@@ -319,8 +386,12 @@ export async function getLandingLinks(
     getGameSets(scope.game.id),
     getCategories(),
   ]);
-  const { find, to } = gameContext(scope.game, lookup, sets, categories);
-  const game = scope.game.name;
+  const { find, to } = gameContext(scope.game, lookup, sets, categories, {
+    set: scope.set?.slug,
+    category: scope.category?.slug,
+    language: scope.language,
+    status: scope.status,
+  });
   const set = scope.set;
   const category = scope.category;
   const language = scope.language;
@@ -330,29 +401,28 @@ export async function getLandingLinks(
     ? categories.filter((c) => c.parentId === category.id)
     : [];
   const self = landingPath(scope);
-  const inLanguage = language ? LANGUAGE_IN_LABELS[language] : '';
 
   if (kind === 'set' && set)
     return linkGroups(
       [
         {
-          title: `Familles de l’extension ${set.name}`,
+          title: 'Par famille',
           links: categories.flatMap((c) =>
             to({ set: set.slug, category: c.slug }),
           ),
         },
         {
-          title: `${set.name} par langue`,
+          title: 'Par langue',
           links: FACET_LANGUAGES.flatMap((l) =>
             to({ set: set.slug, language: l }),
           ),
         },
         {
-          title: `Disponibilité de l’extension ${set.name}`,
+          title: 'Disponibilité',
           links: STATUS_SLUGS.flatMap((s) => to({ set: set.slug, status: s })),
         },
         {
-          title: `Autres extensions ${game}`,
+          title: 'Autres extensions',
           links: neighbourSets(
             set.slug,
             sets,
@@ -366,23 +436,23 @@ export async function getLandingLinks(
     return linkGroups(
       [
         {
-          title: `Dans les ${inSentence(category.name)} ${game}`,
+          title: 'Dans cette famille',
           links: children.flatMap((c) => to({ category: c.slug })),
         },
         {
-          title: `${category.name} par extension`,
+          title: 'Par extension',
           links: sets.flatMap((s) =>
             to({ set: s.slug, category: category.slug }),
           ),
         },
         {
-          title: `${category.name} ${game} par langue`,
+          title: 'Par langue',
           links: FACET_LANGUAGES.flatMap((l) =>
             to({ category: category.slug, language: l }),
           ),
         },
         {
-          title: `Disponibilité des ${inSentence(category.name)} ${game}`,
+          title: 'Disponibilité',
           links: STATUS_SLUGS.flatMap((s) =>
             to({ category: category.slug, status: s }),
           ),
@@ -394,15 +464,15 @@ export async function getLandingLinks(
     return linkGroups(
       [
         {
-          title: `Familles ${inLanguage}`,
+          title: 'Par famille',
           links: categories.flatMap((c) => to({ category: c.slug, language })),
         },
         {
-          title: `Extensions ${inLanguage}`,
+          title: 'Par extension',
           links: sets.flatMap((s) => to({ set: s.slug, language })),
         },
         {
-          title: `${game} dans d’autres langues`,
+          title: 'Autres langues',
           links: FACET_LANGUAGES.flatMap((l) => to({ language: l })),
         },
       ],
@@ -420,7 +490,7 @@ export async function getLandingLinks(
           links: sets.flatMap((s) => to({ set: s.slug, status })),
         },
         {
-          title: `Disponibilité des produits ${game}`,
+          title: 'Autres disponibilités',
           links: STATUS_SLUGS.flatMap((s) => to({ status: s })),
         },
       ],
@@ -437,13 +507,13 @@ export async function getLandingLinks(
           ],
         },
         {
-          title: `Autres familles de ${set.name}`,
+          title: 'Autres familles',
           links: categories.flatMap((c) =>
             to({ set: set.slug, category: c.slug }),
           ),
         },
         {
-          title: `${category.name} des autres extensions`,
+          title: 'Autres extensions',
           links: otherSets.flatMap((s) =>
             to({ set: s.slug, category: category.slug }),
           ),
@@ -463,15 +533,13 @@ export async function getLandingLinks(
           ],
         },
         {
-          title: language
-            ? `${set.name} dans d’autres langues`
-            : `Disponibilité de l’extension ${set.name}`,
+          title: language ? 'Autres langues' : 'Disponibilité',
           links: language
             ? FACET_LANGUAGES.flatMap((l) => to({ set: set.slug, language: l }))
             : STATUS_SLUGS.flatMap((s) => to({ set: set.slug, status: s })),
         },
         {
-          title: `Familles de l’extension ${set.name}`,
+          title: 'Par famille',
           links: categories.flatMap((c) =>
             to({ set: set.slug, category: c.slug }),
           ),
@@ -491,15 +559,13 @@ export async function getLandingLinks(
           ],
         },
         {
-          title: `Dans les ${inSentence(category.name)} ${game}`,
+          title: 'Dans cette famille',
           links: children.flatMap((c) =>
             to({ category: c.slug, language, status }),
           ),
         },
         {
-          title: language
-            ? `${category.name} ${game} dans d’autres langues`
-            : `Disponibilité des ${inSentence(category.name)} ${game}`,
+          title: language ? 'Autres langues' : 'Disponibilité',
           links: language
             ? FACET_LANGUAGES.flatMap((l) =>
                 to({ category: category.slug, language: l }),
