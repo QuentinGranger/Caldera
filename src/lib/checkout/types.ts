@@ -84,3 +84,27 @@ export const emptyContact = (): ContactValues => ({
   shipping: emptyAddress(),
   billing: null,
 });
+
+
+export type CartPromotionState = {
+  promotion: CheckoutView['promotion'];
+  promotionIssue: CheckoutView['promotionIssue'];
+  provisionalTotal: string;
+};
+
+export type CartPromotionActionResult = {
+  success: boolean;
+  message: string;
+  state: CartPromotionState | null;
+};
+
+export function toCartPromotionState(
+  view: CheckoutView | null,
+): CartPromotionState | null {
+  if (!view) return null;
+  return {
+    promotion: view.promotion,
+    promotionIssue: view.promotionIssue,
+    provisionalTotal: view.provisionalTotal,
+  };
+}
