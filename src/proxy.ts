@@ -1,16 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { REMOVED_CONTENT } from '@/lib/content/removed';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL, siteOrigin } from '@/lib/site';
+
 // www serves the same pages as the apex: one canonical host (308, path and query kept).
 function apexRedirect(request: NextRequest) {
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   if (host !== `www.${PRODUCTION_HOST}`) return null;
+
   // Assigned, never resolved: a path starting with // cannot change the host.
   const target = new URL(PRODUCTION_SITE_URL);
   target.pathname = request.nextUrl.pathname;
   target.search = request.nextUrl.search;
   return NextResponse.redirect(target, 308);
 }
+
+const CONSTRUCTION_PATH = '/en-construction';
+
+// Temporary launch curtain: only the public production domain is covered.
+// localhost and Vercel previews stay fully usable while the shop is being built.
+// Remove this helper and the construction rewrite below when Caldera opens.
+function shouldShowConstruction(request: NextRequest) {
+  const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
+  const { pathname } = request.nextUrl;
+
+  const isProductionHost =
+    host === PRODUCTION_HOST || host === `www.${PRODUCTION_HOST}`;
+
+  if (!isProductionHost) return false;
+  if (pathname === CONSTRUCTION_PATH) return false;
+
+  // Keep the back office usable on the live domain.
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return false;
+
+  // Let crawlers read the real robots/sitemap endpoints; storefront pages
+  // themselves answer noindex while the curtain is active.
+  if (
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
+    pathname.startsWith('/sitemaps/')
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 // Sentry ingest host, derived from the public DSN: the browser posts errors there.
 function sentryOrigin() {
   try {
@@ -19,12 +53,14 @@ function sentryOrigin() {
     return '';
   }
 }
+
 // Products withdrawn for good answer 410 Gone (src/lib/product/gone.ts). The
 // list is read at most every 5 minutes per instance; a failed read keeps the
 // previous list and is retried a minute later.
 const GONE_TTL = 300_000;
 let goneProducts = { at: 0, slugs: new Set<string>() };
 let goneRefresh: Promise<void> | null = null;
+
 // Always the configured origin, never the request Host header: a forged host
 // must not decide which products answer 410.
 async function refreshGoneProducts() {
@@ -46,15 +82,18 @@ async function refreshGoneProducts() {
     goneProducts = { ...goneProducts, at: Date.now() - GONE_TTL + 60_000 };
   }
 }
+
 async function isGoneProduct(request: NextRequest) {
   const match = /^\/produit\/([^/]+)$/.exec(request.nextUrl.pathname);
   if (!match?.[1]) return false;
+
   let slug: string;
   try {
     slug = decodeURIComponent(match[1]);
   } catch {
     return false;
   }
+
   if (Date.now() - goneProducts.at > GONE_TTL) {
     goneRefresh ??= refreshGoneProducts().finally(() => {
       goneRefresh = null;
@@ -63,6 +102,7 @@ async function isGoneProduct(request: NextRequest) {
   }
   return goneProducts.slugs.has(slug);
 }
+
 // What a withdrawn page says, and where to go instead.
 const GONE_PAGES = {
   product: {
@@ -80,6 +120,7 @@ const GONE_PAGES = {
       '<a href="/guides">Les guides</a> · <a href="/glossaire">Le glossaire</a> · <a href="/">Accueil</a>',
   },
 } as const;
+
 function goneResponse(kind: keyof typeof GONE_PAGES) {
   const page = GONE_PAGES[kind];
   return new NextResponse(
@@ -98,12 +139,19 @@ function goneResponse(kind: keyof typeof GONE_PAGES) {
     },
   );
 }
+
 export async function proxy(request: NextRequest) {
   const redirect = apexRedirect(request);
   if (redirect) return redirect;
-  if (REMOVED_CONTENT.has(request.nextUrl.pathname))
-    return goneResponse('content');
-  if (await isGoneProduct(request)) return goneResponse('product');
+
+  const showConstruction = shouldShowConstruction(request);
+
+  if (!showConstruction) {
+    if (REMOVED_CONTENT.has(request.nextUrl.pathname))
+      return goneResponse('content');
+    if (await isGoneProduct(request)) return goneResponse('product');
+  }
+
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const dev = process.env.NODE_ENV === 'development';
   const policy = [
@@ -119,13 +167,27 @@ export async function proxy(request: NextRequest) {
     "frame-ancestors 'none'",
     "form-action 'self'",
   ].join('; ');
+
   const headers = new Headers(request.headers);
   headers.set('x-nonce', nonce);
   headers.set('Content-Security-Policy', policy);
-  const response = NextResponse.next({ request: { headers } });
+
+  const response = showConstruction
+    ? NextResponse.rewrite(new URL(CONSTRUCTION_PATH, request.url), {
+        request: { headers },
+      })
+    : NextResponse.next({ request: { headers } });
+
   response.headers.set('Content-Security-Policy', policy);
   response.headers.set('Referrer-Policy', 'no-referrer');
   response.headers.set('X-Content-Type-Options', 'nosniff');
+
+  if (showConstruction) {
+    response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60');
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    return response;
+  }
+
   const { pathname } = request.nextUrl;
   if (
     ['/admin', '/compte', '/newsletter', '/alertes'].some(
@@ -135,8 +197,10 @@ export async function proxy(request: NextRequest) {
     response.headers.set('Cache-Control', 'private, no-store, max-age=0');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   }
+
   return response;
 }
+
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|assets|favicon.ico).*)'],
 };

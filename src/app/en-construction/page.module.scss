@@ -1,0 +1,219 @@
+.main {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  place-items: center;
+  padding: clamp(2rem, 5vw, 5rem) 1.5rem;
+  color: #f3eadb;
+  background: #07110f;
+}
+
+.landscape,
+.embers,
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.landscape {
+  z-index: -4;
+  inset: -3rem;
+  background:
+    linear-gradient(180deg, rgba(3, 10, 8, 0.24) 0%, rgba(3, 9, 7, 0.58) 58%, rgba(3, 8, 7, 0.9) 100%),
+    linear-gradient(90deg, rgba(3, 10, 8, 0.68) 0%, transparent 38%, transparent 62%, rgba(3, 10, 8, 0.68) 100%),
+    url('/assets/images/TerresBraise.png') center 48% / cover no-repeat;
+  filter: saturate(0.82) contrast(1.04);
+  transform: scale(1.035);
+  animation: breathe 18s ease-in-out infinite alternate;
+}
+
+.embers {
+  z-index: -2;
+  opacity: 0.56;
+  background-image:
+    radial-gradient(circle at 13% 78%, rgba(210, 125, 60, 0.85) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 28% 63%, rgba(238, 177, 99, 0.62) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 68%, rgba(213, 128, 63, 0.72) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 84% 81%, rgba(244, 191, 114, 0.62) 0 1px, transparent 1.5px);
+  background-size: 12rem 14rem, 17rem 21rem, 15rem 19rem, 20rem 24rem;
+  animation: embers 16s linear infinite;
+}
+
+.vignette {
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(3, 9, 7, 0.08) 50%, rgba(3, 8, 7, 0.72) 100%),
+    linear-gradient(180deg, rgba(4, 10, 8, 0.18), rgba(4, 10, 8, 0.74));
+}
+
+.content {
+  width: min(100%, 46rem);
+  margin-top: -2vh;
+  text-align: center;
+  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.34);
+}
+
+.logo {
+  width: clamp(12.5rem, 29vw, 23rem);
+  height: auto;
+  margin: 0 auto clamp(1.4rem, 3vw, 2.4rem);
+  object-fit: contain;
+  filter: drop-shadow(0 0.9rem 2.2rem rgba(0, 0, 0, 0.4));
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin: 0 0 1.15rem;
+  color: rgba(241, 220, 184, 0.84);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.27em;
+  line-height: 1.4;
+  text-transform: uppercase;
+
+  span {
+    width: clamp(1.8rem, 5vw, 3.8rem);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(218, 174, 105, 0.78));
+  }
+
+  span:last-child {
+    background: linear-gradient(90deg, rgba(218, 174, 105, 0.78), transparent);
+  }
+}
+
+.title {
+  font-size: clamp(3.25rem, 9vw, 7.6rem);
+  font-weight: 400;
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+
+  em {
+    color: #dcc08a;
+    font-weight: 400;
+  }
+}
+
+.lead {
+  max-width: 37rem;
+  margin: clamp(1.8rem, 4vw, 3rem) auto 0;
+  color: rgba(244, 238, 226, 0.82);
+  font-size: clamp(0.92rem, 1.5vw, 1.08rem);
+  line-height: 1.8;
+  text-wrap: balance;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  width: min(17rem, 62vw);
+  margin: clamp(1.8rem, 3.6vw, 2.8rem) auto 1.3rem;
+
+  span {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(220, 192, 138, 0.5));
+  }
+
+  span:last-child {
+    background: linear-gradient(90deg, rgba(220, 192, 138, 0.5), transparent);
+  }
+
+  i {
+    width: 0.42rem;
+    height: 0.42rem;
+    border: 1px solid rgba(220, 192, 138, 0.72);
+    transform: rotate(45deg);
+  }
+}
+
+.note {
+  margin: 0;
+  color: rgba(242, 231, 210, 0.72);
+  font-size: 0.78rem;
+  letter-spacing: 0.045em;
+}
+
+.signature {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.35rem;
+  left: 1.5rem;
+  margin: 0;
+  color: rgba(238, 224, 199, 0.52);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-align: center;
+  text-transform: uppercase;
+
+  span {
+    margin: 0 0.45em;
+    color: rgba(216, 171, 99, 0.72);
+  }
+}
+
+@keyframes breathe {
+  from {
+    transform: scale(1.035);
+  }
+
+  to {
+    transform: scale(1.075);
+  }
+}
+
+@keyframes embers {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 1rem -8rem, -1rem -10rem, 1rem -9rem, -1rem -12rem;
+  }
+}
+
+@media (max-width: 42rem) {
+  .main {
+    padding: 2.2rem 1.25rem 4.5rem;
+  }
+
+  .landscape {
+    background-position: 58% center;
+  }
+
+  .content {
+    margin-top: -4vh;
+  }
+
+  .title {
+    line-height: 0.88;
+  }
+
+  .lead {
+    max-width: 30rem;
+  }
+
+  .signature {
+    bottom: 1.05rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landscape,
+  .embers {
+    animation: none;
+  }
+}
