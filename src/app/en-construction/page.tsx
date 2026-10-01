@@ -3,13 +3,17 @@ import type { Metadata } from 'next';
 import { ConstructionExperience } from './ConstructionExperience';
 
 export const metadata: Metadata = {
-  title: 'Caldera — Ouverture prochaine',
+  title: {
+    absolute: 'Caldera — Ouverture prochaine',
+  },
   description:
     'Caldera prépare sa boutique en ligne dédiée aux jeux de cartes à collectionner. Ouverture prochaine.',
+  alternates: {
+    canonical: '/',
+  },
   robots: {
-    index: false,
-    follow: false,
-    nocache: true,
+    index: true,
+    follow: true,
   },
 };
 
