@@ -6,9 +6,20 @@ import { getCartCookie } from '@/lib/cart/cartCookie';
 import { cartTokenHash } from '@/lib/cart/identity';
 import { getActiveOrderForCheckoutRecovery } from '@/lib/orders/queries';
 import { cancelOrder } from '@/lib/payments/cancel';
-import { mutateCheckout } from './service';
+import { getCheckoutData } from './queries';
+import {
+  applyPromotionFromCart,
+  mutateCheckout,
+  removePromotionFromCart,
+} from './service';
+import { getCheckoutSummary } from './validation';
 import { CheckoutError } from './schemas';
-import type { CheckoutActionResult } from './types';
+import {
+  toCartPromotionState,
+  type CartPromotionActionResult,
+  type CartPromotionState,
+  type CheckoutActionResult,
+} from './types';
 
 async function recoverExpiredPayment(token: string | undefined) {
   const order = await getActiveOrderForCheckoutRecovery(token);
@@ -20,10 +31,19 @@ async function recoverExpiredPayment(token: string | undefined) {
 
   if (
     activeReservations.length > 0 &&
-    activeReservations.every((reservation) => reservation.expiresAt <= new Date())
+    activeReservations.every(
+      (reservation) => reservation.expiresAt <= new Date(),
+    )
   ) {
     await cancelOrder(order.id, true);
   }
+}
+
+async function assertPromotionAttempt(token: string | undefined) {
+  if (!(await allowAccountAttempt('promotion', cartTokenHash(token) ?? '')))
+    throw new CheckoutError(
+      'Trop de codes essayés. Réessayez dans une heure.',
+    );
 }
 
 async function run(
@@ -34,13 +54,7 @@ async function run(
   try {
     const token = await getCartCookie();
 
-    if (
-      mutation.kind === 'promotion' &&
-      !(await allowAccountAttempt('promotion', cartTokenHash(token) ?? ''))
-    )
-      throw new CheckoutError(
-        'Trop de codes essayés. Réessayez dans une heure.',
-      );
+    if (mutation.kind === 'promotion') await assertPromotionAttempt(token);
 
     if (mutation.kind === 'start' || mutation.kind === 'sync') {
       await recoverExpiredPayment(token);
@@ -68,6 +82,64 @@ async function run(
 
   revalidatePath('/', 'layout');
   return result;
+}
+
+async function currentCartPromotionState(
+  token: string | undefined,
+): Promise<CartPromotionState | null> {
+  const data = await getCheckoutData(token);
+  return toCartPromotionState(data ? getCheckoutSummary(data) : null);
+}
+
+export async function applyCartPromotionAction(
+  code: unknown,
+): Promise<CartPromotionActionResult> {
+  const token = await getCartCookie();
+  try {
+    await assertPromotionAttempt(token);
+    const view = await applyPromotionFromCart(token, code);
+    revalidatePath('/panier');
+    return {
+      success: true,
+      message: 'Code promo appliqué.',
+      state: toCartPromotionState(view),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof CheckoutError
+          ? error.message
+          : 'Impossible d’appliquer ce code promo. Réessayez.',
+      state: await currentCartPromotionState(token),
+    };
+  }
+}
+
+export async function removeCartPromotionAction(): Promise<CartPromotionActionResult> {
+  const token = await getCartCookie();
+  try {
+    const view = await removePromotionFromCart(token);
+    revalidatePath('/panier');
+    return {
+      success: true,
+      message: 'Code promo retiré.',
+      state: toCartPromotionState(view),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof CheckoutError
+          ? error.message
+          : 'Impossible de retirer ce code promo. Réessayez.',
+      state: await currentCartPromotionState(token),
+    };
+  }
+}
+
+export async function refreshCartPromotionAction() {
+  return currentCartPromotionState(await getCartCookie());
 }
 
 export async function startCheckoutAction() {
