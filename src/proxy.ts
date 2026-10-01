@@ -29,6 +29,17 @@ function shouldShowConstruction(request: NextRequest) {
   if (!isProductionHost) return false;
   if (pathname === CONSTRUCTION_PATH) return false;
 
+  // Branding files must stay as real image responses. In particular, Next.js
+  // serves app/icon.png through /icon; rewriting that route to the construction
+  // page prevents search engines from fetching the favicon.
+  if (
+    pathname === '/icon' ||
+    pathname === '/favicon.png' ||
+    pathname === '/apple-touch-icon.png'
+  ) {
+    return false;
+  }
+
   // Keep the back office usable on the live domain.
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return false;
 
@@ -202,5 +213,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|assets|favicon.ico).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|assets|favicon.ico|favicon.png|apple-touch-icon.png|icon).*)',
+  ],
 };
