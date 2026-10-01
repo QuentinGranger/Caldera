@@ -47,6 +47,11 @@ export interface SiteNavigation {
    * short name (« Accessoires »).
    */
   productTypes: NavLink[];
+  /**
+   * Root families of the offer, by short name: the licence sold's page, else
+   * the multi-game page (licence-free products only).
+   */
+  families: NavLink[];
   /** /catalogue: always reachable, even before it has enough products to be indexed. */
   catalogue: NavLink;
   /** Nouveautés, Précommandes, En stock while indexable. */
@@ -81,6 +86,15 @@ function flattenFamilies(families: readonly NavigationFamily[]): NavLink[] {
 const familySlugs = (families: readonly NavigationFamily[]): string[] =>
   families.flatMap((family) => [family.slug, ...familySlugs(family.children)]);
 
+/** One link per family, the first met: the licence sold's before the others. */
+function rootFamilies(families: readonly NavigationFamily[]): NavLink[] {
+  const links = new Map<string, NavLink>();
+  for (const family of families)
+    if (!links.has(family.slug))
+      links.set(family.slug, { href: family.href, label: family.name });
+  return [...links.values()];
+}
+
 /** Pure part of getSiteNavigation. */
 export function buildSiteNavigation(
   navigation: Navigation,
@@ -114,6 +128,10 @@ export function buildSiteNavigation(
     productTypes: navigation.categoryHubs
       .filter((family) => !covered.has(family.slug))
       .map((family) => ({ href: family.href, label: family.name })),
+    families: rootFamilies([
+      ...games.flatMap((game) => game.families),
+      ...navigation.categoryHubs.filter(({ slug }) => !covered.has(slug)),
+    ]),
     catalogue: {
       href: LISTING_HUBS.catalogue.path,
       label: 'Tout le catalogue',

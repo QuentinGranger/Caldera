@@ -11,6 +11,17 @@
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
   backdrop-filter: blur(16px) saturate(1.15);
 }
+// The mobile menu is open: the header is its opaque top bar. Without the
+// backdrop filter, the menu panel is fixed to the screen, not to the header;
+// a gold hairline shows once the menu's content scrolls under it.
+.header:has([aria-controls='mobile-navigation'][aria-expanded='true']) {
+  background: v.$color-night-soft;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.header:has([data-menu-scrolled]) {
+  border-bottom-color: rgb(232 194 97 / 22%);
+}
 // Home: the header floats over the hero, then settles as the hero leaves.
 // Without scroll timelines it simply stays solid.
 @supports (animation-timeline: scroll()) {
@@ -42,22 +53,33 @@
   }
 }
 .inner {
-  display: flex;
+  // Phones and tablets: menu, logo, actions; the logo stays at the exact
+  // centre whatever the icons on either side.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem;
+  column-gap: 0.35rem;
   height: var(--header-height);
   width: calc(100% - 1rem);
   @include m.from(v.$breakpoint-tablet) {
     width: min(100% - 3rem, v.$container-width);
   }
   @include m.from(v.$breakpoint-desktop) {
+    display: flex;
+    justify-content: space-between;
     gap: 1.5rem;
+  }
+}
+// The narrowest phones: the header gains the page's side margins back, so
+// search and cart hold beside a centred logo.
+@media (max-width: 22.49rem) {
+  .header .inner {
+    width: calc(100% - 1rem);
   }
 }
 .brand {
   display: block;
-  width: 7.25rem;
+  width: 6.75rem;
   flex-shrink: 0;
   img {
     display: block;
@@ -90,6 +112,7 @@
 .actions {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: 0;
 }
 .actions .desktop {

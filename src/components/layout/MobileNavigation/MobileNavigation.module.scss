@@ -1,242 +1,259 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
 
+// Phones and tablets: the header's menu button and a panel over the screen.
+$gutter: 1.25rem;
+$tap: rgb(255 255 255 / 6%);
+$ivory-soft: rgb(251 244 223 / 84%);
+$ivory-muted: rgb(251 244 223 / 68%);
+
 .mobile {
   @include m.from(v.$breakpoint-desktop) {
     display: none;
   }
 }
 
+// Under the header (--menu-top, measured on opening), down to the bottom of
+// the screen; only its own content scrolls.
 .panel {
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: var(--menu-top, var(--header-height));
   right: 0;
+  bottom: 0;
   left: 0;
-  // Down to the bottom of the screen (the announcement bar is 2rem high).
-  max-height: calc(100svh - var(--header-height) - 2rem);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 1.8rem 1.5rem 2rem;
-  color: v.$color-text-on-dark;
+  scrollbar-gutter: stable;
   background: v.$color-night-soft;
-  border-top: 1px solid v.$color-border-on-dark;
-  box-shadow: v.$shadow-night;
+  color: v.$color-text-on-dark;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 160ms v.$ease-out,
+    visibility 0s linear 160ms;
+  &[data-open] {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity 200ms v.$ease-out,
+      visibility 0s;
+  }
+}
+// The content settles by a few pixels as the panel appears.
+.content {
+  padding: 0.5rem $gutter calc(2rem + env(safe-area-inset-bottom));
+  transform: translateY(-6px);
+  transition: transform 220ms v.$ease-out;
+  .panel[data-open] & {
+    transform: none;
+  }
 }
 
-.group + .group {
-  margin-top: 2rem;
-  padding-top: 1.6rem;
-  border-top: 1px solid v.$color-border-on-dark;
+// Three groups and the service: rules between groups only.
+.group {
+  padding-block: 1rem;
+  & + & {
+    border-top: 1px solid rgb(255 255 255 / 8%);
+  }
 }
-
 .eyebrow {
   @include m.eyebrow;
-  margin: 0;
+  margin-bottom: 0.3rem;
   color: v.$color-gold;
 }
 
 .mainLinks,
-.universeLinks {
+.minorLinks,
+.gridLinks,
+.chapters,
+.accordion ul {
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.mainLinks {
-  margin: 0.85rem 0 0;
-
-  li {
-    border-bottom: 1px solid v.$color-border-on-dark;
-  }
-
-  a {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 52px;
-    padding-block: 0.75rem;
-    color: v.$color-text-on-dark;
-    font-family: v.$font-heading;
-    font-size: 1.55rem;
-    text-decoration: none;
-  }
-}
-
-// A game: the same line as the other entries, opening onto its families.
-.accordion {
+// A main entry: the serif, a little smaller than the site's titles. Its
+// touch area runs slightly past the text on both sides.
+.main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  min-height: 52px;
-  padding: 0.75rem 0;
+  gap: 1rem;
+  box-sizing: border-box;
+  width: calc(100% + 1.5rem);
+  min-height: 46px;
+  margin-inline: -0.75rem;
+  padding: 0.3rem 0.75rem;
   border: 0;
+  border-radius: 0.4rem;
   background: none;
   color: v.$color-text-on-dark;
   font-family: v.$font-heading;
-  font-size: 1.55rem;
+  font-size: 1.32rem;
+  font-weight: 500;
+  line-height: 1.2;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   svg {
-    color: v.$color-gold-light;
-    transition: transform v.$duration-short v.$ease-out;
+    flex-shrink: 0;
+    color: rgb(232 194 97 / 75%);
+    transition: transform 200ms v.$ease-out;
   }
   &[aria-expanded='true'] svg {
     transform: rotate(180deg);
   }
 }
-// Height animated through the grid row, from 0fr to 1fr.
-.accordionPanel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 240ms v.$ease-out;
-  .accordion[aria-expanded='true'] + & {
-    grid-template-rows: 1fr;
-  }
-}
-.mainLinks .accordionLinks {
-  min-height: 0;
-  overflow: hidden;
-  margin: 0;
-  padding: 0 0 0 1rem;
-  border-left: 1px solid rgb(232 194 97 / 28%);
-  list-style: none;
-  li {
-    border-bottom: 0;
-  }
-  li:last-child {
-    padding-bottom: 0.9rem;
-  }
+
+// Pre-orders and stock: the same shop, one step down.
+.minorLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+  margin-top: 0.15rem;
   a {
-    justify-content: flex-start;
-    min-height: 44px;
-    padding-block: 0.55rem;
-    color: rgb(251 244 223 / 82%);
-    font-family: v.$font-body;
-    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.4rem;
+    color: $ivory-muted;
+    font-size: 0.9rem;
     font-weight: 500;
   }
-  // The whole game first, a little ahead of its families.
-  li:first-child a,
-  a[aria-current='page'] {
-    color: v.$color-gold-light;
-  }
-  li:first-child a {
-    font-weight: 600;
-  }
 }
 
-// Secondary sections: two columns of plain links.
-.compactLinks {
+// The sub-pages of an entry: height, opacity and a small drop, ~200ms.
+.accordion {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 1rem;
-  margin: 0.6rem 0 0;
-  padding: 0;
-  list-style: none;
-
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 220ms v.$ease-out,
+    opacity 180ms v.$ease-out;
+  ul {
+    min-height: 0;
+    overflow: hidden;
+    margin-left: 0.15rem;
+    padding-left: 0.85rem;
+    border-left: 1px solid rgb(232 194 97 / 28%);
+    transform: translateY(-4px);
+    transition: transform 220ms v.$ease-out;
+  }
+  li:last-child {
+    padding-bottom: 0.35rem;
+  }
   a {
     display: flex;
     align-items: center;
-    min-height: 44px;
-    color: v.$color-text-on-dark;
-    font-size: 0.88rem;
-    text-decoration: none;
+    min-height: 42px;
+    margin-left: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.4rem;
+    color: $ivory-soft;
+    font-size: 0.98rem;
+    font-weight: 500;
+  }
+  // The whole game first, a little ahead of its families.
+  li:first-child a {
+    color: v.$color-gold-light;
+    font-weight: 600;
+  }
+  .main[aria-expanded='true'] + & {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    ul {
+      transform: none;
+    }
   }
 }
 
-.universeGroup {
-  padding-bottom: 0.4rem;
-}
-
-.universeHeading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-
-  h2 {
-    margin-top: 0.25rem;
-    color: v.$color-cream;
-    font: 500 2rem/1 v.$font-heading;
-  }
-}
-
-.allUniverse {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 40px;
-  padding-bottom: 0.2rem;
-  color: v.$color-gold-light;
-  border-bottom: 1px solid rgb(244 217 133 / 48%);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.universeLinks {
-  margin: 1rem 0 0;
-  border-top: 1px solid v.$color-border-on-dark;
-
-  li {
-    border-bottom: 1px solid v.$color-border-on-dark;
-  }
-
-  a {
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    gap: 0.75rem;
-    align-items: center;
-    min-height: 68px;
-    padding-block: 0.7rem;
-    color: v.$color-text-on-dark;
-    text-decoration: none;
-  }
-}
-
-.chapterNumber {
-  color: v.$color-gold-light;
-  font: 500 0.85rem/1 v.$font-heading;
-}
-
-.chapterCopy {
+// Reading and service: two columns of plain links.
+.gridLinks {
   display: grid;
-  gap: 0.12rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1rem;
+  a {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    margin-inline: -0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.4rem;
+    color: $ivory-soft;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+}
 
-  strong {
-    color: v.$color-cream;
+// The universe's chapters: numbered, without their taglines.
+.chapters {
+  margin-top: 0.1rem;
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 40px;
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.4rem;
+    color: $ivory-soft;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  span {
+    min-width: 1.25rem;
+    color: v.$color-gold-light;
+    font-family: v.$font-heading;
+    font-size: 0.95rem;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+}
+
+// Account and help: at hand, quieter than the shop.
+.service {
+  .eyebrow {
+    color: rgb(232 194 97 / 70%);
+  }
+  .gridLinks a {
+    color: $ivory-muted;
     font-size: 0.88rem;
   }
+}
 
-  small {
-    color: v.$color-muted-on-dark;
-    font-size: 0.75rem;
-    line-height: 1.4;
+// Every link, last so it wins: immediate feedback on touch, no hover needed.
+.panel a,
+.main {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 120ms v.$ease-out,
+    color 120ms v.$ease-out;
+  span {
+    transition: transform 160ms v.$ease-out;
+  }
+  &:active {
+    background: $tap;
+    color: v.$color-text-on-dark;
+    span {
+      transform: translateX(2px);
+    }
+  }
+  &[aria-current='page'] {
+    color: v.$color-gold-light;
+  }
+  &:focus-visible {
+    outline: 2px solid v.$color-gold-light;
+    outline-offset: -2px;
   }
 }
 
-.universeLinks a > svg {
-  color: v.$color-gold-light;
-}
-
-.signature {
-  display: block;
-  margin-top: 1.8rem;
-  color: v.$color-muted-on-dark;
-  font-size: 0.75rem;
-}
-
-@media (max-width: 479px) {
-  .panel {
-    padding-inline: 1.1rem;
+@media (max-width: 22.49rem) {
+  .content {
+    padding-inline: 1rem;
   }
-
-  .mainLinks a {
-    font-size: 1.4rem;
-  }
-
-  .universeHeading h2 {
-    font-size: 1.8rem;
+  .main {
+    font-size: 1.24rem;
   }
 }

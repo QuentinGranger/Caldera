@@ -123,6 +123,12 @@ test('menus : une famille couverte par Pokémon passe par son menu, pas par la p
   assert.deepEqual(site.productTypes, [
     { href: '/categorie/accessoires', label: 'Accessoires' },
   ]);
+  // The shop's root families: Pokémon's page first, the multi-game page
+  // only for licence-free products.
+  assert.deepEqual(site.families, [
+    { href: '/pokemon/scelles', label: 'Produits scellés' },
+    { href: '/categorie/accessoires', label: 'Accessoires' },
+  ]);
   // Short names for the menus that already name the game.
   assert.deepEqual(
     site.games[0]!.children.map((link) => link.shortLabel ?? link.label),

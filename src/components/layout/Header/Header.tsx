@@ -7,15 +7,22 @@ import { IconLink } from '@/components/ui/IconButton/IconButton';
 import { Navigation } from '@/components/layout/Navigation/Navigation';
 import { MobileNavigation } from '@/components/layout/MobileNavigation/MobileNavigation';
 import { getSiteNavigation, headerItems } from '@/data/navigation';
+import { currentCustomer } from '@/lib/account/auth';
 import styles from './Header.module.scss';
 import { HeaderSearch } from '@/components/layout/HeaderSearch/HeaderSearch';
 import { HeaderWishlistLink } from '@/components/wishlist/HeaderWishlistLink';
 export async function Header() {
-  const navigation = await getSiteNavigation();
+  const [navigation, customer] = await Promise.all([
+    getSiteNavigation(),
+    currentCustomer(),
+  ]);
   return (
     <header className={styles.header}>
       <Container className={styles.inner}>
-        <MobileNavigation navigation={navigation} />
+        <MobileNavigation
+          navigation={navigation}
+          signedIn={Boolean(customer)}
+        />
         <Link
           href="/"
           className={styles.brand}
@@ -27,7 +34,7 @@ export async function Header() {
             alt="Les Terres de Caldera"
             width={1774}
             height={887}
-            sizes="(min-width: 1200px) 152px, 116px"
+            sizes="(min-width: 1200px) 152px, 108px"
             loading="eager"
           />
         </Link>
