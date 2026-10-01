@@ -84,7 +84,8 @@ export async function catalogListingMetadata({
 /**
  * The products of a loaded listing: the families at a glance, the
  * exploration bar (count, search, filters drawer, order), the active
- * filters, the grid and its crawlable pagination, then the internal links.
+ * filters, the grid and its crawlable pagination, then the internal links
+ * and the newsletter (`newsletter={false}`: the page places its own).
  * A scope without any product and without refinement shows `emptyState`
  * (the default empty message otherwise), without filters. `interlude`, when
  * given, opens a window on the universe between two rows of products.
@@ -95,18 +96,20 @@ export function CatalogResults({
   emptyState,
   linkGroups,
   interlude,
+  newsletter: withNewsletter = true,
 }: {
   load: CatalogLoad;
   path: string;
   emptyState?: ReactNode;
   linkGroups?: SeoLinkGroup[];
   interlude?: ReactNode;
+  newsletter?: boolean;
 }) {
   const { filters, facets, result, total } = load;
   const links = linkGroups?.length ? (
     <CatalogLinks groups={linkGroups} />
   ) : null;
-  const newsletter = (
+  const newsletter = withNewsletter && (
     <NewsletterCta
       eyebrow="Réassorts et nouveautés"
       title="Soyez prévenu quand de nouvelles cartes arrivent"

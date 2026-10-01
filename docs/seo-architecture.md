@@ -128,7 +128,7 @@ Deux blocs au plus par page : le `BreadcrumbList`, émis par le composant `Bread
 
 Liens calculés depuis la base, **uniquement vers des cibles indexables** :
 
-- hub jeu → extensions (récentes d’abord), familles, langues/statuts pertinents, guides du jeu, calendrier ;
+- hub jeu → prochaine sortie et extensions récentes (trois au plus, toutes via `/extensions`), familles, langues, disponibilité (la page du jeu, sinon la liste transverse `/{statut}`), trois guides du jeu, calendrier ;
 - extension → familles de l’extension, extensions voisines (même série, précédente/suivante par date de sortie), langues disponibles, guides liés ;
 - famille → sous-familles, extensions proposant cette famille, langues ;
 - produit → hub jeu, extension, extension+famille, famille du jeu, terme du glossaire lié à son type, guides liés, produits similaires (mix même extension / même famille, priorité au stock) ;

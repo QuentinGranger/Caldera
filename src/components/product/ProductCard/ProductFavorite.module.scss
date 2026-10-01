@@ -1,8 +1,23 @@
 @use '../../../styles/abstracts/variables' as v;
 
+// A lit disc behind the heart, smaller than its 44 px target: the heart
+// reads on any packaging and leaves room for the badge.
+.disc {
+  background: radial-gradient(
+    circle closest-side,
+    rgb(255 252 245 / 78%) 80%,
+    transparent 83%
+  );
+}
+
 .active {
   color: v.$color-green-dark;
-  background: rgb(244 217 133 / 78%);
+  // The same disc as at rest, in gold.
+  background: radial-gradient(
+    circle closest-side,
+    rgb(244 217 133 / 88%) 80%,
+    transparent 83%
+  );
 
   svg {
     fill: currentColor;

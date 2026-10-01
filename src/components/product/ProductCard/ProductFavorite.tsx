@@ -21,7 +21,7 @@ export function ProductFavorite({
 
   return (
     <IconButton
-      className={`${className} ${favorite ? styles.active : ''} ${pending ? styles.pending : ''}`}
+      className={`${className} ${styles.disc} ${favorite ? styles.active : ''} ${pending ? styles.pending : ''}`}
       label={`${action} ${productName} ${favorite ? 'des' : 'aux'} favoris`}
       aria-pressed={favorite}
       aria-busy={pending || undefined}

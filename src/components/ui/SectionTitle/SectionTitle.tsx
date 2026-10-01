@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import styles from './SectionTitle.module.scss';
 type Props = {
@@ -19,7 +19,7 @@ export function SectionTitle({ id, title, eyebrow, description, link }: Props) {
       {link && (
         <Link href={link.href} className={styles.link}>
           {link.label}
-          <ArrowUpRight size={17} aria-hidden="true" />
+          <ArrowRight size={17} aria-hidden="true" />
         </Link>
       )}
     </div>

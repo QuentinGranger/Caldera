@@ -56,8 +56,22 @@
 .badge {
   position: absolute;
   top: 0.8rem;
+  // Clear of the favourite: a long label wraps rather than meets it.
+  right: 3.1rem;
   left: 0.8rem;
   z-index: 1;
+  pointer-events: none;
+  @media (max-width: 29.99rem) {
+    top: 0.6rem;
+    left: 0.5rem;
+  }
+  @media (max-width: 22.49rem) {
+    > span {
+      padding-inline: 0.45rem;
+      font-size: 0.64rem;
+      letter-spacing: 0;
+    }
+  }
 }
 .favorite {
   position: absolute;
@@ -70,11 +84,22 @@
   flex: 1;
   flex-direction: column;
   padding: 1rem 0.15rem 0;
+  // Two lines at most, always two reserved: a long name never makes its
+  // card taller, and the lines below stay level along a row.
   h3 {
+    display: -webkit-box;
+    min-height: 2lh;
+    overflow: hidden;
     font-family: v.$font-body;
     font-size: 0.95rem;
     font-weight: 600;
     line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    @media (max-width: 29.99rem) {
+      font-size: 0.9rem;
+    }
     a {
       transition: color v.$duration-short v.$ease-out;
     }
@@ -102,26 +127,43 @@
 }
 .category {
   margin-bottom: 0.3rem;
+  overflow: hidden;
   color: v.$color-text-muted;
   font-size: 0.72rem;
   letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .bottom {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-top: auto;
   padding-top: 0.6rem;
   gap: 0.5rem;
 }
 .price {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+// « À partir de », the former price: small, above the amount.
+.priceNote {
+  color: v.$color-text-muted;
+  font-size: 0.72rem;
+  font-weight: 500;
+  del {
+    font-weight: 400;
+  }
 }
 .add {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 1px solid v.$color-border;
   border-radius: v.$radius-card;
   transition:
@@ -150,6 +192,9 @@
   }
   .content {
     padding: 0;
+  }
+  .content h3 {
+    min-height: 0;
   }
   .favorite,
   .badge {
@@ -180,7 +225,7 @@
     }
   }
   .category,
-  .comparePrice {
+  .priceNote {
     color: v.$color-muted-on-night;
   }
   .availability {
@@ -195,13 +240,6 @@
   }
 }
 
-.comparePrice {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 400;
-  color: v.$color-text-muted;
-}
 .visual > a {
   display: block;
   position: absolute;

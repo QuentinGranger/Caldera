@@ -209,6 +209,63 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.match(strip((await page('/nouveautes')).html), /\d+ nouveautés?/);
 });
 
+test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () => {
+  const { html } = await page('/pokemon');
+  assert.equal(h1Count(html), 1);
+  const text = strip(html);
+  // The hero: where, what, the way to the products; no figures in prose.
+  assert.ok(
+    text.includes(
+      'Cartes, boosters, displays et coffrets Pokémon sélectionnés pour jouer, collectionner et ouvrir.',
+    ),
+  );
+  assert.ok(html.includes('href="#catalogue-resultats"'));
+  assert.doesNotMatch(text, /produits au catalogue|Disponibilité : \d/);
+  const at = (marker: string, from = 0) => {
+    const index = html.indexOf(marker, from);
+    assert.ok(index >= 0, marker);
+    return index;
+  };
+  // The products come before every secondary block, in this order.
+  const blocks = [
+    '<article',
+    'id="extensions"',
+    'id="explorer"',
+    'id="guides"',
+    'id="questions"',
+    'aria-label="Réassorts et nouveautés"',
+  ].map((marker) => at(marker));
+  assert.deepEqual(
+    blocks,
+    [...blocks].sort((a, b) => a - b),
+  );
+  // Three guides at most; the questions open in place.
+  const guides = html.slice(at('id="guides"'), at('id="questions"'));
+  const guideCount = (guides.match(/<h3[\s>]/g) ?? []).length;
+  assert.ok(guideCount >= 1 && guideCount <= 3, String(guideCount));
+  assert.ok(guides.includes('href="/guides"'));
+  assert.match(
+    html.slice(at('id="questions"')),
+    /<details\b[^>]*>\s*<summary>/,
+  );
+  assert.equal(
+    jsonLdTypes(html).filter((type) => type === 'FAQPage').length,
+    1,
+  );
+  // Shortcuts: only indexable pages. Every preorder is a Pokémon one: the
+  // shop's listing stands for the game's.
+  const explorer = html.slice(at('id="explorer"'), at('id="guides"'));
+  for (const href of [
+    '/pokemon/boosters',
+    '/pokemon/francais',
+    '/pokemon/en-stock',
+    '/precommandes',
+  ])
+    assert.ok(explorer.includes(`href="${href}"`), href);
+  for (const href of ['/pokemon/japonais', '/pokemon/precommandes'])
+    assert.ok(!explorer.includes(`href="${href}"`), href);
+});
+
 test('HTTP : aucun résultat et filtres mobile / recherche accessibles', async () => {
   const empty = await page('/catalogue?search=introuvable-caldera');
   assert.ok(

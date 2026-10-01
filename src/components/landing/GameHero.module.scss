@@ -1,0 +1,226 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+// From this width the view leaves the background for its arch.
+$split: 60rem;
+$gold-line: rgb(232 194 97 / 60%);
+
+// Deep green, a glow of gold behind the arch, a gold hairline where the
+// view meets the parchment of the shop.
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse 55% 85% at 80% 50%,
+      rgb(232 194 97 / 13%),
+      transparent 65%
+    ),
+    linear-gradient(165deg, v.$color-night-soft 0%, v.$color-night 75%);
+  color: v.$color-text-on-dark;
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $gold-line, transparent);
+  }
+}
+
+// Wide screens only: the view, blurred, colours the night around the arch.
+.atmosphere {
+  display: none;
+  @include m.from($split) {
+    display: block;
+    position: absolute;
+    inset: -12%;
+    z-index: -2;
+    opacity: 0.4;
+    filter: blur(56px) saturate(1.15);
+    img {
+      object-fit: cover;
+    }
+  }
+}
+
+.inner {
+  @include m.container;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  // Short on phones: the families and the first products follow.
+  min-height: clamp(21rem, 52svh, 29rem);
+  padding-block: 1.25rem 1.75rem;
+  // The breadcrumb, light on the view.
+  > nav {
+    margin-bottom: 0;
+    color: rgb(251 244 223 / 72%);
+    a:hover {
+      color: v.$color-gold-light;
+    }
+    [aria-current] {
+      color: v.$color-text-on-dark;
+    }
+  }
+  @include m.from($split) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 23rem);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'crumb view'
+      'content view';
+    column-gap: clamp(3rem, 7vw, 7rem);
+    min-height: 0;
+    padding-block: 1.5rem 3.25rem;
+    > nav {
+      grid-area: crumb;
+    }
+  }
+}
+
+.content {
+  display: grid;
+  justify-items: start;
+  gap: 0.85rem;
+  max-width: 40rem;
+  h1 {
+    margin-bottom: 0.1rem;
+    font-size: clamp(3.2rem, 1.9rem + 5.4vw, 6.4rem);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-shadow: 0 2px 30px rgb(3 20 14 / 50%);
+  }
+  @include m.from($split) {
+    grid-area: content;
+    align-self: center;
+    padding-block: 1rem 2rem;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: v.$color-gold-light;
+  span {
+    width: 2rem;
+    height: 1px;
+    background: currentColor;
+  }
+}
+.lead {
+  max-width: min(100%, 29rem);
+  color: #eef1e8;
+  font-size: v.$text-lead;
+  line-height: 1.6;
+}
+.explore {
+  margin-top: 0.85rem;
+}
+
+// Phones: the whole background, darkened where the words are. Wide
+// screens: an arch, outlined in gold, the view a little apart.
+.view {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  img {
+    object-fit: cover;
+    object-position: 50% 40%;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(3 20 14 / 62%) 0%,
+      rgb(3 20 14 / 20%) 28%,
+      rgb(3 20 14 / 58%) 58%,
+      v.$color-night 100%
+    );
+  }
+  @include m.from($split) {
+    grid-area: view;
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    align-self: end;
+    width: 100%;
+    aspect-ratio: 0.82;
+    margin-top: 0.75rem;
+    overflow: hidden;
+    border-radius: 50% 50% 0.6rem 0.6rem / 34% 34% 0.6rem 0.6rem;
+    outline: 1px solid $gold-line;
+    outline-offset: 10px;
+    box-shadow: v.$shadow-night;
+    &::after {
+      background: linear-gradient(
+        180deg,
+        transparent 55%,
+        rgb(3 20 14 / 45%) 100%
+      );
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .content > * {
+    animation: rise 800ms v.$ease-out both;
+  }
+  .content > :nth-child(2) {
+    animation-delay: 90ms;
+  }
+  .content > :nth-child(3) {
+    animation-delay: 180ms;
+  }
+  .content > :nth-child(n + 4) {
+    animation-delay: 270ms;
+  }
+  @include m.from($split) {
+    .view {
+      animation: open 1100ms v.$ease-out both;
+    }
+  }
+  // The view drifts a little as the page goes down to the products.
+  @supports (animation-timeline: scroll()) {
+    .view img {
+      animation: drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 80vh;
+    }
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drift {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1.08) translateY(6%);
+  }
+}

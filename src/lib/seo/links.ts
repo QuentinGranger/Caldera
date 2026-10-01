@@ -15,7 +15,9 @@ import { getPrisma } from '@/lib/db/prisma';
 import type { CatalogProduct } from '@/types/product';
 import {
   LANGUAGE_IN_LABELS,
+  LANGUAGE_LABELS,
   LANGUAGE_SLUGS,
+  STATUS_LABELS,
   STATUS_SLUGS,
   isSupportedScope,
   landingKind,
@@ -258,6 +260,52 @@ export async function getGameHubLinks(game: GameRef): Promise<SeoLinkGroup[]> {
       links: STATUS_SLUGS.flatMap((status) => to({ status })),
     },
   ]);
+}
+
+export interface GameHubShortcuts {
+  /** Families with an indexable landing, labelled by name alone. */
+  formats: SeoLink[];
+  /** « Français », « Anglais »… */
+  languages: SeoLink[];
+  /** Status landings of the game, by status; absent when not indexable. */
+  statuses: Partial<Record<StatusSlug, SeoLink>>;
+}
+
+/**
+ * /{game}: its families, languages and statuses as short shortcuts, under a
+ * heading that already names the game. Only indexable landings.
+ */
+export async function getGameHubShortcuts(
+  game: GameRef,
+): Promise<GameHubShortcuts> {
+  const [lookup, sets, categories] = await Promise.all([
+    getIndexLookup(),
+    getGameSets(game.id),
+    getCategories(),
+  ]);
+  const { find } = gameContext(game, lookup, sets, categories);
+  const link = (page: IndexedPage | undefined, label: string): SeoLink[] =>
+    page ? [{ href: page.path, label, count: page.productCount }] : [];
+  return {
+    formats: categories.flatMap((category) =>
+      link(find({ category: category.slug }), category.name),
+    ),
+    languages: FACET_LANGUAGES.flatMap((language) =>
+      link(find({ language }), capitalizeFr(LANGUAGE_LABELS[language])),
+    ),
+    statuses: Object.fromEntries(
+      STATUS_SLUGS.flatMap((status) =>
+        link(find({ status }), STATUS_LABELS[status]).map((entry) => [
+          status,
+          entry,
+        ]),
+      ),
+    ),
+  };
+}
+
+function capitalizeFr(text: string): string {
+  return text.charAt(0).toLocaleUpperCase('fr-FR') + text.slice(1);
 }
 
 /** Links of a facet landing: children, neighbours and parents, never itself. */

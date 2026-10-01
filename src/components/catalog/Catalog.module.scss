@@ -439,7 +439,8 @@ $hairline: rgb(23 62 50 / 14%);
   gap: 2rem 0.85rem;
   margin-top: 1.5rem;
   transition: opacity v.$duration-medium v.$ease-out;
-  @media (min-width: 360px) {
+  // Two columns down to the smallest phones: comparing side by side.
+  @media (min-width: 300px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   @include m.from(v.$breakpoint-tablet) {
@@ -531,6 +532,7 @@ $hairline: rgb(23 62 50 / 14%);
 }
 .interludeLink {
   @include m.underline-link(v.$color-gold-light);
+  min-height: 44px;
   margin-top: 0.4rem;
   color: v.$color-text-on-dark;
 }

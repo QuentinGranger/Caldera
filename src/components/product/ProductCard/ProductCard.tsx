@@ -8,7 +8,7 @@ import { formatPrice } from '@/utils/formatPrice';
 import styles from './ProductCard.module.scss';
 /** The listing grid: 2 columns on phones, 3 on tablets, 4 from 75rem. */
 const GRID_SIZES =
-  '(min-width: 1200px) 300px, (min-width: 768px) 31vw, (min-width: 360px) 46vw, 90vw';
+  '(min-width: 1200px) 300px, (min-width: 768px) 31vw, (min-width: 300px) 46vw, 90vw';
 
 export function ProductCard({
   product,
@@ -61,23 +61,25 @@ export function ProductCard({
           <p className={styles.availability}>En stock</p>
         )}
         <div className={styles.bottom}>
+          {/* The amount always ends the block: amounts align along a row. */}
           <div className={styles.price}>
             {product.price === null ? (
               <span>Indisponible</span>
             ) : (
               <>
-                <span>
-                  {product.priceFrom ? 'À partir de ' : ''}
-                  {formatPrice(product.price)}
-                </span>
-                {product.compareAtPrice && (
-                  <del
-                    className={styles.comparePrice}
-                    aria-label={`Ancien prix : ${formatPrice(product.compareAtPrice)}`}
-                  >
-                    {formatPrice(product.compareAtPrice)}
-                  </del>
+                {(product.priceFrom || product.compareAtPrice) && (
+                  <span className={styles.priceNote}>
+                    {product.priceFrom && 'À partir de '}
+                    {product.compareAtPrice && (
+                      <del
+                        aria-label={`Ancien prix : ${formatPrice(product.compareAtPrice)}`}
+                      >
+                        {formatPrice(product.compareAtPrice)}
+                      </del>
+                    )}
+                  </span>
                 )}
+                <span>{formatPrice(product.price)}</span>
               </>
             )}
           </div>

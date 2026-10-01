@@ -1,0 +1,269 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+$hairline: rgb(23 62 50 / 14%);
+
+// --- Releases: the next one leads, the latest follow ------------------------
+
+// Phones: swiped, the next card peeking. Wider: side by side, the next
+// release wider than the others.
+.rail {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0 calc(-1 * #{v.$space-6});
+  padding: 0.25rem v.$space-6 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: v.$space-6;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  list-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  > li {
+    flex: 0 0 min(80%, 19rem);
+    scroll-snap-align: start;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+.release {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  height: 100%;
+  min-height: 12.5rem;
+  padding: 1.15rem 1.2rem 1.1rem;
+  border-radius: v.$radius-medium;
+  background: v.$color-surface;
+  box-shadow: inset 0 0 0 1px v.$color-border;
+  transition: box-shadow v.$duration-short v.$ease-out;
+  h3 {
+    margin-top: 0.15rem;
+    color: v.$color-green-dark;
+    font: 500 1.5rem/1.1 v.$font-heading;
+    overflow-wrap: anywhere;
+  }
+  // The whole card opens the set.
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  h3 a:focus-visible {
+    outline: none;
+  }
+  &:has(a:focus-visible) {
+    outline: 2px solid v.$color-green-secondary;
+    outline-offset: 2px;
+  }
+  &:has(a:hover) {
+    box-shadow:
+      inset 0 0 0 1px rgb(11 102 80 / 45%),
+      0 18px 40px -30px rgb(7 28 23 / 55%);
+  }
+}
+.releaseLabel {
+  @include m.eyebrow;
+  color: v.$color-green-secondary;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+}
+.releaseLogo {
+  width: auto;
+  max-width: 120px;
+  height: 48px;
+  object-fit: contain;
+}
+.releaseMeta {
+  color: v.$color-text-muted;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.releaseCount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid $hairline;
+  color: v.$color-text;
+  font-size: 0.8rem;
+  font-weight: 600;
+  svg {
+    color: v.$color-green-secondary;
+    transition: transform v.$duration-short v.$ease-out;
+  }
+  .release:has(a:hover) & svg {
+    transform: translateX(3px);
+  }
+}
+.releaseDate {
+  color: v.$color-gold-light;
+  font: 500 clamp(1.6rem, 1.3rem + 1vw, 2.1rem) / 1.05 v.$font-heading;
+}
+// The next release: the night of the hero, its date in gold.
+.next {
+  background:
+    radial-gradient(
+      ellipse 90% 70% at 100% 0%,
+      rgb(232 194 97 / 18%),
+      transparent 65%
+    ),
+    linear-gradient(160deg, v.$color-green-dark 0%, v.$color-night 100%);
+  box-shadow: none;
+  color: v.$color-text-on-dark;
+  .releaseLabel {
+    align-self: flex-start;
+    padding: 0.3rem 0.6rem;
+    border-radius: v.$radius-pill;
+    background: v.$color-gold-light;
+    color: v.$color-green-dark;
+  }
+  h3 {
+    color: v.$color-text-on-dark;
+    font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.2rem);
+  }
+  .releaseMeta {
+    color: v.$color-muted-on-night;
+  }
+  .releaseCount {
+    border-top-color: rgb(255 255 255 / 14%);
+    color: v.$color-text-on-dark;
+    svg {
+      color: v.$color-gold-light;
+    }
+  }
+  &:has(a:hover) {
+    box-shadow: 0 22px 50px -30px rgb(3 20 14 / 80%);
+  }
+  &:has(a:focus-visible) {
+    outline-color: v.$color-gold;
+  }
+}
+
+// --- Shortcuts: format, language, availability -----------------------------
+
+// Phones: the heading, the shortcuts, then the presentation. Wide: the
+// presentation reads on the left, the shortcuts stand on the right.
+.explore {
+  display: grid;
+  gap: 1.5rem;
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-areas:
+      'heading shortcuts'
+      'about shortcuts';
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(3rem, 6vw, 6rem);
+    row-gap: 0;
+  }
+}
+.exploreHeading {
+  > div {
+    margin-bottom: 0;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-area: heading;
+  }
+}
+.exploreLead {
+  max-width: 34rem;
+  margin-top: 0.85rem;
+  color: v.$color-text-muted;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+.about {
+  summary {
+    @include m.underline-link(v.$color-green-secondary);
+    min-height: 44px;
+    color: v.$color-green-dark;
+    list-style: none;
+    cursor: pointer;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    &:focus-visible {
+      outline: 2px solid v.$color-green-secondary;
+      outline-offset: 2px;
+    }
+  }
+  &[open] summary svg {
+    transform: rotate(180deg);
+  }
+  > div {
+    margin: 0.75rem 0 0;
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    grid-area: about;
+    margin-top: 0.75rem;
+  }
+}
+.shortcuts {
+  display: grid;
+  gap: 1.1rem;
+  @include m.from(v.$breakpoint-desktop) {
+    grid-area: shortcuts;
+    align-self: start;
+    gap: 1.5rem;
+    padding: 1.75rem;
+    border-radius: v.$radius-medium;
+    background: v.$color-surface;
+    box-shadow: inset 0 0 0 1px v.$color-border;
+  }
+}
+.shortcutGroup {
+  h3 {
+    margin-bottom: 0.55rem;
+    color: v.$color-green-secondary;
+    font: 700 0.7rem/1.4 v.$font-body;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    padding: 0 0.95rem 0 1.05rem;
+    border: 1px solid $hairline;
+    border-radius: v.$radius-pill;
+    background: rgb(255 252 245 / 70%);
+    color: v.$color-text;
+    font-size: 0.86rem;
+    font-weight: 600;
+    transition:
+      border-color v.$duration-short v.$ease-out,
+      background-color v.$duration-short v.$ease-out;
+    svg {
+      color: v.$color-green-secondary;
+      transition: transform v.$duration-short v.$ease-out;
+    }
+    &:hover {
+      border-color: v.$color-green-secondary;
+      background: v.$color-surface;
+      svg {
+        transform: translateX(2px);
+      }
+    }
+  }
+}

@@ -1,8 +1,13 @@
+import { Plus } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle/SectionTitle';
 import type { FaqEntry } from '@/lib/seo/types';
 import styles from './Landing.module.scss';
 
-/** Visible FAQ; the page adds the FAQPage node only when this is rendered. */
+/**
+ * Visible FAQ, one question per line that opens in place: the answers stay
+ * in the page (the FAQPage node describes them), shown on demand. The page
+ * adds that node only when this is rendered.
+ */
 export function LandingFaq({
   entries,
   subject,
@@ -19,14 +24,17 @@ export function LandingFaq({
         eyebrow={subject}
         title="Questions fréquentes"
       />
-      <dl className={styles.faq}>
+      <div className={styles.faq}>
         {entries.map((entry) => (
-          <div key={entry.question} className={styles.faqItem}>
-            <dt>{entry.question}</dt>
-            <dd>{entry.answer}</dd>
-          </div>
+          <details key={entry.question} className={styles.faqItem}>
+            <summary>
+              <h3>{entry.question}</h3>
+              <Plus size={18} aria-hidden="true" />
+            </summary>
+            <p>{entry.answer}</p>
+          </details>
         ))}
-      </dl>
+      </div>
     </section>
   );
 }

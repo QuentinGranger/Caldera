@@ -3,11 +3,18 @@ import {
   catalogListingMetadata,
   loadCatalog,
 } from '@/components/catalog/CatalogPage';
-import { HubReleases } from '@/components/landing/HubReleases';
-import { LandingPage } from '@/components/landing/LandingPage';
+import { getIndexableListings } from '@/components/catalog/listingHub';
+import { getGuidesIndex } from '@/components/editorial/content';
+import { GameHubPage } from '@/components/landing/GameHubPage';
 import { requireLandingView } from '@/components/landing/routes';
 import type { SearchParams } from '@/lib/catalog/params';
-import { getGameHubLinks } from '@/lib/seo/links';
+import {
+  STATUS_LABELS,
+  STATUS_SLUGS,
+  statusListingPath,
+} from '@/lib/seo/facets';
+import { getGameHubShortcuts } from '@/lib/seo/links';
+import type { SeoLink } from '@/lib/seo/types';
 
 type Props = {
   params: Promise<{ game: string }>;
@@ -32,17 +39,31 @@ export async function generateMetadata({
 
 export default async function Page({ params, searchParams }: Props) {
   const view = await requireLandingView((await params).game, [], searchParams);
-  const [load, groups] = await Promise.all([
+  const [load, shortcuts, listings, guides] = await Promise.all([
     loadCatalog({ path: view.path, searchParams, scope: view.catalogScope }),
-    getGameHubLinks(view.scope.game),
+    getGameHubShortcuts(view.scope.game),
+    getIndexableListings(),
+    getGuidesIndex(),
   ]);
-  // The sets have their own section above the products.
-  const linkGroups = groups.filter(
-    (group) => !group.links.every((link) => view.setPaths.has(link.href)),
-  );
+  // A status without its own page for the game (every product of the
+  // status is of this game, or too few) leads to the shop's listing.
+  const availability = STATUS_SLUGS.flatMap((status): SeoLink[] => {
+    const own = shortcuts.statuses[status];
+    if (own) return [own];
+    return listings.has(status)
+      ? [{ href: statusListingPath(status), label: STATUS_LABELS[status] }]
+      : [];
+  });
   return (
-    <LandingPage view={view} load={load} linkGroups={linkGroups}>
-      <HubReleases view={view} />
-    </LandingPage>
+    <GameHubPage
+      view={view}
+      load={load}
+      shortcuts={[
+        { title: 'Explorer par format', links: shortcuts.formats },
+        { title: 'Acheter par langue', links: shortcuts.languages },
+        { title: 'Disponibilité', links: availability },
+      ]}
+      guidesIndexable={guides.decision.index}
+    />
   );
 }

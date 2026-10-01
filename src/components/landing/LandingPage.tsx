@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import type { ReactNode } from 'react';
 import { CatalogHeader } from '@/components/catalog/CatalogHeader';
 import {
   CatalogResults,
@@ -27,20 +26,18 @@ const EMPTY_TITLES: Partial<Record<LandingView['kind'], string>> = {
 };
 
 /**
- * /{game} and /{game}/{facets}: facts, editorial intro, `children` (game hub
- * releases), products with their links, guides and FAQ. Editorial blocks and
- * the FAQ are shown on the first page only.
+ * /{game}/{facets}: facts, editorial intro, products with their links,
+ * guides and FAQ (the game hub has its own page, GameHubPage). Editorial
+ * blocks and the FAQ are shown on the first page only.
  */
 export function LandingPage({
   view,
   load,
   linkGroups,
-  children,
 }: {
   view: LandingView;
   load: CatalogLoad;
   linkGroups: readonly SeoLinkGroup[];
-  children?: ReactNode;
 }) {
   const firstPage = load.page === 1;
   const faq = firstPage ? view.faq : [];
@@ -68,7 +65,6 @@ export function LandingPage({
           }
         />
         {firstPage && <LandingEditorial html={view.editorialHtml} />}
-        {firstPage && children}
         <CatalogResults
           load={load}
           path={view.path}
