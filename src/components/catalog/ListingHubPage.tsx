@@ -30,6 +30,26 @@ import {
 } from './listingHub';
 import styles from './Catalog.module.scss';
 
+/** The counter's range, in the shop's words and order. */
+const COUNTER_FAMILIES = [
+  ['scelles', 'Produits scellés'],
+  ['boosters', 'Boosters'],
+  ['displays', 'Displays'],
+  ['coffrets', 'Coffrets'],
+  ['accessoires', 'Accessoires'],
+] as const;
+
+/** The licence sold, then each family once it has products. */
+function counterRange(families: readonly { slug: string }[]): string[] {
+  const present = new Set(families.map((family) => family.slug));
+  return [
+    'Pokémon TCG',
+    ...COUNTER_FAMILIES.filter(([slug]) => present.has(slug)).map(
+      ([, label]) => label,
+    ),
+  ];
+}
+
 const plural = (count: number, one: string, many: string) =>
   `${count} ${count > 1 ? many : one}`;
 
@@ -215,10 +235,8 @@ export async function ListingHubPage({
           path={config.path}
           eyebrow="Le Comptoir"
           title="Tout le catalogue"
-          lead={
-            'Toute la collection de la boutique, réunie au même comptoir\u00a0: chaque pièce avec son prix et sa disponibilité du jour.'
-          }
-          facts={intro}
+          lead="Explorez les collections de Caldera et trouvez les pièces qui rejoindront votre prochaine aventure."
+          range={counterRange(load.facets.categories)}
           explore={load.total > 0 ? '#catalogue-resultats' : undefined}
         />
         <Container>{results}</Container>

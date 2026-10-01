@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import type { ReactNode } from 'react';
 import { ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
 import {
@@ -11,6 +10,7 @@ import styles from './CatalogueHero.module.scss';
 /**
  * The entrance of the catalogue: a view over Caldera, kept short (the shop
  * is right below), that settles into the counter where the products are.
+ * Words only, no figures: the counts live with the products, below.
  */
 export function CatalogueHero({
   breadcrumb,
@@ -18,7 +18,7 @@ export function CatalogueHero({
   eyebrow,
   title,
   lead,
-  facts,
+  range,
   explore,
 }: {
   breadcrumb: BreadcrumbItem[];
@@ -26,8 +26,8 @@ export function CatalogueHero({
   eyebrow: string;
   title: string;
   lead: string;
-  /** Factual lines (counts, prices, games), links included. */
-  facts?: ReactNode;
+  /** What the counter holds: the licence, then the families with products. */
+  range: readonly string[];
   /** Anchor of the products, absent while there is none. */
   explore?: string;
 }) {
@@ -52,10 +52,16 @@ export function CatalogueHero({
           </p>
           <h1 id="catalogue-title">{title}</h1>
           <p className={styles.lead}>{lead}</p>
-          {facts && <div className={styles.facts}>{facts}</div>}
+          {range.length > 0 && (
+            <ul className={styles.range} aria-label="Au comptoir">
+              {range.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
           {explore && (
             <Button href={explore} variant="gold" className={styles.explore}>
-              Explorer les produits <ArrowDown aria-hidden="true" />
+              Explorer le catalogue <ArrowDown aria-hidden="true" />
             </Button>
           )}
         </div>

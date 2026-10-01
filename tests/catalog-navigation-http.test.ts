@@ -171,7 +171,10 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   }
 
   const catalogue = (await page('/catalogue')).html;
-  assert.match(strip(catalogue), /\d+ produits au catalogue, de [\d,]+ € à/);
+  // The real figures, in the search snippet: the hero itself has none.
+  const description =
+    /<meta name="description" content="([^"]*)"/.exec(catalogue)?.[1] ?? '';
+  assert.match(description, /\d+ produits de [\d,]+\s€ à [\d,]+\s€/);
   for (const href of ['/nouveautes', '/precommandes', '/en-stock', '/pokemon'])
     assert.ok(catalogue.includes(`href="${href}"`), href);
   assert.ok(strip(catalogue).includes('Produits scellés (17)'));

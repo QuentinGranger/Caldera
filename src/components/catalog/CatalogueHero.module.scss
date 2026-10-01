@@ -79,6 +79,10 @@ $dawn: clamp(3rem, 6vw, 4.5rem);
   justify-items: start;
   gap: 0.9rem;
   max-width: 40rem;
+  // A reading in steps: where, what, why, then the way in.
+  h1 {
+    margin-bottom: 0.15rem;
+  }
   h1 {
     font-size: clamp(2.6rem, 1.7rem + 3.8vw, 5rem);
     font-weight: 500;
@@ -100,32 +104,44 @@ $dawn: clamp(3rem, 6vw, 4.5rem);
   }
 }
 .lead {
-  max-width: 34rem;
+  // Short lines, on every screen.
+  max-width: min(100%, 27rem);
   color: #eef1e8;
   font-size: v.$text-lead;
   line-height: 1.6;
 }
-// The counter's figures: real counts, prices and games.
-.facts {
-  max-width: 38rem;
+// What the counter holds: quiet, one dot between each, never one starting
+// a line (the first 1.1rem of every line is clipped).
+.range {
+  $dot-space: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+  margin: 0.35rem 0 0 (-$dot-space);
+  padding: 0;
+  clip-path: inset(0 0 0 $dot-space);
   color: v.$color-muted-on-night;
-  font-size: v.$text-small;
-  line-height: 1.7;
-  p + p {
-    margin-top: 0.15rem;
-  }
-  a {
-    color: v.$color-text-on-dark;
-    text-decoration: underline;
-    text-decoration-color: rgb(244 217 133 / 45%);
-    text-underline-offset: 3px;
-    &:hover {
-      color: v.$color-gold-light;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  list-style: none;
+  li {
+    position: relative;
+    padding-left: $dot-space;
+    white-space: nowrap;
+    &::before {
+      content: '·';
+      position: absolute;
+      left: 0.4rem;
+      color: v.$color-gold;
+    }
+    &:first-child {
+      color: v.$color-text-on-dark;
+      font-weight: 600;
     }
   }
 }
 .explore {
-  margin-top: 0.6rem;
+  margin-top: 1.1rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
