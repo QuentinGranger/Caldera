@@ -108,6 +108,7 @@ export function shopAisleCopy(
         lead: `Retrouvez les boosters ${game} disponibles parmi les extensions proposées par Caldera.`,
         focus: '50% 8%',
         browse: 'set',
+        up: true,
         teaser: {
           eyebrow: 'Choisir son extension',
           guide: 'extensions-et-series-pokemon',
@@ -120,6 +121,7 @@ export function shopAisleCopy(
         lead: 'Des displays pour multiplier les ouvertures et explorer une extension en profondeur.',
         focus: '50% 76%',
         card: 'edition',
+        up: true,
         teaser: {
           eyebrow: 'Garder ses displays intacts',
           guide: 'conserver-produits-scelles',

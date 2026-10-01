@@ -393,15 +393,26 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   // Coffrets: a visible way up to the sealed products, in the hero, and
   // the latest boxes above the bar, in the listing's own « Nouveautés »
   // order, a preview only (never all of them).
+  const heroOf = (html: string) =>
+    html.slice(
+      html.indexOf('data-frame='),
+      html.indexOf('id="catalogue-resultats"'),
+    );
+  const wayUp =
+    /<a[^>]*href="\/pokemon\/scelles"[^>]*>.*Voir tous les produits scellés/s;
+  // Boosters, displays and boxes lead up to the sealed products; the sealed
+  // products themselves have no parent.
+  for (const path of [
+    '/pokemon/boosters',
+    '/pokemon/displays',
+    '/pokemon/coffrets',
+  ])
+    assert.match(heroOf((await page(path)).html), wayUp, path);
+  assert.doesNotMatch(
+    heroOf((await page('/pokemon/scelles')).html),
+    /Voir tous les produits scellés/,
+  );
   const boxes = (await page('/pokemon/coffrets')).html;
-  const hero = boxes.slice(
-    boxes.indexOf('data-frame='),
-    boxes.indexOf('id="catalogue-resultats"'),
-  );
-  assert.match(
-    hero,
-    /<a[^>]*href="\/pokemon\/scelles"[^>]*>.*Voir tous les produits scellés/s,
-  );
   const latestStart = boxes.indexOf('aria-labelledby="derniers-ajouts"');
   assert.ok(latestStart > 0 && latestStart < boxes.indexOf('role="status"'));
   const latest = boxes.slice(latestStart, boxes.indexOf('role="status"'));
