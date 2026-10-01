@@ -35,7 +35,7 @@ export function CartPromotionField({
       cart.items
         .map(
           (item) =>
-            \`\${item.id}:\${item.variantId}:\${item.quantity}:\${item.price}:\${item.issue ?? ''}\`,
+            `${item.id}:${item.variantId}:${item.quantity}:${item.price}:${item.issue ?? ''}`,
         )
         .join('|'),
     [cart.items],
@@ -101,9 +101,9 @@ export function CartPromotionField({
 
     return (
       <section
-        className={\`\${styles.promotionCard} \${
+        className={`${styles.promotionCard} ${
           valid ? styles.promotionValid : styles.promotionInvalid
-        }\`}
+        }`}
         aria-label={valid ? 'Code promo appliqué' : 'Code promo à vérifier'}
       >
         <div className={styles.promotionCardHeader}>
