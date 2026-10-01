@@ -91,10 +91,16 @@ export function CartPromotionField({
         </div>
 
         {state?.promotion && discount > 0 && (
-          <div className={styles.promotionSaving}>
-            <span>Réduction</span>
-            <strong>−{formatPrice(state.promotion.discount)}</strong>
-          </div>
+          <>
+            <div className={styles.promotionSaving}>
+              <span>Réduction</span>
+              <strong>−{formatPrice(state.promotion.discount)}</strong>
+            </div>
+            <div className={styles.promotionTotal}>
+              <span>Total provisoire</span>
+              <strong>{formatPrice(state.provisionalTotal)}</strong>
+            </div>
+          </>
         )}
 
         {state?.promotion && discount === 0 && (
