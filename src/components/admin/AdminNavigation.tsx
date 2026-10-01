@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import styles from './Admin.module.scss';
+
 const groups = [
   {
     label: 'Pilotage',
@@ -31,8 +32,22 @@ const groups = [
         label: 'Pilotage économique',
         icon: BarChart3,
       },
+    ],
+  },
+  {
+    label: 'Catalogue',
+    links: [
+      { href: '/admin/jeux', label: 'Jeux', icon: Dices },
+      { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
+      { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
+      { href: '/admin/produits', label: 'Produits', icon: Package },
+    ],
+  },
+  {
+    label: 'Approvisionnement',
+    links: [
+      { href: '/admin/fournisseurs', label: 'Fournisseurs', icon: Warehouse },
       { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
-      { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
     ],
   },
   {
@@ -40,11 +55,17 @@ const groups = [
     links: [
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
+    ],
+  },
+  {
+    label: 'Marketing',
+    links: [
       {
         href: '/admin/promotions',
         label: 'Codes promo',
         icon: TicketPercent,
       },
+      { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
     ],
   },
   {
@@ -54,23 +75,15 @@ const groups = [
       { href: '/admin/fiscalite', label: 'Fiscalité', icon: Landmark },
     ],
   },
-  {
-    label: 'Catalogue',
-    links: [
-      { href: '/admin/produits', label: 'Produits', icon: Package },
-      { href: '/admin/jeux', label: 'Jeux', icon: Dices },
-      { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
-      { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
-      { href: '/admin/fournisseurs', label: 'Fournisseurs', icon: Warehouse },
-    ],
-  },
 ] as const;
+
 export function AdminNavigation({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
   const [open, setOpen] = useState(false);
+
   const navigation = (
     <nav aria-label="Administration" className={styles.navigation}>
       {groups.map((group) => (
@@ -100,7 +113,9 @@ export function AdminNavigation({ mobile = false }: { mobile?: boolean }) {
       ))}
     </nav>
   );
+
   if (!mobile) return navigation;
+
   return (
     <>
       <button
@@ -117,6 +132,7 @@ export function AdminNavigation({ mobile = false }: { mobile?: boolean }) {
       >
         <Menu size={20} aria-hidden="true" />
       </button>
+
       <dialog
         id={id}
         ref={dialog}
