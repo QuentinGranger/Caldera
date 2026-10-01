@@ -195,7 +195,14 @@ export async function proxy(request: NextRequest) {
 
   if (showConstruction) {
     response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60');
-    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+
+    // Keep only the homepage indexable while the launch curtain is active.
+    // This lets Google refresh the main result and favicon without keeping
+    // obsolete storefront URLs such as /univers or /contact in the index.
+    if (request.nextUrl.pathname !== '/') {
+      response.headers.set('X-Robots-Tag', 'noindex, follow, noarchive');
+    }
+
     return response;
   }
 
