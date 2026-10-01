@@ -177,3 +177,33 @@ test('410 : produit retiré définitivement, liste lue sur l’origine configur�
     else process.env.SITE_URL = saved.site;
   }
 });
+test('410 : guides et termes retirés, sans lecture réseau', async () => {
+  const { NextRequest } = await import('next/server');
+  const { proxy } = await import('../src/proxy');
+  const { REMOVED_CONTENT } = await import('../src/lib/content/removed');
+  const saved = globalThis.fetch;
+  globalThis.fetch = (async () => {
+    throw new Error('aucune lecture attendue');
+  }) as typeof fetch;
+  try {
+    assert.ok(REMOVED_CONTENT.size > 0);
+    for (const path of REMOVED_CONTENT) {
+      const gone = await proxy(
+        new NextRequest(`https://lesterresdecaldera.fr${path}`),
+      );
+      assert.equal(gone.status, 410, path);
+      assert.equal(gone.headers.get('x-robots-tag'), 'noindex', path);
+      const body = await gone.text();
+      assert.match(body, /n’est plus en ligne/, path);
+      assert.ok(body.includes('href="/guides"'), path);
+    }
+    const live = await proxy(
+      new NextRequest(
+        'https://lesterresdecaldera.fr/guides/proteger-ses-cartes',
+      ),
+    );
+    assert.notEqual(live.status, 410);
+  } finally {
+    globalThis.fetch = saved;
+  }
+});

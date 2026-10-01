@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { REMOVED_CONTENT } from '@/lib/content/removed';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL, siteOrigin } from '@/lib/site';
 // www serves the same pages as the apex: one canonical host (308, path and query kept).
 function apexRedirect(request: NextRequest) {
@@ -62,9 +63,27 @@ async function isGoneProduct(request: NextRequest) {
   }
   return goneProducts.slugs.has(slug);
 }
-function goneResponse() {
+// What a withdrawn page says, and where to go instead.
+const GONE_PAGES = {
+  product: {
+    title: 'Produit retiré',
+    heading: 'Ce produit n’est plus proposé.',
+    text: 'Il a été retiré définitivement du catalogue.',
+    links:
+      '<a href="/catalogue">Parcourir le catalogue</a> · <a href="/">Accueil</a>',
+  },
+  content: {
+    title: 'Page retirée',
+    heading: 'Cette page n’est plus en ligne.',
+    text: 'Caldera se consacre au JCC Pokémon : ce contenu a été retiré définitivement.',
+    links:
+      '<a href="/guides">Les guides</a> · <a href="/glossaire">Le glossaire</a> · <a href="/">Accueil</a>',
+  },
+} as const;
+function goneResponse(kind: keyof typeof GONE_PAGES) {
+  const page = GONE_PAGES[kind];
   return new NextResponse(
-    '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Produit retiré | Caldera</title></head><body style="margin:0;padding:4rem 1rem;background:#fffcf5;color:#071c17;font-family:Georgia,serif;text-align:center"><h1>Ce produit n’est plus proposé.</h1><p>Il a été retiré définitivement du catalogue.</p><p><a href="/catalogue">Parcourir le catalogue</a> · <a href="/">Accueil</a></p></body></html>',
+    `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${page.title} | Caldera</title></head><body style="margin:0;padding:4rem 1rem;background:#fffcf5;color:#071c17;font-family:Georgia,serif;text-align:center"><h1>${page.heading}</h1><p>${page.text}</p><p>${page.links}</p></body></html>`,
     {
       status: 410,
       headers: {
@@ -82,7 +101,9 @@ function goneResponse() {
 export async function proxy(request: NextRequest) {
   const redirect = apexRedirect(request);
   if (redirect) return redirect;
-  if (await isGoneProduct(request)) return goneResponse();
+  if (REMOVED_CONTENT.has(request.nextUrl.pathname))
+    return goneResponse('content');
+  if (await isGoneProduct(request)) return goneResponse('product');
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const dev = process.env.NODE_ENV === 'development';
   const policy = [

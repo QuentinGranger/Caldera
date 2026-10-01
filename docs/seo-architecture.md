@@ -13,7 +13,7 @@ Ce document est le contrat de l’architecture SEO : modèle de données, URL, i
 ## 2. Modèle de données (migration additive)
 
 ```prisma
-model Game {                       // jeu / licence : Pokémon, One Piece, Magic…
+model Game {                       // jeu / licence (Pokémon)
   id             String   @id @default(uuid()) @db.Uuid
   name           String            // « Pokémon »
   slug           String   @unique  // « pokemon » → /pokemon
@@ -172,7 +172,7 @@ Où va chaque type :
 
 **Dossier d’extension** : un `dossier` avec `sets: [slug-extension]` s’affiche sur la landing de l’extension (`/{jeu}/{extension}`) et la renforce. À écrire quand l’extension existe en base (slug réel), avec des faits vérifiés : date de sortie, produits, contenu des boosters.
 
-**Autres jeux** : les guides et termes One Piece, Magic et Yu-Gi-Oh! ciblent les slugs `one-piece`, `magic` et `yugioh`. Leurs liens vers la boutique n’apparaissent qu’une fois le jeu créé dans l’admin avec exactement ce slug (et des produits).
+**Autres jeux** : Caldera ne vend que du JCC Pokémon ; les guides et termes consacrés à d’autres jeux ont été retirés et répondent **410 Gone** (`src/lib/content/removed.ts`, appliqué par `src/proxy.ts`). Un contenu sans jeu (`games: []`) vaut pour tous.
 
 Les pages de contenu affichent automatiquement les produits correspondant à leurs facettes (si indexables) : l’éditorial et le commerce se renforcent. Ton concret, pas de formules génériques (« Découvrez notre large sélection… »), aucun chiffre non vérifiable.
 

@@ -18,6 +18,7 @@ import {
   selectForScope,
 } from '../src/lib/content/library';
 import { linkTarget, renderDocument } from '../src/lib/content/markdown';
+import { REMOVED_CONTENT } from '../src/lib/content/removed';
 import { parseContentFile, type ContentSource } from '../src/lib/content/parse';
 import { DESCRIPTION_MAX } from '../src/lib/seo/metadata';
 
@@ -182,9 +183,25 @@ test('contenu par périmètre : guides d’abord, facettes exactes, multi-jeux p
   assert.ok(other.every((e) => e.games.length === 0));
   assert.ok(other.some((e) => e.slug === 'proteger-ses-cartes'));
   // A game with its own content gets it, never another game's.
-  const magic = await getContentForScope({ game: 'magic' }, 50);
-  assert.ok(magic.some((e) => e.slug === 'debuter-magic-the-gathering'));
-  assert.ok(magic.every((e) => !e.games.length || e.games.includes('magic')));
+  const pokemon = await getContentForScope({ game: 'pokemon' }, 50);
+  assert.ok(
+    pokemon.some((e) => e.slug === 'debuter-collection-cartes-pokemon'),
+  );
+  assert.ok(
+    pokemon.every((e) => !e.games.length || e.games.includes('pokemon')),
+  );
+  // A withdrawn page never shadows a live one.
+  for (const removed of REMOVED_CONTENT)
+    assert.ok(
+      (await getAllContent()).every((e) => e.href !== removed),
+      removed,
+    );
+  // Caldera sells Pokémon only: no entry is about another game.
+  assert.ok(
+    (await getAllContent()).every(
+      (e) => !e.games.length || e.games.every((game) => game === 'pokemon'),
+    ),
+  );
 
   // Within a section, entries of the game come before multi-game ones.
   const guides = (await getContentForScope({ game: 'pokemon' }, 50)).filter(
