@@ -76,12 +76,12 @@ test('accueil : chaque famille mène à sa page Pokémon, le hub multi-jeux seul
   const targets = familyTargets({
     games: [
       {
-        slug: 'lorcana',
-        name: 'Lorcana',
+        slug: 'jeu-test',
+        name: 'Jeu Test',
         shortName: null,
-        href: '/lorcana',
+        href: '/jeu-test',
         count: 30,
-        families: [family('scelles', '/lorcana/scelles', 30)],
+        families: [family('scelles', '/jeu-test/scelles', 30)],
       },
       {
         slug: 'pokemon',
@@ -122,12 +122,12 @@ test('accueil : description des seuls produits Pokémon, la promesse tant que ri
   assert.match(description, /dont 11 en stock et 3 en précommande\./);
   assert.ok(description.includes('Boosters et ETB.'));
   assert.ok(description.length <= 160);
-  assert.doesNotMatch(description, /Lorcana|JCC/);
+  assert.doesNotMatch(description, /Magic|One Piece|Yu-Gi-Oh|JCC/);
 });
 
 test('accueil : lectures Pokémon ou sans licence, jamais celles d’un autre jeu', () => {
   assert.equal(isShopGame(['pokemon']), true);
   assert.equal(isShopGame([]), true);
-  assert.equal(isShopGame(['lorcana']), false);
+  assert.equal(isShopGame(['jeu-test']), false);
   assert.equal(isShopGame(['magic', 'pokemon']), true);
 });

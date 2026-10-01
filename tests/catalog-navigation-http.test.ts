@@ -177,10 +177,15 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.match(description, /\d+ produits de [\d,]+\s€ à [\d,]+\s€/);
   for (const href of ['/nouveautes', '/precommandes', '/en-stock', '/pokemon'])
     assert.ok(catalogue.includes(`href="${href}"`), href);
-  assert.ok(strip(catalogue).includes('Produits scellés (17)'));
+  assert.ok(strip(catalogue).includes('Produits scellés (14)'));
 
   const preorders = (await page('/precommandes')).html;
-  assert.ok(preorders.includes('href="/pokemon/precommandes"'));
+  // Every preorder is a Pokémon one: the game's page defers to the listing.
+  assert.ok(!preorders.includes('href="/pokemon/precommandes"'));
+  assert.equal(
+    canonical((await page('/pokemon/precommandes')).html),
+    '/precommandes',
+  );
   assert.ok(preorders.includes('href="/catalogue"'));
   // Every preorder is shown as such, or as sold out once its quota is used up.
   assert.ok(articles(preorders).some((a) => a.includes('Précommande')));

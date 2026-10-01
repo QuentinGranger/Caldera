@@ -67,6 +67,11 @@ export const STATUS_LABELS: Readonly<Record<StatusSlug, string>> = {
   nouveautes: 'Nouveautés',
 };
 
+/** Transverse listing of a status, every game together: /nouveautes… */
+export function statusListingPath(status: StatusSlug): string {
+  return `/${status}`;
+}
+
 /**
  * First path segments that a game slug can never take: every root segment of
  * src/app, the planned SEO routes and the technical paths served by Next.js,

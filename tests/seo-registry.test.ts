@@ -18,7 +18,7 @@ import { buildNavigation } from '../src/lib/seo/links';
 import type { CategoryRef, GameRef, SetRef } from '../src/lib/seo/types';
 
 const pokemon: GameRef = { id: 'g-pkm', slug: 'pokemon', name: 'Pokémon' };
-const lorcana: GameRef = { id: 'g-lor', slug: 'lorcana', name: 'Lorcana' };
+const jeuTest: GameRef = { id: 'g-test', slug: 'jeu-test', name: 'Jeu Test' };
 const category = (
   id: string,
   slug: string,
@@ -110,7 +110,7 @@ test('compteurs de landings : produits distincts sur l’arbre, langues et statu
         languages: ['FR'],
         lastModified: day(9),
       }),
-      group({ gameId: lorcana.id, count: 5 }),
+      group({ gameId: jeuTest.id, count: 5 }),
       group({ tcgSetId: 'other-game-set', preorder: true, inStock: false }),
       group({ languages: ['OTHER'], categoryId: 'ghost' }),
     ],
@@ -138,7 +138,7 @@ test('compteurs de landings : produits distincts sur l’arbre, langues et statu
   assert.deepEqual([...(get('||EN|')?.languages ?? [])], ['EN']);
 });
 
-test('landings indexables : seuils, doublons du parent et collisions de slugs', () => {
+test('landings indexables : seuils, doublons du parent ou de la liste transverse et collisions de slugs', () => {
   const groups = [
     group({ tcgSetId: braise.id, count: 2, languages: ['FR', 'EN'] }),
     group({ tcgSetId: braise.id, categoryId: 'c-etb', count: 1 }),
@@ -170,6 +170,17 @@ test('landings indexables : seuils, doublons du parent et collisions de slugs', 
   // Every product in French: same as the hub.
   assert.ok(!paths.includes('/pokemon/francais'));
   assert.ok(paths.includes('/pokemon/precommandes'));
+  // The game's preorders are all of the shop's: /precommandes stands for them.
+  const preorders = (count: number) =>
+    indexGameLandings({
+      game: pokemon,
+      groups,
+      sets: [braise, vallees],
+      categories,
+      listingCounts: new Map([['precommandes', count]]),
+    }).some((entry) => entry.path === '/pokemon/precommandes');
+  assert.equal(preorders(2), false);
+  assert.equal(preorders(3), true);
   assert.equal(entries[0]?.kind, 'game');
   assert.equal(
     entries
@@ -203,13 +214,13 @@ test('hubs /categorie : plusieurs jeux ou produits sans jeu', () => {
   const hubs = indexCategoryHubs({
     groups: [
       group({ categoryId: 'c-boosters', count: 2 }),
-      group({ gameId: lorcana.id, categoryId: 'c-boosters' }),
+      group({ gameId: jeuTest.id, categoryId: 'c-boosters' }),
       group({ categoryId: 'c-etb', count: 3 }),
       group({ gameId: null, categoryId: 'c-acc', count: 1 }),
       group({ categoryId: 'c-acc', count: 1 }),
     ],
     categories,
-    games: [pokemon, lorcana],
+    games: [pokemon, jeuTest],
   });
   assert.deepEqual(
     hubs.map((hub) => [hub.path, hub.productCount]),
@@ -334,7 +345,7 @@ test('navigation : jeux avec hub indexable et familles en arbre', () => {
         lastModified: null,
       },
       {
-        path: '/lorcana/scelles',
+        path: '/jeu-test/scelles',
         productCount: 2,
         lastModified: null,
       },
@@ -362,11 +373,11 @@ test('navigation : jeux avec hub indexable et familles en arbre', () => {
     index,
     [
       { ...pokemon, shortName: null },
-      { ...lorcana, shortName: 'Lorcana' },
+      { ...jeuTest, shortName: 'Jeu Test' },
     ],
     full,
   );
-  // Lorcana has no indexable hub: absent from the menus.
+  // Jeu Test has no indexable hub: absent from the menus.
   assert.deepEqual(
     navigation.games.map((g) => g.slug),
     ['pokemon'],

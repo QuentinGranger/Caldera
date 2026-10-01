@@ -182,11 +182,9 @@ test('contenu par périmètre : guides d’abord, facettes exactes, multi-jeux p
   assert.ok(other.every((e) => e.games.length === 0));
   assert.ok(other.some((e) => e.slug === 'proteger-ses-cartes'));
   // A game with its own content gets it, never another game's.
-  const lorcana = await getContentForScope({ game: 'lorcana' }, 50);
-  assert.ok(lorcana.some((e) => e.slug === 'debuter-disney-lorcana'));
-  assert.ok(
-    lorcana.every((e) => !e.games.length || e.games.includes('lorcana')),
-  );
+  const magic = await getContentForScope({ game: 'magic' }, 50);
+  assert.ok(magic.some((e) => e.slug === 'debuter-magic-the-gathering'));
+  assert.ok(magic.every((e) => !e.games.length || e.games.includes('magic')));
 
   // Within a section, entries of the game come before multi-game ones.
   const guides = (await getContentForScope({ game: 'pokemon' }, 50)).filter(
@@ -208,7 +206,7 @@ test('contenu par périmètre : guides d’abord, facettes exactes, multi-jeux p
       href: '/glossaire/terme-braise',
       sets: ['terres-de-braise'],
     }),
-    entry('guide-lorcana', { games: ['lorcana'] }),
+    entry('guide-jeu-test', { games: ['jeu-test'] }),
   ];
   assert.deepEqual(
     selectForScope(

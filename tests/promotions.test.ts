@@ -40,7 +40,7 @@ const lines: PromotionLine[] = [
     id: 'b',
     unitCents: 1999,
     quantity: 1,
-    gameId: 'lorcana',
+    gameId: 'jeu-test',
     categoryId: 'deck',
   },
 ];
@@ -107,7 +107,7 @@ test('codes promo : jeu, catégorie et minimum sur les articles concernés', () 
   assert.equal(none.ok, false);
   assert.match(!none.ok ? none.reason : '', /aucun article/);
 
-  const minimum = run(rule({ gameId: 'lorcana', minimumSubtotalCents: 5000 }));
+  const minimum = run(rule({ gameId: 'jeu-test', minimumSubtotalCents: 5000 }));
   assert.equal(minimum.ok, false);
   assert.match(
     !minimum.ok ? minimum.reason : '',
@@ -121,7 +121,7 @@ test('codes promo : jeu, catégorie et minimum sur les articles concernés', () 
       type: 'FIXED_AMOUNT',
       percentOff: null,
       amountOffCents: 10000,
-      gameId: 'lorcana',
+      gameId: 'jeu-test',
     }),
   );
   assert.ok(capped.ok);

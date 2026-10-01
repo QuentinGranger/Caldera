@@ -667,6 +667,8 @@ export function indexGameLandings(input: {
   sets: readonly SetRef[];
   /** Active categories (whole ancestor chain active). */
   categories: readonly CategoryRef[];
+  /** Visible products of each transverse status listing (/nouveautes…). */
+  listingCounts?: ReadonlyMap<StatusSlug, number>;
 }): IndexedLanding[] {
   const { game } = input;
   if (isReservedRootSlug(game.slug)) return [];
@@ -708,10 +710,17 @@ export function indexGameLandings(input: {
           }),
         )
       : undefined;
+    const listingCount = facets.status
+      ? input.listingCounts?.get(facets.status)
+      : undefined;
     const decision = decideLandingIndexation({
       scope,
       stats: counterStats(counter),
       parentStats: parent ? counterStats(parentCounter) : null,
+      listingStats:
+        listingCount === undefined
+          ? null
+          : { ...counterStats(undefined), productCount: listingCount },
     });
     if (!decision.index) continue;
     // A slug shared by two dimensions would resolve to another landing.
@@ -809,11 +818,22 @@ export function indexCategoryHubs(input: {
   });
 }
 
+/** Visible products of each transverse status listing, every game together. */
+async function loadListingCounts(): Promise<Map<StatusSlug, number>> {
+  const [row] = await getPrisma().$queryRaw<Record<StatusSlug, number>[]>`
+    WITH facts AS (${productFactsSql({})})
+    SELECT (COUNT(*) FILTER (WHERE "inStock"))::int AS "en-stock",
+      (COUNT(*) FILTER (WHERE "preorder"))::int AS "precommandes",
+      (COUNT(*) FILTER (WHERE "newArrival"))::int AS "nouveautes"
+    FROM facts`;
+  return new Map(STATUS_SLUGS.map((status) => [status, row?.[status] ?? 0]));
+}
+
 /** Uncached: indexable landings of one active game (scripts, cache fill). */
 export async function loadGameLandings(
   gameId: string,
 ): Promise<IndexedLanding[]> {
-  const [games, categories, sets, groups] = await Promise.all([
+  const [games, categories, sets, groups, listingCounts] = await Promise.all([
     getGames(),
     getCategories(),
     getGameSets(gameId),
@@ -826,6 +846,7 @@ export async function loadGameLandings(
       FROM facts
       GROUP BY "gameId", "tcgSetId", "categoryId", "preorder", "newArrival",
         "inStock", "languages"`,
+    loadListingCounts(),
   ]);
   const game = games.find((candidate) => candidate.id === gameId);
   if (!game) return [];
@@ -834,6 +855,7 @@ export async function loadGameLandings(
     groups,
     sets: sets.map(toSetRef),
     categories: categories.map(toCategoryRef),
+    listingCounts,
   });
 }
 

@@ -328,6 +328,34 @@ test('indexation : facettes filtre et combinaisons', () => {
     parentPath: '/pokemon/boosters',
   });
   assert.equal(categoryStatus.canonicalPath, '/pokemon/boosters');
+  // Every new arrival of the shop is of this game: /nouveautes lists the same.
+  const arrivals = (listingCount: number) =>
+    decideLandingIndexation({
+      scope: { game, status: 'nouveautes' },
+      stats: stats({ productCount: 4 }),
+      parentStats: hub,
+      listingStats: stats({ productCount: listingCount }),
+    });
+  assert.deepEqual(arrivals(4), {
+    index: false,
+    reason: 'duplicate-of-listing',
+    canonicalPath: '/nouveautes',
+  });
+  assert.deepEqual(arrivals(5), {
+    index: true,
+    reason: 'indexable',
+    canonicalPath: '/pokemon/nouveautes',
+  });
+  // Only a status alone has a transverse listing.
+  assert.equal(
+    decideLandingIndexation({
+      scope: { game, category, status: 'nouveautes' },
+      stats: stats({ productCount: 3 }),
+      parentStats: stats({ productCount: 6 }),
+      listingStats: stats({ productCount: 3 }),
+    }).index,
+    true,
+  );
   assert.equal(
     decideLandingIndexation({
       scope: { game, set, language: 'FR' },
@@ -696,9 +724,9 @@ test('metadata : hub famille, hubs transverses et pagination', () => {
   const hub = categoryHubText({
     name: 'Boosters',
     stats: fullStats,
-    gameNames: ['Pokémon', 'Lorcana'],
+    gameNames: ['Pokémon', 'Jeu Test'],
   });
-  assert.equal(hub.title, 'Boosters Pokémon et Lorcana');
+  assert.equal(hub.title, 'Boosters Pokémon et Jeu Test');
   assert.match(hub.description, /^Boosters : 12 produits/);
 
   const preorders = listingText({

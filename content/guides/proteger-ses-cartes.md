@@ -2,7 +2,7 @@
 title: 'Protéger ses cartes : protège-cartes, toploaders et classeurs'
 description: 'Protège-cartes, toploaders, étuis, classeurs, boîtes : quelle protection pour quelle carte, les tailles à connaître et les erreurs qui abîment une collection.'
 kind: guide
-updated: 2026-09-26
+updated: 2026-10-01
 games: []
 categories: [accessoires]
 sets: []
@@ -42,7 +42,7 @@ Le [protège-cartes](/glossaire/protege-cartes), ou « sleeve », est la base de
 
 ### Choisir la bonne taille
 
-Les cartes Pokémon sont au format standard, environ 63 × 88 mm, le même que Magic ou Lorcana. Elles vont dans des protège-cartes standard, généralement d’environ 66 × 91 mm. Les protège-cartes petit format, prévus pour Yu-Gi-Oh!, sont trop petits. Les cartes japonaises ont le même format que les cartes françaises.
+Les cartes Pokémon sont au format standard, environ 63 × 88 mm, le même que Magic. Elles vont dans des protège-cartes standard, généralement d’environ 66 × 91 mm. Les protège-cartes petit format, prévus pour Yu-Gi-Oh!, sont trop petits. Les cartes japonaises ont le même format que les cartes françaises.
 
 ### Fin, épais ou ajusté
 

@@ -2,7 +2,7 @@
 title: 'JCC (jeu de cartes à collectionner)'
 description: 'JCC, jeu de cartes à collectionner, ou TCG en anglais : définition, fonctionnement par extensions et boosters, et différence avec les jeux à contenu fixe.'
 kind: glossaire
-updated: 2026-09-26
+updated: 2026-10-01
 games: []
 categories: []
 sets: []
@@ -20,7 +20,7 @@ JCC est l’abréviation de « jeu de cartes à collectionner », équivalent fr
 
 ## Quelques JCC connus
 
-Magic: The Gathering, sorti en 1993, est considéré comme le premier JCC moderne. Le JCC Pokémon est apparu au Japon en 1996 ; Yu-Gi-Oh!, Disney Lorcana ou le One Piece Card Game reposent sur les mêmes principes. En français, l’éditeur de Pokémon emploie l’appellation « JCC Pokémon ».
+Magic: The Gathering, sorti en 1993, est considéré comme le premier JCC moderne. Le JCC Pokémon est apparu au Japon en 1996 ; Yu-Gi-Oh! ou le One Piece Card Game reposent sur les mêmes principes. En français, l’éditeur de Pokémon emploie l’appellation « JCC Pokémon ».
 
 ## JCC, JCE, jeu de cartes classique
 

@@ -74,16 +74,6 @@ const games = [
     faq: demoFaq('les produits Pokémon'),
     sortOrder: 0,
   },
-  {
-    slug: 'lorcana',
-    name: '[Démo] Lorcana',
-    shortName: '[Démo] Lorcana',
-    description:
-      '[Démo] Second jeu de démonstration pour tester le catalogue multi-jeux ; aucun produit réel.',
-    intro: demoIntro('le hub Lorcana'),
-    faq: null,
-    sortOrder: 1,
-  },
 ] as const;
 
 type CategorySeed = {
@@ -194,13 +184,6 @@ const sets: SetSeed[] = [
     code: 'DEV-OPALE',
     game: 'pokemon',
     releaseDate: daysFromToday(90),
-  },
-  {
-    slug: 'dev-brumes-de-cristal',
-    name: '[Démo] Brumes de Cristal',
-    code: 'DEV-BRUMES',
-    game: 'lorcana',
-    releaseDate: daysFromToday(45),
   },
 ];
 
@@ -428,38 +411,6 @@ const examples: Example[] = [
     stock: 4,
     set: 'dev-aurores-sauvages',
   },
-  {
-    slug: 'dev-lorcana-booster-brumes',
-    name: '[Démo] Booster Lorcana — Brumes de Cristal',
-    type: 'BOOSTER',
-    sku: 'DEV-LOR-BST-BRUMES-FR',
-    price: '6.90',
-    stock: 36,
-    set: 'dev-brumes-de-cristal',
-    newArrival: true,
-    preorder: true,
-  },
-  {
-    slug: 'dev-lorcana-display-brumes',
-    name: '[Démo] Display Lorcana — Brumes de Cristal',
-    type: 'DISPLAY',
-    sku: 'DEV-LOR-DIS-BRUMES-EN',
-    price: '149.90',
-    stock: 2,
-    set: 'dev-brumes-de-cristal',
-    preorder: true,
-    language: 'EN',
-  },
-  {
-    slug: 'dev-lorcana-deck-initiation',
-    name: '[Démo] Deck d’initiation Lorcana',
-    type: 'DECK',
-    sku: 'DEV-LOR-DECK-INITIATION-FR',
-    price: '16.90',
-    stock: 6,
-    game: 'lorcana',
-    releaseDate: daysFromToday(-120),
-  },
 ];
 
 async function main() {
@@ -572,10 +523,7 @@ async function main() {
           create: {
             ...set,
             gameId,
-            series:
-              game === 'pokemon'
-                ? 'Série fictive de développement'
-                : '[Démo] Série Lorcana fictive',
+            series: 'Série fictive de développement',
             description:
               'Extension fictive pour tester Caldera. Ce n’est pas une extension officielle.',
           },

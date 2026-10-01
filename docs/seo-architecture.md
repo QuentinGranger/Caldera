@@ -13,7 +13,7 @@ Ce document est le contrat de l’architecture SEO : modèle de données, URL, i
 ## 2. Modèle de données (migration additive)
 
 ```prisma
-model Game {                       // jeu / licence : Pokémon, Lorcana, One Piece…
+model Game {                       // jeu / licence : Pokémon, One Piece, Magic…
   id             String   @id @default(uuid()) @db.Uuid
   name           String            // « Pokémon »
   slug           String   @unique  // « pokemon » → /pokemon
@@ -90,7 +90,7 @@ Espace de noms : un slug d’extension, de famille, de langue, de statut et les 
 | ------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | hub jeu                               | ≥ 1 produit visible                                                   | noindex, follow                                                                                                                                            |
 | extension, famille (1 facette entité) | ≥ 2 produits                                                          | 0 produit : 200 noindex si l’entité existe (page « bientôt », dates) ; 1 produit : noindex                                                                 |
-| langue, statut (1 facette filtre)     | ≥ 2 produits **et** strictement moins que le hub jeu                  | identique au parent : canonical vers le parent ; 0 produit : 404                                                                                           |
+| langue, statut (1 facette filtre)     | ≥ 2 produits **et** strictement moins que le hub jeu                  | identique au parent : canonical vers le parent ; statut aux mêmes produits que `/{statut}` : canonical vers ce hub ; 0 produit : 404                       |
 | extension+famille                     | ≥ 2 produits **et** strictement moins que l’extension seule           | identique : canonical vers l’extension ; 0 : 404                                                                                                           |
 | combinaisons avec langue/statut       | ≥ 2 produits **et** strictement moins que le parent entité            | identique : canonical parent ; 0 : 404                                                                                                                     |
 | `/categorie/{slug}`                   | ≥ 2 produits **et** (≥ 2 jeux distincts **ou** des produits sans jeu) | un seul jeu : canonical vers `/{jeu}/{famille}`                                                                                                            |
@@ -172,7 +172,7 @@ Où va chaque type :
 
 **Dossier d’extension** : un `dossier` avec `sets: [slug-extension]` s’affiche sur la landing de l’extension (`/{jeu}/{extension}`) et la renforce. À écrire quand l’extension existe en base (slug réel), avec des faits vérifiés : date de sortie, produits, contenu des boosters.
 
-**Autres jeux** : les guides et termes Lorcana, One Piece, Magic et Yu-Gi-Oh! ciblent les slugs `lorcana`, `one-piece`, `magic` et `yugioh`. Leurs liens vers la boutique n’apparaissent qu’une fois le jeu créé dans l’admin avec exactement ce slug (et des produits).
+**Autres jeux** : les guides et termes One Piece, Magic et Yu-Gi-Oh! ciblent les slugs `one-piece`, `magic` et `yugioh`. Leurs liens vers la boutique n’apparaissent qu’une fois le jeu créé dans l’admin avec exactement ce slug (et des produits).
 
 Les pages de contenu affichent automatiquement les produits correspondant à leurs facettes (si indexables) : l’éditorial et le commerce se renforcent. Ton concret, pas de formules génériques (« Découvrez notre large sélection… »), aucun chiffre non vérifiable.
 

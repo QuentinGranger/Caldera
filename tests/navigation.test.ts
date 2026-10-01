@@ -78,7 +78,7 @@ test('menus : les autres jeux du catalogue restent hors des menus', () => {
   });
   const site = buildSiteNavigation(
     {
-      games: [game('pokemon', 'Pokémon'), game('lorcana', 'Lorcana')],
+      games: [game('pokemon', 'Pokémon'), game('jeu-test', 'Jeu Test')],
       categoryHubs: [],
     },
     new Set(),

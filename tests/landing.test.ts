@@ -402,14 +402,14 @@ test('intro factuelle : extension hors jeu et hub famille multi-jeux', () => {
     stats: stats({ productCount: 19, inStockCount: 19 }),
     games: [
       { label: 'Pokémon', count: 14, href: '/pokemon/scelles' },
-      { label: 'Lorcana', count: 3 },
+      { label: 'Jeu Test', count: 3 },
     ],
     gamelessCount: 2,
     families: [{ label: 'Boosters', count: 7, href: '/categorie/boosters' }],
   });
   assert.deepEqual(hub.map(factText), [
     '19 produits au catalogue.',
-    'Jeux : Pokémon (14), Lorcana (3) et 2 produits multi-jeux.',
+    'Jeux : Pokémon (14), Jeu Test (3) et 2 produits multi-jeux.',
     'Sous-famille : Boosters (7).',
     'Disponibilité : 19 en stock.',
   ]);
@@ -427,8 +427,8 @@ test('intro factuelle : extension hors jeu et hub famille multi-jeux', () => {
     ],
   );
   assert.equal(
-    categoryHubHeading('Boosters', ['Pokémon', 'Lorcana'], false),
-    'Boosters Pokémon et Lorcana',
+    categoryHubHeading('Boosters', ['Pokémon', 'Jeu Test'], false),
+    'Boosters Pokémon et Jeu Test',
   );
   assert.equal(
     categoryHubHeading('Boosters', ['Pokémon'], false),
@@ -443,7 +443,7 @@ test('intro factuelle : extension hors jeu et hub famille multi-jeux', () => {
   assert.equal(
     categoryHubHeading(
       'Protège-cartes et accessoires de rangement',
-      ['Pokémon', 'Lorcana', 'One Piece'],
+      ['Pokémon', 'Jeu Test', 'One Piece'],
       false,
     ),
     'Protège-cartes et accessoires de rangement',
@@ -828,10 +828,10 @@ test('calendrier annuel : URL, titres et faits datés', () => {
   const past = yearCalendarText({
     year: 2025,
     gameName: null,
-    gameNames: ['Pokémon', 'Lorcana'],
+    gameNames: ['Pokémon', 'Jeu Test'],
     upcoming: [],
     released: [{}],
   });
-  assert.equal(past.title, 'Calendrier des sorties 2025 : Pokémon et Lorcana');
+  assert.equal(past.title, 'Calendrier des sorties 2025 : Pokémon et Jeu Test');
   assert.equal(past.description, '1 extension en 2025, déjà sortie.');
 });

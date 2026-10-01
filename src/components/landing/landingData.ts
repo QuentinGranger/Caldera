@@ -350,6 +350,7 @@ async function buildLandingView(
   const [
     stats,
     parentStats,
+    listingStats,
     breakdown,
     indexed,
     setDetail,
@@ -358,6 +359,9 @@ async function buildLandingView(
   ] = await Promise.all([
     getScopeStats(scope),
     needsParent && parent ? getScopeStats(parent) : null,
+    kind === 'status' && scope.status
+      ? getScopeStats({ status: scope.status })
+      : null,
     getScopeBreakdown(scope),
     getIndexedPages(),
     scope.set ? getSetBySlug(scope.set.slug) : null,
@@ -368,6 +372,7 @@ async function buildLandingView(
     scope,
     stats,
     parentStats,
+    listingStats,
     entityExists: true,
   });
   const isIndexable = (target: string) => indexed.has(target);

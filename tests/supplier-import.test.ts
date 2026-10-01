@@ -482,7 +482,7 @@ test('matching : EAN, offre connue, SKU, combinaison, nom en dernier recours', (
   assert.equal(fuzzy.match, 'AMBIGUOUS');
   assert.ok(fuzzy.candidates.length >= 2);
   assert.equal(
-    match({ ...base, name: 'Tapis de jeu Lorcana', language: 'FR' }).match,
+    match({ ...base, name: 'Tapis de jeu Caldera', language: 'FR' }).match,
     'NEW',
   );
   assert.ok(
@@ -535,7 +535,7 @@ test('analyse : actions, doublons, différences et récapitulatif', () => {
       row(3, {
         supplierSku: 'NEW-1',
         ean: '0820650853531',
-        name: 'Tapis de jeu Lorcana',
+        name: 'Tapis de jeu Caldera',
         language: 'FR',
       }),
       row(4, { supplierSku: 'DUP', name: 'Deck A' }),

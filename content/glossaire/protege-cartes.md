@@ -2,7 +2,7 @@
 title: 'Protège-cartes (sleeves)'
 description: 'Le protège-cartes ou sleeve : quelle taille pour des cartes Pokémon, pochettes fines ou de jeu, double protection et matériaux à privilégier.'
 kind: glossaire
-updated: 2026-09-26
+updated: 2026-10-01
 games: []
 categories: [accessoires]
 sets: []
@@ -13,7 +13,7 @@ Un protège-cartes, ou « sleeve », est une pochette en plastique souple à la 
 
 ## Quelle taille choisir ?
 
-Les cartes Pokémon sont au format dit « standard », environ 63 × 88 mm, comme celles de Magic ou de Lorcana. Elles se glissent dans des protège-cartes standard, généralement d’environ 66 × 91 mm. Les protège-cartes « petit format », parfois appelés « taille japonaise » et conçus pour des cartes plus petites comme celles de Yu-Gi-Oh!, ne conviennent pas. Les cartes Pokémon japonaises ont le même format que les cartes françaises.
+Les cartes Pokémon sont au format dit « standard », environ 63 × 88 mm, comme celles de Magic. Elles se glissent dans des protège-cartes standard, généralement d’environ 66 × 91 mm. Les protège-cartes « petit format », parfois appelés « taille japonaise » et conçus pour des cartes plus petites comme celles de Yu-Gi-Oh!, ne conviennent pas. Les cartes Pokémon japonaises ont le même format que les cartes françaises.
 
 ## Les trois grands usages
 

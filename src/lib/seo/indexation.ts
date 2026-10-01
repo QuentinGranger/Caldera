@@ -1,7 +1,12 @@
 // Indexation rules (docs/seo-architecture.md §4). Pure: the routes compute the
 // stats, these functions only decide. A decision is never noindex together with
 // a canonical pointing to another URL.
-import { indexationParent, landingKind, landingPath } from './facets';
+import {
+  indexationParent,
+  landingKind,
+  landingPath,
+  statusListingPath,
+} from './facets';
 import type { IndexDecision, LandingScope, ScopeStats } from './types';
 
 export type IndexReason =
@@ -11,6 +16,11 @@ export type IndexReason =
   | 'below-threshold'
   /** Same products as the parent: canonical to the parent, not in sitemaps. */
   | 'duplicate-of-parent'
+  /**
+   * Status landing holding every product of the status (/{game}/nouveautes
+   * when no other game has any): canonical to /nouveautes, not in sitemaps.
+   */
+  | 'duplicate-of-listing'
   /** Filter combination without any product: the route answers 404. */
   | 'empty-combination'
   /** /categorie/{slug} holding a single game: canonical to /{game}/{category}. */
@@ -52,6 +62,8 @@ export interface LandingIndexationInput {
   parentStats?: ScopeStats | null;
   /** Defaults to landingPath(indexationParent(scope)). */
   parentPath?: string;
+  /** Stats of the transverse listing (/nouveautes…), for a status landing. */
+  listingStats?: ScopeStats | null;
   /**
    * For a set or category landing without product: true keeps a 200 noindex
    * page (upcoming set, release dates), false turns it into a 404.
@@ -64,6 +76,7 @@ export function decideLandingIndexation({
   stats,
   parentStats,
   parentPath,
+  listingStats,
   entityExists = true,
 }: LandingIndexationInput): IndexDecision {
   const kind = landingKind(scope);
@@ -92,6 +105,18 @@ export function decideLandingIndexation({
       parentPath ?? (parent ? landingPath(parent) : path),
     );
   }
+  // A subset as large as the listing is the listing itself.
+  if (
+    kind === 'status' &&
+    scope.status &&
+    listingStats &&
+    count >= listingStats.productCount
+  )
+    return decision(
+      false,
+      'duplicate-of-listing',
+      statusListingPath(scope.status),
+    );
   return decision(true, 'indexable', path);
 }
 

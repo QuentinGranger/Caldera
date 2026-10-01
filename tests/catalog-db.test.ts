@@ -38,23 +38,23 @@ async function rejectedWrite(
 test('seed : identités uniques et relations conservées après plusieurs exécutions', async () => {
   assert.equal(
     await db.product.count({ where: { slug: { startsWith: 'dev-' } } }),
-    23,
+    20,
   );
   assert.equal(
     await db.productVariant.count({ where: { sku: { startsWith: 'DEV-' } } }),
-    26,
+    23,
   );
   assert.equal(
     await db.productImage.count({
       where: { product: { slug: { startsWith: 'dev-' } } },
     }),
-    25,
+    22,
   );
   const sets = await db.tcgSet.findMany({
     where: { slug: { startsWith: 'dev-' } },
     select: { gameId: true },
   });
-  assert.equal(sets.length, 5);
+  assert.equal(sets.length, 4);
   assert.ok(sets.every((set) => set.gameId));
   // Families are cross-game roots; the game is its own axis.
   const roots = await db.category.findMany({
@@ -78,7 +78,7 @@ test('seed : identités uniques et relations conservées après plusieurs exécu
         orderBy: { sortOrder: 'asc' },
       })
     ).map((game) => game.slug),
-    ['pokemon', 'lorcana'],
+    ['pokemon'],
   );
   // A product with a set belongs to the set's game; game-less = multi-game.
   for (const product of await db.product.findMany({
@@ -104,7 +104,7 @@ test('seed : identités uniques et relations conservées après plusieurs exécu
 });
 test('lecture : statuts, variantes, DTO public, prix minimum et listes spécialisées', async () => {
   const products = await getProducts();
-  assert.equal(products.filter((p) => p.slug.startsWith('dev-')).length, 20);
+  assert.equal(products.filter((p) => p.slug.startsWith('dev-')).length, 17);
   for (const slug of ['dev-brouillon', 'dev-archive', 'inexistant'])
     assert.equal(await getProductBySlug(slug), null);
   const product = await getProductBySlug('dev-etb-terres-de-braise');
@@ -226,7 +226,7 @@ test('CHECK PostgreSQL et clés étrangères : écritures invalides annulées', 
     'P2003',
   );
   await rejectedWrite(
-    (tx) => tx.game.delete({ where: { slug: 'lorcana' } }),
+    (tx) => tx.game.delete({ where: { slug: 'pokemon' } }),
     'P2003',
   );
   await rejectedWrite(

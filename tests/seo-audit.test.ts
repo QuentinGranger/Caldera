@@ -868,7 +868,10 @@ test('base : catalogue sain sans constat, catégorie parente comptée par ses en
 test('base : produits sans image réelle, description, jeu ou alt ; jeu incohérent', () => {
   const { issues } = auditCatalog(
     snapshot({
-      games: [game(), game({ id: 'g-lor', slug: 'lorcana', name: 'Lorcana' })],
+      games: [
+        game(),
+        game({ id: 'g-test', slug: 'jeu-test', name: 'Jeu Test' }),
+      ],
       products: [
         product(),
         product({
@@ -894,7 +897,7 @@ test('base : produits sans image réelle, description, jeu ou alt ; jeu incohér
           gameId: null,
           tcgSetId: null,
         }),
-        product({ id: 'p4', slug: 'mauvais-jeu', gameId: 'g-lor' }),
+        product({ id: 'p4', slug: 'mauvais-jeu', gameId: 'g-test' }),
         product({
           id: 'p5',
           slug: 'brouillon',
@@ -923,7 +926,7 @@ test('base : produits sans image réelle, description, jeu ou alt ; jeu incohér
   assert.match(
     issues.find((issue) => issue.subject === '/produit/mauvais-jeu')?.detail ??
       '',
-    /jeu du produit : Lorcana ; extension « Flammes Obsidiennes » : Pokémon/,
+    /jeu du produit : Jeu Test ; extension « Flammes Obsidiennes » : Pokémon/,
   );
   // A hidden product only counts for data integrity.
   assert.deepEqual(codesOf(issues, '/produit/brouillon'), [
