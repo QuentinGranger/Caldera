@@ -340,6 +340,42 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
     assert.ok(row.includes('href="/pokemon"'), path);
     assert.ok(isCurrentAisle(row, path), path);
   }
+  // Boosters: the sets as chips above the products, the drawer's own filter.
+  const boosters = (await page('/pokemon/boosters')).html;
+  const setRow = (html: string) => {
+    const start = html.indexOf('aria-label="Extensions"');
+    assert.ok(start >= 0, 'extensions');
+    return html.slice(start, html.indexOf('</nav>', start));
+  };
+  const chips = (html: string) =>
+    [...setRow(html).matchAll(/<a\b([^>]*)>([^<]*)/g)].map(
+      ([, attrs = '', label = '']) => ({
+        label,
+        href: /href="([^"]*)"/.exec(attrs)?.[1]?.replaceAll('&amp;', '&'),
+        current: attrs.includes('aria-current'),
+      }),
+    );
+  const all = chips(boosters);
+  assert.deepEqual(all[0], {
+    label: 'Toutes les extensions',
+    href: '/pokemon/boosters',
+    current: true,
+  });
+  const vallees = '/pokemon/boosters?set=dev-vallees-oubliees';
+  assert.ok(all.some((chip) => chip.href === vallees && !chip.current));
+  // Above the bar and the products, under the aisles.
+  const at = (marker: string) => boosters.indexOf(marker);
+  assert.ok(
+    at('aria-label="Rayons de la boutique"') < at('aria-label="Extensions"') &&
+      at('aria-label="Extensions"') < at('role="status"') &&
+      at('role="status"') < at('<article'),
+  );
+  const one = (await page(vallees)).html;
+  assert.ok(chips(one).some((chip) => chip.href === vallees && chip.current));
+  assert.ok(!chips(one)[0]?.current);
+  assert.ok(one.includes('Retirer le filtre [Démo] Vallées Oubliées'));
+  assert.equal(articles(one).length, 3);
+
   // The sealed products lead to a real guide, by its own title.
   const sealed = (await page('/pokemon/scelles')).html;
   assert.ok(sealed.includes('href="/guides/etb-display-ou-booster"'));

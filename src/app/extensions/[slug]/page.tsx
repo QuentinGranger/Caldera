@@ -100,7 +100,9 @@ export default async function Page({ params, searchParams }: Props) {
         groups={[
           {
             title: 'Sorties',
-            links: [{ href: EXTENSIONS_PATH, label: 'Toutes les extensions' }],
+            links: [
+              { href: EXTENSIONS_PATH, label: 'Voir toutes les extensions' },
+            ],
           },
         ]}
         about={

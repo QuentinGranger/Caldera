@@ -5,39 +5,51 @@ import { ChipRow } from './ChipRow';
 import { PendingHint } from './PendingHint';
 import styles from './Catalog.module.scss';
 
+/** The filters a row of chips can stand for, with their words. */
+const ROWS = {
+  category: { all: 'Tout', label: 'Familles de produits' },
+  set: { all: 'Toutes les extensions', label: 'Extensions' },
+} as const;
+
 /**
- * The families of the listing at a glance, to narrow it in one tap without
- * opening the filters. Only families with products; the other filters stay.
+ * One filter of the listing at a glance (its families by default, or its
+ * sets), to narrow it in one tap without opening the filters: the same
+ * query parameter as the drawer, so both always agree. Only options with
+ * products; the other filters stay.
  */
 export function CatalogQuickNav({
   facets,
   filters,
   path,
+  facet = 'category',
 }: {
   facets: CatalogFacets;
   filters: CatalogFilters;
   path: string;
+  facet?: keyof typeof ROWS;
 }) {
-  if (facets.categories.length < 2) return null;
-  const only = filters.category.length === 1 ? filters.category[0] : null;
+  const options = facet === 'set' ? facets.sets : facets.categories;
+  if (options.length < 2) return null;
+  const chosen = filters[facet];
+  const only = chosen.length === 1 ? chosen[0] : null;
   const entries = [
     {
       key: 'all',
-      label: 'Tout',
-      href: catalogUrl(path, filters, { category: [] }),
-      current: filters.category.length === 0,
+      label: ROWS[facet].all,
+      href: catalogUrl(path, filters, { [facet]: [] }),
+      current: chosen.length === 0,
       count: null,
     },
-    ...facets.categories.map((category) => ({
-      key: category.slug,
-      label: category.name,
-      href: catalogUrl(path, filters, { category: [category.slug] }),
-      current: only === category.slug,
-      count: category.count,
+    ...options.map((option) => ({
+      key: option.slug,
+      label: option.name,
+      href: catalogUrl(path, filters, { [facet]: [option.slug] }),
+      current: only === option.slug,
+      count: option.count,
     })),
   ];
   return (
-    <nav className={styles.quickNav} aria-label="Familles de produits">
+    <nav className={styles.quickNav} aria-label={ROWS[facet].label}>
       <ChipRow key={only ?? 'all'}>
         {entries.map((entry) => (
           <li key={entry.key}>

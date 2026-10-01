@@ -68,7 +68,7 @@ export function LandingPage({
         {
           title: 'Sorties',
           links: [
-            { href: EXTENSIONS_PATH, label: 'Toutes les extensions' },
+            { href: EXTENSIONS_PATH, label: 'Voir toutes les extensions' },
             ...(view.calendarIndexable
               ? [{ href: CALENDAR_PATH, label: 'Calendrier des sorties' }]
               : []),
@@ -121,6 +121,7 @@ export function LandingPage({
             <AisleNav aisles={aisles} current={view.path} />
           ) : undefined
         }
+        browse={copy?.browse}
         emptyState={
           <EmptyState
             title={

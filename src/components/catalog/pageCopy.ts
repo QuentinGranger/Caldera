@@ -71,6 +71,8 @@ export interface AisleCopy {
   lead: string;
   /** Part of the game's view kept in this aisle's frame. */
   focus: string;
+  /** A filter offered as chips above the products (by set). */
+  browse?: 'set';
   teaser?: Teaser;
 }
 
@@ -99,6 +101,7 @@ export function shopAisleCopy(
         eyebrow: 'Ouvrir une nouvelle piste',
         lead: `Retrouvez les boosters ${game} disponibles parmi les extensions proposées par Caldera.`,
         focus: '50% 8%',
+        browse: 'set',
         teaser: {
           eyebrow: 'Choisir son extension',
           guide: 'extensions-et-series-pokemon',

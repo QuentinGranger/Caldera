@@ -5,7 +5,7 @@ Toutes les pages qui montrent des produits (`/catalogue`, `/nouveautes`, `/preco
 ## Ordre d’une page
 
 1. **Hero** (`PageHero`) : fil d’Ariane, surtitre, H1 serif, une phrase, éventuellement une note, le CTA. Même hauteur, mêmes marges, même échelle de titres partout.
-2. **Rangée de chips** : les rayons de la boutique (`AisleNav`, liens vers les pages, rayon courant marqué) sur le hub du jeu, ses familles et les familles transverses ; les familles de la liste (`CatalogQuickNav`, filtres) ailleurs. La chip courante est ramenée au centre sur mobile (`ChipRow`).
+2. **Rangée de chips** : les rayons de la boutique (`AisleNav`, liens vers les pages, rayon courant marqué) sur le hub du jeu, ses familles et les familles transverses ; les familles de la liste (`CatalogQuickNav`, filtres) ailleurs. La chip courante est ramenée au centre sur mobile (`ChipRow`). Un rayon peut ajouter une seconde rangée pour un filtre (`browse: 'set'` : les extensions sur Boosters) : le même composant, le même paramètre d’URL que le tiroir, « Toutes les extensions » en tête.
 3. **Produits** (`CatalogResults`) : barre d’exploration (nombre, recherche, filtres, tri), grille de `ProductCard`, pagination, état vide (`EmptyState`). Un guide (`CatalogInterlude`) s’intercale après huit produits, ou suit une grille courte.
 4. **Après les produits** : sorties (hub du jeu), « Continuer l’exploration » (`ExploreSection` : chips vers des pages indexables, présentation de l’admin repliée), trois guides au plus (`LandingGuides`), questions en accordéon (`LandingFaq`).
 5. **Lettre** puis données structurées : `CatalogShell` les place toujours en dernier.
@@ -42,5 +42,5 @@ Les vues viennent du monde de Caldera, jamais d’une créature ni d’un visuel
 ## Ajouter un rayon
 
 1. Créer la famille dans l’admin : la page, ses filtres, sa place dans les chips et les liens viennent des données (pages indexables seulement).
-2. Pour lui donner sa voix, ajouter une entrée dans `shopAisleCopy` (famille du jeu) ou `categoryCopy` (famille transverse) de `src/components/catalog/pageCopy.ts` : surtitre, phrase, cadrage de la vue, guide éventuel. Sans entrée, la page prend la description de l’admin et un surtitre générique.
+2. Pour lui donner sa voix, ajouter une entrée dans `shopAisleCopy` (famille du jeu) ou `categoryCopy` (famille transverse) de `src/components/catalog/pageCopy.ts` : surtitre, phrase, cadrage de la vue, guide éventuel, rangée d’extensions (`browse`). Sans entrée, la page prend la description de l’admin et un surtitre générique.
 3. Rien d’autre : hero, chips, barre, grille, cartes, filtres, blocs éditoriaux et lettre sont ceux de toutes les autres pages.

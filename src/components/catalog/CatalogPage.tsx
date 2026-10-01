@@ -72,13 +72,16 @@ export async function catalogListingMetadata({
  * exploration bar (count, search, filters drawer, order), the active
  * filters, the grid and its crawlable pagination. A scope without any
  * product and without refinement shows `emptyState` instead of the bar.
- * `interlude` opens a window between two rows (after the grid when it is
- * short); `widest` is the last way out of a search without result.
+ * `browse`: a second row, one filter at a glance (the sets of an aisle),
+ * between the ways in and the bar. `interlude` opens a window between two
+ * rows (after the grid when it is short); `widest` is the last way out of
+ * a search without result.
  */
 export function CatalogResults({
   load,
   path,
   nav,
+  browse,
   emptyState,
   interlude,
   widest,
@@ -86,6 +89,7 @@ export function CatalogResults({
   load: CatalogLoad;
   path: string;
   nav?: ReactNode;
+  browse?: 'set';
   emptyState: ReactNode;
   interlude?: ReactNode;
   widest?: EmptyAction;
@@ -108,6 +112,14 @@ export function CatalogResults({
         emptyState
       ) : (
         <>
+          {browse && (
+            <CatalogQuickNav
+              facets={facets}
+              filters={filters}
+              path={path}
+              facet={browse}
+            />
+          )}
           <CatalogToolbar
             filters={filters}
             path={path}
