@@ -141,6 +141,19 @@ $gold-line: rgb(232 194 97 / 60%);
 .action {
   margin-top: 0.85rem;
 }
+// Secondary: the parent family, a text link under the lead.
+.up {
+  @include m.underline-link(v.$color-gold-light);
+  min-height: 44px;
+  color: rgb(251 244 223 / 82%);
+  svg {
+    order: -1;
+  }
+  &:hover svg,
+  &:focus-visible svg {
+    transform: translateX(-3px);
+  }
+}
 .logo {
   width: auto;
   max-width: 160px;

@@ -58,6 +58,19 @@ const readProducts = cache((scopeKey: string, filtersKey: string) =>
   ),
 );
 
+/**
+ * The latest products of a scope in the catalogue's own « Nouveautés » order
+ * (publication, then release date): `limit` at most and never all of them,
+ * so they stay a preview of the listing that follows.
+ */
+export async function getLatestProducts(scope: CatalogScope, limit: number) {
+  const { products, total } = await readProducts(
+    JSON.stringify(scope),
+    JSON.stringify(parseCatalogParams({ sort: 'newest' })),
+  );
+  return products.slice(0, Math.max(0, Math.min(limit, total - 1)));
+}
+
 /** Facets of a scope, shared with loadCatalog within the request. */
 export function getScopeFacets(scope: CatalogScope): Promise<CatalogFacets> {
   return readFacets(JSON.stringify(scope));

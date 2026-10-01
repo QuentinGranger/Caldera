@@ -60,6 +60,9 @@ $hairline: rgb(23 62 50 / 14%);
   margin-top: v.$rhythm-after-hero;
   scroll-margin-top: calc(var(--header-height) + 0.5rem);
 }
+.listAnchor {
+  scroll-margin-top: var(--header-height);
+}
 
 // The families at a glance: one row, swiped on phones.
 .quickNav {
@@ -480,6 +483,59 @@ $hairline: rgb(23 62 50 / 14%);
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+// The latest products of an aisle, above its listing: the same cards, a
+// swiped row on phones and tablets, one row of four on wide screens.
+.latest {
+  margin-block: v.$rhythm-grid;
+  // A heading inside the listing: the section title, one step smaller.
+  > div:first-child {
+    row-gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    h2 {
+      font-size: clamp(1.7rem, 1.35rem + 1.4vw, 2.4rem);
+    }
+  }
+}
+.latestRow {
+  display: flex;
+  gap: 0.85rem;
+  margin: 0 calc(-1 * #{v.$space-6});
+  padding: 0.25rem v.$space-6 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: v.$space-6;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  list-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  > li {
+    flex: 0 0 min(44%, 15rem);
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    margin: 0 calc(-1 * #{v.$space-12});
+    padding-inline: v.$space-12;
+    scroll-padding-inline: v.$space-12;
+    > li {
+      flex-basis: min(30%, 16rem);
+    }
+  }
+  @include m.from(v.$breakpoint-desktop) {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    > li:nth-child(n + 5) {
+      display: none;
+    }
   }
 }
 

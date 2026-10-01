@@ -21,10 +21,14 @@ import { EmptyCatalog } from './EmptyCatalog';
 import type { EmptyAction } from './EmptyState';
 import styles from './Catalog.module.scss';
 
+/** Anchor of the full list, right above its bar. */
+export const LIST_ANCHOR = 'liste-complete';
+
 export {
   catalogItemListNode,
   catalogLoadPath,
   catalogRobots,
+  getLatestProducts,
   getScopeFacets,
   resolveCatalog,
   type CatalogLoad,
@@ -73,7 +77,8 @@ export async function catalogListingMetadata({
  * filters, the grid and its crawlable pagination. A scope without any
  * product and without refinement shows `emptyState` instead of the bar.
  * `browse`: a second row, one filter at a glance (the sets of an aisle),
- * between the ways in and the bar. `interlude` opens a window between two
+ * between the ways in and the bar; `above`: a block between them and the
+ * bar (an aisle's latest products). `interlude` opens a window between two
  * rows (after the grid when it is short); `widest` is the last way out of
  * a search without result.
  */
@@ -82,6 +87,7 @@ export function CatalogResults({
   path,
   nav,
   browse,
+  above,
   card,
   emptyState,
   interlude,
@@ -91,6 +97,7 @@ export function CatalogResults({
   path: string;
   nav?: ReactNode;
   browse?: 'set';
+  above?: ReactNode;
   /** The cards' layout, for aisles where the edition decides. */
   card?: 'edition';
   emptyState: ReactNode;
@@ -123,6 +130,9 @@ export function CatalogResults({
               facet={browse}
             />
           )}
+          {above}
+          {/* The whole list, from its bar: where « Voir tous… » leads. */}
+          <div id={LIST_ANCHOR} className={styles.listAnchor} />
           <CatalogToolbar
             filters={filters}
             path={path}

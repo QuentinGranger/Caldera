@@ -5,6 +5,7 @@ import {
 } from '@/components/catalog/CatalogInterlude';
 import {
   CatalogResults,
+  LIST_ANCHOR,
   catalogItemListNode,
   catalogLoadPath,
   type CatalogLoad,
@@ -12,6 +13,7 @@ import {
 import { CatalogShell } from '@/components/catalog/CatalogShell';
 import { EmptyState } from '@/components/catalog/EmptyState';
 import { ExploreSection } from '@/components/catalog/ExploreSection';
+import { LatestProducts } from '@/components/catalog/LatestProducts';
 import {
   EXPLORE_PRODUCTS,
   VIEWS,
@@ -22,6 +24,7 @@ import { GUIDES_PATH } from '@/components/editorial/editorial';
 import { landingPath } from '@/lib/seo/facets';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
 import type { SeoLink, SeoLinkGroup } from '@/lib/seo/types';
+import type { CatalogProduct } from '@/types/product';
 import {
   CALENDAR_PATH,
   EXTENSIONS_PATH,
@@ -29,6 +32,9 @@ import {
 } from './landingData';
 import { LandingFaq } from './LandingFaq';
 import { LandingGuides } from './LandingGuides';
+
+/** Fewer latest products than this would say little: no row. */
+const LATEST_MIN = 4;
 
 const EMPTY_TITLES: Partial<Record<LandingView['kind'], string>> = {
   set: 'Aucun produit en ligne pour cette extension',
@@ -49,6 +55,8 @@ export function LandingPage({
   copy,
   teaser,
   guidesIndexable,
+  up,
+  latest = [],
 }: {
   view: LandingView;
   load: CatalogLoad;
@@ -59,6 +67,10 @@ export function LandingPage({
   copy?: AisleCopy;
   teaser: InterludeContent | null;
   guidesIndexable: boolean;
+  /** The parent family's page, for a visible way up. */
+  up?: SeoLink | null;
+  /** The latest products, for an aisle that shows them (copy.latest). */
+  latest?: readonly CatalogProduct[];
 }) {
   const firstPage = load.page === 1;
   const faq = firstPage ? view.faq : [];
@@ -83,6 +95,7 @@ export function LandingPage({
           breadcrumb={view.breadcrumb}
           path={view.path}
           eyebrow={copy?.eyebrow ?? view.eyebrow}
+          up={up ?? undefined}
           title={view.heading}
           lead={
             copy?.lead ??
@@ -122,6 +135,22 @@ export function LandingPage({
           ) : undefined
         }
         browse={copy?.browse}
+        // The first view of the aisle only: a preview, never in a search.
+        above={
+          copy?.latest &&
+          firstPage &&
+          !load.hasRefinements &&
+          latest.length >= LATEST_MIN ? (
+            <LatestProducts
+              title={copy.latest.title}
+              products={latest}
+              all={{
+                href: `#${LIST_ANCHOR}`,
+                label: copy.latest.all,
+              }}
+            />
+          ) : undefined
+        }
         card={copy?.card}
         emptyState={
           <EmptyState

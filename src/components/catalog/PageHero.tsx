@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { CSSProperties, ReactNode } from 'react';
-import { ArrowDown, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
 import {
   Breadcrumb,
@@ -35,6 +36,7 @@ export function PageHero({
   title,
   lead,
   note,
+  up,
   action,
   view,
   children,
@@ -46,6 +48,8 @@ export function PageHero({
   lead: string;
   /** Small print under the lead (what a label means here). */
   note?: string;
+  /** A quiet way up to the parent family, under the lead. */
+  up?: { href: string; label: string };
   /** The way in: an anchor to the products, or a page. */
   action?: { href: string; label: string };
   view: HeroView;
@@ -77,6 +81,12 @@ export function PageHero({
           <h1 id="page-title">{title}</h1>
           <p className={styles.lead}>{lead}</p>
           {note && <p className={styles.note}>{note}</p>}
+          {up && (
+            <Link href={up.href} className={styles.up}>
+              <ArrowLeft size={16} aria-hidden="true" />
+              {up.label}
+            </Link>
+          )}
           {children}
           {action && (
             <Button href={action.href} variant="gold" className={styles.action}>

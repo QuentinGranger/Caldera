@@ -390,6 +390,40 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   assert.ok(articles(boosters).every((card) => !card.includes('>Français<')));
   assert.ok(articles(boosters).some((card) => card.includes('Boosters ·')));
 
+  // Coffrets: a visible way up to the sealed products, in the hero, and
+  // the latest boxes above the bar, in the listing's own « Nouveautés »
+  // order, a preview only (never all of them).
+  const boxes = (await page('/pokemon/coffrets')).html;
+  const hero = boxes.slice(
+    boxes.indexOf('data-frame='),
+    boxes.indexOf('id="catalogue-resultats"'),
+  );
+  assert.match(
+    hero,
+    /<a[^>]*href="\/pokemon\/scelles"[^>]*>.*Voir tous les produits scellés/s,
+  );
+  const latestStart = boxes.indexOf('aria-labelledby="derniers-ajouts"');
+  assert.ok(latestStart > 0 && latestStart < boxes.indexOf('role="status"'));
+  const latest = boxes.slice(latestStart, boxes.indexOf('role="status"'));
+  assert.ok(strip(latest).includes('Derniers coffrets ajoutés'));
+  // « Voir tous les coffrets »: the full list right below, no sort URL.
+  assert.ok(latest.includes('href="#liste-complete"'));
+  assert.ok(
+    boxes.indexOf('id="liste-complete"') < boxes.indexOf('role="status"'),
+  );
+  const slugs = (html: string) =>
+    [...html.matchAll(/<h3><a href="\/produit\/([^"]+)"/g)].map(
+      ([, slug]) => slug,
+    );
+  const newest = slugs(
+    articles((await page('/pokemon/coffrets?sort=newest')).html).join(''),
+  );
+  const shown = slugs(latest);
+  assert.ok(shown.length >= 4 && shown.length < newest.length);
+  assert.deepEqual(shown, newest.slice(0, shown.length));
+  // Other aisles keep their page as it was.
+  assert.ok(!boosters.includes('derniers-ajouts'));
+
   // The sealed products lead to a real guide, by its own title.
   const sealed = (await page('/pokemon/scelles')).html;
   assert.ok(sealed.includes('href="/guides/etb-display-ou-booster"'));

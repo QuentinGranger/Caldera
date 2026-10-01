@@ -75,6 +75,10 @@ export interface AisleCopy {
   browse?: 'set';
   /** The cards' layout: `edition` shows the set and the languages first. */
   card?: 'edition';
+  /** A visible way up to the parent family, in the hero. */
+  up?: true;
+  /** The latest products above the listing, under this title. */
+  latest?: { title: string; all: string };
   teaser?: Teaser;
 }
 
@@ -127,6 +131,11 @@ export function shopAisleCopy(
         eyebrow: 'Pièces de collection',
         lead: `Coffrets et collections ${game} pensés pour l’ouverture et la collection.`,
         focus: '50% 30%',
+        up: true,
+        latest: {
+          title: 'Derniers coffrets ajoutés',
+          all: 'Voir tous les coffrets',
+        },
         teaser: {
           eyebrow: 'Après l’ouverture',
           guide: 'proteger-ses-cartes',
