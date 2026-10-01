@@ -174,11 +174,15 @@ export const getSiteNavigation = cache(async (): Promise<SiteNavigation> => {
       getAllContent(),
     ]);
     return buildSiteNavigation(navigation, new Set(listings), {
-      questions: content.some((entry) => entry.kind === 'question'),
+      // The shop's FAQ is always there, card questions or not.
+      questions: true,
       news: content.some((entry) => entry.kind === 'actualite'),
     });
   } catch {
-    return buildSiteNavigation({ games: [], categoryHubs: [] }, new Set());
+    return buildSiteNavigation({ games: [], categoryHubs: [] }, new Set(), {
+      questions: true,
+      news: false,
+    });
   }
 });
 

@@ -12,6 +12,9 @@ import { getContentLinks } from '@/lib/seo/links';
 import { formatDateFr, type MetadataText } from '@/lib/seo/metadata';
 import type { IndexDecision } from '@/lib/seo/types';
 import type { EditorialPage } from './content';
+import { DELIVERY_ZONE } from './delivery';
+import { SHOP_FAQ_UPDATED } from './shopFaq';
+import { RETURN_POLICY } from '@/lib/seo/policies';
 import {
   editorialDecision,
   fitSentences,
@@ -36,28 +39,32 @@ export interface SectionIndex {
   decision: IndexDecision;
 }
 
+/**
+ * /questions: the shop's FAQ (shopFaq.ts), then the questions about the
+ * cards themselves, each with its own page. Always indexable: the FAQ is.
+ */
 export const getQuestionsIndex = cache(async (): Promise<SectionIndex> => {
   const entries = (await getAllContent()).filter(
     (entry) => entry.kind === 'question',
   );
-  const heading = 'Questions sur les cartes à collectionner';
-  const summary = entries.length
-    ? `${upperFirst(kindCount('question', entries.length))} d’acheteurs et de collectionneurs, avec une réponse directe puis le détail.`
-    : 'Aucune question publiée pour le moment.';
-  const updated = latestUpdate(entries);
+  const heading = 'Questions fréquentes';
+  const summary =
+    'Commander, payer, être livré, changer d’avis : les réponses sur la boutique, d’après nos conditions générales de vente et le fonctionnement du site.';
+  const latest = latestUpdate(entries);
+  const updated =
+    latest && latest > SHOP_FAQ_UPDATED ? latest : SHOP_FAQ_UPDATED;
   return {
     entries,
     heading,
     summary,
     updated,
     text: {
-      title: fittingTitle(`${heading} (JCC)`, heading),
+      title: 'Questions fréquentes : commande, livraison et retours',
       description: fitSentences([
-        summary,
-        updated && `Mis à jour le ${formatDateFr(updated)}.`,
+        `Commande, paiement, livraison en ${DELIVERY_ZONE}, retours sous ${RETURN_POLICY.days} jours : les réponses sur la boutique, d’après nos conditions de vente.`,
       ]),
     },
-    decision: editorialDecision(QUESTIONS_PATH, entries.length > 0),
+    decision: editorialDecision(QUESTIONS_PATH, true),
   };
 });
 

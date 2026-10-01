@@ -1,0 +1,155 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+// The shop's FAQ: themes, then questions that open in place.
+
+.groups {
+  margin: -0.5rem 0 1.5rem;
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 1rem;
+    border: 1px solid v.$color-border;
+    border-radius: 999px;
+    background: v.$color-surface;
+    color: v.$color-text;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: border-color v.$duration-short v.$ease-out;
+    &:hover {
+      border-color: v.$color-green-secondary;
+    }
+  }
+}
+
+.group {
+  padding-block: 2rem;
+  border-top: 1px solid v.$color-border;
+  h2 {
+    color: v.$color-green-dark;
+    font: 500 clamp(1.8rem, 3.2vw, 2.4rem) / 1.05 v.$font-heading;
+    letter-spacing: -0.02em;
+  }
+}
+.groupLead {
+  max-width: 46rem;
+  margin: 0.5rem 0 1.25rem;
+  color: v.$color-text-muted;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  a {
+    color: v.$color-text;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+.items {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 52rem;
+  margin-top: 1.1rem;
+}
+
+// One question: the whole line opens it; the answer reads like the CGV.
+.item {
+  border-radius: v.$radius-medium;
+  background: v.$color-surface;
+  box-shadow: inset 0 0 0 1px v.$color-border;
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 52px;
+    padding: 0.75rem 1.1rem;
+    list-style: none;
+    cursor: pointer;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    &:focus-visible {
+      outline: 2px solid v.$color-green-secondary;
+      outline-offset: -2px;
+      border-radius: v.$radius-medium;
+    }
+    svg {
+      flex-shrink: 0;
+      color: v.$color-green-secondary;
+      transition: transform v.$duration-short v.$ease-out;
+    }
+  }
+  h3 {
+    color: v.$color-green-dark;
+    font: 600 1rem / 1.4 v.$font-body;
+  }
+  &[open] {
+    box-shadow:
+      inset 0 0 0 1px rgb(11 102 80 / 35%),
+      0 12px 30px -24px rgb(7 28 23 / 45%);
+    summary svg {
+      transform: rotate(180deg);
+    }
+  }
+}
+.answer {
+  padding: 0 1.1rem 1.1rem;
+  color: v.$color-text-muted;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  p + p,
+  p + ul,
+  ul + p {
+    margin-top: 0.6rem;
+  }
+  ul {
+    padding-left: 1.2rem;
+  }
+  strong {
+    color: v.$color-text;
+  }
+  a {
+    color: v.$color-green-secondary;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgb(11 102 80 / 35%);
+    text-underline-offset: 3px;
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+// The way out when the answer is not here.
+.contact {
+  margin-top: 1rem;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border-radius: v.$radius-medium;
+  background: v.$color-green-dark;
+  color: v.$color-text-on-dark;
+  h2 {
+    color: v.$color-cream;
+    font: 500 clamp(1.6rem, 3vw, 2.1rem) / 1.1 v.$font-heading;
+  }
+  p {
+    max-width: 40rem;
+    margin-top: 0.5rem;
+    color: v.$color-muted-on-dark;
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+  a {
+    color: v.$color-gold-light;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
