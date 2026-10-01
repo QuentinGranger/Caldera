@@ -1,46 +1,51 @@
 @use '@/styles/abstracts/variables' as v;
 
 .summary {
-  background: v.$color-green-dark;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(196, 151, 75, 0.08), transparent 34%),
+    v.$color-green-dark;
   color: v.$color-cream;
-  padding: clamp(1.25rem, 3vw, 2rem);
+  padding: clamp(1.35rem, 3vw, 2rem);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: v.$radius-small;
+  box-shadow: 0 1.1rem 3rem rgba(0, 0, 0, 0.12);
 
   h2 {
+    margin-bottom: 1.4rem;
     font-family: v.$font-heading;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
+    font-size: clamp(1.8rem, 4vw, 2.15rem);
+    font-weight: 500;
   }
 
-  dl > div,
-  .promotionSaving,
-  .promotionTotal {
+  dl {
+    margin: 0;
+  }
+
+  dl > div {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 0.75rem;
+    align-items: baseline;
+  }
+
+  dt {
+    color: v.$color-muted-on-dark;
+    font-size: 0.78rem;
   }
 
   dd {
+    margin: 0;
+    font-size: 0.95rem;
     font-weight: 700;
   }
 
-  p {
+  > p {
     font-size: 0.75rem;
-    line-height: 1.8;
+    line-height: 1.75;
     margin-block: 0.9rem;
-  }
-
-  > div > button,
-  > button {
-    width: 100%;
-    margin-top: 0.7rem;
-    background: v.$color-gold;
-    color: v.$color-ink;
-
-    &:disabled {
-      opacity: 0.7;
-    }
   }
 
   .warning {
@@ -50,23 +55,117 @@
   }
 
   .note {
+    margin-bottom: 0;
     color: v.$color-muted-on-dark;
   }
 }
 
-.promotion {
-  margin-block: 1.25rem;
-  padding-block: 1.1rem;
-  border-block: 1px solid v.$color-border-on-dark;
+.checkoutAction {
+  margin-top: 1rem;
 
-  label,
-  .promotionApplied > div > span {
+  button {
+    width: 100%;
+    min-height: 3.1rem;
+    background: v.$color-gold;
+    color: v.$color-ink;
+
+    &:disabled {
+      opacity: 0.65;
+    }
+  }
+
+  p {
+    margin: 0.5rem 0 0;
+    color: v.$color-muted-on-dark;
+    font-size: 0.72rem;
+  }
+}
+
+.promotionEntry,
+.promotionCard {
+  margin-block: 1.25rem;
+}
+
+.promotionEntry {
+  border-block: 1px solid v.$color-border-on-dark;
+}
+
+.promotionTrigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 1rem 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+
+  > span:nth-child(2) {
+    min-width: 0;
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    color: v.$color-cream;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  small {
+    margin-top: 0.16rem;
+    color: v.$color-muted-on-dark;
+    font-size: 0.68rem;
+    line-height: 1.45;
+  }
+
+  > svg {
+    color: v.$color-muted-on-dark;
+    transition: transform 180ms ease;
+  }
+
+  &:hover strong {
+    color: v.$color-gold-light;
+  }
+
+  &:focus-visible {
+    outline: 2px solid v.$color-gold;
+    outline-offset: 0.3rem;
+  }
+}
+
+.promotionTriggerIcon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  color: v.$color-gold-light;
+  background: rgba(196, 151, 75, 0.09);
+  border: 1px solid rgba(196, 151, 75, 0.22);
+  border-radius: 999px;
+}
+
+.promotionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.promotionPanel {
+  padding: 0.1rem 0 1rem;
+
+  label {
     display: block;
     margin-bottom: 0.45rem;
     color: v.$color-muted-on-dark;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
   }
 }
@@ -78,95 +177,221 @@
 
   input {
     min-width: 0;
-    padding: 0.72rem 0.8rem;
+    min-height: 2.8rem;
+    padding: 0.72rem 0.82rem;
     color: v.$color-ink;
-    background: v.$color-cream;
+    background: #f3ecde;
     border: 1px solid transparent;
     border-radius: v.$radius-small;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
 
-    &:focus-visible {
+    &::placeholder {
+      color: rgba(34, 39, 35, 0.45);
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    &:focus {
       border-color: v.$color-gold;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(196, 151, 75, 0.13);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: rgba(222, 151, 96, 0.9);
     }
   }
 
   button {
-    width: auto;
+    min-height: 2.8rem;
     margin: 0;
     padding-inline: 1rem;
-    background: v.$color-gold;
     color: v.$color-ink;
+    background: v.$color-gold;
+    border: 0;
     border-radius: v.$radius-small;
-  }
-}
+    font-size: 0.76rem;
+    font-weight: 700;
+    white-space: nowrap;
 
-.promotionApplied {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-
-  strong,
-  small {
-    display: block;
-  }
-
-  strong {
-    color: v.$color-gold-light;
-    letter-spacing: 0.04em;
-  }
-
-  small {
-    margin-top: 0.15rem;
-    color: v.$color-muted-on-dark;
-  }
-
-  button {
-    width: auto;
-    margin: 0;
-    padding: 0;
-    color: v.$color-gold-light;
-    background: transparent;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-}
-
-.promotionSaving,
-.promotionTotal {
-  margin-top: 0.9rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid v.$color-border-on-dark;
-}
-
-.promotionSaving strong {
-  color: v.$color-gold-light;
-}
-
-.promotionTotal {
-  font-size: 0.82rem;
-
-  strong {
-    color: v.$color-cream;
-    font-size: 1rem;
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
   }
 }
 
 .promotionHint,
-.promotionFeedback,
 .promotionError {
-  margin-bottom: 0 !important;
+  margin: 0.55rem 0 0;
+  font-size: 0.7rem;
+  line-height: 1.55;
 }
 
 .promotionHint {
   color: v.$color-muted-on-dark;
 }
 
-.promotionFeedback {
-  color: v.$color-gold-light;
+.promotionError {
+  color: #f0c19d;
 }
 
-.promotionError {
+.promotionCard {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: calc(v.$radius-small + 2px);
+}
+
+.promotionValid {
+  background:
+    linear-gradient(135deg, rgba(196, 151, 75, 0.08), transparent 60%),
+    rgba(255, 255, 255, 0.02);
+  border-color: rgba(196, 151, 75, 0.2);
+}
+
+.promotionInvalid {
+  border-color: rgba(222, 151, 96, 0.3);
+}
+
+.promotionCardHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.72rem;
+  align-items: start;
+}
+
+.promotionStatusIcon {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  place-items: center;
   color: v.$color-gold-light;
+  background: rgba(196, 151, 75, 0.1);
+  border: 1px solid rgba(196, 151, 75, 0.22);
+  border-radius: 999px;
+}
+
+.promotionInvalid .promotionStatusIcon {
+  color: #f0c19d;
+  background: rgba(222, 151, 96, 0.08);
+  border-color: rgba(222, 151, 96, 0.22);
+}
+
+.promotionIdentity {
+  min-width: 0;
+
+  > span,
+  strong,
+  small {
+    display: block;
+  }
+
+  > span {
+    color: v.$color-muted-on-dark;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    margin-top: 0.18rem;
+    overflow-wrap: anywhere;
+    color: v.$color-gold-light;
+    font-size: 0.93rem;
+    letter-spacing: 0.06em;
+  }
+
+  small {
+    margin-top: 0.15rem;
+    color: v.$color-muted-on-dark;
+    font-size: 0.68rem;
+    line-height: 1.45;
+  }
+}
+
+.promotionRemove {
+  margin: 0;
+  padding: 0.2rem 0;
+  color: v.$color-muted-on-dark;
+  background: transparent;
+  border: 0;
+  font-size: 0.68rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover {
+    color: v.$color-cream;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.promotionResult {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-top: 0.95rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid v.$color-border-on-dark;
+
+  > div {
+    min-width: 0;
+
+    + div {
+      padding-left: 1rem;
+      border-left: 1px solid v.$color-border-on-dark;
+      text-align: right;
+    }
+  }
+
+  span,
+  strong {
+    display: block;
+  }
+
+  span {
+    color: v.$color-muted-on-dark;
+    font-size: 0.64rem;
+  }
+
+  strong {
+    margin-top: 0.14rem;
+    color: v.$color-cream;
+    font-size: 1rem;
+  }
+
+  .promotionSaving {
+    color: v.$color-gold-light;
+  }
+}
+
+.promotionShipping {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-top: 0.9rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid v.$color-border-on-dark;
+  color: v.$color-gold-light;
+
+  p {
+    margin: 0;
+    color: v.$color-muted-on-dark;
+    font-size: 0.7rem;
+    line-height: 1.55;
+  }
 }
 
 @media (max-width: 28rem) {
@@ -175,6 +400,36 @@
 
     button {
       width: 100%;
+    }
+  }
+
+  .promotionTrigger {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    > svg {
+      display: none;
+    }
+  }
+
+  .promotionCardHeader {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .promotionRemove {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .promotionResult {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+
+    > div + div {
+      padding-top: 0.7rem;
+      padding-left: 0;
+      border-top: 1px solid v.$color-border-on-dark;
+      border-left: 0;
+      text-align: left;
     }
   }
 }

@@ -124,7 +124,7 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
     await t.test(
       'code promo : saisie dans le panier, remise visible et conservation au checkout',
       async () => {
-        assert.match(await page(), /Code promo/);
+        assert.match(await page(), /code promo/i);
 
         const applied = await action('applyCartPromotionAction', [
           `  ${promotion.code.toLowerCase()}  `,
@@ -153,7 +153,7 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
         const removed = await action('removeCartPromotionAction', []);
         assert.match(removed.body, /"success":true/);
         const clean = await page();
-        assert.match(clean, /Code promo/);
+        assert.match(clean, /code promo/i);
         assert.doesNotMatch(clean, new RegExp(promotion.code));
       },
     );

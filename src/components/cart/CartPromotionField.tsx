@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  Check,
+  ChevronDown,
+  TicketPercent,
+  TriangleAlert,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   applyCartPromotionAction,
@@ -21,7 +27,9 @@ export function CartPromotionField({
   const [state, setState] = useState(initialState);
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
+  const [open, setOpen] = useState(Boolean(initialState?.promotionIssue));
   const [pending, startTransition] = useTransition();
+
   const fingerprint = useMemo(
     () =>
       cart.items
@@ -37,9 +45,12 @@ export function CartPromotionField({
   useEffect(() => {
     if (previousFingerprint.current === fingerprint) return;
     previousFingerprint.current = fingerprint;
+
     startTransition(async () => {
       try {
-        setState(await refreshCartPromotionAction());
+        const next = await refreshCartPromotionAction();
+        setState(next);
+        setMessage('');
       } catch {
         setMessage(
           'Le code promo sera revérifié avant le paiement. Actualisez la page si nécessaire.',
@@ -48,124 +59,198 @@ export function CartPromotionField({
     });
   }, [fingerprint]);
 
-  const applied = state?.promotion ?? state?.promotionIssue;
-  const discount = Number(state?.promotion?.discount ?? 0);
+  const promotion = state?.promotion ?? null;
+  const issue = state?.promotionIssue ?? null;
+  const applied = promotion ?? issue;
+  const discount = Number(promotion?.discount ?? 0);
 
   function apply() {
     if (!code.trim() || pending) return;
+
     setMessage('');
     startTransition(async () => {
       const result = await applyCartPromotionAction(code);
       setState(result.state);
-      setMessage(result.message);
-      if (result.success) setCode('');
+      setMessage(result.success ? '' : result.message);
+
+      if (result.success) {
+        setCode('');
+        setOpen(false);
+      }
     });
   }
 
   function remove() {
     if (pending) return;
+
     setMessage('');
     startTransition(async () => {
       const result = await removeCartPromotionAction();
       setState(result.state);
-      setMessage(result.message);
+      setMessage(result.success ? '' : result.message);
+
+      if (result.success) {
+        setCode('');
+        setOpen(false);
+      }
     });
   }
 
-  if (applied)
+  if (applied) {
+    const valid = Boolean(promotion);
+
     return (
-      <div className={styles.promotion}>
-        <div className={styles.promotionApplied}>
-          <div>
-            <span>Code promo</span>
+      <section
+        className={`${styles.promotionCard} ${
+          valid ? styles.promotionValid : styles.promotionInvalid
+        }`}
+        aria-label={valid ? 'Code promo appliqué' : 'Code promo à vérifier'}
+      >
+        <div className={styles.promotionCardHeader}>
+          <span className={styles.promotionStatusIcon} aria-hidden="true">
+            {valid ? <Check size={15} /> : <TriangleAlert size={15} />}
+          </span>
+
+          <div className={styles.promotionIdentity}>
+            <span>{valid ? 'Code promo appliqué' : 'Code promo à vérifier'}</span>
             <strong>{applied.code}</strong>
-            {state?.promotion && <small>{state.promotion.label}</small>}
+            {promotion && <small>{promotion.label}</small>}
           </div>
-          <button type="button" disabled={pending} onClick={remove}>
-            Retirer
+
+          <button
+            type="button"
+            className={styles.promotionRemove}
+            disabled={pending}
+            onClick={remove}
+          >
+            {pending ? 'Retrait…' : 'Retirer'}
           </button>
         </div>
 
-        {state?.promotion && discount > 0 && (
-          <>
-            <div className={styles.promotionSaving}>
-              <span>Réduction</span>
-              <strong>−{formatPrice(state.promotion.discount)}</strong>
+        {promotion && discount > 0 && (
+          <div className={styles.promotionResult}>
+            <div>
+              <span>Votre économie</span>
+              <strong className={styles.promotionSaving}>
+                −{formatPrice(promotion.discount)}
+              </strong>
             </div>
-            <div className={styles.promotionTotal}>
+            <div>
               <span>Total provisoire</span>
-              <strong>{formatPrice(state.provisionalTotal)}</strong>
+              <strong>{formatPrice(state!.provisionalTotal)}</strong>
             </div>
-          </>
+          </div>
         )}
 
-        {state?.promotion && discount === 0 && (
-          <p className={styles.promotionHint}>
-            Code validé. L’avantage lié à la livraison sera calculé après le
-            choix du mode de livraison.
-          </p>
+        {promotion && discount === 0 && (
+          <div className={styles.promotionShipping}>
+            <TicketPercent size={16} aria-hidden="true" />
+            <p>
+              Code validé. L’avantage sur la livraison sera calculé dès que vous
+              aurez choisi votre mode de livraison.
+            </p>
+          </div>
         )}
 
-        {state?.promotionIssue && (
+        {issue && (
           <p className={styles.promotionError} role="alert">
-            {state.promotionIssue.message}
+            {issue.message}
           </p>
         )}
 
         {message && (
-          <p
-            className={
-              state?.promotionIssue
-                ? styles.promotionError
-                : styles.promotionFeedback
-            }
-            role="status"
-          >
+          <p className={styles.promotionError} role="alert">
             {message}
           </p>
         )}
-      </div>
+      </section>
     );
+  }
 
   return (
-    <form
-      className={styles.promotion}
-      onSubmit={(event) => {
-        event.preventDefault();
-        apply();
-      }}
-    >
-      <label htmlFor="cart-promotion-code">Code promo</label>
-      <div className={styles.promotionRow}>
-        <input
-          id="cart-promotion-code"
-          name="promotionCode"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          maxLength={40}
-          placeholder="Ex. BIENVENUE10"
-          aria-invalid={Boolean(message)}
-          aria-describedby={message ? 'cart-promotion-message' : undefined}
+    <div className={styles.promotionEntry}>
+      <button
+        type="button"
+        className={styles.promotionTrigger}
+        aria-expanded={open}
+        aria-controls="cart-promotion-panel"
+        onClick={() => {
+          setOpen((current) => !current);
+          setMessage('');
+        }}
+      >
+        <span className={styles.promotionTriggerIcon} aria-hidden="true">
+          <TicketPercent size={17} />
+        </span>
+        <span>
+          <strong>Ajouter un code promo</strong>
+          <small>Vous pourrez aussi le modifier avant le paiement</small>
+        </span>
+        <ChevronDown
+          size={17}
+          className={open ? styles.promotionChevronOpen : undefined}
+          aria-hidden="true"
         />
-        <button type="submit" disabled={pending || !code.trim()}>
-          {pending ? '…' : 'Appliquer'}
-        </button>
-      </div>
-      <p className={styles.promotionHint}>
-        Le code est conservé pour la commande et revérifié avant le paiement.
-      </p>
-      {message && (
-        <p
-          id="cart-promotion-message"
-          className={styles.promotionError}
-          role="alert"
+      </button>
+
+      {open && (
+        <form
+          id="cart-promotion-panel"
+          className={styles.promotionPanel}
+          onSubmit={(event) => {
+            event.preventDefault();
+            apply();
+          }}
         >
-          {message}
-        </p>
+          <label htmlFor="cart-promotion-code">Code promo</label>
+
+          <div className={styles.promotionRow}>
+            <input
+              id="cart-promotion-code"
+              name="promotionCode"
+              value={code}
+              onChange={(event) => {
+                setCode(event.target.value.toUpperCase());
+                if (message) setMessage('');
+              }}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={40}
+              placeholder="Ex. BIENVENUE10"
+              aria-invalid={Boolean(message)}
+              aria-describedby={
+                message
+                  ? 'cart-promotion-message'
+                  : 'cart-promotion-description'
+              }
+              autoFocus
+            />
+
+            <button type="submit" disabled={pending || !code.trim()}>
+              {pending ? 'Vérification…' : 'Appliquer'}
+            </button>
+          </div>
+
+          <p
+            id="cart-promotion-description"
+            className={styles.promotionHint}
+          >
+            La remise est calculée côté serveur et sera revérifiée avant le
+            paiement.
+          </p>
+
+          {message && (
+            <p
+              id="cart-promotion-message"
+              className={styles.promotionError}
+              role="alert"
+            >
+              {message}
+            </p>
+          )}
+        </form>
       )}
-    </form>
+    </div>
   );
 }

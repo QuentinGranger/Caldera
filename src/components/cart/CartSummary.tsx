@@ -33,9 +33,11 @@ export function CartSummary({
         </p>
       )}
 
-      <StartCheckoutButton
-        disabled={cart.hasUnavailableItems || !cart.items.length}
-      />
+      <div className={styles.checkoutAction}>
+        <StartCheckoutButton
+          disabled={cart.hasUnavailableItems || !cart.items.length}
+        />
+      </div>
 
       <p className={styles.note}>
         Les articles du panier ne sont pas réservés à ce stade. Les prix,
