@@ -14,6 +14,8 @@ import { formatEuro, listFr, type ListingKind } from '@/lib/seo/metadata';
 import type { SeoLink } from '@/lib/seo/types';
 import { catalogItemListNode, catalogLoadPath } from './catalogLoad';
 import { CatalogHeader } from './CatalogHeader';
+import { CatalogInterlude } from './CatalogInterlude';
+import { CatalogueHero } from './CatalogueHero';
 import {
   CatalogResults,
   catalogListingMetadata,
@@ -114,13 +116,13 @@ function ListingIntro({
 
 function ListingEmpty({ title, links }: { title: string; links: SeoLink[] }) {
   return (
-    <section className={styles.empty}>
-      <Compass size={36} strokeWidth={1} aria-hidden="true" />
-      <h2>{title}</h2>
-      {links.length > 0 && (
+    <section className={styles.empty} aria-labelledby="catalogue-vide">
+      <Compass size={34} strokeWidth={1.2} aria-hidden="true" />
+      <h2 id="catalogue-vide">{title}</h2>
+      {links.length > 0 ? (
         <>
           <p>Ces sélections contiennent des produits :</p>
-          <div>
+          <div className={styles.emptyActions}>
             {links.map((link) => (
               <Link key={link.href} href={link.href}>
                 {link.label}
@@ -128,6 +130,8 @@ function ListingEmpty({ title, links }: { title: string; links: SeoLink[] }) {
             ))}
           </div>
         </>
+      ) : (
+        <p>La lettre ci-dessous prévient des premières mises en ligne.</p>
       )}
     </section>
   );
@@ -171,35 +175,71 @@ export async function ListingHubPage({
   ]);
   const links = await getListingHubLinks(hub);
   const text = listingPageText(hub.text, load.page);
+  const breadcrumb = [
+    { label: 'Accueil', href: '/' },
+    ...(listing !== 'catalogue' && links.catalogueIndexable
+      ? [{ label: LISTING_HUBS.catalogue.label, href: '/catalogue' }]
+      : []),
+    { label: config.label },
+  ];
+  const intro = hub.stats.productCount > 0 && (
+    <ListingIntro hub={hub} gameTargets={links.gameTargets} />
+  );
+  const results = (
+    <CatalogResults
+      load={load}
+      path={config.path}
+      emptyState={
+        <ListingEmpty title={config.emptyTitle} links={links.fallback} />
+      }
+      linkGroups={links.groups}
+      // Once, on the first page: whoever is shopping scrolls past it.
+      interlude={
+        listing === 'catalogue' && load.page === 1 ? (
+          <CatalogInterlude />
+        ) : undefined
+      }
+    />
+  );
+  // The whole catalogue opens on a view of Caldera; the other listings keep
+  // their plain heading.
+  if (listing === 'catalogue')
+    return (
+      <main
+        id="contenu"
+        tabIndex={-1}
+        className={`${styles.main} ${styles.immersive}`}
+      >
+        <CatalogueHero
+          breadcrumb={breadcrumb}
+          path={config.path}
+          eyebrow="Le Comptoir"
+          title="Tout le catalogue"
+          lead={
+            'Toute la collection de la boutique, réunie au même comptoir\u00a0: chaque pièce avec son prix et sa disponibilité du jour.'
+          }
+          facts={intro}
+          explore={load.total > 0 ? '#catalogue-resultats' : undefined}
+        />
+        <Container>{results}</Container>
+        <JsonLd
+          data={graph(
+            collectionPageNode({
+              path: catalogLoadPath(load),
+              name: text.title,
+              description: text.description,
+              mainEntity: catalogItemListNode(load),
+            }),
+          )}
+        />
+      </main>
+    );
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <Container>
-        <Breadcrumb
-          items={[
-            { label: 'Accueil', href: '/' },
-            ...(listing !== 'catalogue' && links.catalogueIndexable
-              ? [{ label: LISTING_HUBS.catalogue.label, href: '/catalogue' }]
-              : []),
-            { label: config.label },
-          ]}
-          currentPath={config.path}
-        />
-        <CatalogHeader
-          title={hub.heading}
-          intro={
-            hub.stats.productCount > 0 && (
-              <ListingIntro hub={hub} gameTargets={links.gameTargets} />
-            )
-          }
-        />
-        <CatalogResults
-          load={load}
-          path={config.path}
-          emptyState={
-            <ListingEmpty title={config.emptyTitle} links={links.fallback} />
-          }
-          linkGroups={links.groups}
-        />
+        <Breadcrumb items={breadcrumb} currentPath={config.path} />
+        <CatalogHeader title={hub.heading} intro={intro} />
+        {results}
       </Container>
       <JsonLd
         data={graph(

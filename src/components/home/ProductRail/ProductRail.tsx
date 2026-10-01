@@ -49,7 +49,11 @@ export function ProductRail({
             <ul className={styles.rail}>
               {latest.map((product) => (
                 <li key={product.id}>
-                  <ProductCard product={product} />
+                  {/* A swiped row on phones: wider cards than the grid. */}
+                  <ProductCard
+                    product={product}
+                    sizes="(min-width: 1200px) 300px, (min-width: 960px) 24vw, (min-width: 768px) 46vw, 72vw"
+                  />
                 </li>
               ))}
             </ul>

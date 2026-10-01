@@ -1,0 +1,170 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+// The view, then dawn: the landscape gives way to the parchment of the
+// counter where the products are.
+$dawn: clamp(3rem, 6vw, 4.5rem);
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-bottom: $dawn;
+  background: v.$color-night;
+  color: v.$color-text-on-dark;
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    height: $dawn;
+    background: linear-gradient(
+      180deg,
+      v.$color-night 0%,
+      #25322a 38%,
+      #a89f86 74%,
+      v.$color-background 100%
+    );
+  }
+}
+.media {
+  position: absolute;
+  inset: 0 0 $dawn;
+  z-index: -2;
+  img {
+    object-fit: cover;
+    object-position: 35% 45%;
+  }
+  // Legibility: darker at the bottom and on the left, where the words are.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        0deg,
+        v.$color-night 0%,
+        rgb(3 20 14 / 72%) 32%,
+        rgb(3 20 14 / 22%) 68%,
+        rgb(3 20 14 / 45%) 100%
+      ),
+      linear-gradient(90deg, rgb(3 20 14 / 72%) 0%, transparent 70%);
+  }
+}
+// Compact: about half of a desktop screen, the shop shows right below.
+.inner {
+  @include m.container;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+  min-height: clamp(21rem, 48vh, 31rem);
+  padding-block: 1.25rem clamp(1.5rem, 4vh, 2.75rem);
+  // The breadcrumb, light on the view.
+  > nav {
+    margin-bottom: 0;
+    color: rgb(251 244 223 / 72%);
+    a:hover {
+      color: v.$color-gold-light;
+    }
+    [aria-current] {
+      color: v.$color-text-on-dark;
+    }
+  }
+}
+.content {
+  display: grid;
+  justify-items: start;
+  gap: 0.9rem;
+  max-width: 40rem;
+  h1 {
+    font-size: clamp(2.6rem, 1.7rem + 3.8vw, 5rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 2px 26px rgb(3 20 14 / 45%);
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: v.$color-gold-light;
+  span {
+    width: 2rem;
+    height: 1px;
+    background: currentColor;
+  }
+}
+.lead {
+  max-width: 34rem;
+  color: #eef1e8;
+  font-size: v.$text-lead;
+  line-height: 1.6;
+}
+// The counter's figures: real counts, prices and games.
+.facts {
+  max-width: 38rem;
+  color: v.$color-muted-on-night;
+  font-size: v.$text-small;
+  line-height: 1.7;
+  p + p {
+    margin-top: 0.15rem;
+  }
+  a {
+    color: v.$color-text-on-dark;
+    text-decoration: underline;
+    text-decoration-color: rgb(244 217 133 / 45%);
+    text-underline-offset: 3px;
+    &:hover {
+      color: v.$color-gold-light;
+    }
+  }
+}
+.explore {
+  margin-top: 0.6rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .content > * {
+    animation: rise 800ms v.$ease-out both;
+  }
+  .content > :nth-child(2) {
+    animation-delay: 90ms;
+  }
+  .content > :nth-child(3) {
+    animation-delay: 180ms;
+  }
+  .content > :nth-child(n + 4) {
+    animation-delay: 270ms;
+  }
+  // A little depth as the page goes down to the products.
+  @supports (animation-timeline: scroll()) {
+    .media img {
+      animation: drift-down linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 70vh;
+    }
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drift-down {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1.06) translateY(6%);
+  }
+}

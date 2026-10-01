@@ -6,15 +6,22 @@ import { ProductFavorite } from './ProductFavorite';
 import type { CatalogProduct } from '@/types/product';
 import { formatPrice } from '@/utils/formatPrice';
 import styles from './ProductCard.module.scss';
+/** The listing grid: 2 columns on phones, 3 on tablets, 4 from 75rem. */
+const GRID_SIZES =
+  '(min-width: 1200px) 300px, (min-width: 768px) 31vw, (min-width: 360px) 46vw, 90vw';
+
 export function ProductCard({
   product,
   compact = false,
   tone = 'day',
+  sizes = GRID_SIZES,
 }: {
   product: CatalogProduct;
   compact?: boolean;
   /** `night`: on the dark sections of the home page. */
   tone?: 'day' | 'night';
+  /** Width of the card where it is shown; the listing grid by default. */
+  sizes?: string;
 }) {
   return (
     <article
@@ -37,11 +44,7 @@ export function ProductCard({
             src={product.image}
             alt={product.imageAlt}
             fill
-            sizes={
-              compact
-                ? '(min-width: 768px) 160px, 120px'
-                : '(min-width: 1200px) 300px, (min-width: 768px) 42vw, 80vw'
-            }
+            sizes={compact ? '(min-width: 768px) 160px, 120px' : sizes}
           />
         </Link>
       </div>
@@ -53,6 +56,10 @@ export function ProductCard({
         <h3>
           <Link href={`/produit/${product.slug}`}>{product.name}</Link>
         </h3>
+        {/* Pre-order, sold out and last pieces already show as a badge. */}
+        {product.availability === 'IN_STOCK' && (
+          <p className={styles.availability}>En stock</p>
+        )}
         <div className={styles.bottom}>
           <div className={styles.price}>
             {product.price === null ? (

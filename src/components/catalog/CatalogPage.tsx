@@ -31,6 +31,7 @@ import { CatalogToolbar } from './CatalogToolbar';
 import { ActiveFilters } from './ActiveFilters';
 import { CatalogGrid } from './CatalogGrid';
 import { CatalogPagination } from './CatalogPagination';
+import { CatalogQuickNav } from './CatalogQuickNav';
 import { EmptyCatalog } from './EmptyCatalog';
 import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
 import styles from './Catalog.module.scss';
@@ -81,80 +82,102 @@ export async function catalogListingMetadata({
 }
 
 /**
- * Filters, toolbar, active filters, grid and crawlable pagination of a loaded
- * listing, then its internal links. A scope without any product and without
- * refinement shows `emptyState` (the default empty message otherwise) and no
- * filter.
+ * The products of a loaded listing: the families at a glance, the
+ * exploration bar (count, search, filters drawer, order), the active
+ * filters, the grid and its crawlable pagination, then the internal links.
+ * A scope without any product and without refinement shows `emptyState`
+ * (the default empty message otherwise), without filters. `interlude`, when
+ * given, opens a window on the universe between two rows of products.
  */
 export function CatalogResults({
   load,
   path,
   emptyState,
   linkGroups,
+  interlude,
 }: {
   load: CatalogLoad;
   path: string;
   emptyState?: ReactNode;
   linkGroups?: SeoLinkGroup[];
+  interlude?: ReactNode;
 }) {
   const { filters, facets, result, total } = load;
   const links = linkGroups?.length ? (
     <CatalogLinks groups={linkGroups} />
   ) : null;
+  const newsletter = (
+    <NewsletterCta
+      eyebrow="Réassorts et nouveautés"
+      title="Soyez prévenu quand de nouvelles cartes arrivent"
+    >
+      Recevez les prochains réassorts, sorties et sélections sans avoir à
+      surveiller le catalogue.
+    </NewsletterCta>
+  );
   if (!total && !load.hasRefinements)
     return (
       <>
         {emptyState ?? <EmptyCatalog filters={filters} path={path} />}
         {links}
-        <NewsletterCta
-          eyebrow="Réassorts et nouveautés"
-          title="Soyez prévenu quand de nouvelles cartes arrivent"
-        >
-          Recevez les prochains réassorts, sorties et sélections sans avoir à
-          surveiller le catalogue.
-        </NewsletterCta>
+        {newsletter}
       </>
     );
   return (
     <>
-      <div className={styles.layout} id="catalogue-resultats">
-        <CatalogFilters
-          filters={filters}
-          facets={facets}
-          scope={load.scope}
-          path={path}
-        />
-        <div className={styles.results}>
-          <h2 className={styles.srOnly}>Produits</h2>
-          <CatalogToolbar filters={filters} path={path} total={total} />
-          {total > 0 && activeFilterCount(filters) > 0 && (
-            <p className={styles.resultCount}>
-              {total}{' '}
-              {total > 1 ? 'produits correspondent' : 'produit correspond'} à
-              ces critères.
-            </p>
-          )}
-          <ActiveFilters filters={filters} facets={facets} path={path} />
-          {result.products.length ? (
-            <CatalogGrid products={result.products} />
-          ) : (
-            <EmptyCatalog filters={filters} path={path} />
-          )}
-          <CatalogPagination
-            filters={filters}
-            path={path}
-            pageCount={load.pageCount}
-          />
-        </div>
-      </div>
-      {links}
-      <NewsletterCta
-        eyebrow="Réassorts et nouveautés"
-        title="Soyez prévenu quand de nouvelles cartes arrivent"
+      <section
+        className={styles.explorer}
+        id="catalogue-resultats"
+        aria-labelledby="catalogue-produits"
       >
-        Recevez les prochains réassorts, sorties et sélections sans avoir à
-        surveiller le catalogue.
-      </NewsletterCta>
+        <h2 id="catalogue-produits" className={styles.srOnly}>
+          Produits
+        </h2>
+        <CatalogQuickNav facets={facets} filters={filters} path={path} />
+        <CatalogToolbar
+          filters={filters}
+          path={path}
+          total={total}
+          filterControl={
+            <CatalogFilters
+              filters={filters}
+              facets={facets}
+              scope={load.scope}
+              path={path}
+              total={total}
+            />
+          }
+        />
+        {activeFilterCount(filters) > 0 && (
+          <div className={styles.refinements}>
+            {total > 0 && (
+              <p className={styles.resultCount}>
+                {total}{' '}
+                {total > 1 ? 'produits correspondent' : 'produit correspond'} à
+                ces critères.
+              </p>
+            )}
+            <ActiveFilters filters={filters} facets={facets} path={path} />
+          </div>
+        )}
+        {result.products.length ? (
+          <CatalogGrid
+            products={result.products}
+            interlude={load.hasRefinements ? undefined : interlude}
+          />
+        ) : (
+          <EmptyCatalog filters={filters} path={path} />
+        )}
+        <CatalogPagination
+          filters={filters}
+          path={path}
+          pageCount={load.pageCount}
+          total={total}
+          pageSize={result.pageSize}
+        />
+      </section>
+      {links}
+      {newsletter}
     </>
   );
 }

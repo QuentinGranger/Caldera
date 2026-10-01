@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useId, useRef, useTransition } from 'react';
+import { useId, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
@@ -28,7 +28,20 @@ type Props = {
   facets: CatalogFacets;
   scope: CatalogScope;
   path: string;
+  /** Products matching the current filters. */
+  total: number;
 };
+/** Everything but the search, which has its own field. */
+const NO_FILTERS = {
+  category: [],
+  type: [],
+  set: [],
+  language: [],
+  availability: [],
+  minPrice: undefined,
+  maxPrice: undefined,
+} satisfies Partial<Filters>;
+
 function FilterForm({
   filters,
   facets,
@@ -49,6 +62,18 @@ function FilterForm({
     label: string;
     options: { value: string; label: string; count?: number }[];
   }[] = [
+    ...(stock.length
+      ? [
+          {
+            key: 'availability' as const,
+            label: 'Disponibilité',
+            options: stock.map((value) => ({
+              value,
+              label: stockLabels[value],
+            })),
+          },
+        ]
+      : []),
     {
       key: 'category',
       label: 'Catégorie',
@@ -94,63 +119,61 @@ function FilterForm({
           },
         ]
       : []),
-    ...(stock.length
-      ? [
-          {
-            key: 'availability' as const,
-            label: 'Disponibilité',
-            options: stock.map((value) => ({
-              value,
-              label: stockLabels[value],
-            })),
-          },
-        ]
-      : []),
   ];
+  const shown = sections.filter((section) => section.options.length);
   return (
-    <div aria-busy={pending}>
-      {sections
-        .filter((section) => section.options.length)
-        .map((section) => (
-          <details key={section.key} open className={styles.filterSection}>
-            <summary>
-              {section.label}
-              <ChevronDown size={14} aria-hidden="true" />
-            </summary>
-            <fieldset aria-disabled={pending}>
-              <legend className={styles.srOnly}>{section.label}</legend>
-              {section.options.map((option) => (
-                <label key={option.value} className={styles.checkbox}>
-                  <input
-                    type="checkbox"
-                    checked={(filters[section.key] as string[]).includes(
-                      option.value,
-                    )}
-                    onChange={(event) =>
-                      !pending &&
-                      onChange({
-                        [section.key]: event.target.checked
-                          ? [...filters[section.key], option.value]
-                          : filters[section.key].filter(
-                              (v) => v !== option.value,
-                            ),
-                      })
-                    }
-                  />
-                  <span>
-                    {option.label}
-                    {option.count !== undefined && (
-                      <span className={styles.optionCount}>
-                        {' '}
-                        ({option.count})
-                      </span>
-                    )}
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-          </details>
-        ))}
+    <div className={styles.filterBody} aria-busy={pending}>
+      {shown.map((section, index) => (
+        // The first two sections, and any in use, open from the start.
+        <details
+          key={section.key}
+          open={index < 2 || filters[section.key].length > 0}
+          className={styles.filterSection}
+        >
+          <summary>
+            {section.label}
+            {filters[section.key].length > 0 && (
+              <span className={styles.selected}>
+                {filters[section.key].length}
+                <span className={styles.srOnly}> sélectionné(s)</span>
+              </span>
+            )}
+            <ChevronDown size={16} aria-hidden="true" />
+          </summary>
+          <fieldset aria-disabled={pending}>
+            <legend className={styles.srOnly}>{section.label}</legend>
+            {section.options.map((option) => (
+              <label key={option.value} className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={(filters[section.key] as string[]).includes(
+                    option.value,
+                  )}
+                  onChange={(event) =>
+                    !pending &&
+                    onChange({
+                      [section.key]: event.target.checked
+                        ? [...filters[section.key], option.value]
+                        : filters[section.key].filter(
+                            (v) => v !== option.value,
+                          ),
+                    })
+                  }
+                />
+                <span>
+                  {option.label}
+                  {option.count !== undefined && (
+                    <span className={styles.optionCount}>
+                      {' '}
+                      ({option.count})
+                    </span>
+                  )}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        </details>
+      ))}
       <form
         className={styles.filterSection}
         onSubmit={(event) => {
@@ -205,55 +228,47 @@ function FilterForm({
     </div>
   );
 }
-export function CatalogFilters({ filters, facets, scope, path }: Props) {
+
+/**
+ * The filters in a drawer: from the side on wide screens, from the bottom on
+ * phones. Each choice updates the listing behind at once; the footer tells
+ * how many products remain.
+ */
+export function CatalogFilters({ filters, facets, scope, path, total }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null),
     trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const count = activeFilterCount(filters);
+  // The search has its own field: it is not counted as a filter here.
+  const count = activeFilterCount(filters) - Number(Boolean(filters.search));
   const change = (patch: Partial<Filters>) =>
     startTransition(() =>
       router.push(catalogUrl(path, filters, patch), { scroll: false }),
     );
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 75rem)');
-    const close = () => {
-      if (media.matches) dialog.current?.close();
-    };
-    media.addEventListener('change', close);
-    return () => media.removeEventListener('change', close);
-  }, []);
-  const form = (
-    <FilterForm
-      filters={filters}
-      facets={facets}
-      scope={scope}
-      onChange={change}
-      pending={pending}
-    />
-  );
   return (
     <>
-      <aside className={styles.sidebar} aria-label="Filtres du catalogue">
-        <h2>Affiner l’exploration</h2>
-        {form}
-      </aside>
       <button
         ref={trigger}
-        className={styles.mobileTrigger}
+        className={styles.filtersTrigger}
         type="button"
         aria-haspopup="dialog"
         aria-controls={id}
         onClick={() => dialog.current?.showModal()}
       >
         <SlidersHorizontal size={16} aria-hidden="true" />
-        Filtres{count ? ` (${count})` : ''}
+        <span className={styles.triggerLabel}>Filtres</span>
+        {count > 0 && (
+          <span className={styles.selected}>
+            {count}
+            <span className={styles.srOnly}> actif(s)</span>
+          </span>
+        )}
       </button>
       <dialog
         id={id}
         ref={dialog}
-        className={styles.dialog}
+        className={styles.drawer}
         aria-labelledby={`${id}-title`}
         onClose={() => {
           if (trigger.current?.getClientRects().length) trigger.current.focus();
@@ -271,20 +286,36 @@ export function CatalogFilters({ filters, facets, scope, path }: Props) {
           }
         }}
       >
-        <div className={styles.dialogHeading}>
+        <div className={styles.drawerHeading}>
           <h2 id={`${id}-title`}>Affiner l’exploration</h2>
           <button
             type="button"
             aria-label="Fermer les filtres"
             onClick={() => dialog.current?.close()}
           >
-            <X size={22} />
+            <X size={22} aria-hidden="true" />
           </button>
         </div>
-        {form}
-        <div className={styles.dialogFooter}>
+        <FilterForm
+          filters={filters}
+          facets={facets}
+          scope={scope}
+          onChange={change}
+          pending={pending}
+        />
+        <div className={styles.drawerFooter}>
+          <button
+            type="button"
+            className={styles.textButton}
+            disabled={pending || count === 0}
+            onClick={() => change(NO_FILTERS)}
+          >
+            Effacer les filtres
+          </button>
           <Button disabled={pending} onClick={() => dialog.current?.close()}>
-            Voir les résultats
+            {pending
+              ? 'Mise à jour…'
+              : `Voir ${total} ${total > 1 ? 'produits' : 'produit'}`}
           </Button>
         </div>
       </dialog>

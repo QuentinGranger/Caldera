@@ -3,6 +3,11 @@ import { Compass } from 'lucide-react';
 import { hasCatalogRefinements } from '@/lib/catalog/metadata';
 import { catalogUrl, type CatalogFilters } from '@/lib/catalog/params';
 import styles from './Catalog.module.scss';
+
+/**
+ * No product for this search or these filters: say so plainly, then the
+ * ways back, the widest last.
+ */
 export function EmptyCatalog({
   filters,
   path,
@@ -11,28 +16,33 @@ export function EmptyCatalog({
   path: string;
 }) {
   const refined = hasCatalogRefinements(filters);
+  // Filters other than the search itself.
+  const filtered =
+    refined && catalogUrl(path, filters, { search: '' }) !== path;
   return (
-    <section className={styles.empty}>
-      <Compass size={36} strokeWidth={1} aria-hidden="true" />
-      <h2>
+    <section className={styles.empty} aria-labelledby="catalogue-vide">
+      <Compass size={34} strokeWidth={1.2} aria-hidden="true" />
+      <h2 id="catalogue-vide">
         {filters.search
           ? `Aucun résultat pour « ${filters.search} »`
           : refined
-            ? 'Aucune découverte pour ces critères'
+            ? 'Aucun produit ne correspond à cette exploration'
             : 'Aucun produit disponible pour le moment'}
       </h2>
       <p>
-        {refined
-          ? 'Nous n’avons trouvé aucun produit correspondant à ces critères.'
-          : 'Cette sélection ne contient aucun produit en ligne aujourd’hui.'}
+        {filters.search
+          ? 'Vérifiez l’orthographe, essayez un nom d’extension ou un type de produit.'
+          : refined
+            ? 'Retirez un filtre, ou repartez de toute la sélection.'
+            : 'Cette sélection ne contient aucun produit en ligne aujourd’hui.'}
       </p>
-      <div>
+      <div className={styles.emptyActions}>
         {filters.search && (
           <Link href={catalogUrl(path, filters, { search: '' })}>
             Réinitialiser la recherche
           </Link>
         )}
-        {refined && <Link href={path}>Effacer les filtres</Link>}
+        {filtered && <Link href={path}>Réinitialiser les filtres</Link>}
         {path !== '/catalogue' && (
           <Link href="/catalogue">Voir tout le catalogue</Link>
         )}

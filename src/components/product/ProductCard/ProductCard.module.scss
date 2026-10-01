@@ -3,6 +3,10 @@
 // The product sits on a softly lit stage; on hover it rises a little and the
 // light grows. No border: depth and light separate the cards.
 .card {
+  // A column whose price line sits at the bottom: prices align in a row.
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   min-width: 0;
   color: v.$color-text;
   &:hover .visual,
@@ -42,7 +46,8 @@
     transition: opacity v.$duration-medium v.$ease-out;
   }
   img {
-    padding: 2.75rem 1.9rem 1.75rem;
+    // Proportional: the same air around the product at every card width.
+    padding: 15% 11% 9%;
     object-fit: contain;
     mix-blend-mode: multiply;
     transition: transform v.$duration-long v.$ease-out;
@@ -61,6 +66,9 @@
   z-index: 1;
 }
 .content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 1rem 0.15rem 0;
   h3 {
     font-family: v.$font-body;
@@ -75,6 +83,23 @@
     }
   }
 }
+.availability {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  color: v.$color-green-secondary;
+  font-size: 0.75rem;
+  font-weight: 600;
+  // The word says it; the dot only echoes it.
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
 .category {
   margin-bottom: 0.3rem;
   color: v.$color-text-muted;
@@ -85,7 +110,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
   gap: 0.5rem;
 }
 .price {
@@ -102,6 +128,14 @@
     background v.$duration-short v.$ease-out,
     border-color v.$duration-short v.$ease-out,
     color v.$duration-short v.$ease-out;
+}
+// Pointer devices only: the card's action steps forward on hover.
+@media (hover: hover) {
+  .card:hover .add {
+    border-color: v.$color-green;
+    background: v.$color-green;
+    color: v.$color-text-on-dark;
+  }
 }
 .compact {
   display: grid;
@@ -148,6 +182,9 @@
   .category,
   .comparePrice {
     color: v.$color-muted-on-night;
+  }
+  .availability {
+    color: #9fd3b4;
   }
   .content h3 a:hover {
     color: v.$color-gold-light;
