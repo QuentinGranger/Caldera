@@ -26,6 +26,11 @@ export function rootMetadata(): Metadata {
     title: { default: DEFAULT_TITLE, template: TITLE_TEMPLATE },
     description: DEFAULT_DESCRIPTION,
     applicationName: SITE_NAME,
+    icons: {
+      icon: '/favicon.png',
+      shortcut: '/favicon.png',
+      apple: '/apple-touch-icon.png',
+    },
     openGraph: {
       type: 'website',
       locale: 'fr_FR',
