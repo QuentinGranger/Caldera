@@ -3,15 +3,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { clearCartAction } from '@/lib/cart/actions';
+import type { CartPromotionState } from '@/lib/checkout/types';
 import { useCart } from './CartProvider';
 import { CartItem } from './CartItem';
 import { CartUnavailable } from './CartUnavailable';
 import { CartEmpty } from './CartEmpty';
 import { CartSummary } from './CartSummary';
 import styles from './CartPageContent.module.scss';
-export function CartPageContent() {
+
+export function CartPageContent({
+  initialPromotionState,
+}: {
+  initialPromotionState: CartPromotionState | null;
+}) {
   const { cart, pending, message, execute } = useCart();
   const [confirm, setConfirm] = useState(false);
+
   return (
     <>
       <div className={styles.heading}>
@@ -68,7 +75,10 @@ export function CartPageContent() {
             </div>
           </section>
           <aside>
-            <CartSummary cart={cart} />
+            <CartSummary
+              cart={cart}
+              initialPromotionState={initialPromotionState}
+            />
           </aside>
         </div>
       ) : (

@@ -8,7 +8,7 @@ import {
 } from '@/lib/promotions/pricing';
 import { promotionRule, promotionUsage } from '@/lib/promotions/service';
 import { toCents } from '@/lib/refunds/amounts';
-import { readCheckout } from './queries';
+import { getCheckoutData, readCheckout } from './queries';
 import {
   getCheckoutSummary,
   promotionLines,
@@ -260,4 +260,51 @@ export async function mutateCheckout(
     }
   }
   throw new CheckoutError('La session est occupée. Réessayez.');
+}
+
+
+/**
+ * Apply a promotion directly from the cart. A checkout draft is created only
+ * when needed; the same draft is then reused by /checkout, so the code cannot
+ * be lost between the cart and the order flow.
+ */
+export async function applyPromotionFromCart(
+  token: string | undefined,
+  code: unknown,
+) {
+  await mutateCheckout(token, { kind: 'start' });
+  let data = await getCheckoutData(token);
+  if (!data?.session)
+    throw new CheckoutError(
+      'Impossible de préparer le code promo pour ce panier.',
+    );
+
+  await mutateCheckout(token, {
+    kind: 'promotion',
+    sessionId: data.session.id,
+    code,
+  });
+
+  data = await getCheckoutData(token);
+  if (!data)
+    throw new CheckoutError('Votre panier est introuvable.');
+  return getCheckoutSummary(data);
+}
+
+/** Remove the promotion attached to the cart's checkout draft, if any. */
+export async function removePromotionFromCart(token: string | undefined) {
+  await mutateCheckout(token, { kind: 'start' });
+  let data = await getCheckoutData(token);
+  if (!data?.session)
+    throw new CheckoutError(
+      'Impossible de mettre à jour le code promo de ce panier.',
+    );
+
+  await mutateCheckout(token, {
+    kind: 'promotion-remove',
+    sessionId: data.session.id,
+  });
+
+  data = await getCheckoutData(token);
+  return data ? getCheckoutSummary(data) : null;
 }

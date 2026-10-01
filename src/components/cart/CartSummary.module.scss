@@ -1,43 +1,180 @@
 @use '@/styles/abstracts/variables' as v;
+
 .summary {
   background: v.$color-green-dark;
   color: v.$color-cream;
   padding: clamp(1.25rem, 3vw, 2rem);
   border-radius: v.$radius-small;
+
   h2 {
     font-family: v.$font-heading;
     font-size: 2rem;
     margin-bottom: 1.5rem;
   }
-  dl > div {
+
+  dl > div,
+  .promotionSaving,
+  .promotionTotal {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 0.75rem;
   }
+
   dd {
     font-weight: 700;
   }
+
   p {
     font-size: 0.75rem;
     line-height: 1.8;
     margin-block: 0.9rem;
   }
-  button {
+
+  > div > button,
+  > button {
     width: 100%;
     margin-top: 0.7rem;
     background: v.$color-gold;
     color: v.$color-ink;
+
     &:disabled {
       opacity: 0.7;
     }
   }
+
   .warning {
     padding-block: 1rem;
     border-block: 1px solid v.$color-border-on-dark;
     color: v.$color-gold-light;
   }
+
   .note {
     color: v.$color-muted-on-dark;
+  }
+}
+
+.promotion {
+  margin-block: 1.25rem;
+  padding-block: 1.1rem;
+  border-block: 1px solid v.$color-border-on-dark;
+
+  label,
+  .promotionApplied > div > span {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: v.$color-muted-on-dark;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.promotionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+
+  input {
+    min-width: 0;
+    padding: 0.72rem 0.8rem;
+    color: v.$color-ink;
+    background: v.$color-cream;
+    border: 1px solid transparent;
+    border-radius: v.$radius-small;
+
+    &:focus-visible {
+      border-color: v.$color-gold;
+    }
+  }
+
+  button {
+    width: auto;
+    margin: 0;
+    padding-inline: 1rem;
+    background: v.$color-gold;
+    color: v.$color-ink;
+    border-radius: v.$radius-small;
+  }
+}
+
+.promotionApplied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    color: v.$color-gold-light;
+    letter-spacing: 0.04em;
+  }
+
+  small {
+    margin-top: 0.15rem;
+    color: v.$color-muted-on-dark;
+  }
+
+  button {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    color: v.$color-gold-light;
+    background: transparent;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}
+
+.promotionSaving,
+.promotionTotal {
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid v.$color-border-on-dark;
+}
+
+.promotionSaving strong {
+  color: v.$color-gold-light;
+}
+
+.promotionTotal {
+  font-size: 0.82rem;
+
+  strong {
+    color: v.$color-cream;
+    font-size: 1rem;
+  }
+}
+
+.promotionHint,
+.promotionFeedback,
+.promotionError {
+  margin-bottom: 0 !important;
+}
+
+.promotionHint {
+  color: v.$color-muted-on-dark;
+}
+
+.promotionFeedback {
+  color: v.$color-gold-light;
+}
+
+.promotionError {
+  color: v.$color-gold-light;
+}
+
+@media (max-width: 28rem) {
+  .promotionRow {
+    grid-template-columns: 1fr;
+
+    button {
+      width: 100%;
+    }
   }
 }
