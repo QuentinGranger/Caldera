@@ -36,10 +36,16 @@ main {
   display: contents;
 }
 
-// The 404 is a standalone landscape, including for notFound() in nested routes.
-// CSS applies on the server-rendered markup, without a client effect or a flash.
-body:has([data-caldera-not-found]) .storefront-chrome {
+// Standalone full-screen experiences hide the normal shop chrome on the
+// server-rendered markup, without a client effect or a flash.
+body:has([data-caldera-not-found]) .storefront-chrome,
+body:has([data-caldera-construction]) .storefront-chrome {
   display: none;
+}
+
+body:has([data-caldera-construction]) {
+  overflow: hidden;
+  background: #07110f;
 }
 
 section[id],
