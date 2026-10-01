@@ -266,7 +266,8 @@ export interface DefinedTermSetInput {
   path: string;
   name: string;
   description?: string | null;
-  terms: readonly { path: string; name: string }[];
+  /** A term defined on the set's page itself has an anchor path (« #… »). */
+  terms: readonly { path: string; name: string; description?: string }[];
 }
 
 export function definedTermSetNode({
@@ -283,8 +284,12 @@ export function definedTermSetNode({
     url: absoluteUrl(path),
     hasDefinedTerm: terms.map((term) => ({
       '@type': 'DefinedTerm',
-      '@id': termId(term.path),
+      // An anchor already identifies the term; a page gets « #term ».
+      '@id': term.path.includes('#')
+        ? absoluteUrl(term.path)
+        : termId(term.path),
       name: term.name,
+      description: term.description || undefined,
       url: absoluteUrl(term.path),
     })),
   });

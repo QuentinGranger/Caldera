@@ -12,6 +12,11 @@ import {
   type ContentPage,
 } from '@/lib/content';
 import { GLOSSARY_SLUG_BY_PRODUCT_TYPE } from '@/lib/content/library';
+import {
+  getGlossaryDocument,
+  type GlossaryDocument,
+} from '@/lib/content/glossaryDocument';
+import { isShopGame } from '@/lib/catalog/shopGame';
 import { getContentLinks, type ContentLinks } from '@/lib/seo/links';
 import { formatDateFr, listFr, type MetadataText } from '@/lib/seo/metadata';
 import type { IndexDecision } from '@/lib/seo/types';
@@ -20,19 +25,15 @@ import {
   GUIDES_PATH,
   GUIDE_KINDS_IN_TEXT,
   editorialDecision,
-  fitList,
   fitSentences,
   fittingTitle,
-  groupByLetter,
   groupGuides,
   guideCountsLabel,
   isGuideKind,
   kindCount,
   latestUpdate,
-  lowerFirst,
   upperFirst,
   type KindGroup,
-  type LetterGroup,
 } from './editorial';
 
 const PRODUCT_LIMIT = 8;
@@ -104,65 +105,48 @@ export const getGuidesIndex = cache(async (): Promise<GuidesIndex> => {
 });
 
 export interface GlossaryIndex {
-  letters: LetterGroup[];
-  terms: ContentEntry[];
+  /** The A to Z of the Pokémon TCG (content/pages/glossaire-pokemon.md). */
+  document: GlossaryDocument;
+  /** Terms with a page of their own, about Pokémon or no game in particular. */
+  fiches: ContentEntry[];
   heading: string;
-  /** « 29 termes définis, de Blister à Version japonaise. » */
+  /** « 170 termes du JCC Pokémon, d’Ability à Lost Zone. » */
   summary: string;
   updated: Date | null;
   text: MetadataText;
   decision: IndexDecision;
 }
 
-/** « ETB (Elite Trainer Box) » → « ETB », « Carte promo » → « carte promo ». */
-function termName(title: string): string {
-  const name = title.replace(/\s*\([^)]*\)\s*$/, '').trim();
-  const [first = '', ...rest] = name.split(' ');
-  const keepCase =
-    /\p{Lu}/u.test(first.slice(1)) || rest.some((w) => /\p{Lu}/u.test(w));
-  return keepCase ? name : lowerFirst(name);
-}
-
-const TYPE_TERMS = new Set(
-  Object.values(GLOSSARY_SLUG_BY_PRODUCT_TYPE).filter((slug): slug is string =>
-    Boolean(slug),
-  ),
-);
-
 export const getGlossaryIndex = cache(async (): Promise<GlossaryIndex> => {
-  const all = await getAllContent();
-  const terms = all.filter((entry) => entry.kind === 'glossaire');
-  const letters = groupByLetter(terms);
-  const ordered = letters.flatMap((group) => group.entries);
-  const first = ordered[0];
-  const last = ordered.at(-1);
-  const heading = 'Glossaire des cartes à collectionner';
+  const [all, document] = await Promise.all([
+    getAllContent(),
+    getGlossaryDocument(),
+  ]);
+  const fiches = all.filter(
+    (entry) => entry.kind === 'glossaire' && isShopGame(entry.games),
+  );
+  const { terms } = document;
+  const first = terms[0]?.text.split(' — ')[0];
+  const last = terms.at(-1)?.text.split(' — ')[0];
   const summary = !terms.length
     ? 'Aucun terme publié pour le moment.'
-    : first && last && ordered.length > 1
-      ? `${kindCount('glossaire', terms.length)} définis, de ${first.title} à ${last.title}.`
-      : `${kindCount('glossaire', terms.length)} défini.`;
-  // Product formats first: the words met on the product pages.
-  const featured = [
-    ...ordered.filter((entry) => TYPE_TERMS.has(entry.slug)),
-    ...ordered.filter((entry) => !TYPE_TERMS.has(entry.slug)),
-  ].map((entry) => termName(entry.title));
+    : `${kindCount('glossaire', terms.length)} du JCC Pokémon, de ${first} à ${last}.`;
+  const updates = [document.updated, latestUpdate(fiches)].filter(
+    (date): date is Date => date !== null,
+  );
   return {
-    letters,
-    terms: ordered,
-    heading,
+    document,
+    fiches,
+    heading: document.title,
     summary,
-    updated: latestUpdate(terms),
-    text: {
-      title: fittingTitle(`${heading} (JCC)`, heading),
-      description: terms.length
-        ? fitList(
-            `Définitions de ${kindCount('glossaire', terms.length)} des cartes à collectionner : `,
-            featured,
-          )
-        : summary,
-    },
-    decision: editorialDecision(GLOSSARY_PATH, terms.length > 0),
+    updated: updates.length
+      ? new Date(Math.max(...updates.map((date) => date.getTime())))
+      : null,
+    text: { title: document.title, description: document.description },
+    decision: editorialDecision(
+      GLOSSARY_PATH,
+      terms.length > 0 || fiches.length > 0,
+    ),
   };
 });
 

@@ -114,10 +114,15 @@ test('index des guides et du glossaire indexables tant qu’ils ont du contenu',
     content.getGlossaryIndex(),
   ]);
   assert.equal(guides.decision.index, guides.groups.length > 0);
-  assert.equal(glossary.decision.index, glossary.terms.length > 0);
   assert.equal(
-    glossary.letters.reduce((total, group) => total + group.entries.length, 0),
-    glossary.terms.length,
+    glossary.decision.index,
+    glossary.document.terms.length + glossary.fiches.length > 0,
+  );
+  // The detailed pages listed with the A to Z: Pokémon, or no game at all.
+  assert.ok(
+    glossary.fiches.every(
+      (entry) => !entry.games.length || entry.games.includes('pokemon'),
+    ),
   );
 });
 

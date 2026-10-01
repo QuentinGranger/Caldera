@@ -1,0 +1,226 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+// The A to Z: each letter held in the margin while its terms go by; the
+// themed sections lay their terms out as small cards.
+
+// Under the header, and the letter bar where it is sticky (from tablets).
+$anchor-offset: calc(var(--header-height) + 5rem);
+@mixin anchor {
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+  @include m.from(v.$breakpoint-tablet) {
+    scroll-margin-top: $anchor-offset;
+  }
+}
+
+.themes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin: -0.75rem 0 2rem;
+  > p {
+    @include m.eyebrow;
+    color: v.$color-green-secondary;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: inline-block;
+    padding-block: 0.4rem;
+    color: v.$color-text;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: v.$color-border;
+    text-underline-offset: 4px;
+    &:hover {
+      color: v.$color-green;
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+// Shared by both kinds of section: the term headings and their definition.
+.letter,
+.theme {
+  padding-block: 2rem;
+  border-top: 1px solid v.$color-border;
+  h2 {
+    @include anchor;
+  }
+  h3 {
+    @include anchor;
+    color: v.$color-green-dark;
+    font: 500 clamp(1.3rem, 2.2vw, 1.55rem) / 1.15 v.$font-heading;
+  }
+  p,
+  ul {
+    max-width: 46rem;
+    margin-top: 0.5rem;
+    color: v.$color-text-muted;
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+  ul {
+    padding-left: 1.2rem;
+  }
+  li + li {
+    margin-top: 0.15rem;
+  }
+  strong {
+    color: v.$color-text;
+  }
+  // The link to a term's own page.
+  p:has(> a[href^='/glossaire/']:only-child) {
+    margin-top: 0.6rem;
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-height: 32px;
+      color: v.$color-green-secondary;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: underline;
+      text-decoration-color: rgb(11 102 80 / 35%);
+      text-underline-offset: 4px;
+      &::after {
+        content: '→';
+        transition: transform v.$duration-short v.$ease-out;
+      }
+      &:hover::after {
+        transform: translateX(3px);
+      }
+    }
+  }
+}
+
+// A letter: the letter on the left, held while its terms scroll by.
+.letter {
+  display: grid;
+  gap: 1rem;
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .heading {
+    @include m.from(v.$breakpoint-tablet) {
+      position: sticky;
+      top: $anchor-offset;
+      align-self: start;
+    }
+  }
+  h2 {
+    color: v.$color-gold;
+    font: 500 clamp(2.4rem, 4vw, 3.2rem) / 1 v.$font-heading;
+  }
+}
+.entries {
+  display: grid;
+  gap: 1.6rem;
+  min-width: 0;
+}
+.term {
+  min-width: 0;
+}
+
+// A themed section: its title over the width, its terms as cards.
+.theme {
+  h2 {
+    max-width: 40rem;
+    color: v.$color-green-dark;
+    font: 500 clamp(1.9rem, 3.4vw, 2.6rem) / 1.05 v.$font-heading;
+    letter-spacing: -0.02em;
+  }
+  .entries {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: 0.9rem;
+    margin-top: 1.25rem;
+  }
+  .sectionIntro {
+    grid-column: 1 / -1;
+    p:first-child {
+      margin-top: 0;
+    }
+  }
+  .term {
+    padding: 1.1rem 1.2rem 1.2rem;
+    border-radius: v.$radius-medium;
+    background: v.$color-surface;
+    box-shadow: inset 0 0 0 1px v.$color-border;
+    h3 {
+      font-size: 1.25rem;
+    }
+    p {
+      font-size: 0.86rem;
+      line-height: 1.65;
+    }
+  }
+}
+
+// The pages of their own, after the A to Z.
+.fiches {
+  padding-block: 2rem;
+  border-top: 1px solid v.$color-border;
+  // Above the global section[id] rule.
+  &[id] {
+    @include anchor;
+  }
+  h2 {
+    color: v.$color-green-dark;
+    font: 500 clamp(1.9rem, 3.4vw, 2.6rem) / 1.05 v.$font-heading;
+    letter-spacing: -0.02em;
+  }
+  > p {
+    max-width: 46rem;
+    margin-top: 0.5rem;
+    color: v.$color-text-muted;
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: 0.25rem 1.5rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: inline-block;
+    padding-block: 0.45rem;
+    color: v.$color-text;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    text-decoration-color: v.$color-border;
+    text-underline-offset: 4px;
+    &:hover {
+      color: v.$color-green;
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+// The signature of the glossary.
+.closing {
+  margin-top: 1rem;
+  padding: clamp(2rem, 5vw, 3rem) 0 1rem;
+  border-top: 1px solid v.$color-border;
+  text-align: center;
+  p:first-child {
+    @include m.eyebrow;
+    color: v.$color-gold;
+  }
+  p + p {
+    margin-top: 0.75rem;
+    color: v.$color-green-dark;
+    font: italic 500 clamp(1.4rem, 2.6vw, 1.9rem) / 1.25 v.$font-heading;
+  }
+}
