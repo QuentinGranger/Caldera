@@ -41,6 +41,15 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
     include: { variants: true },
   });
   const variantId = product.variants[0]!.id;
+  const promotion = await db.promotion.create({
+    data: {
+      code: `CART-${key.slice(0, 8).toUpperCase()}`,
+      label: 'Panier −10 %',
+      type: 'PERCENTAGE',
+      percentOff: 10,
+      isActive: true,
+    },
+  });
   let cookie = '';
   async function action(
     name: string,
@@ -112,6 +121,43 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
         assert.match(await page(), /59,90/);
       },
     );
+    await t.test(
+      'code promo : saisie dans le panier, remise visible et conservation au checkout',
+      async () => {
+        assert.match(await page(), /Code promo/);
+
+        const applied = await action('applyCartPromotionAction', [
+          `  ${promotion.code.toLowerCase()}  `,
+        ]);
+        assert.equal(applied.response.status, 200);
+        assert.match(applied.body, /"success":true/);
+
+        const discounted = await page();
+        assert.match(discounted, new RegExp(promotion.code));
+        assert.match(discounted, /5,99/);
+        assert.match(discounted, /53,91/);
+
+        const started = await action('startCheckoutAction', []);
+        assert.match(started.body, /"success":true/);
+
+        const checkout = await fetch(`${base}/checkout?step=contact`, {
+          headers: { Cookie: cookie },
+          redirect: 'manual',
+        });
+        assert.equal(checkout.status, 200);
+        const checkoutHtml = await checkout.text();
+        assert.match(checkoutHtml, new RegExp(promotion.code));
+        assert.match(checkoutHtml, /5,99/);
+        assert.match(checkoutHtml, /53,91/);
+
+        const removed = await action('removeCartPromotionAction', []);
+        assert.match(removed.body, /"success":true/);
+        const clean = await page();
+        assert.match(clean, /Code promo/);
+        assert.doesNotMatch(clean, new RegExp(promotion.code));
+      },
+    );
+
     await t.test(
       'cumul, update et stock : badge et quantité servis immédiatement',
       async () => {
@@ -215,6 +261,7 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
         tokenHash: { in: [...tokens].map((token) => cartTokenHash(token)!) },
       },
     });
+    await db.promotion.delete({ where: { id: promotion.id } });
     await db.productVariant.deleteMany({ where: { productId: product.id } });
     await db.product.delete({ where: { id: product.id } });
     await db.category.delete({ where: { id: category.id } });
