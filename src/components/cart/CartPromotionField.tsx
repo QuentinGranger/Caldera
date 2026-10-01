@@ -35,10 +35,6 @@ export function CartPromotionField({
   const previousFingerprint = useRef(fingerprint);
 
   useEffect(() => {
-    setState(initialState);
-  }, [initialState]);
-
-  useEffect(() => {
     if (previousFingerprint.current === fingerprint) return;
     previousFingerprint.current = fingerprint;
     startTransition(async () => {
