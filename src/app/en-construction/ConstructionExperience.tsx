@@ -46,7 +46,7 @@ export function ConstructionExperience() {
     return () => {
       const current = Object.getOwnPropertyDescriptor(window, command);
       if (current?.configurable) {
-        delete (window as Window & Record<string, unknown>)[command];
+        Reflect.deleteProperty(window, command);
       }
     };
   }, []);
