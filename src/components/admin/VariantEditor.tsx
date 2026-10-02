@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { ProductLanguage } from '@/generated/prisma/client';
 import { saveVariantAction } from '@/lib/admin/actions';
-import { formatDate, label } from '@/lib/admin/format';
+import { euros, formatDate, label } from '@/lib/admin/format';
+import { landedCost } from '@/lib/finance/landedCost';
 import { AdminForm } from './AdminForm';
 import { Field, SelectField, Check, Hidden } from './AdminFields';
 import { AdminTable, IntegrityWarning } from './AdminUI';
@@ -16,6 +17,18 @@ export function VariantEditor({
   productId: string;
   variant?: Variant;
 }) {
+  const currentLandedCost = variant
+    ? landedCost({
+        costPrice: variant.costPrice,
+        inboundShippingCost: variant.inboundShippingCost,
+        procurementFees: variant.procurementFees,
+      })
+    : null;
+  const currentMarginRate =
+    variant && currentLandedCost && variant.price.gt(0)
+      ? variant.price.minus(currentLandedCost).div(variant.price).mul(100)
+      : null;
+
   return (
     <>
       <AdminForm
@@ -77,10 +90,24 @@ export function VariantEditor({
             defaultValue={variant?.compareAtPrice?.toFixed(2) ?? ''}
           />
           <Field
-            label="Coût d’achat (€), interne"
+            label="Coût d’achat unitaire (€), interne"
             name="costPrice"
             inputMode="decimal"
             defaultValue={variant?.costPrice?.toFixed(2) ?? ''}
+          />
+          <Field
+            label="Transport fournisseur / unité (€)"
+            name="inboundShippingCost"
+            inputMode="decimal"
+            required
+            defaultValue={variant?.inboundShippingCost.toFixed(2) ?? '0.00'}
+          />
+          <Field
+            label="Autres frais d’approvisionnement / unité (€)"
+            name="procurementFees"
+            inputMode="decimal"
+            required
+            defaultValue={variant?.procurementFees.toFixed(2) ?? '0.00'}
           />
           <Field
             label="Seuil de stock faible"
@@ -111,6 +138,18 @@ export function VariantEditor({
             />
           )}
         </div>
+        <p className={styles.muted}>
+          Coût rendu = achat + transport fournisseur par unité + autres frais
+          d’approvisionnement.
+          {currentLandedCost && (
+            <>
+              {' '}Actuel : <strong>{euros(currentLandedCost)}</strong>
+              {currentMarginRate && (
+                <> · marge brute théorique : <strong>{currentMarginRate.toFixed(1)} %</strong></>
+              )}
+            </>
+          )}
+        </p>
         <div className={styles.checks}>
           <Check
             name="isActive"
