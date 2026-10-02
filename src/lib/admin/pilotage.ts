@@ -45,59 +45,59 @@ export async function getBusinessPilotage() {
   const [rawItems, variants, productOptions, refunds, paidOrders] =
     await Promise.all([
       db.orderItem.findMany({
-      where: { order: orderWhere },
-      select: {
-        productId: true,
-        productName: true,
-        lineTotal: true,
-        discountAmount: true,
-        unitCost: true,
-        quantity: true,
-        order: { select: { paidAt: true } },
-        refundItems: {
-          where: { refund: { status: 'SUCCEEDED' } },
-          select: {
-            amount: true,
-            quantity: true,
-            refund: { select: { restockedAt: true } },
+        where: { order: orderWhere },
+        select: {
+          productId: true,
+          productName: true,
+          lineTotal: true,
+          discountAmount: true,
+          unitCost: true,
+          quantity: true,
+          order: { select: { paidAt: true } },
+          refundItems: {
+            where: { refund: { status: 'SUCCEEDED' } },
+            select: {
+              amount: true,
+              quantity: true,
+              refund: { select: { restockedAt: true } },
+            },
           },
         },
-      },
-    }),
+      }),
       db.productVariant.findMany({
-      where: {
-        isActive: true,
-        product: { status: { not: 'ARCHIVED' } },
-      },
-      select: {
-        productId: true,
-        stockQuantity: true,
-        costPrice: true,
-        inboundShippingCost: true,
-        procurementFees: true,
-      },
-    }),
+        where: {
+          isActive: true,
+          product: { status: { not: 'ARCHIVED' } },
+        },
+        select: {
+          productId: true,
+          stockQuantity: true,
+          costPrice: true,
+          inboundShippingCost: true,
+          procurementFees: true,
+        },
+      }),
       db.product.findMany({
-      where: {
-        OR: [
-          { status: { not: 'ARCHIVED' } },
-          { pilotageLaunches: { some: { settingsId: SETTINGS_ID } } },
-        ],
-      },
-      select: { id: true, name: true, productType: true, status: true },
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
-    }),
+        where: {
+          OR: [
+            { status: { not: 'ARCHIVED' } },
+            { pilotageLaunches: { some: { settingsId: SETTINGS_ID } } },
+          ],
+        },
+        select: { id: true, name: true, productType: true, status: true },
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+      }),
       db.refund.findMany({
-      where: { status: 'SUCCEEDED', order: orderWhere },
-      select: {
-        amount: true,
-        shippingAmount: true,
-        items: { select: { amount: true } },
-      },
-    }),
+        where: { status: 'SUCCEEDED', order: orderWhere },
+        select: {
+          amount: true,
+          shippingAmount: true,
+          items: { select: { amount: true } },
+        },
+      }),
       db.order.findMany({
-      where: orderWhere,
-      select: { totalAmount: true, paidAt: true },
+        where: orderWhere,
+        select: { totalAmount: true, paidAt: true },
       }),
     ]);
 
@@ -362,15 +362,15 @@ export async function saveBusinessPilotage(form: FormData) {
   const minimumMarginRate = money(form, 'minimumMarginRate')!;
   const maxStockBudget = money(form, 'maxStockBudget')!;
   const cashBalance = signedMoney(form, 'cashBalance');
-  const cashReserveTarget = money(form, 'cashReserveTarget')!;
-  const monthlyFixedCosts = money(form, 'monthlyFixedCosts')!;
-  const monthlyPackagingBudget = money(form, 'monthlyPackagingBudget')!;
-  const monthlyShippingBudget = money(form, 'monthlyShippingBudget')!;
-  const monthlyMarketingBudget = money(form, 'monthlyMarketingBudget')!;
-  const monthlyOtherCosts = money(form, 'monthlyOtherCosts')!;
-  const paymentFeeRate = money(form, 'paymentFeeRate')!;
-  const paymentFixedFee = money(form, 'paymentFixedFee')!;
-  const reinvestmentRate = money(form, 'reinvestmentRate')!;
+  const cashReserveTarget = money(form, 'cashReserveTarget', true);
+  const monthlyFixedCosts = money(form, 'monthlyFixedCosts', true);
+  const monthlyPackagingBudget = money(form, 'monthlyPackagingBudget', true);
+  const monthlyShippingBudget = money(form, 'monthlyShippingBudget', true);
+  const monthlyMarketingBudget = money(form, 'monthlyMarketingBudget', true);
+  const monthlyOtherCosts = money(form, 'monthlyOtherCosts', true);
+  const paymentFeeRate = money(form, 'paymentFeeRate', true);
+  const paymentFixedFee = money(form, 'paymentFixedFee', true);
+  const reinvestmentRate = money(form, 'reinvestmentRate', true);
   const trackingStartDate = date(form, 'trackingStartDate');
   if (number(revenueTarget) <= 0)
     throw new AdminError("L'objectif de chiffre d'affaires doit être supérieur à 0 €.");
@@ -416,15 +416,15 @@ export async function saveBusinessPilotage(form: FormData) {
         minimumMarginRate,
         maxStockBudget,
         cashBalance,
-        cashReserveTarget,
-        monthlyFixedCosts,
-        monthlyPackagingBudget,
-        monthlyShippingBudget,
-        monthlyMarketingBudget,
-        monthlyOtherCosts,
-        paymentFeeRate,
-        paymentFixedFee,
-        reinvestmentRate,
+        cashReserveTarget: cashReserveTarget ?? undefined,
+        monthlyFixedCosts: monthlyFixedCosts ?? undefined,
+        monthlyPackagingBudget: monthlyPackagingBudget ?? undefined,
+        monthlyShippingBudget: monthlyShippingBudget ?? undefined,
+        monthlyMarketingBudget: monthlyMarketingBudget ?? undefined,
+        monthlyOtherCosts: monthlyOtherCosts ?? undefined,
+        paymentFeeRate: paymentFeeRate ?? undefined,
+        paymentFixedFee: paymentFixedFee ?? undefined,
+        reinvestmentRate: reinvestmentRate ?? undefined,
         trackingStartDate,
       },
       update: {
@@ -432,15 +432,15 @@ export async function saveBusinessPilotage(form: FormData) {
         minimumMarginRate,
         maxStockBudget,
         cashBalance,
-        cashReserveTarget,
-        monthlyFixedCosts,
-        monthlyPackagingBudget,
-        monthlyShippingBudget,
-        monthlyMarketingBudget,
-        monthlyOtherCosts,
-        paymentFeeRate,
-        paymentFixedFee,
-        reinvestmentRate,
+        cashReserveTarget: cashReserveTarget ?? undefined,
+        monthlyFixedCosts: monthlyFixedCosts ?? undefined,
+        monthlyPackagingBudget: monthlyPackagingBudget ?? undefined,
+        monthlyShippingBudget: monthlyShippingBudget ?? undefined,
+        monthlyMarketingBudget: monthlyMarketingBudget ?? undefined,
+        monthlyOtherCosts: monthlyOtherCosts ?? undefined,
+        paymentFeeRate: paymentFeeRate ?? undefined,
+        paymentFixedFee: paymentFixedFee ?? undefined,
+        reinvestmentRate: reinvestmentRate ?? undefined,
         trackingStartDate,
       },
     });
