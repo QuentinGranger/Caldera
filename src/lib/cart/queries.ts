@@ -15,6 +15,8 @@ export const cartVariantSelect = {
   language: true,
   price: true,
   costPrice: true,
+  inboundShippingCost: true,
+  procurementFees: true,
   isActive: true,
   stockQuantity: true,
   reservedQuantity: true,
