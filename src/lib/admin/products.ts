@@ -344,12 +344,18 @@ export async function saveVariant(adminId: string, form: FormData) {
         previous: previous
           ? {
               price: previous.price.toFixed(2),
+              costPrice: previous.costPrice?.toFixed(2) ?? null,
+              inboundShippingCost: previous.inboundShippingCost.toFixed(2),
+              procurementFees: previous.procurementFees.toFixed(2),
               isActive: previous.isActive,
               isDefault: previous.isDefault,
             }
           : null,
         next: {
           price: data.price.toFixed(2),
+          costPrice: data.costPrice?.toFixed(2) ?? null,
+          inboundShippingCost: data.inboundShippingCost.toFixed(2),
+          procurementFees: data.procurementFees.toFixed(2),
           isActive: data.isActive,
           isDefault: data.isDefault,
         },
