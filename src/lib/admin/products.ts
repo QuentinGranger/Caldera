@@ -1,6 +1,6 @@
 import 'server-only';
 import {
-  type Prisma,
+  Prisma,
   ProductLanguage,
   ProductType,
 } from '@/generated/prisma/client';
