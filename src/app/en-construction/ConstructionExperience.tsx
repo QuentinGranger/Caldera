@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 
 import styles from './page.module.scss';
@@ -27,29 +27,6 @@ const features = [
 export function ConstructionExperience() {
   const mainRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    const command = 'W3AR3N0T0P3NY3T';
-    const previous = Object.getOwnPropertyDescriptor(window, command);
-
-    if (previous && !previous.configurable) return;
-
-    Object.defineProperty(window, command, {
-      configurable: true,
-      get() {
-        document.cookie =
-          'caldera_preview=1; Path=/; Max-Age=604800; SameSite=Lax; Secure';
-        window.location.assign('/');
-        return 'Ouverture de Caldera…';
-      },
-    });
-
-    return () => {
-      const current = Object.getOwnPropertyDescriptor(window, command);
-      if (current?.configurable) {
-        Reflect.deleteProperty(window, command);
-      }
-    };
-  }, []);
 
   function handlePointerMove(event: ReactPointerEvent<HTMLElement>) {
     const element = mainRef.current;
