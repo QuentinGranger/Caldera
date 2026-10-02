@@ -44,7 +44,7 @@ export async function getBusinessPilotage() {
   };
   const [rawItems, variants, productOptions, refunds, paidOrders] =
     await Promise.all([
-    db.orderItem.findMany({
+      db.orderItem.findMany({
       where: { order: orderWhere },
       select: {
         productId: true,
@@ -64,7 +64,7 @@ export async function getBusinessPilotage() {
         },
       },
     }),
-    db.productVariant.findMany({
+      db.productVariant.findMany({
       where: {
         isActive: true,
         product: { status: { not: 'ARCHIVED' } },
@@ -77,7 +77,7 @@ export async function getBusinessPilotage() {
         procurementFees: true,
       },
     }),
-    db.product.findMany({
+      db.product.findMany({
       where: {
         OR: [
           { status: { not: 'ARCHIVED' } },
@@ -87,7 +87,7 @@ export async function getBusinessPilotage() {
       select: { id: true, name: true, productType: true, status: true },
       orderBy: [{ name: 'asc' }, { id: 'asc' }],
     }),
-    db.refund.findMany({
+      db.refund.findMany({
       where: { status: 'SUCCEEDED', order: orderWhere },
       select: {
         amount: true,
@@ -95,11 +95,11 @@ export async function getBusinessPilotage() {
         items: { select: { amount: true } },
       },
     }),
-    db.order.findMany({
+      db.order.findMany({
       where: orderWhere,
       select: { totalAmount: true, paidAt: true },
-    }),
-  ]);
+      }),
+    ]);
 
   // Revenue net of promotional discounts and refunds. Items put back in stock are no longer sold (nor
   // their cost spent); refunded but lost ones still cost their purchase price.
@@ -391,7 +391,7 @@ export async function saveBusinessPilotage(form: FormData) {
         .getAll('launchProductId')
         .map((value) => {
           if (typeof value !== 'string')
-            throw new AdminError('Produit de lancement invalide.');
+            throw new AdminError('Référence stratégique invalide.');
           return uuid(value);
         }),
     ),
@@ -405,7 +405,7 @@ export async function saveBusinessPilotage(form: FormData) {
       });
       if (count !== launchProductIds.length)
         throw new AdminError(
-          'Un produit de lancement est introuvable ou archivé. Rechargez la page.',
+          'Une référence stratégique est introuvable ou archivée. Rechargez la page.',
         );
     }
     const settings = await tx.businessPilotageSettings.upsert({
