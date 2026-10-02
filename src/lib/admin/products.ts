@@ -285,6 +285,12 @@ export async function saveVariant(adminId: string, form: FormData) {
     throw new AdminError(
       'L’ancien prix ne peut pas être inférieur au prix actuel.',
     );
+  const requestedInboundShippingCost = money(
+    form,
+    'inboundShippingCost',
+    true,
+  );
+  const requestedProcurementFees = money(form, 'procurementFees', true);
   const data = {
     sku: text(form, 'sku', 100),
     barcode: text(form, 'barcode', 100, false) || null,
@@ -293,8 +299,6 @@ export async function saveVariant(adminId: string, form: FormData) {
     price,
     compareAtPrice,
     costPrice: money(form, 'costPrice', true),
-    inboundShippingCost: money(form, 'inboundShippingCost')!,
-    procurementFees: money(form, 'procurementFees')!,
     lowStockThreshold: integer(form, 'lowStockThreshold'),
     isActive: checked(form, 'isActive'),
     isDefault: checked(form, 'isDefault'),
@@ -319,14 +323,30 @@ export async function saveVariant(adminId: string, form: FormData) {
       throw new AdminError(
         'La variante a changé. Rechargez avant d’enregistrer.',
       );
-    if (data.isDefault)
+    const writeData = {
+      ...data,
+      inboundShippingCost:
+        requestedInboundShippingCost ??
+        previous?.inboundShippingCost ??
+        new Prisma.Decimal(0),
+      procurementFees:
+        requestedProcurementFees ??
+        previous?.procurementFees ??
+        new Prisma.Decimal(0),
+    };
+    if (writeData.isDefault)
       await tx.productVariant.updateMany({
         where: { productId, isDefault: true },
         data: { isDefault: false },
       });
     const variant = previous
-      ? await tx.productVariant.update({ where: { id: previous.id }, data })
-      : await tx.productVariant.create({ data: { ...data, productId } });
+      ? await tx.productVariant.update({
+          where: { id: previous.id },
+          data: writeData,
+        })
+      : await tx.productVariant.create({
+          data: { ...writeData, productId },
+        });
     if (!previous && initialStock)
       await changeStock(tx, adminId, variant.id, {
         mode: 'delta',
@@ -352,12 +372,12 @@ export async function saveVariant(adminId: string, form: FormData) {
             }
           : null,
         next: {
-          price: data.price.toFixed(2),
-          costPrice: data.costPrice?.toFixed(2) ?? null,
-          inboundShippingCost: data.inboundShippingCost.toFixed(2),
-          procurementFees: data.procurementFees.toFixed(2),
-          isActive: data.isActive,
-          isDefault: data.isDefault,
+          price: writeData.price.toFixed(2),
+          costPrice: writeData.costPrice?.toFixed(2) ?? null,
+          inboundShippingCost: writeData.inboundShippingCost.toFixed(2),
+          procurementFees: writeData.procurementFees.toFixed(2),
+          isActive: writeData.isActive,
+          isDefault: writeData.isDefault,
         },
         productId,
       },
