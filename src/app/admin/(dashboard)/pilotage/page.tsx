@@ -56,7 +56,7 @@ export default async function PilotagePage() {
           <small>
             {marginKnown
               ? `${euros(metrics.grossMarginAmount)} · seuil ${metrics.minimumMarginRate.toFixed(1)} %`
-              : 'Renseignez les coûts d’achat pour calculer la marge.'}
+              : 'Renseignez les coûts rendus pour calculer la marge.'}
           </small>
         </article>
 
@@ -115,14 +115,14 @@ export default async function PilotagePage() {
           <p className={styles.warning}>
             <AlertTriangle size={18} aria-hidden="true" />
             La marge couvre {metrics.marginCoverage.toFixed(1)} % du CA seulement :
-            certaines ventes n’ont pas de coût d’achat historique.
+            certaines ventes n’ont pas de coût rendu historique.
           </p>
         )}
         {metrics.stockUnitsWithoutCost > 0 && (
           <p className={styles.warning}>
             <AlertTriangle size={18} aria-hidden="true" />
             {metrics.stockUnitsWithoutCost} unité(s) en stock n’ont pas de coût
-            d’achat : la valorisation du stock est donc incomplète.
+            rendu : la valorisation du stock est donc incomplète.
           </p>
         )}
         {marginKnown && metrics.grossMarginRate < metrics.minimumMarginRate && (
@@ -175,7 +175,7 @@ export default async function PilotagePage() {
                 required
               />
               <Field
-                label="Budget maximal immobilisé en stock (€)"
+                label="Budget maximal de stock (€)"
                 name="maxStockBudget"
                 type="number"
                 min="0"
@@ -242,11 +242,11 @@ export default async function PilotagePage() {
             </div>
             <div>
               <dt>Marge brute</dt>
-              <dd>(vente − coût) / vente</dd>
+              <dd>(vente − coût rendu) / vente</dd>
             </div>
             <div>
               <dt>Stock immobilisé</dt>
-              <dd>quantité × coût d’achat</dd>
+              <dd>quantité × coût rendu</dd>
             </div>
             <div>
               <dt>Rotation 30 j</dt>
@@ -264,6 +264,9 @@ export default async function PilotagePage() {
             enregistrés, hors frais Stripe, transport et autres charges, sans
             retraitement comptable de TVA. La trésorerie reste manuelle tant
             qu’aucun compte bancaire n’est connecté.
+            {' '}Le coût rendu correspond au coût d’achat + transport fournisseur
+            par unité + autres frais d’approvisionnement. Les cartons, frais Stripe
+            et le transport vers le client restent hors de cette marge brute.
           </p>
         </aside>
       </div>
