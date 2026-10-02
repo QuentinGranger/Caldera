@@ -22,6 +22,7 @@ const CONSTRUCTION_CURTAIN_ENABLED = true;
 // Remove this helper and the construction rewrite below when Caldera opens.
 function shouldShowConstruction(request: NextRequest) {
   if (!CONSTRUCTION_CURTAIN_ENABLED) return false;
+  if (request.cookies.get('caldera_preview')?.value === '1') return false;
 
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   const { pathname } = request.nextUrl;
