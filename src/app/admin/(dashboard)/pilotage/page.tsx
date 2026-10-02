@@ -19,13 +19,14 @@ export default async function PilotagePage() {
   const targetProgress = Math.min(100, Math.max(0, metrics.targetProgress));
   const budgetProgress = Math.min(100, Math.max(0, metrics.stockBudgetUsage));
   const marginKnown = metrics.coveredRevenue > 0;
+  const resultKnown = marginKnown && metrics.marginCoverage >= 99.9;
 
   return (
     <>
       <span className={styles.eyebrow}>Modèle économique & performance</span>
       <PageHeader
         title="Pilotage économique"
-        description="Fixez les règles de CALDERA puis comparez-les aux ventes et au stock réels."
+        description="Suivez en continu la rentabilité, le stock, les charges, la trésorerie et la capacité de réinvestissement de CALDERA."
       />
 
       <section className={styles.pilotageKpis} aria-label="Indicateurs économiques">
@@ -62,6 +63,36 @@ export default async function PilotagePage() {
 
         <article className={styles.pilotageKpi}>
           <span>
+            <Banknote size={18} aria-hidden="true" />
+            Résultat mensuel estimé
+          </span>
+          <strong>
+            {resultKnown ? euros(metrics.estimatedMonthlyResult) : '—'}
+          </strong>
+          <small>
+            {resultKnown
+              ? `Marge nette estimée ${metrics.estimatedNetMarginRate.toFixed(1)} % · après frais de paiement et budgets d’exploitation`
+              : 'Disponible quand les coûts rendus couvrent toutes les ventes.'}
+          </small>
+        </article>
+
+        <article className={styles.pilotageKpi}>
+          <span>
+            <Target size={18} aria-hidden="true" />
+            Seuil de rentabilité
+          </span>
+          <strong>
+            {metrics.breakEvenRevenue === null
+              ? '—'
+              : euros(metrics.breakEvenRevenue)}
+          </strong>
+          <small>
+            CA mensuel estimé nécessaire pour couvrir le budget d’exploitation.
+          </small>
+        </article>
+
+        <article className={styles.pilotageKpi}>
+          <span>
             <Boxes size={18} aria-hidden="true" />
             Stock immobilisé
           </span>
@@ -79,10 +110,25 @@ export default async function PilotagePage() {
         <article className={styles.pilotageKpi}>
           <span>
             <Banknote size={18} aria-hidden="true" />
-            Trésorerie
+            Trésorerie libre
           </span>
-          <strong>{euros(metrics.cashBalance)}</strong>
-          <small>Solde disponible saisi manuellement.</small>
+          <strong>{euros(metrics.cashAboveReserve)}</strong>
+          <small>
+            Solde {euros(metrics.cashBalance)} · réserve cible{' '}
+            {euros(metrics.cashReserveTarget)}
+          </small>
+        </article>
+
+        <article className={styles.pilotageKpi}>
+          <span>
+            <Boxes size={18} aria-hidden="true" />
+            Capacité de réinvestissement
+          </span>
+          <strong>{euros(metrics.reinvestmentCapacity)}</strong>
+          <small>
+            Plafonnée par la trésorerie libre, le taux de réinvestissement et le
+            budget stock restant.
+          </small>
         </article>
 
         <article className={styles.pilotageKpi}>
@@ -108,7 +154,7 @@ export default async function PilotagePage() {
         {settings.launchProductIds.length === 0 && (
           <p className={styles.warning}>
             <AlertTriangle size={18} aria-hidden="true" />
-            Aucun produit de lancement n’est encore défini.
+            Aucune référence stratégique n’est encore suivie.
           </p>
         )}
         {metrics.marginCoverage < 99.9 && metrics.revenue > 0 && (
@@ -139,16 +185,38 @@ export default async function PilotagePage() {
             {euros(metrics.stockValue - metrics.stockBudget)}.
           </p>
         )}
+        {metrics.reserveGap > 0 && (
+          <p className={styles.warning}>
+            <AlertTriangle size={18} aria-hidden="true" />
+            Il manque {euros(metrics.reserveGap)} pour atteindre la réserve de
+            trésorerie cible.
+          </p>
+        )}
+        {resultKnown && metrics.estimatedMonthlyResult < 0 && (
+          <p className={styles.warning}>
+            <AlertTriangle size={18} aria-hidden="true" />
+            Le résultat mensuel estimé est négatif de{' '}
+            {euros(Math.abs(metrics.estimatedMonthlyResult))}. Réduisez les charges,
+            améliorez la marge ou augmentez le volume rentable.
+          </p>
+        )}
+        {marginKnown && metrics.breakEvenRevenue === null && (
+          <p className={styles.warning}>
+            <AlertTriangle size={18} aria-hidden="true" />
+            Le seuil de rentabilité ne peut pas être calculé : la marge contributive
+            après frais de paiement est nulle ou négative.
+          </p>
+        )}
       </div>
 
       <div className={styles.pilotageLayout}>
         <section className={styles.card}>
           <div className={styles.panelHeader}>
             <div>
-              <h2>Modèle cible</h2>
+              <h2>Paramètres permanents</h2>
               <p className={styles.muted}>
-                Ces paramètres servent de garde-fous, ils ne modifient ni les prix ni
-                le stock automatiquement.
+                Ces paramètres servent au pilotage quotidien et mensuel. Ils ne
+                modifient ni les prix ni le stock automatiquement.
               </p>
             </div>
           </div>
@@ -192,23 +260,115 @@ export default async function PilotagePage() {
                 required
               />
               <Field
+                label="Réserve de trésorerie cible (€)"
+                name="cashReserveTarget"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.cashReserveTarget}
+                required
+              />
+              <Field
+                label="Taux de réinvestissement de la trésorerie libre (%)"
+                name="reinvestmentRate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                defaultValue={settings.reinvestmentRate}
+                required
+              />
+              <Field
                 label="Début du suivi de l’objectif"
                 name="trackingStartDate"
                 type="date"
                 defaultValue={settings.trackingStartDate}
               />
             </div>
+
+            <h3>Frais de paiement</h3>
+            <div className={styles.fields}>
+              <Field
+                label="Frais variables (%)"
+                name="paymentFeeRate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                defaultValue={settings.paymentFeeRate}
+                required
+              />
+              <Field
+                label="Frais fixes par paiement (€)"
+                name="paymentFixedFee"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.paymentFixedFee}
+                required
+              />
+            </div>
+
+            <h3>Budget d’exploitation mensuel</h3>
+            <div className={styles.fields}>
+              <Field
+                label="Charges fixes (€ / mois)"
+                name="monthlyFixedCosts"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.monthlyFixedCosts}
+                required
+              />
+              <Field
+                label="Cartons & consommables (€ / mois)"
+                name="monthlyPackagingBudget"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.monthlyPackagingBudget}
+                required
+              />
+              <Field
+                label="Transport client à votre charge (€ / mois)"
+                name="monthlyShippingBudget"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.monthlyShippingBudget}
+                required
+              />
+              <Field
+                label="Marketing (€ / mois)"
+                name="monthlyMarketingBudget"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.monthlyMarketingBudget}
+                required
+              />
+              <Field
+                label="Autres charges (€ / mois)"
+                name="monthlyOtherCosts"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={settings.monthlyOtherCosts}
+                required
+              />
+            </div>
             <p className={styles.muted}>
-              Le budget de stock concerne uniquement la marchandise immobilisée.
-              Gardez séparément les cartons et consommables, l’avance de transport
-              client et votre réserve de trésorerie.
+              Le budget stock reste séparé des charges d’exploitation. Le coût rendu
+              des produits inclut uniquement achat, transport fournisseur et frais
+              d’approvisionnement. Ces paramètres mesurent ce qu’il reste réellement
+              après fonctionnement de la boutique.
             </p>
 
             <fieldset className={styles.launchProducts}>
-              <legend>Produits vendus au lancement</legend>
+              <legend>Références stratégiques suivies</legend>
               <p className={styles.muted}>
-                Sélectionnez les références exactes. Vous pourrez les modifier sans
-                toucher au catalogue.
+                Sélectionnez les références à surveiller dans la durée pour comparer
+                leur CA, rotation, stock immobilisé et marge.
               </p>
               {productOptions.length ? (
                 <div className={styles.launchProductGrid}>
@@ -239,6 +399,42 @@ export default async function PilotagePage() {
         </section>
 
         <aside className={styles.card}>
+          <h2>Synthèse mensuelle</h2>
+          <dl className={styles.metricList}>
+            <div>
+              <dt>CA mensuel observé</dt>
+              <dd>{euros(metrics.monthlyRevenue)}</dd>
+            </div>
+            <div>
+              <dt>Marge brute mensuelle</dt>
+              <dd>{marginKnown ? euros(metrics.monthlyGrossMargin) : '—'}</dd>
+            </div>
+            <div>
+              <dt>Frais de paiement estimés</dt>
+              <dd>{euros(metrics.monthlyPaymentFees)}</dd>
+            </div>
+            <div>
+              <dt>Budget d’exploitation</dt>
+              <dd>{euros(metrics.monthlyOperatingBudget)}</dd>
+            </div>
+            <div>
+              <dt>Résultat mensuel estimé</dt>
+              <dd>{resultKnown ? euros(metrics.estimatedMonthlyResult) : '—'}</dd>
+            </div>
+            <div>
+              <dt>Panier moyen encaissé</dt>
+              <dd>
+                {metrics.averageOrderValue === null
+                  ? '—'
+                  : euros(metrics.averageOrderValue)}
+              </dd>
+            </div>
+          </dl>
+          <p className={styles.pilotageNote}>
+            Le rythme mensuel est calculé sur la période suivie, avec au minimum un
+            mois pour éviter de surinterpréter quelques jours d’activité.
+          </p>
+
           <h2>Comment sont calculés les chiffres ?</h2>
           <dl className={styles.metricList}>
             <div>
@@ -258,19 +454,24 @@ export default async function PilotagePage() {
               <dd>vendus 30 j / stock actuel</dd>
             </div>
             <div>
-              <dt>Trésorerie</dt>
-              <dd>Saisie manuelle</dd>
+              <dt>Résultat estimé</dt>
+              <dd>marge brute − frais paiement − budget d’exploitation</dd>
+            </div>
+            <div>
+              <dt>Réinvestissement</dt>
+              <dd>trésorerie libre × taux, plafonné par le budget stock</dd>
             </div>
           </dl>
           <p className={styles.pilotageNote}>
             Le CA exclut les frais de livraison. La rotation est un indicateur
             opérationnel basé sur le stock actuel, pas une rotation comptable sur
             stock moyen. La marge est une marge commerciale simplifiée sur les prix
-            enregistrés, hors cartons, frais Stripe, transport vers le client et
-            autres charges, sans retraitement comptable de TVA. La trésorerie reste
-            manuelle tant qu’aucun compte bancaire n’est connecté. Le coût rendu
-            correspond au coût d’achat + transport fournisseur par unité + autres
-            frais d’approvisionnement.
+            enregistrés, hors charges d’exploitation et sans retraitement comptable
+            de TVA. Le coût rendu correspond au coût d’achat + transport fournisseur
+            par unité + autres frais d’approvisionnement. Les frais de paiement sont
+            estimés à partir du taux et du montant fixe saisis ; le budget
+            d’exploitation est mensuel. La trésorerie reste saisie manuellement tant
+            qu’aucun compte bancaire n’est connecté.
           </p>
         </aside>
       </div>
@@ -278,10 +479,9 @@ export default async function PilotagePage() {
       <section className={styles.card}>
         <div className={styles.panelHeader}>
           <div>
-            <h2>Plan de lancement</h2>
+            <h2>Références stratégiques</h2>
             <p className={styles.muted}>
-              Performance des références que vous avez explicitement retenues pour le
-              lancement.
+              Performance continue des références que vous avez choisi de suivre.
             </p>
           </div>
           <span className={styles.badge}>
@@ -291,7 +491,7 @@ export default async function PilotagePage() {
 
         {launchProducts.length ? (
           <AdminTable
-            caption="Performance des produits du lancement"
+            caption="Performance des références stratégiques suivies"
             headings={['Produit', 'CA', 'Vendus', 'Stock', 'Valeur stock', 'Marge']}
           >
             {launchProducts.map((product) => (
@@ -318,8 +518,8 @@ export default async function PilotagePage() {
           </AdminTable>
         ) : (
           <p className={styles.muted}>
-            Sélectionnez au moins un produit dans le modèle cible pour constituer le
-            plan de lancement.
+            Sélectionnez au moins un produit dans les paramètres permanents pour
+            constituer votre suivi stratégique.
           </p>
         )}
       </section>

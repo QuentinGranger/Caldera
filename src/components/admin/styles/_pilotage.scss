@@ -2,7 +2,7 @@
 
 .pilotageKpis {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: 0.8rem;
   margin-bottom: 1.5rem;
 }
@@ -149,10 +149,6 @@
 }
 
 @media (max-width: 74.99rem) {
-  .pilotageKpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .pilotageLayout {
     grid-template-columns: 1fr;
   }

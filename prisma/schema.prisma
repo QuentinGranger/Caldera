@@ -748,9 +748,18 @@ model BusinessPilotageSettings {
   id                String                          @id @default("caldera")
   revenueTarget     Decimal                         @default(10000) @db.Decimal(12, 2)
   minimumMarginRate Decimal                         @default(20) @db.Decimal(5, 2)
-  maxStockBudget    Decimal                         @default(1000) @db.Decimal(12, 2)
-  cashBalance       Decimal                         @default(0) @db.Decimal(12, 2)
-  trackingStartDate DateTime?                       @db.Date
+  maxStockBudget           Decimal                         @default(1000) @db.Decimal(12, 2)
+  cashBalance              Decimal                         @default(0) @db.Decimal(12, 2)
+  cashReserveTarget        Decimal                         @default(0) @db.Decimal(12, 2)
+  monthlyFixedCosts        Decimal                         @default(0) @db.Decimal(12, 2)
+  monthlyPackagingBudget   Decimal                         @default(0) @db.Decimal(12, 2)
+  monthlyShippingBudget    Decimal                         @default(0) @db.Decimal(12, 2)
+  monthlyMarketingBudget   Decimal                         @default(0) @db.Decimal(12, 2)
+  monthlyOtherCosts        Decimal                         @default(0) @db.Decimal(12, 2)
+  paymentFeeRate           Decimal                         @default(0) @db.Decimal(5, 2)
+  paymentFixedFee          Decimal                         @default(0) @db.Decimal(10, 2)
+  reinvestmentRate         Decimal                         @default(100) @db.Decimal(5, 2)
+  trackingStartDate        DateTime?                       @db.Date
   createdAt         DateTime                        @default(now())
   updatedAt         DateTime                        @updatedAt
   launchProducts    BusinessPilotageLaunchProduct[]
