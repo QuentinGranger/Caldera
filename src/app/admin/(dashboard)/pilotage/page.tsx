@@ -198,6 +198,11 @@ export default async function PilotagePage() {
                 defaultValue={settings.trackingStartDate}
               />
             </div>
+            <p className={styles.muted}>
+              Le budget de stock concerne uniquement la marchandise immobilisée.
+              Gardez séparément les cartons et consommables, l’avance de transport
+              client et votre réserve de trésorerie.
+            </p>
 
             <fieldset className={styles.launchProducts}>
               <legend>Produits vendus au lancement</legend>
@@ -261,12 +266,11 @@ export default async function PilotagePage() {
             Le CA exclut les frais de livraison. La rotation est un indicateur
             opérationnel basé sur le stock actuel, pas une rotation comptable sur
             stock moyen. La marge est une marge commerciale simplifiée sur les prix
-            enregistrés, hors frais Stripe, transport et autres charges, sans
-            retraitement comptable de TVA. La trésorerie reste manuelle tant
-            qu’aucun compte bancaire n’est connecté.
-            {' '}Le coût rendu correspond au coût d’achat + transport fournisseur
-            par unité + autres frais d’approvisionnement. Les cartons, frais Stripe
-            et le transport vers le client restent hors de cette marge brute.
+            enregistrés, hors cartons, frais Stripe, transport vers le client et
+            autres charges, sans retraitement comptable de TVA. La trésorerie reste
+            manuelle tant qu’aucun compte bancaire n’est connecté. Le coût rendu
+            correspond au coût d’achat + transport fournisseur par unité + autres
+            frais d’approvisionnement.
           </p>
         </aside>
       </div>
