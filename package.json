@@ -11,6 +11,7 @@
     "dev": "next dev --webpack",
     "build": "prisma generate && next build --webpack",
     "start": "next start",
+    "W3AR3N0T30P3NY3T": "node scripts/open-storefront.mjs",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "prisma generate && next typegen && tsc --noEmit",
     "format": "prettier --write .",

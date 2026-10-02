@@ -15,11 +15,14 @@ function apexRedirect(request: NextRequest) {
 }
 
 const CONSTRUCTION_PATH = '/en-construction';
+const CONSTRUCTION_CURTAIN_ENABLED = true;
 
 // Temporary launch curtain: only the public production domain is covered.
 // localhost and Vercel previews stay fully usable while the shop is being built.
 // Remove this helper and the construction rewrite below when Caldera opens.
 function shouldShowConstruction(request: NextRequest) {
+  if (!CONSTRUCTION_CURTAIN_ENABLED) return false;
+
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   const { pathname } = request.nextUrl;
 
