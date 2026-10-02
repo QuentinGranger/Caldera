@@ -28,7 +28,7 @@ export function ConstructionExperience() {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const command = 'W3AR3N0T30P3NY3T';
+    const command = 'W3AR3N0T0P3NY3T';
     const previous = Object.getOwnPropertyDescriptor(window, command);
 
     if (previous && !previous.configurable) return;
