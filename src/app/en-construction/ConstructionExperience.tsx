@@ -27,7 +27,6 @@ const features = [
 export function ConstructionExperience() {
   const mainRef = useRef<HTMLElement>(null);
 
-
   function handlePointerMove(event: ReactPointerEvent<HTMLElement>) {
     const element = mainRef.current;
     if (!element) return;
