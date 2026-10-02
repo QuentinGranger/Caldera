@@ -154,7 +154,7 @@ export default async function PilotagePage() {
         {settings.launchProductIds.length === 0 && (
           <p className={styles.warning}>
             <AlertTriangle size={18} aria-hidden="true" />
-            Aucun produit de lancement n’est encore défini.
+            Aucune référence stratégique n’est encore suivie.
           </p>
         )}
         {metrics.marginCoverage < 99.9 && metrics.revenue > 0 && (
@@ -466,14 +466,12 @@ export default async function PilotagePage() {
             Le CA exclut les frais de livraison. La rotation est un indicateur
             opérationnel basé sur le stock actuel, pas une rotation comptable sur
             stock moyen. La marge est une marge commerciale simplifiée sur les prix
-            enregistrés, hors cartons, frais Stripe, transport vers le client et
-            autres charges, sans retraitement comptable de TVA. La trésorerie reste
-            manuelle tant qu’aucun compte bancaire n’est connecté. Le coût rendu
-            correspond au coût d’achat + transport fournisseur par unité + autres
-            frais d’approvisionnement. Les frais de paiement sont estimés à partir
-            du taux et du montant fixe saisis ; le budget d’exploitation est mensuel.
-            La trésorerie reste saisie manuellement tant qu’aucun compte bancaire
-            n’est connecté.
+            enregistrés, hors charges d’exploitation et sans retraitement comptable
+            de TVA. Le coût rendu correspond au coût d’achat + transport fournisseur
+            par unité + autres frais d’approvisionnement. Les frais de paiement sont
+            estimés à partir du taux et du montant fixe saisis ; le budget
+            d’exploitation est mensuel. La trésorerie reste saisie manuellement tant
+            qu’aucun compte bancaire n’est connecté.
           </p>
         </aside>
       </div>
@@ -493,7 +491,7 @@ export default async function PilotagePage() {
 
         {launchProducts.length ? (
           <AdminTable
-            caption="Performance des produits du lancement"
+            caption="Performance des références stratégiques suivies"
             headings={['Produit', 'CA', 'Vendus', 'Stock', 'Valeur stock', 'Marge']}
           >
             {launchProducts.map((product) => (
