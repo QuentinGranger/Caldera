@@ -1,0 +1,3 @@
+ALTER TABLE "ProductVariant"
+ADD COLUMN "inboundShippingCost" DECIMAL(10,2) NOT NULL DEFAULT 0,
+ADD COLUMN "procurementFees" DECIMAL(10,2) NOT NULL DEFAULT 0;

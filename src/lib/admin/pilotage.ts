@@ -2,6 +2,7 @@ import 'server-only';
 import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { requireAdmin } from './auth';
+import { landedCost } from '@/lib/finance/landedCost';
 import { AdminError, date, money, text, uuid, whitelist } from './validation';
 
 const SETTINGS_ID = 'caldera';
@@ -65,6 +66,8 @@ export async function getBusinessPilotage() {
         productId: true,
         stockQuantity: true,
         costPrice: true,
+        inboundShippingCost: true,
+        procurementFees: true,
       },
     }),
     db.product.findMany({
@@ -150,8 +153,9 @@ export async function getBusinessPilotage() {
   let stockUnitsWithoutCost = 0;
   for (const variant of variants) {
     stockUnits += variant.stockQuantity;
-    if (variant.costPrice === null) stockUnitsWithoutCost += variant.stockQuantity;
-    else stockValue += number(variant.costPrice) * variant.stockQuantity;
+    const unitLandedCost = landedCost(variant);
+    if (unitLandedCost === null) stockUnitsWithoutCost += variant.stockQuantity;
+    else stockValue += number(unitLandedCost) * variant.stockQuantity;
   }
 
   const grossMarginAmount = coveredRevenue - costOfGoodsSold;
@@ -192,9 +196,12 @@ export async function getBusinessPilotage() {
       const productStockValue = productVariants.reduce(
         (sum, variant) =>
           sum +
-          (variant.costPrice === null
-            ? 0
-            : number(variant.costPrice) * variant.stockQuantity),
+          (() => {
+            const unitLandedCost = landedCost(variant);
+            return unitLandedCost === null
+              ? 0
+              : number(unitLandedCost) * variant.stockQuantity;
+          })(),
         0,
       );
       return {

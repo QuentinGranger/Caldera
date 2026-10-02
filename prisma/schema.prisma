@@ -133,6 +133,10 @@ model ProductVariant {
   price              Decimal               @db.Decimal(10, 2)
   compareAtPrice     Decimal?              @db.Decimal(10, 2)
   costPrice          Decimal?              @db.Decimal(10, 2)
+  /// Supplier-to-CALDERA transport allocated to one unit.
+  inboundShippingCost Decimal               @default(0) @db.Decimal(10, 2)
+  /// Other per-unit procurement costs (handling, import or similar).
+  procurementFees     Decimal               @default(0) @db.Decimal(10, 2)
   stockQuantity      Int                   @default(0)
   reservedQuantity   Int                   @default(0)
   availableQuantity  Int                   @default(dbgenerated())

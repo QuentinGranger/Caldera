@@ -17,6 +17,7 @@ import {
   STORE_CURRENCY,
 } from './common';
 import { toStripeAmount } from '@/lib/stripe/amount';
+import { landedCost } from '@/lib/finance/landedCost';
 
 export async function prepareOrder(
   token: string | undefined,
@@ -141,7 +142,11 @@ export async function prepareOrder(
             sku: item.variant.sku,
             language: item.variant.language,
             unitPrice: item.variant.price,
-            unitCost: item.variant.costPrice,
+            unitCost: landedCost({
+              costPrice: item.variant.costPrice,
+              inboundShippingCost: item.variant.inboundShippingCost,
+              procurementFees: item.variant.procurementFees,
+            }),
             quantity: item.quantity,
             lineTotal: item.variant.price.mul(item.quantity),
             discountAmount:
