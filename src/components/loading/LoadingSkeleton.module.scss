@@ -224,6 +224,10 @@ $hairline: rgb(23 62 50 / 14%);
   grid-area: filters;
   width: 6.5rem;
 
+  @media (max-width: 22.49rem) {
+    width: 44px;
+  }
+
   @include m.from(v.$breakpoint-tablet) {
     width: auto;
   }
