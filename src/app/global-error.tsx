@@ -2,6 +2,7 @@
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import { useEffect } from 'react';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 
 // Replaces the root layout when it fails: no global styles, fonts or header here.
 export default function GlobalError({
@@ -100,7 +101,7 @@ export default function GlobalError({
               Réessayer
             </button>
             <Link href="/catalogue" style={secondary}>
-              Voir tous les produits
+              {ALL_PRODUCTS_LABEL}
             </Link>
           </div>
           <Link
