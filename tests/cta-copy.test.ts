@@ -27,6 +27,7 @@ test('CTA storefront : une même destination catalogue garde le même vocabulair
     'Voir le catalogue',
     'Tout le catalogue',
     'Explorer la boutique',
+    'Parcourir le catalogue',
   ];
 
   for (const { path, content } of contents) {
