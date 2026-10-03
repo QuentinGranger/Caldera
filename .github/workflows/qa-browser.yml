@@ -92,10 +92,25 @@ jobs:
           exit 1
 
       - name: QA cross-browser
+        id: cross_browser
+        continue-on-error: true
         run: node scripts/qa-browser.cjs
 
       - name: Lighthouse mobile et desktop
+        id: lighthouse
+        continue-on-error: true
         run: node scripts/qa-lighthouse.mjs
+
+      - name: Validation QA
+        if: always()
+        env:
+          CROSS_BROWSER_OUTCOME: ${{ steps.cross_browser.outcome }}
+          LIGHTHOUSE_OUTCOME: ${{ steps.lighthouse.outcome }}
+        run: |
+          echo "Cross-browser: $CROSS_BROWSER_OUTCOME"
+          echo "Lighthouse: $LIGHTHOUSE_OUTCOME"
+          test "$CROSS_BROWSER_OUTCOME" = "success"
+          test "$LIGHTHOUSE_OUTCOME" = "success"
 
       - name: Rapports QA
         if: always()
