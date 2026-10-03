@@ -271,3 +271,61 @@ export function WishlistPageSkeleton() {
     </main>
   );
 }
+
+
+export function CheckoutPageSkeleton() {
+  return (
+    <main
+      id="contenu"
+      className={styles.checkoutPage}
+      aria-busy="true"
+      aria-label="Chargement de la commande"
+    >
+      <span className={styles.srOnly}>Chargement de la commande…</span>
+      <Container>
+        <div className={styles.checkoutProgress} aria-hidden="true">
+          {Array.from({ length: 4 }, (_, index) => (
+            <Block className={styles.checkoutStep} key={index} />
+          ))}
+        </div>
+        <div className={styles.checkoutGrid} aria-hidden="true">
+          <div>
+            <Block className={styles.checkoutEyebrow} />
+            <Block className={styles.checkoutTitle} />
+            <Block className={styles.checkoutMobileTotal} />
+            <Block className={styles.checkoutLegend} />
+            <div className={styles.checkoutFields}>
+              {Array.from({ length: 4 }, (_, index) => (
+                <div className={styles.checkoutField} key={index}>
+                  <Block className={styles.checkoutFieldLabel} />
+                  <Block className={styles.checkoutInput} />
+                </div>
+              ))}
+              <div
+                className={`${styles.checkoutField} ${styles.checkoutWide}`}
+              >
+                <Block className={styles.checkoutFieldLabel} />
+                <Block className={styles.checkoutInput} />
+              </div>
+            </div>
+            <Block className={styles.checkoutContinue} />
+          </div>
+          <aside className={styles.checkoutSummary}>
+            <Block className={styles.checkoutSummaryTitle} dark />
+            {Array.from({ length: 3 }, (_, index) => (
+              <div className={styles.checkoutSummaryItem} key={index}>
+                <Block className={styles.checkoutSummaryImage} dark />
+                <div>
+                  <Block className={styles.checkoutSummaryName} dark />
+                  <Block className={styles.checkoutSummaryMeta} dark />
+                </div>
+                <Block className={styles.checkoutSummaryPrice} dark />
+              </div>
+            ))}
+            <Block className={styles.checkoutTotal} dark />
+          </aside>
+        </div>
+      </Container>
+    </main>
+  );
+}
