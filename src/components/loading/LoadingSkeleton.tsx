@@ -208,19 +208,22 @@ export function CalendarPageSkeleton() {
   return (
     <main
       id="contenu"
-      className={styles.loadingMain}
+      className={styles.simplePage}
       aria-busy="true"
       aria-label="Chargement du calendrier des sorties"
     >
       <span className={styles.srOnly}>Chargement du calendrier…</span>
-      <HeroSkeleton />
       <Container>
-        <div className={styles.catalogBody} aria-hidden="true">
-          <div className={styles.chips}>
-            <Block className={styles.chip} />
-            <Block className={`${styles.chip} ${styles.chipWide}`} />
-            <Block className={styles.chip} />
-          </div>
+        <div aria-hidden="true">
+          <Block className={styles.simpleBreadcrumb} />
+          <header className={styles.simpleHeader}>
+            <Block className={styles.simpleEyebrow} />
+            <Block className={styles.simpleTitle} />
+            <Block className={styles.simpleLead} />
+            <Block
+              className={`${styles.simpleLead} ${styles.heroLeadShort}`}
+            />
+          </header>
           {Array.from({ length: 2 }, (_, section) => (
             <section className={styles.sectionSkeleton} key={section}>
               <Block className={styles.sectionHeading} />
@@ -234,6 +237,34 @@ export function CalendarPageSkeleton() {
                 ))}
               </div>
             </section>
+          ))}
+        </div>
+      </Container>
+    </main>
+  );
+}
+
+export function WishlistPageSkeleton() {
+  return (
+    <main
+      id="contenu"
+      className={styles.simplePage}
+      aria-busy="true"
+      aria-label="Chargement des favoris"
+    >
+      <span className={styles.srOnly}>Chargement des favoris…</span>
+      <Container>
+        <header className={styles.wishlistHeader} aria-hidden="true">
+          <Block className={styles.simpleEyebrow} />
+          <Block className={styles.wishlistTitle} />
+          <Block className={styles.simpleLead} />
+          <Block
+            className={`${styles.simpleLead} ${styles.heroLeadShort}`}
+          />
+        </header>
+        <div className={styles.grid} aria-hidden="true">
+          {Array.from({ length: 8 }, (_, index) => (
+            <ProductCardSkeleton key={index} />
           ))}
         </div>
       </Container>
