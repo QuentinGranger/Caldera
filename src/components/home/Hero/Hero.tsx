@@ -57,7 +57,7 @@ export function Hero({
               </Button>
             )}
             <Link href="/univers" className={styles.secondary}>
-              Découvrir Caldera <ArrowRight size={16} aria-hidden="true" />
+              Découvrir l’univers <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         </div>
