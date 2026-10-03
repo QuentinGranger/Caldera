@@ -1,6 +1,7 @@
 'use client';
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { Container } from '@/components/ui/Container/Container';
 import { Button } from '@/components/ui/Button/Button';
 import styles from '@/components/catalog/Catalog.module.scss';
@@ -26,6 +27,10 @@ export default function ErrorPage({
           </p>
           <div>
             <Button onClick={() => retry()}>Réessayer</Button>
+            <Button href="/catalogue" variant="outline">
+              Voir tous les produits
+            </Button>
+            <Link href="/">Retour à l’accueil</Link>
           </div>
         </section>
       </Container>
