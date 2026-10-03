@@ -30,7 +30,6 @@ for (const [name, path] of routes) {
   for (const mode of ['mobile', 'desktop']) {
     const output = `${outDir}/lighthouse-${name}-${mode}.json`;
     const args = [
-      'lighthouse',
       `${base}${path}`,
       '--quiet',
       '--output=json',
@@ -39,7 +38,7 @@ for (const [name, path] of routes) {
       '--chrome-flags=--headless --no-sandbox --disable-gpu',
     ];
     if (mode === 'desktop') args.push('--preset=desktop');
-    await run('npx', args);
+    await run('lighthouse', args);
   }
 }
 
