@@ -222,10 +222,20 @@ $hairline: rgb(23 62 50 / 14%);
 
 .toolbarFilters {
   grid-area: filters;
+  width: 6.5rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    width: auto;
+  }
 }
 
 .toolbarSort {
   grid-area: sort;
+  width: 44px;
+
+  @include m.from(v.$breakpoint-tablet) {
+    width: auto;
+  }
 }
 
 .grid {
@@ -550,4 +560,51 @@ $hairline: rgb(23 62 50 / 14%);
   @include m.from(v.$breakpoint-tablet) {
     justify-self: end;
   }
+}
+
+
+.simplePage {
+  min-height: 65vh;
+  padding-block: 2rem 5rem;
+}
+
+.simpleBreadcrumb {
+  width: min(18rem, 70vw);
+  height: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.simpleHeader {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 48rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid v.$color-border;
+}
+
+.simpleEyebrow {
+  width: 8rem;
+  height: 0.7rem;
+}
+
+.simpleTitle {
+  width: min(34rem, 92%);
+  height: clamp(3.5rem, 8vw, 5rem);
+}
+
+.simpleLead {
+  width: min(38rem, 90%);
+  height: 0.9rem;
+}
+
+.wishlistHeader {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 46rem;
+  margin-bottom: clamp(1.75rem, 4vw, 3rem);
+}
+
+.wishlistTitle {
+  width: min(24rem, 76%);
+  height: clamp(3rem, 8vw, 4.4rem);
 }
