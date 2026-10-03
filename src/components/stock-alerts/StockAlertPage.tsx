@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { BellRing } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from '@/components/newsletter/NewsletterPage.module.scss';
 
 /** Pages opened from an alert e-mail (confirmation, removal). */
@@ -24,7 +25,7 @@ export function StockAlertPage({
           <p className={styles.lead}>{lead}</p>
           {children}
           <p className={styles.back}>
-            <Link href="/catalogue">Retour au catalogue</Link>
+            <Link href="/catalogue">{ALL_PRODUCTS_LABEL}</Link>
           </p>
         </section>
       </Container>
