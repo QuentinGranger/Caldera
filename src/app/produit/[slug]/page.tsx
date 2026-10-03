@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ProductGallery } from '@/components/product/ProductGallery/ProductGallery';
+import { ProductPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { currentCustomer } from '@/lib/account/auth';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel/ProductPurchasePanel';
 import { ProductWishlistButton } from '@/components/product/ProductWishlistButton/ProductWishlistButton';
@@ -34,8 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { product, decision } = await resolve(params);
   return productPageMetadata(product, decision);
 }
-export default async function ProductPage({ params }: Props) {
-  const { product, decision } = await resolve(params);
+async function ProductContent({
+  route,
+}: {
+  route: Awaited<ReturnType<typeof resolve>>;
+}) {
+  const { product, decision } = route;
   const page = await loadProductPage(product, decision);
   const images = product.images.length
     ? product.images
@@ -141,5 +147,15 @@ export default async function ProductPage({ params }: Props) {
         {!alternatives.length && <RelatedProducts products={page.related} />}
       </Container>
     </main>
+  );
+}
+export default async function ProductPage({ params }: Props) {
+  // Decide 404/410/308 before opening a streaming boundary so HTTP semantics
+  // remain exact. The heavier product view can then reveal progressively.
+  const route = await resolve(params);
+  return (
+    <Suspense fallback={<ProductPageSkeleton />}>
+      <ProductContent route={route} />
+    </Suspense>
   );
 }
