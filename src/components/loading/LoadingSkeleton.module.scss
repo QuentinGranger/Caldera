@@ -515,3 +515,39 @@ $hairline: rgb(23 62 50 / 14%);
     background: rgb(255 255 255 / 10%);
   }
 }
+
+
+.releaseList {
+  border-top: 1px solid v.$color-border;
+}
+
+.releaseRow {
+  display: grid;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1rem;
+  border-bottom: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 10rem minmax(0, 1fr) minmax(0, 14rem);
+    align-items: center;
+  }
+}
+
+.releaseDate {
+  width: 7rem;
+  height: 0.75rem;
+}
+
+.releaseName {
+  width: min(18rem, 80%);
+  height: 1.1rem;
+}
+
+.releaseStock {
+  width: 9rem;
+  height: 0.75rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    justify-self: end;
+  }
+}
