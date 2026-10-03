@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/Button/Button';
 import { Container } from '@/components/ui/Container/Container';
 import styles from '@/components/checkout/Checkout.module.scss';
 export default function CheckoutError({
-  retry,
+  reset,
 }: {
   error: Error & { digest?: string };
-  retry: () => void;
+  reset: () => void;
 }) {
   return (
     <main id="contenu">
@@ -19,7 +19,7 @@ export default function CheckoutError({
             enregistrées restent conservées.
           </p>
           <div className={styles.actions}>
-            <Button onClick={retry}>Réessayer</Button>
+            <Button onClick={reset}>Réessayer</Button>
             <Link href="/panier">Retour au panier</Link>
           </div>
         </div>

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { CatalogHeader } from '@/components/catalog/CatalogHeader';
+import { CalendarPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { CALENDAR_PATH } from '@/components/landing/landingData';
 import { LandingFacts } from '@/components/landing/LandingFacts';
 import { ReleaseMonths } from '@/components/landing/ReleaseMonths';
@@ -28,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function Page() {
+async function CalendarContent() {
   await connection();
   const [calendar, years] = await Promise.all([
     getReleaseCalendar(),
@@ -88,5 +90,13 @@ export default async function Page() {
         )}
       />
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<CalendarPageSkeleton />}>
+      <CalendarContent />
+    </Suspense>
   );
 }

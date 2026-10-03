@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { AisleNav } from '@/components/catalog/AisleNav';
+import { ExtensionsPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { CatalogShell } from '@/components/catalog/CatalogShell';
 import { EXTENSIONS_COPY } from '@/components/catalog/pageCopy';
 import { PageHero } from '@/components/catalog/PageHero';
@@ -88,7 +90,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * exclusive sections. The shared SetCard keeps links, images and dates aligned
  * with every other catalogue surface.
  */
-export default async function Page() {
+async function ExtensionsContent() {
   await connection();
   const index = await getExtensionsIndex();
   const ways: SeoLink[] = [
@@ -179,5 +181,13 @@ export default async function Page() {
         emptyText="Aucune extension plus ancienne à afficher."
       />
     </CatalogShell>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<ExtensionsPageSkeleton />}>
+      <ExtensionsContent />
+    </Suspense>
   );
 }
