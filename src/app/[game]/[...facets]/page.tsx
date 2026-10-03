@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import {
   catalogListingMetadata,
   getLatestProducts,
@@ -13,7 +12,6 @@ import {
   type LandingView,
 } from '@/components/landing/landingData';
 import { LandingPage } from '@/components/landing/LandingPage';
-import { CatalogPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { inSentence } from '@/components/landing/landingText';
 import { requireLandingView } from '@/components/landing/routes';
 import { getCategories, toCategoryRef } from '@/lib/catalog/taxonomy';
@@ -72,13 +70,9 @@ export async function generateMetadata({
   });
 }
 
-async function LandingContent({
-  view,
-  searchParams,
-}: {
-  view: LandingView;
-  searchParams: Props['searchParams'];
-}) {
+export default async function Page({ params, searchParams }: Props) {
+  const { game, facets } = await params;
+  const view = await requireLandingView(game, facets, searchParams);
   // The shop's families are its aisles: their own words, the aisles row.
   const family =
     view.kind === 'category' && isShopGame([view.game.slug])
@@ -107,14 +101,5 @@ async function LandingContent({
       up={up}
       latest={latest}
     />
-  );
-}
-export default async function Page({ params, searchParams }: Props) {
-  const { game, facets } = await params;
-  const view = await requireLandingView(game, facets, searchParams);
-  const content = <LandingContent view={view} searchParams={searchParams} />;
-  if (Object.keys(await searchParams).length > 0) return content;
-  return (
-    <Suspense fallback={<CatalogPageSkeleton framed />}>{content}</Suspense>
   );
 }
