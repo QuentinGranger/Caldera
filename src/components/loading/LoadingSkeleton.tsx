@@ -39,7 +39,7 @@ function HeroSkeleton({ framed = false }: { framed?: boolean }) {
 
 function ProductCardSkeleton() {
   return (
-    <article className={styles.productCard} aria-hidden="true">
+    <div className={styles.productCard} aria-hidden="true">
       <div className={`${styles.block} ${styles.productVisual}`}>
         <Block className={styles.productBadge} />
       </div>
@@ -52,7 +52,23 @@ function ProductCardSkeleton() {
           <Block className={styles.productAdd} />
         </div>
       </div>
-    </article>
+    </div>
+  );
+}
+
+export function CatalogGridSkeleton({
+  className = '',
+}: {
+  className?: string;
+}) {
+  return (
+    <div className={className} aria-hidden="true">
+      <div className={styles.grid}>
+        {Array.from({ length: 8 }, (_, index) => (
+          <ProductCardSkeleton key={index} />
+        ))}
+      </div>
+    </div>
   );
 }
 
