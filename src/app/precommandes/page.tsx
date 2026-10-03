@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { CatalogPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import {
   ListingHubPage,
   listingHubMetadata,
@@ -9,11 +7,6 @@ type Props = { searchParams: Promise<SearchParams> };
 export function generateMetadata({ searchParams }: Props) {
   return listingHubMetadata('precommandes', searchParams);
 }
-export default async function Page({ searchParams }: Props) {
-  const content = (
-    <ListingHubPage listing="precommandes" searchParams={searchParams} />
-  );
-  // Filtered URLs may canonicalise with a 308; do not begin streaming first.
-  if (Object.keys(await searchParams).length > 0) return content;
-  return <Suspense fallback={<CatalogPageSkeleton />}>{content}</Suspense>;
+export default function Page({ searchParams }: Props) {
+  return <ListingHubPage listing="precommandes" searchParams={searchParams} />;
 }
