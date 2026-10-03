@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { NewsletterForm } from '@/components/home/Newsletter/NewsletterForm';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './FinalCall.module.scss';
 
 /**
@@ -30,7 +31,7 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
           </p>
           {catalogue && (
             <Link href={catalogue} className={styles.catalogue}>
-              Explorer la boutique <ArrowRight size={16} aria-hidden="true" />
+              {ALL_PRODUCTS_LABEL} <ArrowRight size={16} aria-hidden="true" />
             </Link>
           )}
         </div>

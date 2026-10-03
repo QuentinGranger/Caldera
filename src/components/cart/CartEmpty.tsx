@@ -1,5 +1,6 @@
 import { Compass } from 'lucide-react';
 import Link from 'next/link';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './CartEmpty.module.scss';
 export function CartEmpty({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -11,7 +12,7 @@ export function CartEmpty({ onNavigate }: { onNavigate?: () => void }) {
         collection.
       </p>
       <Link href="/catalogue" onClick={onNavigate}>
-        Découvrir le catalogue
+        {ALL_PRODUCTS_LABEL}
       </Link>
     </div>
   );

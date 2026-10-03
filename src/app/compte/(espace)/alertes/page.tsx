@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { StockAlertRemoveButton } from '@/components/account/StockAlertRemoveButton';
 import { requireCustomer } from '@/lib/account/guard';
 import { getCustomerStockAlerts } from '@/lib/stock-alerts/service';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from '@/components/account/Account.module.scss';
 
 export const metadata: Metadata = { title: 'Mes alertes de stock' };
@@ -62,7 +63,7 @@ export default async function AccountStockAlerts() {
           </p>
           <div className={styles.emptyActions}>
             <Link href="/catalogue" className={styles.submit}>
-              Parcourir le catalogue
+              {ALL_PRODUCTS_LABEL}
             </Link>
           </div>
         </section>

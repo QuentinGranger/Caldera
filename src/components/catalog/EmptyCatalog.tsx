@@ -1,11 +1,12 @@
 import { hasCatalogRefinements } from '@/lib/catalog/metadata';
 import { catalogUrl, type CatalogFilters } from '@/lib/catalog/params';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import { EmptyState, type EmptyAction } from './EmptyState';
 
 /** The shop's widest list: every product. */
 export const ALL_PRODUCTS: EmptyAction = {
   href: '/catalogue',
-  label: 'Voir tous les produits',
+  label: ALL_PRODUCTS_LABEL,
 };
 
 /**

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Container } from '@/components/ui/Container/Container';
 import { Button } from '@/components/ui/Button/Button';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from '@/components/catalog/Catalog.module.scss';
 
 export default function ErrorPage({
@@ -30,7 +31,7 @@ export default function ErrorPage({
           <div className={styles.errorActions}>
             <Button onClick={reset}>Réessayer</Button>
             <Button href="/catalogue" variant="outline">
-              Voir tous les produits
+              {ALL_PRODUCTS_LABEL}
             </Button>
             <Link href="/" className={styles.errorHome}>
               Retour à l’accueil

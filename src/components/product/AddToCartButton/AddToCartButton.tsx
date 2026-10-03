@@ -4,6 +4,7 @@ import { useCart } from '@/components/cart/CartProvider';
 import { addToCartAction } from '@/lib/cart/actions';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
+import { ADD_TO_CART_LABEL } from '@/lib/ux/copy';
 import styles from './AddToCartButton.module.scss';
 type Props = {
   variantId: string;
@@ -38,7 +39,7 @@ export function AddToCartButton({
             ? 'Rupture de stock'
             : preorder
               ? 'Précommander'
-              : 'Ajouter au panier'}
+              : ADD_TO_CART_LABEL}
       </Button>
       <p id={id} role="status">
         {message || 'Votre sélection est conservée pendant 30 jours.'}

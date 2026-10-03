@@ -4,6 +4,7 @@ import { LoaderCircle, Plus } from 'lucide-react';
 import { useCart } from '@/components/cart/CartProvider';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import { addToCartAction } from '@/lib/cart/actions';
+import { addProductToCartLabel } from '@/lib/ux/copy';
 
 type Props = {
   productName: string;
@@ -25,7 +26,7 @@ export function ProductCardQuickAdd({
     ? `${productName} — indisponible`
     : pending
       ? `Ajout de ${productName} au panier…`
-      : `Ajouter ${productName} au panier`;
+      : addProductToCartLabel(productName);
 
   return (
     <IconButton

@@ -5,6 +5,7 @@ import { OrderCard } from '@/components/account/AccountOrders';
 import { requireCustomer } from '@/lib/account/guard';
 import { isOpenOrder } from '@/lib/account/orderStatus';
 import { getCustomerAddress, getCustomerOrders } from '@/lib/account/queries';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from '@/components/account/Account.module.scss';
 
 export const metadata: Metadata = { title: 'Mon compte' };
@@ -109,7 +110,7 @@ export default async function AccountDashboard({ searchParams }: Props) {
           </p>
           <div className={styles.emptyActions}>
             <Link href="/catalogue" className={styles.submit}>
-              Découvrir le catalogue
+              {ALL_PRODUCTS_LABEL}
             </Link>
             <Link href="/nouveautes" className={styles.secondary}>
               Voir les nouveautés

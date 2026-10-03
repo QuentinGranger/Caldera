@@ -12,6 +12,7 @@ import {
 import { GLOSSARY_PATH, GUIDES_PATH } from '@/components/editorial/editorial';
 import { getNavigation } from '@/lib/seo/links';
 import type { SeoLink } from '@/lib/seo/types';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 
 export interface UniverseShopLinks {
   links: SeoLink[];
@@ -39,7 +40,7 @@ export async function getUniverseShopLinks(): Promise<UniverseShopLinks> {
       : []),
   ];
   const exit = listings.has('catalogue')
-    ? { href: LISTING_HUBS.catalogue.path, label: 'Entrer dans la boutique' }
+    ? { href: LISTING_HUBS.catalogue.path, label: ALL_PRODUCTS_LABEL }
     : (links[0] ?? null);
   return { links, exit };
 }
