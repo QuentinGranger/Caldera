@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { OrderCard } from '@/components/account/AccountOrders';
 import { requireCustomer } from '@/lib/account/guard';
 import { getCustomerOrders } from '@/lib/account/queries';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from '@/components/account/Account.module.scss';
 
 export const metadata: Metadata = { title: 'Mes commandes' };
@@ -34,7 +35,7 @@ export default async function AccountOrders() {
           <p>Vos prochaines commandes et leur suivi apparaîtront ici.</p>
           <div className={styles.emptyActions}>
             <Link href="/catalogue" className={styles.submit}>
-              Découvrir le catalogue
+              {ALL_PRODUCTS_LABEL}
             </Link>
           </div>
         </section>
