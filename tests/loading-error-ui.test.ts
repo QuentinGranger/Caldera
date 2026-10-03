@@ -4,25 +4,31 @@ import { test } from 'node:test';
 
 const text = (path: string) => readFile(path, 'utf8');
 
-test('états de chargement : les routes marchandes ont un fallback dédié', async () => {
+test('états de chargement : les routes marchandes ont une boundary contextuelle', async () => {
   const routes = [
-    'src/app/catalogue/loading.tsx',
-    'src/app/en-stock/loading.tsx',
-    'src/app/nouveautes/loading.tsx',
-    'src/app/precommandes/loading.tsx',
-    'src/app/[game]/loading.tsx',
-    'src/app/categorie/[slug]/loading.tsx',
-    'src/app/extensions/loading.tsx',
-    'src/app/calendrier-des-sorties/loading.tsx',
-    'src/app/produit/[slug]/loading.tsx',
-    'src/app/favoris/loading.tsx',
-    'src/app/checkout/loading.tsx',
+    'src/app/catalogue/page.tsx',
+    'src/app/en-stock/page.tsx',
+    'src/app/nouveautes/page.tsx',
+    'src/app/precommandes/page.tsx',
+    'src/app/[game]/page.tsx',
+    'src/app/[game]/[...facets]/page.tsx',
+    'src/app/categorie/[slug]/page.tsx',
+    'src/app/extensions/page.tsx',
+    'src/app/extensions/[slug]/page.tsx',
+    'src/app/calendrier-des-sorties/page.tsx',
+    'src/app/produit/[slug]/page.tsx',
+    'src/app/favoris/page.tsx',
+    'src/app/checkout/page.tsx',
   ];
 
   const contents = await Promise.all(routes.map(text));
   for (const [index, content] of contents.entries()) {
+    assert.match(content, /Suspense/, routes[index]);
     assert.match(content, /Skeleton/, routes[index]);
   }
+
+  const catalog = await text('src/components/catalog/CatalogPage.tsx');
+  assert.match(catalog, /CatalogGridSkeleton/);
 });
 
 test('skeletons : état occupé, réduction de mouvement et géométrie produit', async () => {
