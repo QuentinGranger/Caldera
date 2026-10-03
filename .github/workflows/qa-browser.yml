@@ -1,0 +1,107 @@
+name: QA navigateurs et Lighthouse
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    name: Lighthouse + Chromium / Firefox / WebKit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: caldera
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d caldera"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/caldera
+      APP_URL: http://localhost:3001
+      TEST_BASE_URL: http://localhost:3001
+      EMAILS_ENABLED: 'false'
+      PASSWORD_BREACH_CHECK: 'off'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: Secrets de test
+        run: |
+          auth="$(openssl rand -hex 32)"
+          access="$(openssl rand -hex 32)"
+          webhook="whsec_$(openssl rand -hex 24)"
+          {
+            echo "BETTER_AUTH_SECRET=$auth"
+            echo "ORDER_ACCESS_SECRET=$access"
+            echo "STRIPE_WEBHOOK_SECRET=$webhook"
+            echo "UPLOAD_DIR=$RUNNER_TEMP/uploads"
+          } >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/uploads"
+
+      - name: Installation application
+        run: npm ci
+
+      - name: Outils QA isolés
+        run: npm install --no-save --package-lock=false @playwright/test@1.55.0 lighthouse@12.8.2
+
+      - name: Navigateurs Playwright
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Base de données de test
+        run: |
+          npx prisma migrate deploy
+          npx prisma db seed
+
+      - name: Build production
+        run: npm run build
+
+      - name: Démarrage du serveur
+        run: |
+          nohup npm run start -- --port 3001 > "$RUNNER_TEMP/qa-server.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3001/ && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/qa-server.log"
+          exit 1
+
+      - name: QA cross-browser
+        run: npx playwright test --config=playwright.qa.config.mjs
+
+      - name: Lighthouse mobile et desktop
+        run: node scripts/qa-lighthouse.mjs
+
+      - name: Rapports QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-browser-lighthouse
+          path: |
+            qa-results/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Journal serveur
+        if: failure()
+        run: cat "$RUNNER_TEMP/qa-server.log" || true
