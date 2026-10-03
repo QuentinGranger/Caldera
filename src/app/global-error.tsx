@@ -1,6 +1,7 @@
 'use client';
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 // Replaces the root layout when it fails: no global styles, fonts or header here.
 export default function GlobalError({
@@ -56,7 +57,7 @@ export default function GlobalError({
             >
               Réessayer
             </button>
-            <a
+            <Link
               href="/catalogue"
               style={{
                 display: 'inline-flex',
@@ -71,8 +72,8 @@ export default function GlobalError({
               }}
             >
               Voir tous les produits
-            </a>
-            <a
+            </Link>
+            <Link
               href="/"
               style={{
                 display: 'inline-flex',
@@ -86,7 +87,7 @@ export default function GlobalError({
               }}
             >
               Retour à l’accueil
-            </a>
+            </Link>
           </div>
         </main>
       </body>
