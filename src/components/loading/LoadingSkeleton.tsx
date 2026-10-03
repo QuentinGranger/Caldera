@@ -202,3 +202,41 @@ export function ProductPageSkeleton() {
     </main>
   );
 }
+
+
+export function CalendarPageSkeleton() {
+  return (
+    <main
+      id="contenu"
+      className={styles.loadingMain}
+      aria-busy="true"
+      aria-label="Chargement du calendrier des sorties"
+    >
+      <span className={styles.srOnly}>Chargement du calendrier…</span>
+      <HeroSkeleton />
+      <Container>
+        <div className={styles.catalogBody} aria-hidden="true">
+          <div className={styles.chips}>
+            <Block className={styles.chip} />
+            <Block className={`${styles.chip} ${styles.chipWide}`} />
+            <Block className={styles.chip} />
+          </div>
+          {Array.from({ length: 2 }, (_, section) => (
+            <section className={styles.sectionSkeleton} key={section}>
+              <Block className={styles.sectionHeading} />
+              <div className={styles.releaseList}>
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div className={styles.releaseRow} key={index}>
+                    <Block className={styles.releaseDate} />
+                    <Block className={styles.releaseName} />
+                    <Block className={styles.releaseStock} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </Container>
+    </main>
+  );
+}
