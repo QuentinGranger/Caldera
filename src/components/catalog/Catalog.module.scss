@@ -460,8 +460,23 @@ $hairline: rgb(23 62 50 / 14%);
     }
   }
 }
-.explorer:has([aria-busy='true'], .pending) .grid {
-  opacity: 0.55;
+.pendingGridSkeleton {
+  display: none;
+}
+
+.explorer:has([aria-busy='true'], .pending) {
+  .pendingGridSkeleton {
+    display: block;
+  }
+
+  > .grid,
+  > :global(.catalog-grid-placeholder) {
+    display: none;
+  }
+
+  .grid {
+    opacity: 0.35;
+  }
 }
 .item {
   min-width: 0;
