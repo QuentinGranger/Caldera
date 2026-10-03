@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import {
   catalogListingMetadata,
   loadCatalog,
@@ -7,7 +6,6 @@ import {
 import { getIndexableListings } from '@/components/catalog/listingHub';
 import { getGuidesIndex } from '@/components/editorial/content';
 import { GameHubPage } from '@/components/landing/GameHubPage';
-import { CatalogPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { requireLandingView } from '@/components/landing/routes';
 import type { SearchParams } from '@/lib/catalog/params';
 import { isShopGame } from '@/lib/catalog/shopGame';
@@ -40,13 +38,8 @@ export async function generateMetadata({
   });
 }
 
-async function GameContent({
-  view,
-  searchParams,
-}: {
-  view: Awaited<ReturnType<typeof requireLandingView>>;
-  searchParams: Props['searchParams'];
-}) {
+export default async function Page({ params, searchParams }: Props) {
+  const view = await requireLandingView((await params).game, [], searchParams);
   const [load, shortcuts, listings, guides, aisles] = await Promise.all([
     loadCatalog({ path: view.path, searchParams, scope: view.catalogScope }),
     getGameHubShortcuts(view.scope.game),
@@ -78,14 +71,5 @@ async function GameContent({
       ]}
       guidesIndexable={guides.decision.index}
     />
-  );
-}
-export default async function Page({ params, searchParams }: Props) {
-  const view = await requireLandingView((await params).game, [], searchParams);
-  const content = <GameContent view={view} searchParams={searchParams} />;
-  // Query canonicalisation can redirect: never stream before it has settled.
-  if (Object.keys(await searchParams).length > 0) return content;
-  return (
-    <Suspense fallback={<CatalogPageSkeleton framed />}>{content}</Suspense>
   );
 }
