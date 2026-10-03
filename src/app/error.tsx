@@ -30,7 +30,7 @@ export default function ErrorPage({
             <Button href="/catalogue" variant="outline">
               Voir tous les produits
             </Button>
-            <Link href="/">Retour à l’accueil</Link>
+            <Link href="/" className={styles.errorHome}>Retour à l’accueil</Link>
           </div>
         </section>
       </Container>
