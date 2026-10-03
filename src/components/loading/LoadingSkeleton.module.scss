@@ -608,3 +608,155 @@ $hairline: rgb(23 62 50 / 14%);
   width: min(24rem, 76%);
   height: clamp(3rem, 8vw, 4.4rem);
 }
+
+
+.checkoutPage {
+  min-height: 65vh;
+  padding-bottom: 4rem;
+}
+
+.checkoutProgress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-block: 2rem 3rem;
+}
+
+.checkoutStep {
+  height: 3.4rem;
+  border-bottom: 1px solid v.$color-border;
+  border-radius: 0;
+}
+
+.checkoutGrid {
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 4rem;
+  }
+}
+
+.checkoutEyebrow {
+  width: 11rem;
+  height: 0.7rem;
+}
+
+.checkoutTitle {
+  width: min(27rem, 82%);
+  height: clamp(3rem, 8vw, 4.2rem);
+  margin-top: 0.6rem;
+}
+
+.checkoutMobileTotal {
+  height: 5rem;
+  margin-block: 1.5rem;
+  border-radius: v.$radius-small;
+
+  @include m.from(v.$breakpoint-desktop) {
+    display: none;
+  }
+}
+
+.checkoutLegend {
+  width: 13rem;
+  height: 1.8rem;
+  margin-block: 2rem 1rem;
+}
+
+.checkoutFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.checkoutField {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.checkoutFieldLabel {
+  width: 6rem;
+  height: 0.7rem;
+}
+
+.checkoutInput {
+  width: 100%;
+  height: 48px;
+  border-radius: v.$radius-small;
+}
+
+.checkoutWide {
+  @include m.from(v.$breakpoint-tablet) {
+    grid-column: 1 / -1;
+  }
+}
+
+.checkoutContinue {
+  width: 12rem;
+  height: 48px;
+  margin-top: 2rem;
+  border-radius: v.$radius-small;
+}
+
+.checkoutSummary {
+  min-height: 31rem;
+  padding: 1.5rem;
+  border-radius: 0.8rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(244 217 133 / 9%), transparent 28%),
+    linear-gradient(180deg, #004434 0%, v.$color-green-dark 60%);
+
+  @include m.from(v.$breakpoint-desktop) {
+    position: sticky;
+    top: calc(var(--header-height) + 2rem);
+  }
+}
+
+.checkoutSummaryTitle {
+  width: 11rem;
+  height: 2.2rem;
+}
+
+.checkoutSummaryItem {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  gap: 0.95rem;
+  align-items: center;
+  padding-block: 1rem;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.checkoutSummaryImage {
+  width: 68px;
+  height: 82px;
+  border-radius: 0.45rem;
+}
+
+.checkoutSummaryName {
+  width: min(10rem, 90%);
+  height: 0.9rem;
+}
+
+.checkoutSummaryMeta {
+  width: 6rem;
+  height: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.checkoutSummaryPrice {
+  width: 3.5rem;
+  height: 0.8rem;
+}
+
+.checkoutTotal {
+  width: 100%;
+  height: 5.5rem;
+  margin-top: 1rem;
+  border-radius: 0.7rem;
+}
