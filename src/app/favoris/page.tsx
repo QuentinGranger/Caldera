@@ -6,6 +6,7 @@ import { ProductCard } from '@/components/product/ProductCard/ProductCard';
 import { WishlistPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { Container } from '@/components/ui/Container/Container';
 import { getWishlistProducts, getWishlistSnapshot } from '@/lib/wishlist/data';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './wishlist.module.scss';
 
 export const metadata: Metadata = {
@@ -61,7 +62,7 @@ async function WishlistContent() {
               Touchez le cœur d’un produit pour le garder ici et le retrouver
               facilement.
             </p>
-            <Link href="/catalogue">Explorer le catalogue</Link>
+            <Link href="/catalogue">{ALL_PRODUCTS_LABEL}</Link>
           </section>
         )}
       </Container>
