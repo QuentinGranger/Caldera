@@ -5,30 +5,27 @@ import { test } from 'node:test';
 const text = (path: string) => readFile(path, 'utf8');
 
 test('états de chargement : les routes marchandes ont une boundary contextuelle', async () => {
-  const routes = [
-    'src/app/catalogue/page.tsx',
-    'src/app/en-stock/page.tsx',
-    'src/app/nouveautes/page.tsx',
-    'src/app/precommandes/page.tsx',
-    'src/app/[game]/page.tsx',
-    'src/app/[game]/[...facets]/page.tsx',
-    'src/app/categorie/[slug]/page.tsx',
+  const streamedRoutes = [
     'src/app/extensions/page.tsx',
-    'src/app/extensions/[slug]/page.tsx',
     'src/app/calendrier-des-sorties/page.tsx',
     'src/app/produit/[slug]/page.tsx',
     'src/app/favoris/page.tsx',
     'src/app/checkout/page.tsx',
   ];
 
-  const contents = await Promise.all(routes.map(text));
+  const contents = await Promise.all(streamedRoutes.map(text));
   for (const [index, content] of contents.entries()) {
-    assert.match(content, /Suspense/, routes[index]);
-    assert.match(content, /Skeleton/, routes[index]);
+    assert.match(content, /Suspense/, streamedRoutes[index]);
+    assert.match(content, /Skeleton/, streamedRoutes[index]);
   }
 
+  // Catalog pages keep their strict SSR order for SEO/HTTP invariants. Their
+  // existing transition state swaps the live grid for matching card skeletons.
   const catalog = await text('src/components/catalog/CatalogPage.tsx');
+  const catalogStyles = await text('src/components/catalog/Catalog.module.scss');
   assert.match(catalog, /CatalogGridSkeleton/);
+  assert.match(catalogStyles, /pendingGridSkeleton/);
+  assert.match(catalogStyles, /aria-busy/);
 });
 
 test('skeletons : état occupé, réduction de mouvement et géométrie produit', async () => {
