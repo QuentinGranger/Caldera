@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowDown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
 import { HOME_PROMISE, type HomeLinks } from '@/components/home/homeData';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './Hero.module.scss';
 
 /**
@@ -48,7 +49,7 @@ export function Hero({
             {/* Nothing online yet: the invitation to hear of the opening. */}
             {links.catalogue ? (
               <Button href={links.catalogue} variant="gold">
-                Explorer la boutique <ArrowRight aria-hidden="true" />
+                {ALL_PRODUCTS_LABEL} <ArrowRight aria-hidden="true" />
               </Button>
             ) : (
               <Button href="#newsletter" variant="gold">
