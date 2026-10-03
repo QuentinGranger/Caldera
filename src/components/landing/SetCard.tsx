@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { formatDateFr } from '@/lib/seo/metadata';
+import { VIEW_EXTENSION_LABEL } from '@/lib/ux/copy';
 import type { SetEntry } from './landingData';
 import { plural } from './landingText';
 import styles from './Sets.module.scss';
@@ -58,7 +59,7 @@ export function SetCard({
         </span>
         {entry.href && (
           <span className={styles.cta} aria-hidden="true">
-            Découvrir l’extension <ArrowRight size={16} />
+            {VIEW_EXTENSION_LABEL} <ArrowRight size={16} />
           </span>
         )}
       </p>
