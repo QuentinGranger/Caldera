@@ -111,7 +111,7 @@ async function checkRoute(context, project, path) {
 
   await goto(page, path);
 
-  const main = page.locator('main#contenu');
+  const main = page.locator('main#contenu:not([aria-busy="true"])').last();
   assert.ok(await main.isVisible(), path + ': main not visible');
   const h1 = page.locator('h1').first();
   assert.ok(await h1.isVisible(), path + ': h1 not visible');
@@ -121,10 +121,30 @@ async function checkRoute(context, project, path) {
     rootScroll: document.documentElement.scrollWidth,
     bodyScroll: document.body.scrollWidth,
   }));
-  assert.ok(
-    Math.max(geometry.rootScroll, geometry.bodyScroll) <= geometry.viewport + 2,
-    `${path}: horizontal overflow ${Math.max(geometry.rootScroll, geometry.bodyScroll)} > ${geometry.viewport}`,
-  );
+  const overflow = Math.max(geometry.rootScroll, geometry.bodyScroll);
+  if (overflow > geometry.viewport + 2) {
+    const offenders = await page.evaluate(() => {
+      const viewport = document.documentElement.clientWidth;
+      return [...document.querySelectorAll('body *')]
+        .map((node) => {
+          const rect = node.getBoundingClientRect();
+          return {
+            tag: node.tagName.toLowerCase(),
+            className: typeof node.className === 'string' ? node.className : '',
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+            width: Math.round(rect.width),
+            text: (node.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80),
+          };
+        })
+        .filter((item) => item.right > viewport + 2 || item.left < -2)
+        .sort((a, b) => Math.max(b.right - viewport, -b.left) - Math.max(a.right - viewport, -a.left))
+        .slice(0, 12);
+    });
+    assert.fail(
+      `${path}: horizontal overflow ${overflow} > ${geometry.viewport}; offenders=${JSON.stringify(offenders)}`,
+    );
+  }
 
   if (HERO_ROUTES.has(path)) {
     const hero = path === '/'
@@ -139,7 +159,7 @@ async function checkRoute(context, project, path) {
   assert.deepEqual(pageErrors, [], path + ': page errors');
   const actionableConsole = consoleErrors.filter(
     (message) =>
-      !/vercel\/insights|favicon|Failed to load resource.*404/i.test(message),
+      !/_vercel\/speed-insights\/script\.js|favicon|Failed to load resource.*404/i.test(message),
   );
   assert.deepEqual(actionableConsole, [], path + ': console errors');
 
