@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard/ProductCard';
+import { WishlistPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { Container } from '@/components/ui/Container/Container';
 import { getWishlistProducts, getWishlistSnapshot } from '@/lib/wishlist/data';
 import styles from './wishlist.module.scss';
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function WishlistPage() {
+async function WishlistContent() {
   const snapshot = await getWishlistSnapshot();
   const { products, readError } = await getWishlistProducts(snapshot);
 
@@ -64,5 +66,13 @@ export default async function WishlistPage() {
         )}
       </Container>
     </main>
+  );
+}
+
+export default function WishlistPage() {
+  return (
+    <Suspense fallback={<WishlistPageSkeleton />}>
+      <WishlistContent />
+    </Suspense>
   );
 }
