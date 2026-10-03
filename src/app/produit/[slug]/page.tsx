@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
@@ -20,6 +21,7 @@ import {
 } from '@/lib/product/page';
 import { productTypeLabels } from '@/lib/product/purchase';
 import { productPath } from '@/lib/product/seo';
+import { ProductPageSkeleton } from '@/components/loading/LoadingSkeletons';
 import styles from './product.module.scss';
 type Props = { params: Promise<{ slug: string }> };
 async function resolve(params: Props['params']) {
@@ -35,7 +37,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return productPageMetadata(product, decision);
 }
 export default async function ProductPage({ params }: Props) {
-  const { product, decision } = await resolve(params);
+  const route = await resolve(params);
+  return (
+    <Suspense fallback={<ProductPageSkeleton />}>
+      <ProductContent route={route} />
+    </Suspense>
+  );
+}
+
+async function ProductContent({
+  route,
+}: {
+  route: Awaited<ReturnType<typeof resolve>>;
+}) {
+  const { product, decision } = route;
   const page = await loadProductPage(product, decision);
   const images = product.images.length
     ? product.images
