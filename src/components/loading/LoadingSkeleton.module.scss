@@ -10,6 +10,7 @@ $hairline: rgb(23 62 50 / 14%);
 
 .block {
   position: relative;
+  display: block;
   overflow: hidden;
   border-radius: 0.35rem;
   background: linear-gradient(
@@ -173,7 +174,8 @@ $hairline: rgb(23 62 50 / 14%);
 
 .toolbar {
   display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr) 44px 6.5rem;
+  grid-template-columns: auto minmax(0, 1fr) 44px auto 44px;
+  grid-template-areas: 'total . toggle filters sort';
   gap: 0.5rem;
   align-items: center;
   min-height: 56px;
@@ -181,13 +183,16 @@ $hairline: rgb(23 62 50 / 14%);
   border-bottom: 1px solid $hairline;
 
   @include m.from(v.$breakpoint-tablet) {
-    grid-template-columns: 6.5rem minmax(12rem, 1fr) 7.5rem 9rem;
+    grid-template-columns: auto minmax(12rem, 1fr) 7.5rem 9rem;
+    grid-template-areas: 'total search filters sort';
     gap: 1rem;
     min-height: 64px;
   }
 }
 
 .toolbarCount {
+  grid-area: total;
+  width: 5.5rem;
   height: 0.85rem;
 }
 
@@ -198,6 +203,7 @@ $hairline: rgb(23 62 50 / 14%);
 }
 
 .toolbarSearch {
+  grid-area: search;
   display: none;
 
   @include m.from(v.$breakpoint-tablet) {
@@ -206,11 +212,20 @@ $hairline: rgb(23 62 50 / 14%);
 }
 
 .toolbarActionMobile {
+  grid-area: toggle;
   width: 44px;
 
   @include m.from(v.$breakpoint-tablet) {
     display: none;
   }
+}
+
+.toolbarFilters {
+  grid-area: filters;
+}
+
+.toolbarSort {
+  grid-area: sort;
 }
 
 .grid {
