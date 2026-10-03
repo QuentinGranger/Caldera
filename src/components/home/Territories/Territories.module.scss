@@ -245,3 +245,29 @@ $wide: 64rem;
     }
   }
 }
+
+
+/* Progressive fallback: an older engine without :has() keeps a coherent
+   static landscape instead of hiding every territory visual. */
+@supports not selector(:has(*)) {
+  @include m.from($wide) {
+    .item:first-child {
+      .visual {
+        opacity: 1;
+
+        img {
+          transform: scale(1);
+        }
+      }
+
+      .name {
+        color: v.$color-gold-light;
+      }
+
+      .tagline {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}
