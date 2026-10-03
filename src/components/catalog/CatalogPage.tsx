@@ -18,6 +18,7 @@ import { CatalogGrid } from './CatalogGrid';
 import { CatalogPagination } from './CatalogPagination';
 import { CatalogQuickNav } from './CatalogQuickNav';
 import { EmptyCatalog } from './EmptyCatalog';
+import { CatalogGridSkeleton } from '@/components/loading/LoadingSkeleton';
 import type { EmptyAction } from './EmptyState';
 import styles from './Catalog.module.scss';
 
@@ -159,6 +160,7 @@ export function CatalogResults({
               <ActiveFilters filters={filters} facets={facets} path={path} />
             </div>
           )}
+          <CatalogGridSkeleton className={styles.pendingGridSkeleton} />
           {result.products.length ? (
             <CatalogGrid
               products={result.products}
