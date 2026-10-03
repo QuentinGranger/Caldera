@@ -703,7 +703,6 @@ export function releaseWindow<T extends { releaseDate: Date }>(
   };
 }
 
-
 export const RECENT_EXTENSION_MONTHS = 6;
 
 /** First day of the rolling window used by /extensions for recent releases. */
@@ -758,7 +757,14 @@ export function extensionReleaseSections<
   const descending = (
     a: (typeof indexed)[number],
     b: (typeof indexed)[number],
-  ) => -ascending(a, b);
+  ) => {
+    const aTime = a.entry.releaseDate?.getTime();
+    const bTime = b.entry.releaseDate?.getTime();
+    if (aTime == null && bTime == null) return a.index - b.index;
+    if (aTime == null) return 1;
+    if (bTime == null) return -1;
+    return bTime - aTime || a.index - b.index;
+  };
 
   return {
     upcoming: indexed
@@ -770,10 +776,12 @@ export function extensionReleaseSections<
       .map(({ entry }) => entry),
     recent: indexed
       .filter(({ entry }) => {
-        const time = entry.releaseDate?.getTime();
+        const releaseDate = entry.releaseDate;
+        const time = releaseDate?.getTime();
         return (
+          releaseDate != null &&
           time != null &&
-          !isUpcoming(entry.releaseDate!, today) &&
+          !isUpcoming(releaseDate, today) &&
           time >= since
         );
       })
