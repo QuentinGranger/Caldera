@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import {
   CatalogResults,
   catalogItemListNode,
@@ -7,6 +8,7 @@ import {
   loadCatalog,
 } from '@/components/catalog/CatalogPage';
 import { CatalogShell } from '@/components/catalog/CatalogShell';
+import { CatalogPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { EmptyState } from '@/components/catalog/EmptyState';
 import { ExploreSection } from '@/components/catalog/ExploreSection';
 import { EXPLORE_PRODUCTS, VIEWS } from '@/components/catalog/pageCopy';
@@ -41,8 +43,13 @@ export async function generateMetadata({
   });
 }
 
-export default async function Page({ params, searchParams }: Props) {
-  const view = await requireStandaloneSet((await params).slug, searchParams);
+async function ExtensionContent({
+  view,
+  searchParams,
+}: {
+  view: Awaited<ReturnType<typeof requireStandaloneSet>>;
+  searchParams: Props['searchParams'];
+}) {
   const load = await loadCatalog({
     path: view.path,
     searchParams,
@@ -116,5 +123,13 @@ export default async function Page({ params, searchParams }: Props) {
       )}
       <LandingFaq entries={faq} subject={set.name} />
     </CatalogShell>
+  );
+}
+export default async function Page({ params, searchParams }: Props) {
+  const view = await requireStandaloneSet((await params).slug, searchParams);
+  const content = <ExtensionContent view={view} searchParams={searchParams} />;
+  if (Object.keys(await searchParams).length > 0) return content;
+  return (
+    <Suspense fallback={<CatalogPageSkeleton framed />}>{content}</Suspense>
   );
 }
