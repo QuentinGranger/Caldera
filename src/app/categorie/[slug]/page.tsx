@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { AisleNav } from '@/components/catalog/AisleNav';
+import { CatalogPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { CatalogInterlude } from '@/components/catalog/CatalogInterlude';
 import {
   CatalogResults,
@@ -53,9 +55,15 @@ export async function generateMetadata({
  * /categorie/{slug}: a family across the shop (accessories for every game).
  * The same system as the game's aisles, its own words and view.
  */
-export default async function Page({ params, searchParams }: Props) {
-  const { slug } = await params;
-  const view = await requireCategoryHub(slug, searchParams);
+async function CategoryContent({
+  slug,
+  view,
+  searchParams,
+}: {
+  slug: string;
+  view: Awaited<ReturnType<typeof requireCategoryHub>>;
+  searchParams: Props['searchParams'];
+}) {
   const copy = categoryCopy(slug);
   const [load, aisles, teaser, guides] = await Promise.all([
     loadCatalog({ path: view.path, searchParams, scope: view.catalogScope }),
@@ -147,5 +155,16 @@ export default async function Page({ params, searchParams }: Props) {
       )}
       <LandingFaq entries={faq} subject={view.heading} />
     </CatalogShell>
+  );
+}
+export default async function Page({ params, searchParams }: Props) {
+  const { slug } = await params;
+  const view = await requireCategoryHub(slug, searchParams);
+  const content = (
+    <CategoryContent slug={slug} view={view} searchParams={searchParams} />
+  );
+  if (Object.keys(await searchParams).length > 0) return content;
+  return (
+    <Suspense fallback={<CatalogPageSkeleton framed />}>{content}</Suspense>
   );
 }
