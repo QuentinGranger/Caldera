@@ -6,6 +6,7 @@ import { ProductFavorite } from './ProductFavorite';
 import { languageLabels } from '@/lib/catalog/params';
 import type { CatalogProduct } from '@/types/product';
 import { formatPrice } from '@/utils/formatPrice';
+import { viewProductLabel } from '@/lib/ux/copy';
 import styles from './ProductCard.module.scss';
 /** The listing grid: 2 columns on phones, 3 on tablets, 4 from 75rem. */
 const GRID_SIZES =
@@ -48,7 +49,7 @@ export function ProductCard({
         />
         <Link
           href={`/produit/${product.slug}`}
-          aria-label={`Découvrir ${product.name}`}
+          aria-label={viewProductLabel(product.name)}
         >
           <Image
             src={product.image}
