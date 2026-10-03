@@ -4,6 +4,7 @@ import {
   categoryAncestors,
   categoryHubFacts,
   categoryHubHeading,
+  extensionReleaseSections,
   factText,
   factualFaq,
   familyAndSubject,
@@ -16,6 +17,8 @@ import {
   landingHeading,
   mergeFaq,
   parisToday,
+  recentExtensionsStart,
+  RECENT_EXTENSION_MONTHS,
   releasePhrase,
   releaseStockText,
   releaseWindow,
@@ -768,6 +771,44 @@ test('calendrier : jour à Paris, fenêtre de 12 mois, regroupement par mois', (
     releaseStockText({ count: 1, inStockCount: 0, preorderCount: 0 }),
     '1 produit, aucun en stock',
   );
+});
+
+test('extensions : trois sections chronologiques sans doublon', () => {
+  const reference = utc(2026, 10, 3);
+  assert.equal(RECENT_EXTENSION_MONTHS, 6);
+  assert.deepEqual(recentExtensionsStart(reference), utc(2026, 4, 3));
+
+  const entries = [
+    { name: 'future lointaine', releaseDate: utc(2027, 1, 10) },
+    { name: 'ancienne', releaseDate: utc(2026, 4, 2) },
+    { name: 'récente', releaseDate: utc(2026, 8, 20) },
+    { name: 'future proche', releaseDate: utc(2026, 10, 12) },
+    { name: 'limite', releaseDate: utc(2026, 4, 3) },
+    { name: 'aujourd’hui', releaseDate: reference },
+    { name: 'sans date', releaseDate: null },
+  ];
+  const sections = extensionReleaseSections(entries, reference);
+
+  assert.deepEqual(
+    sections.upcoming.map((entry) => entry.name),
+    ['future proche', 'future lointaine'],
+  );
+  assert.deepEqual(
+    sections.recent.map((entry) => entry.name),
+    ['aujourd’hui', 'récente', 'limite'],
+  );
+  assert.deepEqual(
+    sections.released.map((entry) => entry.name),
+    ['ancienne', 'sans date'],
+  );
+
+  const names = [
+    ...sections.upcoming,
+    ...sections.recent,
+    ...sections.released,
+  ].map((entry) => entry.name);
+  assert.equal(names.length, entries.length);
+  assert.equal(new Set(names).size, entries.length);
 });
 
 test('redirections : la requête suit le chemin canonique', () => {
