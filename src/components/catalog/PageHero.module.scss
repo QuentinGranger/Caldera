@@ -72,6 +72,19 @@ $gold-line: rgb(232 194 97 / 60%);
     padding-block: 1.5rem 3rem;
   }
 }
+
+// Family heroes ramp up through tablet, then keep one exact desktop height.
+// This avoids the ~50 px growth that used to occur when an h1 wrapped.
+.hero[data-stable-desktop] .inner {
+  @include m.from(v.$breakpoint-tablet) {
+    min-height: clamp(29rem, 58vw, 33rem);
+  }
+
+  @include m.from($split) {
+    height: var(--hero-desktop-height);
+    min-height: var(--hero-desktop-height);
+  }
+}
 .hero:not([data-frame='backdrop']) .inner {
   @include m.from($split) {
     display: grid;
@@ -111,6 +124,15 @@ $gold-line: rgb(232 194 97 / 60%);
   @include m.from($split) {
     grid-area: content;
     align-self: center;
+  }
+}
+
+// Stable family heroes reserve a full content block: a two-line title fits
+// without changing the outer hero height or pushing the CTA outside the frame.
+.hero[data-stable-desktop] .content {
+  @include m.from($split) {
+    min-height: 23rem;
+    align-content: center;
   }
 }
 .eyebrow {
@@ -199,8 +221,18 @@ $gold-line: rgb(232 194 97 / 60%);
   inset: 0;
   z-index: -1;
   img {
+    --drift-zoom: var(--mobile-drift-zoom, 1.08);
     object-fit: cover;
-    object-position: var(--focus);
+    object-position: var(--mobile-focus, var(--focus));
+    transform: scale(var(--mobile-zoom, 1));
+    transform-origin: var(--mobile-focus, var(--focus));
+
+    @include m.from($split) {
+      --drift-zoom: 1.08;
+      object-position: var(--focus);
+      transform: none;
+      transform-origin: var(--focus);
+    }
   }
   &::after {
     content: '';
@@ -316,9 +348,9 @@ $gold-line: rgb(232 194 97 / 60%);
 }
 @keyframes drift {
   from {
-    transform: scale(1.08);
+    transform: scale(var(--drift-zoom, 1.08));
   }
   to {
-    transform: scale(1.08) translateY(6%);
+    transform: scale(var(--drift-zoom, 1.08)) translateY(6%);
   }
 }
