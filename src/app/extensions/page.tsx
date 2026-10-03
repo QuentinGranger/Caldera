@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
 import { AisleNav } from '@/components/catalog/AisleNav';
 import { CatalogShell } from '@/components/catalog/CatalogShell';
 import { EXTENSIONS_COPY } from '@/components/catalog/pageCopy';
@@ -13,6 +14,7 @@ import { getExtensionsIndex } from '@/components/landing/releaseData';
 import { RECENT_EXTENSION_MONTHS } from '@/components/landing/landingText';
 import { SetCard } from '@/components/landing/SetCard';
 import { SectionTitle } from '@/components/ui/SectionTitle/SectionTitle';
+import { ExtensionsPageSkeleton } from '@/components/loading/LoadingSkeletons';
 import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
 import type { SeoLink } from '@/lib/seo/types';
@@ -88,7 +90,15 @@ export async function generateMetadata(): Promise<Metadata> {
  * exclusive sections. The shared SetCard keeps links, images and dates aligned
  * with every other catalogue surface.
  */
-export default async function Page() {
+export default function Page() {
+  return (
+    <Suspense fallback={<ExtensionsPageSkeleton />}>
+      <ExtensionsContent />
+    </Suspense>
+  );
+}
+
+async function ExtensionsContent() {
   await connection();
   const index = await getExtensionsIndex();
   const ways: SeoLink[] = [

@@ -1,5 +1,5 @@
 'use client';
-import { useId, useRef, useState, useTransition, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDownUp, Search, X } from 'lucide-react';
 import {
@@ -8,6 +8,7 @@ import {
   type CatalogFilters,
   type CatalogSort,
 } from '@/lib/catalog/params';
+import { useCatalogPending } from './CatalogPending';
 import styles from './Catalog.module.scss';
 
 /**
@@ -29,7 +30,7 @@ export function CatalogToolbar({
 }) {
   const router = useRouter(),
     id = useId();
-  const [pending, startTransition] = useTransition();
+  const { pending, startTransition } = useCatalogPending();
   const [searchOpen, setSearchOpen] = useState(Boolean(filters.search));
   const input = useRef<HTMLInputElement>(null);
   const change = (patch: Partial<CatalogFilters>) =>

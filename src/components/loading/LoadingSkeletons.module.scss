@@ -1,0 +1,584 @@
+@use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
+
+.bone {
+  display: block;
+  min-width: 1px;
+  min-height: 1px;
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(
+      100deg,
+      transparent 20%,
+      rgb(255 255 255 / 48%) 42%,
+      transparent 64%
+    ),
+    #e5e0d4;
+  background-size: 220% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bone {
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -40% 0;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hero {
+  min-height: clamp(21rem, 52svh, 29rem);
+  padding-block: 1.25rem 1.75rem;
+  background: linear-gradient(165deg, v.$color-night-soft 0%, v.$color-night 75%);
+
+  @include m.from(60rem) {
+    min-height: 31rem;
+    padding-block: 1.5rem 3rem;
+  }
+
+  .bone {
+    background:
+      linear-gradient(
+        100deg,
+        transparent 20%,
+        rgb(255 255 255 / 12%) 42%,
+        transparent 64%
+      ),
+      rgb(255 255 255 / 9%);
+    background-size: 220% 100%;
+  }
+}
+
+.familyHero {
+  @include m.from(v.$breakpoint-tablet) {
+    min-height: clamp(29rem, 58vw, 33rem);
+  }
+
+  @include m.from(60rem) {
+    min-height: 34rem;
+  }
+}
+
+.breadcrumb,
+.simpleBreadcrumb {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.breadcrumb {
+  padding-top: 0.25rem;
+}
+
+.simpleBreadcrumb {
+  padding-block: 1.25rem 0.75rem;
+}
+
+.crumbShort {
+  width: 4.5rem;
+  height: 0.75rem;
+}
+
+.crumbLong {
+  width: 7rem;
+  height: 0.75rem;
+}
+
+.heroBody {
+  display: flex;
+  min-height: 17rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2rem;
+  padding-top: 2rem;
+
+  @include m.from(60rem) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, 30rem);
+    align-items: center;
+    gap: clamp(3rem, 7vw, 7rem);
+    min-height: 25rem;
+  }
+}
+
+.heroCopy {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 40rem;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  width: 9rem;
+  height: 0.72rem;
+  border-radius: 999px;
+}
+
+.heroTitle {
+  width: min(100%, 34rem);
+  height: clamp(2.5rem, 7vw, 5.2rem);
+}
+
+.heroTitleShort {
+  width: min(68%, 22rem);
+  height: clamp(2.5rem, 7vw, 5.2rem);
+}
+
+.heroLead {
+  width: min(100%, 29rem);
+  height: 1rem;
+}
+
+.heroLeadShort {
+  width: min(76%, 22rem);
+  height: 1rem;
+}
+
+.heroButton {
+  width: 10.5rem;
+  height: 44px;
+  margin-top: 0.85rem;
+  border-radius: 999px;
+}
+
+.heroVisual {
+  display: none;
+
+  @include m.from(60rem) {
+    display: block;
+    width: min(30vw, 30rem);
+    aspect-ratio: 1.4;
+    justify-self: end;
+    border-radius: 0.6rem;
+  }
+}
+
+.catalogBody {
+  margin-top: v.$rhythm-after-hero;
+}
+
+.chips {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+
+  .bone {
+    flex: 0 0 auto;
+    width: 7.5rem;
+    height: 44px;
+    border-radius: 999px;
+
+    &:nth-child(2) {
+      width: 9.5rem;
+    }
+
+    &:nth-child(3) {
+      width: 6.75rem;
+    }
+  }
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  min-height: 58px;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid v.$color-border;
+
+  @media (max-width: 47.99rem) {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+}
+
+.total {
+  width: 5.5rem;
+  height: 0.9rem;
+}
+
+.search {
+  height: 44px;
+  border-radius: 999px;
+
+  @media (max-width: 47.99rem) {
+    visibility: hidden;
+  }
+}
+
+.filterButton {
+  width: 6.8rem;
+  height: 44px;
+  border-radius: 999px;
+}
+
+.sortButton {
+  width: 7rem;
+  height: 44px;
+  border-radius: 999px;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem 0.85rem;
+  margin-top: v.$rhythm-grid;
+
+  @media (min-width: 300px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.5rem 1.25rem;
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2.75rem 1.5rem;
+  }
+}
+
+.productCard {
+  min-width: 0;
+}
+
+.productVisual {
+  position: relative;
+  aspect-ratio: 0.95;
+  overflow: hidden;
+  border-radius: v.$radius-card;
+  background: #ebe7da;
+}
+
+.image {
+  position: absolute;
+  inset: 15% 11% 9%;
+  border-radius: v.$radius-medium;
+}
+
+.badge {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  z-index: 1;
+  width: 5.25rem;
+  height: 1.5rem;
+  border-radius: 999px;
+}
+
+.productCopy {
+  display: flex;
+  min-height: 9.8rem;
+  flex-direction: column;
+  gap: 0.42rem;
+  padding: 1rem 0.15rem 0;
+}
+
+.category {
+  width: 58%;
+  height: 0.7rem;
+}
+
+.productTitle {
+  width: 94%;
+  height: 0.9rem;
+  margin-top: 0.1rem;
+}
+
+.productTitleShort {
+  width: 68%;
+  height: 0.9rem;
+}
+
+.stock {
+  width: 4.5rem;
+  height: 0.68rem;
+  margin-top: 0.25rem;
+}
+
+.productBottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+}
+
+.price {
+  width: 5rem;
+  height: 1.25rem;
+}
+
+.addButton {
+  width: 44px;
+  height: 44px;
+  border-radius: v.$radius-card;
+}
+
+.section {
+  margin-top: v.$rhythm-section;
+  padding-top: v.$rhythm-section-inner;
+  border-top: 1px solid v.$color-border;
+}
+
+.sectionTitle {
+  width: min(20rem, 72%);
+  height: 2.4rem;
+  margin-top: 0.55rem;
+}
+
+.sectionLead {
+  width: min(34rem, 92%);
+  height: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.setGrid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.setCard {
+  display: flex;
+  min-height: 13rem;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.15rem 1.2rem 1.1rem;
+  border-radius: v.$radius-medium;
+  background: v.$color-surface;
+  box-shadow: inset 0 0 0 1px v.$color-border;
+}
+
+.setLabel {
+  width: 7.5rem;
+  height: 0.65rem;
+}
+
+.setLogo {
+  width: 7rem;
+  height: 2.25rem;
+}
+
+.setTitle {
+  width: 72%;
+  height: 1.5rem;
+}
+
+.setMeta {
+  width: 55%;
+  height: 0.75rem;
+}
+
+.setFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid v.$color-border;
+}
+
+.setCount {
+  width: 5rem;
+  height: 0.75rem;
+}
+
+.setLink {
+  width: 8rem;
+  height: 0.75rem;
+}
+
+.calendarHeader {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 52rem;
+  padding-block: 1.5rem 2rem;
+  border-bottom: 1px solid v.$color-border;
+}
+
+.calendarTitle {
+  width: min(40rem, 92%);
+  height: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.calendarLead {
+  width: min(42rem, 94%);
+  height: 0.9rem;
+}
+
+.calendarLeadShort {
+  width: min(30rem, 72%);
+  height: 0.9rem;
+}
+
+.calendarSection {
+  margin-top: v.$rhythm-section;
+}
+
+.releaseList {
+  margin-top: 1rem;
+  border-top: 1px solid v.$color-border;
+}
+
+.releaseRow {
+  display: grid;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1rem;
+  border-bottom: 1px solid v.$color-border;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 10rem minmax(0, 1fr) minmax(0, 14rem);
+    align-items: center;
+  }
+}
+
+.releaseDate {
+  width: 7rem;
+  height: 0.72rem;
+}
+
+.releaseName {
+  width: min(22rem, 80%);
+  height: 1.25rem;
+}
+
+.releaseStock {
+  width: 8rem;
+  height: 0.72rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    justify-self: end;
+  }
+}
+
+.productPage {
+  min-height: 65vh;
+  padding-block: 2rem 5rem;
+}
+
+.productHero {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.5rem;
+
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
+    align-items: start;
+    gap: clamp(2rem, 5vw, 5rem);
+  }
+}
+
+.gallery {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: v.$radius-card;
+}
+
+.productInfo {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+}
+
+.productPageTitle {
+  width: 96%;
+  height: clamp(2.5rem, 5vw, 4rem);
+}
+
+.productPageTitleShort {
+  width: 68%;
+  height: clamp(2.5rem, 5vw, 4rem);
+}
+
+.productSet {
+  width: 12rem;
+  height: 0.8rem;
+}
+
+.productSummary {
+  width: 100%;
+  height: 0.9rem;
+}
+
+.productSummaryShort {
+  width: 74%;
+  height: 0.9rem;
+}
+
+.wishlist {
+  width: 9rem;
+  height: 44px;
+  border-radius: 999px;
+}
+
+.purchase {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid v.$color-border;
+}
+
+.purchasePrice {
+  width: 7rem;
+  height: 1.8rem;
+}
+
+.purchaseField {
+  width: 100%;
+  height: 52px;
+  border-radius: v.$radius-medium;
+}
+
+.purchaseButton {
+  width: 100%;
+  height: 48px;
+  border-radius: 999px;
+}
+
+.productSection {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: v.$rhythm-section;
+  padding-top: v.$rhythm-section-inner;
+  border-top: 1px solid v.$color-border;
+}
+
+.detailLine {
+  width: 100%;
+  max-width: 48rem;
+  height: 0.85rem;
+}
+
+.detailLineShort {
+  width: min(32rem, 70%);
+  height: 0.85rem;
+}

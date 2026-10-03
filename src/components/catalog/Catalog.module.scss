@@ -726,6 +726,20 @@ $hairline: rgb(23 62 50 / 14%);
     gap: 0.75rem;
     margin-top: 1.5rem;
   }
+  .errorHome {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    color: v.$color-text;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .errorHome:hover {
+    color: v.$color-green-secondary;
+  }
   .emptyActions a {
     display: inline-flex;
     align-items: center;
