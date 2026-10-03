@@ -127,6 +127,20 @@ $hairline: rgb(23 62 50 / 14%);
   border-radius: 999px;
 }
 
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: min(100%, 29rem);
+  margin-top: 0.35rem;
+}
+
+.heroStat {
+  min-height: 4.5rem;
+  border: 1px solid rgb(232 194 97 / 18%);
+  border-radius: 0.55rem;
+}
+
 .heroVisual {
   display: none;
 

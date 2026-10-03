@@ -16,7 +16,15 @@ function Block({
   );
 }
 
-function HeroSkeleton({ framed = false }: { framed?: boolean }) {
+function HeroSkeleton({
+  framed = false,
+  action = true,
+  stats = false,
+}: {
+  framed?: boolean;
+  action?: boolean;
+  stats?: boolean;
+}) {
   return (
     <section className={styles.hero} aria-hidden="true">
       <div className={styles.heroInner}>
@@ -29,7 +37,14 @@ function HeroSkeleton({ framed = false }: { framed?: boolean }) {
             className={`${styles.heroLead} ${styles.heroLeadShort}`}
             dark
           />
-          <Block className={styles.heroButton} dark />
+          {stats && (
+            <div className={styles.heroStats}>
+              {Array.from({ length: 3 }, (_, index) => (
+                <Block className={styles.heroStat} dark key={index} />
+              ))}
+            </div>
+          )}
+          {action && <Block className={styles.heroButton} dark />}
         </div>
         {framed && <Block className={styles.heroVisual} dark />}
       </div>
@@ -224,22 +239,14 @@ export function CalendarPageSkeleton() {
   return (
     <main
       id="contenu"
-      className={styles.simplePage}
+      className={styles.loadingMain}
       aria-busy="true"
       aria-label="Chargement du calendrier des sorties"
     >
       <span className={styles.srOnly}>Chargement du calendrier…</span>
+      <HeroSkeleton action={false} stats />
       <Container>
-        <div aria-hidden="true">
-          <Block className={styles.simpleBreadcrumb} />
-          <header className={styles.simpleHeader}>
-            <Block className={styles.simpleEyebrow} />
-            <Block className={styles.simpleTitle} />
-            <Block className={styles.simpleLead} />
-            <Block
-              className={`${styles.simpleLead} ${styles.heroLeadShort}`}
-            />
-          </header>
+        <div className={styles.catalogBody} aria-hidden="true">
           {Array.from({ length: 2 }, (_, section) => (
             <section className={styles.sectionSkeleton} key={section}>
               <Block className={styles.sectionHeading} />
