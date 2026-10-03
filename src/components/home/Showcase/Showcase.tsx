@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard/ProductCard';
 import type { CatalogProduct } from '@/types/product';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './Showcase.module.scss';
 
 /**
@@ -38,7 +39,7 @@ export function Showcase({
           </p>
           {catalogue && (
             <Link href={catalogue} className={styles.link}>
-              Tout le catalogue <ArrowRight size={16} aria-hidden="true" />
+              {ALL_PRODUCTS_LABEL} <ArrowRight size={16} aria-hidden="true" />
             </Link>
           )}
         </div>
