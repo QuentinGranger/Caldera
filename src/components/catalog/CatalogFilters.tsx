@@ -1,5 +1,5 @@
 'use client';
-import { useId, useRef, useTransition } from 'react';
+import { useId, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
@@ -15,6 +15,7 @@ import {
   type StockFilter,
 } from '@/lib/catalog/params';
 import type { CatalogFacets } from '@/lib/catalog/facets';
+import { useCatalogPending } from './CatalogPending';
 import styles from './Catalog.module.scss';
 
 /** Stock options that can still narrow the scope. */
@@ -236,7 +237,7 @@ function FilterForm({
  */
 export function CatalogFilters({ filters, facets, scope, path, total }: Props) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, startTransition } = useCatalogPending();
   const dialog = useRef<HTMLDialogElement>(null),
     trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
