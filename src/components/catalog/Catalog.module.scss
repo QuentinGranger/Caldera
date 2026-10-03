@@ -12,6 +12,10 @@ $hairline: rgb(23 62 50 / 14%);
 .immersive {
   padding-top: 0;
 }
+.calendarContent {
+  margin-top: v.$rhythm-after-hero;
+}
+
 .heading {
   padding-bottom: 2rem;
   border-bottom: 1px solid v.$color-border;
