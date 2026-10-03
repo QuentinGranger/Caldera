@@ -10,6 +10,8 @@ $hairline: rgb(23 62 50 / 14%);
 .rail {
   display: flex;
   gap: 0.75rem;
+  width: calc(100% + 2 * #{v.$space-6});
+  max-width: 100vw;
   margin: 0 calc(-1 * #{v.$space-6});
   padding: 0.25rem v.$space-6 0.75rem;
   overflow-x: auto;
@@ -29,6 +31,8 @@ $hairline: rgb(23 62 50 / 14%);
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(0, 1fr));
     gap: 1rem;
+    width: auto;
+    max-width: none;
     margin: 0;
     padding: 0;
     overflow: visible;

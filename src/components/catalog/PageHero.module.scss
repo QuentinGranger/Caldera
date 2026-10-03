@@ -54,6 +54,7 @@ $gold-line: rgb(232 194 97 / 60%);
   flex-direction: column;
   justify-content: space-between;
   gap: 2rem;
+  min-height: 21rem;
   min-height: clamp(21rem, 52svh, 29rem);
   padding-block: 1.25rem 1.75rem;
   // The breadcrumb, light on the view.

@@ -67,6 +67,7 @@
   flex-direction: column;
   justify-content: flex-end;
   @include m.container;
+  min-height: 36rem;
   min-height: max(36rem, calc(100svh - 2rem));
   padding-top: calc(var(--header-height) + 3rem);
   padding-bottom: clamp(2rem, 5vh, 3.5rem);

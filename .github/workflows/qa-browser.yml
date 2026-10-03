@@ -1,0 +1,128 @@
+name: QA navigateurs et Lighthouse
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    name: Lighthouse + Chromium / Firefox / WebKit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: caldera
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d caldera"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/caldera
+      APP_URL: http://localhost:3001
+      TEST_BASE_URL: http://localhost:3001
+      EMAILS_ENABLED: 'false'
+      PASSWORD_BREACH_CHECK: 'off'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: Secrets de test
+        run: |
+          auth="$(openssl rand -hex 32)"
+          access="$(openssl rand -hex 32)"
+          webhook="whsec_$(openssl rand -hex 24)"
+          {
+            echo "BETTER_AUTH_SECRET=$auth"
+            echo "ORDER_ACCESS_SECRET=$access"
+            echo "STRIPE_WEBHOOK_SECRET=$webhook"
+            echo "UPLOAD_DIR=$RUNNER_TEMP/uploads"
+          } >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/uploads"
+
+      - name: Installation application
+        run: npm ci
+
+      - name: Outils QA isolés
+        run: |
+          qa_tools="$RUNNER_TEMP/qa-tools"
+          mkdir -p "$qa_tools"
+          npm install --prefix "$qa_tools" --no-save --package-lock=false playwright@1.55.0 lighthouse@12.8.2
+          echo "$qa_tools/node_modules/.bin" >> "$GITHUB_PATH"
+          echo "NODE_PATH=$qa_tools/node_modules" >> "$GITHUB_ENV"
+
+      - name: Navigateurs Playwright
+        run: playwright install --with-deps chromium firefox webkit
+
+      - name: Base de données de test
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+          npx prisma db seed
+
+      - name: Build production
+        run: npm run build
+
+      - name: Démarrage du serveur
+        run: |
+          nohup npm run start -- --port 3001 > "$RUNNER_TEMP/qa-server.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3001/ && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/qa-server.log"
+          exit 1
+
+      - name: QA cross-browser
+        id: cross_browser
+        continue-on-error: true
+        run: node scripts/qa-browser.cjs
+
+      - name: Lighthouse mobile et desktop
+        id: lighthouse
+        continue-on-error: true
+        run: node scripts/qa-lighthouse.mjs
+
+      - name: Validation QA
+        if: always()
+        env:
+          CROSS_BROWSER_OUTCOME: ${{ steps.cross_browser.outcome }}
+          LIGHTHOUSE_OUTCOME: ${{ steps.lighthouse.outcome }}
+        run: |
+          echo "Cross-browser: $CROSS_BROWSER_OUTCOME"
+          echo "Lighthouse: $LIGHTHOUSE_OUTCOME"
+          test "$CROSS_BROWSER_OUTCOME" = "success"
+          test "$LIGHTHOUSE_OUTCOME" = "success"
+
+      - name: Rapports QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-browser-lighthouse
+          path: |
+            qa-results/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Journal serveur
+        if: failure()
+        run: cat "$RUNNER_TEMP/qa-server.log" || true
