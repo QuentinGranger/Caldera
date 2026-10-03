@@ -27,6 +27,7 @@ import { inSentence } from '@/components/landing/landingText';
 import type { SearchParams } from '@/lib/catalog/params';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
 import { getShopAisles } from '@/lib/seo/links';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -111,7 +112,7 @@ export default async function Page({ params, searchParams }: Props) {
         emptyState={
           <EmptyState
             title="Aucun produit en ligne dans cette famille"
-            actions={[{ href: '/catalogue', label: 'Voir tous les produits' }]}
+            actions={[{ href: '/catalogue', label: ALL_PRODUCTS_LABEL }]}
           />
         }
         interlude={
