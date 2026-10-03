@@ -54,7 +54,7 @@ test('erreurs globales : reset Next.js et chemins de sortie utiles', async () =>
 
   for (const content of [routeError, globalError]) {
     assert.match(content, /reset:\s*\(\) => void/);
-    assert.match(content, /Voir tous les produits/);
+    assert.match(content, /ALL_PRODUCTS_LABEL/);
     assert.match(content, /\/catalogue/);
     assert.match(content, /Retour à l’accueil/);
     assert.doesNotMatch(content, /stack|digest\}/i);
