@@ -1,18 +1,17 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
-import { CatalogHeader } from '@/components/catalog/CatalogHeader';
+import { ExploreSection } from '@/components/catalog/ExploreSection';
+import { PageHero, HeroStats } from '@/components/catalog/PageHero';
+import { VIEWS } from '@/components/catalog/pageCopy';
 import { CalendarPageSkeleton } from '@/components/loading/LoadingSkeleton';
-import { CALENDAR_PATH } from '@/components/landing/landingData';
-import { LandingFacts } from '@/components/landing/LandingFacts';
+import { CALENDAR_PATH, getToday } from '@/components/landing/landingData';
 import { ReleaseMonths } from '@/components/landing/ReleaseMonths';
 import {
   getCalendarYears,
   getReleaseCalendar,
 } from '@/components/landing/releaseData';
-import { ExploreSection } from '@/components/catalog/ExploreSection';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { Container } from '@/components/ui/Container/Container';
 import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -36,48 +35,76 @@ async function CalendarContent() {
     getReleaseCalendar(),
     getCalendarYears(),
   ]);
-  const linked = [...calendar.upcoming, ...calendar.recent].flatMap((entry) =>
+  const today = getToday();
+  const entries = [...calendar.upcoming, ...calendar.recent];
+  const thisMonth = entries.filter(
+    (entry) =>
+      entry.releaseDate.getUTCFullYear() === today.getUTCFullYear() &&
+      entry.releaseDate.getUTCMonth() === today.getUTCMonth(),
+  ).length;
+  const games = new Set(entries.map((entry) => entry.gameSlug)).size;
+  const linked = entries.flatMap((entry) =>
     entry.href ? [{ path: entry.href, name: entry.name }] : [],
   );
+
   return (
-    <main id="contenu" tabIndex={-1} className={styles.main}>
-      <Container>
-        <Breadcrumb
+    <main
+      id="contenu"
+      tabIndex={-1}
+      className={`${styles.main} ${styles.immersive}`}
+    >
+      <PageHero
+        breadcrumb={[
+          { label: 'Accueil', href: '/' },
+          { label: 'Calendrier des sorties' },
+        ]}
+        path={CALENDAR_PATH}
+        eyebrow="Sorties & extensions"
+        title="Calendrier des sorties"
+        lead="Suivez les prochaines extensions et retrouvez les sorties récentes, classées par mois."
+        view={{
+          src: VIEWS.road,
+          frame: 'backdrop',
+          focus: '50% 52%',
+          mobileFocus: '58% 52%',
+        }}
+      >
+        <HeroStats
+          label="Repères du calendrier"
           items={[
-            { label: 'Accueil', href: '/' },
-            { label: 'Calendrier des sorties' },
-          ]}
-          currentPath={CALENDAR_PATH}
-        />
-        <CatalogHeader
-          eyebrow="Extensions"
-          title={calendar.heading}
-          intro={<LandingFacts facts={calendar.facts} />}
-        />
-        <ReleaseMonths
-          id="a-paraitre"
-          eyebrow="À paraître"
-          title="Prochaines sorties"
-          entries={calendar.upcoming}
-        />
-        <ReleaseMonths
-          id="sorties-recentes"
-          eyebrow="Déjà sorties"
-          title="Sorties des 12 derniers mois"
-          entries={calendar.recent}
-        />
-        <ExploreSection
-          eyebrow="Calendrier des sorties"
-          title="Continuer l’exploration"
-          groups={[
-            {
-              title: 'Calendriers par année',
-              links: years
-                .filter((page) => page.indexable)
-                .map((page) => ({ href: page.path, label: page.label })),
-            },
+            { value: calendar.upcoming.length, label: 'Sorties à venir' },
+            { value: thisMonth, label: 'Ce mois-ci' },
+            { value: games, label: 'Jeux suivis' },
           ]}
         />
+      </PageHero>
+      <Container>
+        <div className={styles.calendarContent}>
+          <ReleaseMonths
+            id="a-paraitre"
+            eyebrow="À paraître"
+            title="Prochaines sorties"
+            entries={calendar.upcoming}
+          />
+          <ReleaseMonths
+            id="sorties-recentes"
+            eyebrow="Déjà sorties"
+            title="Sorties des 12 derniers mois"
+            entries={calendar.recent}
+          />
+          <ExploreSection
+            eyebrow="Calendrier des sorties"
+            title="Continuer l’exploration"
+            groups={[
+              {
+                title: 'Calendriers par année',
+                links: years
+                  .filter((page) => page.indexable)
+                  .map((page) => ({ href: page.path, label: page.label })),
+              },
+            ]}
+          />
+        </div>
       </Container>
       <JsonLd
         data={graph(
