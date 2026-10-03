@@ -19,8 +19,14 @@ export type HeroFrame = 'backdrop' | 'arch' | 'window';
 export interface HeroView {
   src: string;
   frame: HeroFrame;
-  /** Part of the view kept in frame (CSS object-position). */
+  /** Desktop/default focal point (CSS object-position). */
   focus?: string;
+  /** Optional phone focal point when the same visual needs another crop. */
+  mobileFocus?: string;
+  /** Optional phone-only crop zoom. Keep close to 1 to avoid over-cropping. */
+  mobileZoom?: number;
+  /** Fixed visual height for desktop variants that must stay aligned. */
+  desktopHeight?: string;
 }
 
 /**
@@ -57,11 +63,24 @@ export function PageHero({
   children?: ReactNode;
 }) {
   const framed = view.frame !== 'backdrop';
-  const focus = { '--focus': view.focus ?? '50% 45%' } as CSSProperties;
+  const desktopFocus = view.focus ?? '50% 45%';
+  const mobileFocus = view.mobileFocus ?? desktopFocus;
+  const mobileZoom = view.mobileZoom ?? 1;
+  const heroStyle = {
+    '--focus': desktopFocus,
+    '--mobile-focus': mobileFocus,
+    '--mobile-zoom': String(mobileZoom),
+    '--mobile-drift-zoom': String(Number((mobileZoom * 1.08).toFixed(3))),
+    ...(view.desktopHeight
+      ? { '--hero-desktop-height': view.desktopHeight }
+      : {}),
+  } as CSSProperties;
   return (
     <section
       className={styles.hero}
       data-frame={view.frame}
+      data-stable-desktop={view.desktopHeight ? '' : undefined}
+      style={heroStyle}
       aria-labelledby="page-title"
     >
       {/* Wide screens, framed views: the same view, blurred, colours the
@@ -99,7 +118,7 @@ export function PageHero({
             </Button>
           )}
         </div>
-        <div className={styles.view} style={focus} aria-hidden="true">
+        <div className={styles.view} aria-hidden="true">
           <Image
             src={view.src}
             alt=""

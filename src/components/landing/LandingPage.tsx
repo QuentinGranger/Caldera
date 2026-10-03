@@ -106,6 +106,9 @@ export function LandingPage({
             src: VIEWS.forest,
             frame: 'window',
             focus: copy?.focus ?? '50% 45%',
+            mobileFocus: copy?.mobileFocus,
+            mobileZoom: copy?.mobileZoom,
+            desktopHeight: copy?.desktopHeight,
           }}
           action={
             load.total > 0

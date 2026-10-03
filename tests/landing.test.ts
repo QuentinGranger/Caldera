@@ -33,6 +33,7 @@ import {
   parseCalendarSlug,
   yearCalendarText,
 } from '../src/components/landing/landingText';
+import { shopAisleCopy } from '../src/components/catalog/pageCopy';
 import { landingKind, landingPath } from '../src/lib/seo/facets';
 import { breadcrumbListNode, breadcrumbTrail } from '../src/lib/seo/jsonld';
 import type {
@@ -809,6 +810,26 @@ test('extensions : trois sections chronologiques sans doublon', () => {
   ].map((entry) => entry.name);
   assert.equal(names.length, entries.length);
   assert.equal(new Set(names).size, entries.length);
+});
+
+test('heroes Pokémon : cadrages mobile distincts et hauteur desktop stable', () => {
+  const copies = ['scelles', 'boosters', 'displays', 'coffrets'].map((slug) => {
+    const copy = shopAisleCopy(slug, 'Pokémon');
+    assert.ok(copy, slug);
+    return copy;
+  });
+
+  assert.equal(new Set(copies.map((copy) => copy.mobileFocus)).size, 4);
+  assert.equal(new Set(copies.map((copy) => copy.focus)).size, 4);
+  assert.deepEqual(
+    [...new Set(copies.map((copy) => copy.desktopHeight))],
+    ['34rem'],
+  );
+  for (const copy of copies) {
+    assert.ok(copy.mobileFocus);
+    assert.ok((copy.mobileZoom ?? 1) >= 1 && (copy.mobileZoom ?? 1) <= 1.12);
+    assert.notEqual(copy.mobileFocus, copy.focus);
+  }
 });
 
 test('redirections : la requête suit le chemin canonique', () => {
