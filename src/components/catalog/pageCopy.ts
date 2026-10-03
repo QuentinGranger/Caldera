@@ -69,8 +69,14 @@ export const LISTING_COPY: Readonly<Record<ListingKind, PageCopy>> = {
 export interface AisleCopy {
   eyebrow: string;
   lead: string;
-  /** Part of the game's view kept in this aisle's frame. */
+  /** Part of the game's view kept in this aisle's desktop frame. */
   focus: string;
+  /** Phone-specific focal point for the shared game visual. */
+  mobileFocus?: string;
+  /** Small phone-only zoom used to reinforce the aisle's crop. */
+  mobileZoom?: number;
+  /** Shared stable desktop height for family heroes. */
+  desktopHeight?: string;
   /** A filter offered as chips above the products (by set). */
   browse?: 'set';
   /** The cards' layout: `edition` shows the set and the languages first. */
@@ -81,6 +87,8 @@ export interface AisleCopy {
   latest?: { title: string; all: string };
   teaser?: Teaser;
 }
+
+const SHOP_AISLE_DESKTOP_HEIGHT = '34rem';
 
 /**
  * The shop game's families (category slugs): the aisles of /{game}/{family}.
@@ -96,6 +104,9 @@ export function shopAisleCopy(
         eyebrow: 'Collection & ouverture',
         lead: `ETB, coffrets, displays et produits ${game} à conserver, offrir ou ouvrir.`,
         focus: '50% 52%',
+        mobileFocus: '38% 58%',
+        mobileZoom: 1.06,
+        desktopHeight: SHOP_AISLE_DESKTOP_HEIGHT,
         teaser: {
           eyebrow: 'Choisir son produit scellé',
           guide: 'etb-display-ou-booster',
@@ -107,6 +118,9 @@ export function shopAisleCopy(
         eyebrow: 'Ouvrir une nouvelle piste',
         lead: `Retrouvez les boosters ${game} disponibles parmi les extensions proposées par Caldera.`,
         focus: '50% 8%',
+        mobileFocus: '64% 14%',
+        mobileZoom: 1.1,
+        desktopHeight: SHOP_AISLE_DESKTOP_HEIGHT,
         browse: 'set',
         up: true,
         teaser: {
@@ -120,6 +134,9 @@ export function shopAisleCopy(
         eyebrow: 'Pour aller plus loin',
         lead: 'Des displays pour multiplier les ouvertures et explorer une extension en profondeur.',
         focus: '50% 76%',
+        mobileFocus: '56% 84%',
+        mobileZoom: 1.07,
+        desktopHeight: SHOP_AISLE_DESKTOP_HEIGHT,
         card: 'edition',
         up: true,
         teaser: {
@@ -133,6 +150,9 @@ export function shopAisleCopy(
         eyebrow: 'Pièces de collection',
         lead: `Coffrets et collections ${game} pensés pour l’ouverture et la collection.`,
         focus: '50% 30%',
+        mobileFocus: '34% 30%',
+        mobileZoom: 1.09,
+        desktopHeight: SHOP_AISLE_DESKTOP_HEIGHT,
         up: true,
         latest: {
           title: 'Derniers coffrets ajoutés',
