@@ -16,6 +16,10 @@ import { CatalogToolbar } from './CatalogToolbar';
 import { ActiveFilters } from './ActiveFilters';
 import { CatalogGrid } from './CatalogGrid';
 import { CatalogPagination } from './CatalogPagination';
+import {
+  CatalogPendingContent,
+  CatalogPendingProvider,
+} from './CatalogPending';
 import { CatalogQuickNav } from './CatalogQuickNav';
 import { EmptyCatalog } from './EmptyCatalog';
 import type { EmptyAction } from './EmptyState';
@@ -109,11 +113,12 @@ export function CatalogResults({
     <CatalogQuickNav facets={facets} filters={filters} path={path} />
   );
   return (
-    <section
-      className={styles.explorer}
-      id="catalogue-resultats"
-      aria-labelledby="catalogue-produits"
-    >
+    <CatalogPendingProvider>
+      <section
+        className={styles.explorer}
+        id="catalogue-resultats"
+        aria-labelledby="catalogue-produits"
+      >
       <h2 id="catalogue-produits" className={styles.srOnly}>
         Produits
       </h2>
@@ -159,24 +164,27 @@ export function CatalogResults({
               <ActiveFilters filters={filters} facets={facets} path={path} />
             </div>
           )}
-          {result.products.length ? (
-            <CatalogGrid
-              products={result.products}
-              card={card}
-              interlude={load.hasRefinements ? undefined : interlude}
+          <CatalogPendingContent>
+            {result.products.length ? (
+              <CatalogGrid
+                products={result.products}
+                card={card}
+                interlude={load.hasRefinements ? undefined : interlude}
+              />
+            ) : (
+              <EmptyCatalog filters={filters} path={path} widest={widest} />
+            )}
+            <CatalogPagination
+              filters={filters}
+              path={path}
+              pageCount={load.pageCount}
+              total={total}
+              pageSize={result.pageSize}
             />
-          ) : (
-            <EmptyCatalog filters={filters} path={path} widest={widest} />
-          )}
-          <CatalogPagination
-            filters={filters}
-            path={path}
-            pageCount={load.pageCount}
-            total={total}
-            pageSize={result.pageSize}
-          />
+          </CatalogPendingContent>
         </>
       )}
-    </section>
+      </section>
+    </CatalogPendingProvider>
   );
 }
