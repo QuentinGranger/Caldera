@@ -157,6 +157,32 @@ export function HeroRange({
   );
 }
 
+export interface HeroStat {
+  value: number | string;
+  label: string;
+}
+
+/** Compact factual counters inside a hero, shared by data-led pages. */
+export function HeroStats({
+  items,
+  label = 'Repères',
+}: {
+  items: readonly HeroStat[];
+  label?: string;
+}) {
+  if (!items.length) return null;
+  return (
+    <dl className={styles.stats} aria-label={label}>
+      {items.map((item) => (
+        <div className={styles.stat} key={item.label}>
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 /** A set's own logo, under the lead (an official visual, set in the admin). */
 export function HeroLogo({ src, alt }: { src: string; alt: string }) {
   return (
