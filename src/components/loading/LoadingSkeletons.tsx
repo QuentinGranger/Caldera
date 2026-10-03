@@ -84,7 +84,7 @@ function ProductCardSkeleton() {
   );
 }
 
-function ProductGridSkeleton({ count = 8 }: { count?: number }) {
+export function CatalogGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div className={styles.productGrid} aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
@@ -112,7 +112,7 @@ export function CatalogPageSkeleton({
         <section className={styles.catalogBody}>
           <ChipsSkeleton />
           <ToolbarSkeleton />
-          <ProductGridSkeleton />
+          <CatalogGridSkeleton />
         </section>
       </Container>
     </main>
