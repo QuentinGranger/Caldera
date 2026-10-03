@@ -703,6 +703,100 @@ export function releaseWindow<T extends { releaseDate: Date }>(
   };
 }
 
+export const RECENT_EXTENSION_MONTHS = 6;
+
+/** First day of the rolling window used by /extensions for recent releases. */
+export function recentExtensionsStart(today: Date): Date {
+  const targetMonth = new Date(
+    Date.UTC(
+      today.getUTCFullYear(),
+      today.getUTCMonth() - RECENT_EXTENSION_MONTHS,
+      1,
+    ),
+  );
+  const lastDay = new Date(
+    Date.UTC(
+      targetMonth.getUTCFullYear(),
+      targetMonth.getUTCMonth() + 1,
+      0,
+    ),
+  ).getUTCDate();
+  return new Date(
+    Date.UTC(
+      targetMonth.getUTCFullYear(),
+      targetMonth.getUTCMonth(),
+      Math.min(today.getUTCDate(), lastDay),
+    ),
+  );
+}
+
+/**
+ * Three mutually exclusive release buckets for /extensions.
+ * Upcoming is soonest first; recent and released are newest first.
+ * Undated entries are considered already released and sort last.
+ */
+export function extensionReleaseSections<
+  T extends { releaseDate: Date | null },
+>(
+  entries: readonly T[],
+  today: Date,
+): { upcoming: T[]; recent: T[]; released: T[] } {
+  const since = recentExtensionsStart(today).getTime();
+  const indexed = entries.map((entry, index) => ({ entry, index }));
+  const ascending = (
+    a: (typeof indexed)[number],
+    b: (typeof indexed)[number],
+  ) => {
+    const aTime = a.entry.releaseDate?.getTime();
+    const bTime = b.entry.releaseDate?.getTime();
+    if (aTime == null && bTime == null) return a.index - b.index;
+    if (aTime == null) return 1;
+    if (bTime == null) return -1;
+    return aTime - bTime || a.index - b.index;
+  };
+  const descending = (
+    a: (typeof indexed)[number],
+    b: (typeof indexed)[number],
+  ) => {
+    const aTime = a.entry.releaseDate?.getTime();
+    const bTime = b.entry.releaseDate?.getTime();
+    if (aTime == null && bTime == null) return a.index - b.index;
+    if (aTime == null) return 1;
+    if (bTime == null) return -1;
+    return bTime - aTime || a.index - b.index;
+  };
+
+  return {
+    upcoming: indexed
+      .filter(
+        ({ entry }) =>
+          entry.releaseDate && isUpcoming(entry.releaseDate, today),
+      )
+      .sort(ascending)
+      .map(({ entry }) => entry),
+    recent: indexed
+      .filter(({ entry }) => {
+        const releaseDate = entry.releaseDate;
+        const time = releaseDate?.getTime();
+        return (
+          releaseDate != null &&
+          time != null &&
+          !isUpcoming(releaseDate, today) &&
+          time >= since
+        );
+      })
+      .sort(descending)
+      .map(({ entry }) => entry),
+    released: indexed
+      .filter(({ entry }) => {
+        const time = entry.releaseDate?.getTime();
+        return time == null || time < since;
+      })
+      .sort(descending)
+      .map(({ entry }) => entry),
+  };
+}
+
 const MONTH = new Intl.DateTimeFormat('fr-FR', {
   month: 'long',
   year: 'numeric',

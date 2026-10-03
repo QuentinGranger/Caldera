@@ -51,6 +51,7 @@ import {
   CALENDAR_YEAR_MIN_SETS,
   calendarYearPath,
   countedFact,
+  extensionReleaseSections,
   factText,
   isUpcoming,
   parseCalendarSlug,
@@ -77,6 +78,12 @@ const countStats = (productCount: number): ScopeStats => ({
 
 const setPagePath = (slug: string) =>
   `${EXTENSIONS_PATH}/${encodeURIComponent(slug)}`;
+
+const isDemoSet = (set: { slug: string; name: string }) =>
+  set.slug.startsWith('dev-') || set.name.trimStart().startsWith('[Démo]');
+
+const visibleSetInEnvironment = (set: { slug: string; name: string }) =>
+  process.env.NODE_ENV !== 'production' || !isDemoSet(set);
 
 /** Canonical page of a set living under an active game, if any. */
 function siloPath(
@@ -107,6 +114,10 @@ export interface ExtensionsIndex {
   groups: SetGroup[];
   /** Announced sets of every game, soonest first. */
   upcoming: SetEntry[];
+  /** Released in the rolling recent window, newest first. */
+  recent: SetEntry[];
+  /** Older or undated released sets, newest first and undated last. */
+  released: SetEntry[];
   total: number;
   heading: string;
   text: MetadataText;
@@ -135,16 +146,20 @@ async function gamelessSets(today: Date): Promise<SetEntry[]> {
       { id: 'asc' },
     ],
   });
-  if (!sets.length) return [];
+  const visibleSets = sets.filter(visibleSetInEnvironment);
+  if (!visibleSets.length) return [];
   const groups = await db.product.groupBy({
     by: ['tcgSetId'],
     where: {
-      AND: [visibleProductWhere, { tcgSetId: { in: sets.map((s) => s.id) } }],
+      AND: [
+        visibleProductWhere,
+        { tcgSetId: { in: visibleSets.map((s) => s.id) } },
+      ],
     },
     _count: { _all: true },
   });
   const counts = new Map(groups.map((g) => [g.tcgSetId, g._count._all]));
-  return sets.flatMap((set) => {
+  return visibleSets.flatMap((set) => {
     const count = counts.get(set.id) ?? 0;
     const upcoming = Boolean(
       set.releaseDate && isUpcoming(set.releaseDate, today),
@@ -188,6 +203,7 @@ export const getExtensionsIndex = cache(async (): Promise<ExtensionsIndex> => {
         getScopeBreakdown({ game }),
       ]);
       const counts = new Map(breakdown.sets.map((set) => [set.id, set.count]));
+      const visibleSets = sets.filter(visibleSetInEnvironment);
       const gameRef = toGameRef(game);
       const hub = landingPath({ game: gameRef });
       return {
@@ -195,7 +211,7 @@ export const getExtensionsIndex = cache(async (): Promise<ExtensionsIndex> => {
         gameName: game.name,
         title: `Extensions ${game.name}`,
         href: indexed.has(hub) ? hub : undefined,
-        entries: sets.flatMap((set): SetEntry[] => {
+        entries: visibleSets.flatMap((set): SetEntry[] => {
           const count = counts.get(set.id) ?? 0;
           const upcoming = Boolean(
             set.releaseDate && isUpcoming(set.releaseDate, today),
@@ -228,13 +244,14 @@ export const getExtensionsIndex = cache(async (): Promise<ExtensionsIndex> => {
       entries: others,
     });
   const listed = groups.filter((group) => group.entries.length);
-  const all = listed.flatMap((group) => group.entries);
-  const upcoming = all
-    .filter((entry) => entry.upcoming)
-    .sort(
-      (a, b) =>
-        (a.releaseDate?.getTime() ?? 0) - (b.releaseDate?.getTime() ?? 0),
-    );
+  const all = [
+    ...new Map(
+      listed
+        .flatMap((group) => group.entries)
+        .map((entry) => [entry.id, entry] as const),
+    ).values(),
+  ];
+  const { upcoming, recent, released } = extensionReleaseSections(all, today);
   const gameNames = listed.flatMap((group) =>
     group.gameName ? [group.gameName] : [],
   );
@@ -269,6 +286,8 @@ export const getExtensionsIndex = cache(async (): Promise<ExtensionsIndex> => {
   return {
     groups: listed,
     upcoming,
+    recent,
+    released,
     total: all.length,
     heading,
     text: {

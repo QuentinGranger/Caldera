@@ -181,3 +181,14 @@ $hairline: rgb(23 62 50 / 14%);
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.emptyState {
+  margin: 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px dashed rgb(23 62 50 / 20%);
+  border-radius: v.$radius-medium;
+  background: rgb(255 255 255 / 42%);
+  color: v.$color-text-muted;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}

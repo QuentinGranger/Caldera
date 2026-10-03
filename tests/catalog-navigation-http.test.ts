@@ -82,11 +82,14 @@ test('HTTP : routes, hiérarchie, extensions et 404', async () => {
     '/extensions/dev-terres-de-braise',
     '/pokemon/dev-terres-de-braise',
   );
-  assert.ok(
-    (await page('/extensions')).html.includes(
-      'href="/pokemon/dev-terres-de-braise"',
-    ),
-  );
+  const extensionsIndex = (await page('/extensions')).html;
+  assert.ok(!extensionsIndex.includes('[Démo]'));
+  for (const href of [
+    'href="#a-venir"',
+    'href="#extensions-recentes"',
+    'href="#deja-sorties"',
+  ])
+    assert.ok(extensionsIndex.includes(href), href);
 });
 
 test('HTTP : filtre FR cohérent, cases synchronisées, URL nettoyée et SEO', async () => {
@@ -439,18 +442,19 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   const sealed = (await page('/pokemon/scelles')).html;
   assert.ok(sealed.includes('href="/guides/etb-display-ou-booster"'));
   assert.ok(strip(sealed).includes('Lire le guide'));
-  // /extensions: the same entrance, each set once, on the shared card.
+  // /extensions: three stable sections; demo rows never leak in production.
   const extensions = (await page('/extensions')).html;
   assert.equal(h1Count(extensions), 1);
   assert.match(extensions, /<section[^>]+data-frame="backdrop"/);
-  // The announced set shows once, under « À venir », not again below.
-  assert.equal(
-    (extensions.match(/<h3[^>]*>[^<]*Sentiers d’Opale/g) ?? []).length,
-    1,
-  );
-  for (const href of ['href="#a-venir"', 'href="#pokemon"'])
-    assert.ok(extensions.includes(href), href);
-  assert.ok(strip(extensions).includes('Découvrir l’extension'));
+  assert.ok(!extensions.includes('[Démo]'));
+  for (const label of ['À venir', 'Extensions récentes', 'Déjà sorties'])
+    assert.ok(strip(extensions).includes(label), label);
+  for (const id of [
+    'id="a-venir"',
+    'id="extensions-recentes"',
+    'id="deja-sorties"',
+  ])
+    assert.ok(extensions.includes(id), id);
 });
 
 test('HTTP : aucun résultat et filtres mobile / recherche accessibles', async () => {
