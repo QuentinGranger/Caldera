@@ -41,6 +41,7 @@ export function CatalogPagination({
             href={href(filters.page - 1)}
             className={styles.step}
             rel="prev"
+            aria-label="Page précédente"
           >
             <ArrowLeft size={16} aria-hidden="true" />
             <span>Précédente</span>
@@ -73,6 +74,7 @@ export function CatalogPagination({
             href={href(filters.page + 1)}
             className={styles.step}
             rel="next"
+            aria-label="Page suivante"
           >
             <span>Suivante</span>
             <ArrowRight size={16} aria-hidden="true" />
