@@ -36,6 +36,7 @@ export function ProductGallery({
           fill
           sizes="(min-width: 1440px) 680px, (min-width: 1200px) 50vw, (min-width: 768px) 80vw, 100vw"
           preload={index === 0}
+          fetchPriority={index === 0 ? 'high' : 'auto'}
         />
         <span className={styles.zoom}>
           <Expand size={16} aria-hidden="true" />

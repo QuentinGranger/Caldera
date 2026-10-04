@@ -39,6 +39,7 @@ export default async function RootLayout({
     getCart(),
     getWishlistSnapshot(),
   ]);
+  const speedInsights = process.env.VERCEL === '1';
   return (
     <html lang="fr" className={`${headingFont.variable} ${bodyFont.variable}`}>
       <body>
@@ -54,7 +55,7 @@ export default async function RootLayout({
             {children}
             <StorefrontOnly>
               <Footer />
-              <SpeedInsights />
+              {speedInsights && <SpeedInsights />}
             </StorefrontOnly>
           </WishlistProvider>
         </CartProvider>

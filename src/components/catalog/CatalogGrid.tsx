@@ -11,6 +11,9 @@ const FEW = 3;
 /**
  * A regular grid, for comparing at a glance. `interlude` takes a whole row
  * after the first products, or follows the grid when it is short.
+ *
+ * Product rows deliberately do not fade their opacity on entry: dimming text
+ * during a scroll animation temporarily breaks WCAG contrast on muted labels.
  */
 export function CatalogGrid({
   products,
@@ -34,7 +37,7 @@ export function CatalogGrid({
             {inside && index === BEFORE_INTERLUDE && (
               <div className={styles.interludeSlot}>{interlude}</div>
             )}
-            <div className={styles.item}>
+            <div style={{ minWidth: 0 }}>
               <ProductCard product={product} layout={card} />
             </div>
           </Fragment>

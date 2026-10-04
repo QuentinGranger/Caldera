@@ -14,22 +14,19 @@ export function ProductWishlistButton({
   const { isFavorite, isPending, toggle } = useWishlist();
   const favorite = isFavorite(productId);
   const pending = isPending(productId);
+  const label = favorite ? 'Retirer des favoris' : 'Ajouter aux favoris';
   return (
     <button
       type="button"
       className={`${styles.button} ${favorite ? styles.active : ''}`}
-      aria-label={`${favorite ? 'Retirer' : 'Ajouter'} ${productName} ${favorite ? 'des' : 'aux'} favoris`}
+      aria-label={`${label} — ${productName}`}
       aria-pressed={favorite}
       aria-busy={pending || undefined}
       disabled={pending}
       onClick={() => toggle(productId)}
     >
       <Heart size={18} aria-hidden="true" />
-      {pending
-        ? 'Enregistrement…'
-        : favorite
-          ? 'Retirer des favoris'
-          : 'Ajouter aux favoris'}
+      {pending ? 'Enregistrement…' : label}
     </button>
   );
 }
