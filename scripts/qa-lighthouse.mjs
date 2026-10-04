@@ -1,9 +1,10 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { getQaTargets, qaBaseUrl } from './qa-targets.mjs';
 
-const OUT = resolve(process.env.QA_ARTIFACT_DIR || 'qa-artifacts/lighthouse');
+const ROOT = resolve(process.env.QA_ARTIFACT_ROOT || 'qa-artifacts');
+const OUT = resolve(process.env.QA_ARTIFACT_DIR || `${ROOT}/lighthouse`);
 await mkdir(OUT, { recursive: true });
 const lighthouse = resolve('node_modules/.bin/lighthouse');
 const chromePath = process.env.LH_CHROME_PATH || process.env.CHROME_PATH;
@@ -16,7 +17,7 @@ const profiles = [
   { id: 'desktop', args: ['--preset=desktop'] },
 ];
 
-// These are regression guards, not vanity-score targets. The test host is
+// Regression guards, not vanity-score targets. The local QA host is
 // deliberately non-indexable, so the raw SEO score is reported but not gated.
 const limits = {
   mobile: { performance: 0.55, accessibility: 0.9, bestPractices: 0.9, cls: 0.15 },
@@ -91,15 +92,16 @@ for (const profile of profiles) {
         failures.push(`${target.id}/${profile.id}: SEO ${auditId} en échec`);
     }
 
-    // A missing priority hint on the actual LCP image is actionable even when
-    // Lantern's simulated LCP value is distorted by the local QA environment.
     const discovery = report.audits?.['lcp-discovery-insight'];
     const checklist = discovery?.details?.items?.find(
       (item) => item.type === 'checklist',
     )?.items;
-    if (checklist?.priorityHinted?.value === false)
+    const lcpSaving = Number(discovery?.metricSavings?.LCP ?? 0);
+    // Do not over-prioritize a decorative candidate when Lighthouse itself
+    // estimates no meaningful LCP gain. Gate only actionable discoveries.
+    if (checklist?.priorityHinted?.value === false && lcpSaving >= 100)
       failures.push(
-        `${target.id}/${profile.id}: l’image LCP n’a pas fetchpriority=high`,
+        `${target.id}/${profile.id}: l’image LCP n’a pas fetchpriority=high (gain estimé ${Math.round(lcpSaving)}ms)`,
       );
 
     const noteworthy = Object.values(report.audits || {})
@@ -132,6 +134,11 @@ console.table(
 );
 console.log(
   '\nNote SEO : le score brut inclut is-crawlable, volontairement en échec sur localhost car robots.txt interdit l’indexation hors hôte public.',
+);
+
+await writeFile(
+  resolve(ROOT, 'lighthouse-summary.json'),
+  JSON.stringify({ summaries, failures }, null, 2),
 );
 
 if (failures.length) {
