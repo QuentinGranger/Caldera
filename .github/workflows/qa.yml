@@ -82,6 +82,7 @@ jobs:
 
       - name: Base de données de test
         run: |
+          npx prisma generate
           npx prisma migrate deploy
           npx prisma db seed
 
