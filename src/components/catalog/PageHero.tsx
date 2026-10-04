@@ -118,7 +118,7 @@ export function PageHero({
             </Button>
           )}
         </div>
-        <div className={styles.view} aria-hidden="true">
+        <div className={styles.view} data-hero-view="" aria-hidden="true">
           <Image
             src={view.src}
             alt=""
