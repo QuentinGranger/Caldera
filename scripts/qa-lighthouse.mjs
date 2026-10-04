@@ -8,6 +8,7 @@ await mkdir(OUT, { recursive: true });
 const lighthouse = resolve('node_modules/.bin/lighthouse');
 const chromePath = process.env.LH_CHROME_PATH || process.env.CHROME_PATH;
 if (!chromePath) throw new Error('LH_CHROME_PATH/CHROME_PATH manquant');
+process.env.CHROME_PATH = chromePath;
 
 const targets = await getQaTargets();
 const profiles = [
@@ -45,7 +46,6 @@ for (const profile of profiles) {
       `--output-path=${out}`,
       '--only-categories=performance,accessibility,best-practices,seo',
       '--throttling-method=simulate',
-      `--chrome-path=${chromePath}`,
       '--chrome-flags=--headless=new --no-sandbox --disable-dev-shm-usage',
       ...profile.args,
     ]);
