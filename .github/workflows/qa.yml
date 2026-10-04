@@ -103,6 +103,7 @@ jobs:
         run: node scripts/qa-lighthouse.mjs
 
       - name: Cross-browser Chromium Firefox WebKit
+        if: always()
         run: node scripts/qa-cross-browser.mjs
 
       - name: Rapports Lighthouse
