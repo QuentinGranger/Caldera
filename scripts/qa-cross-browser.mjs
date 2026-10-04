@@ -1,6 +1,10 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { chromium, firefox, webkit } from 'playwright';
 import { getQaTargets, qaBaseUrl } from './qa-targets.mjs';
 
+const ROOT = resolve(process.env.QA_ARTIFACT_ROOT || 'qa-artifacts');
+await mkdir(ROOT, { recursive: true });
 const targets = await getQaTargets();
 const browsers = { chromium, firefox, webkit };
 const viewports = [
@@ -23,6 +27,7 @@ const seoTargets = new Set([
   'produit',
 ]);
 const failures = [];
+const checks = [];
 
 function record(message) {
   failures.push(message);
@@ -55,13 +60,16 @@ async function inspectPage(browserName, browser, target, viewport) {
       .waitFor({ state: 'visible', timeout: 10_000 });
 
     // Next.js can stream route metadata after DOMContentLoaded. Validate the
-    // settled DOM rather than treating Lighthouse's early snapshot as truth.
+    // settled DOM rather than treating an early snapshot as final metadata.
     if (seoTargets.has(target.id)) {
       try {
         await page.waitForFunction(
           () =>
             Boolean(
-              document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim(),
+              document
+                .querySelector('meta[name="description"]')
+                ?.getAttribute('content')
+                ?.trim(),
             ),
           undefined,
           { timeout: 5_000 },
@@ -78,7 +86,7 @@ async function inspectPage(browserName, browser, target, viewport) {
       const h1 = document.querySelector('h1');
       const hero = document.querySelector('[data-frame], [data-home-hero]');
       const arch = document.querySelector('[data-frame="arch"]');
-      const archView = arch?.querySelector('[class*="_view__"]');
+      const archView = arch?.querySelector('[data-hero-view]');
       const interactive = [
         ...document.querySelectorAll('a[href], button, input, select, textarea'),
       ]
@@ -148,8 +156,6 @@ async function inspectPage(browserName, browser, target, viewport) {
         `${browserName}/${viewport.id}/${target.id}: ${runtime.join(' | ')}`,
       );
 
-    // 44 px is preferred; 32 px catches genuinely problematic controls
-    // without flagging every compact inline text link.
     if (viewport.mobile && metrics.tinyTargets.length) {
       const problematic = metrics.tinyTargets.filter((item) =>
         ['BUTTON', 'INPUT', 'SELECT'].includes(item.tag),
@@ -160,6 +166,13 @@ async function inspectPage(browserName, browser, target, viewport) {
         );
     }
 
+    checks.push({
+      browser: browserName,
+      viewport: viewport.id,
+      target: target.id,
+      overflow: metrics.overflow,
+      supports: metrics.supports,
+    });
     console.log(
       `✔ ${browserName}/${viewport.id}/${target.id}`,
       metrics.supports,
@@ -192,6 +205,7 @@ async function inspectMobileMenu(browserName, browser) {
         `${browserName}/mobile-menu: le scroll de fond n'est pas verrouillé`,
       );
     await page.getByRole('button', { name: 'Fermer le menu' }).click();
+    checks.push({ browser: browserName, scenario: 'mobile-menu', locked });
   } catch (error) {
     record(
       `${browserName}/mobile-menu: ${error instanceof Error ? error.message : String(error)}`,
@@ -212,7 +226,7 @@ async function inspectReducedMotion(browserName, browser) {
       waitUntil: 'domcontentloaded',
     });
     const state = await page
-      .locator('[data-frame] img')
+      .locator('[data-hero-view] img')
       .first()
       .evaluate((image) => {
         const style = getComputedStyle(image);
@@ -228,6 +242,7 @@ async function inspectReducedMotion(browserName, browser) {
       );
     if (state.visibility === 'hidden' || state.opacity === '0')
       record(`${browserName}/reduced-motion: image Hero masquée`);
+    checks.push({ browser: browserName, scenario: 'reduced-motion', ...state });
   } catch (error) {
     record(
       `${browserName}/reduced-motion: ${error instanceof Error ? error.message : String(error)}`,
@@ -260,6 +275,11 @@ for (const [browserName, browserType] of Object.entries(browsers)) {
     await browser.close();
   }
 }
+
+await writeFile(
+  resolve(ROOT, 'cross-browser-summary.json'),
+  JSON.stringify({ failures, checks }, null, 2),
+);
 
 if (failures.length) {
   console.error(`\nQA cross-browser: ${failures.length} anomalie(s).`);
