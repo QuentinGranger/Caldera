@@ -106,12 +106,12 @@ jobs:
         if: always()
         run: node scripts/qa-cross-browser.mjs
 
-      - name: Rapports Lighthouse
+      - name: Rapports QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lighthouse-reports
-          path: qa-artifacts/lighthouse
+          name: qa-reports
+          path: qa-artifacts
           if-no-files-found: ignore
           retention-days: 14
 
