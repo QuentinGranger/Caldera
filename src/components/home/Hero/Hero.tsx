@@ -32,6 +32,7 @@ export function Hero({
           fill
           sizes="100vw"
           preload
+          fetchPriority="high"
         />
         <span className={styles.mist} />
       </div>
