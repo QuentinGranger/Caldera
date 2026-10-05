@@ -17,8 +17,9 @@ function apexRedirect(request: NextRequest) {
 const CONSTRUCTION_PATH = '/en-construction';
 const CONSTRUCTION_CURTAIN_ENABLED = true;
 
-// Temporary launch curtain: only the public production domain is covered.
-// Localhost and Vercel previews stay fully usable while the shop is being built.
+// Temporary launch curtain: every public hostname serving this deployment is
+// covered, including Vercel's production alias and preview URLs. Localhost is
+// usable for development and QA when the app is not running on Vercel.
 // Access to the live storefront must never depend on a client-controlled cookie.
 // Remove this helper and the construction rewrite below when Caldera opens.
 function shouldShowConstruction(request: NextRequest) {
@@ -27,10 +28,10 @@ function shouldShowConstruction(request: NextRequest) {
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   const { pathname } = request.nextUrl;
 
-  const isProductionHost =
-    host === PRODUCTION_HOST || host === `www.${PRODUCTION_HOST}`;
-
-  if (!isProductionHost) return false;
+  const isLocalHost =
+    host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+  if (isLocalHost && !process.env.VERCEL && !process.env.VERCEL_ENV)
+    return false;
   if (pathname === CONSTRUCTION_PATH) return false;
 
   // Branding files must stay as real image responses. In particular, Next.js
