@@ -18,11 +18,11 @@ const CONSTRUCTION_PATH = '/en-construction';
 const CONSTRUCTION_CURTAIN_ENABLED = true;
 
 // Temporary launch curtain: only the public production domain is covered.
-// localhost and Vercel previews stay fully usable while the shop is being built.
+// Localhost and Vercel previews stay fully usable while the shop is being built.
+// Access to the live storefront must never depend on a client-controlled cookie.
 // Remove this helper and the construction rewrite below when Caldera opens.
 function shouldShowConstruction(request: NextRequest) {
   if (!CONSTRUCTION_CURTAIN_ENABLED) return false;
-  if (request.cookies.get('caldera_preview')?.value === '1') return false;
 
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   const { pathname } = request.nextUrl;
