@@ -113,8 +113,9 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
         assert.match(result.setCookie, /HttpOnly/i);
         assert.match(result.setCookie, /SameSite=lax/i);
         assert.match(result.setCookie, /Max-Age=2592000/i);
-        if (!process.env.TEST_ACTION_MANIFEST)
-          assert.match(result.setCookie, /Secure/i);
+        // A production build served over local HTTP needs a persistent cookie.
+        if (new URL(base).hostname === 'localhost')
+          assert.doesNotMatch(result.setCookie, /;\s*Secure\b/i);
         cookie = result.setCookie.split(';')[0]!;
         assert.match(result.body, /"itemCount":1/);
         assert.match(await page(), /Ouvrir le panier · 1 article/);

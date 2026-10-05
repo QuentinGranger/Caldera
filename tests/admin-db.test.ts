@@ -680,6 +680,17 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
           faqInput([{ question: 'A::B ?', answer: 'Ligne 1\nLigne 2' }]),
           'A:B ? :: Ligne 1 Ligne 2',
         );
+        const reordered = await saveGame(
+          admin.id,
+          gameForm({
+            id: game.id,
+            faq: 'Où ? :: Ici.\nQuand ? :: Demain.',
+          }),
+        );
+        assert.deepEqual(reordered.game.faq, [
+          { question: 'Où ?', answer: 'Ici.' },
+          { question: 'Quand ?', answer: 'Demain.' },
+        ]);
         await assert.rejects(
           saveGame(admin.id, gameForm({ name: 'Doublon' })),
           /déjà utilisé par le jeu « Jeu test »/,
@@ -718,7 +729,7 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
           await db.adminAuditLog.count({
             where: { entityId: game.id, action: 'GAME_SAVED' },
           }),
-          3,
+          4,
         );
       },
     );
@@ -818,6 +829,7 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
             name: category.name,
             slug: `admin-renomme-${key}`,
             intro: 'Famille de test.',
+            faq: 'Première ? :: Oui.\nDeuxième ? :: Vous pouvez vérifier.',
             imageUrl: '/assets/images/products/prismatic.png',
             sortOrder: 0,
             isActive: true,
@@ -827,6 +839,10 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
           where: { id: category.id },
         });
         assert.equal(renamed.intro, 'Famille de test.');
+        assert.deepEqual(renamed.faq, [
+          { question: 'Première ?', answer: 'Oui.' },
+          { question: 'Deuxième ?', answer: 'Vous pouvez vérifier.' },
+        ]);
         assert.equal(renamed.imageUrl, '/assets/images/products/prismatic.png');
         assert.equal(
           (

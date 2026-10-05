@@ -1,6 +1,7 @@
 import 'server-only';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+import { secureCookieForHost } from '@/lib/cookies/secure';
 import { parseFavoriteSession, serializeFavoriteSession } from './sessionValue';
 
 const FAVORITES_COOKIE = 'caldera_favorites';
@@ -11,6 +12,7 @@ export async function getGuestFavoriteIds() {
 
 export async function setGuestFavoriteIds(ids: readonly string[]) {
   const cookieStore = await cookies();
+  const requestHeaders = await headers();
   const value = serializeFavoriteSession(ids);
   if (!value) {
     cookieStore.delete(FAVORITES_COOKIE);
@@ -19,7 +21,10 @@ export async function setGuestFavoriteIds(ids: readonly string[]) {
   cookieStore.set(FAVORITES_COOKIE, value, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: secureCookieForHost(
+      requestHeaders.get('host'),
+      requestHeaders.get('x-forwarded-proto'),
+    ),
     path: '/',
     priority: 'medium',
   });

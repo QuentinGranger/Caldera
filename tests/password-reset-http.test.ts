@@ -81,6 +81,32 @@ test('mot de passe oublié HTTP : pages privées, réponse identique, lien inval
       }
     });
 
+    await t.test(
+      'anciens jetons en query : retirés avant le rendu',
+      async () => {
+        const token = `query-token-${key}`;
+        for (const path of [
+          '/compte/verification',
+          '/compte/nouveau-mot-de-passe',
+          '/admin/nouveau-mot-de-passe',
+        ]) {
+          const response = await fetch(
+            `${base}${path}?token=${token}&source=test`,
+            {
+              redirect: 'manual',
+            },
+          );
+          assert.equal(response.status, 307, path);
+          const location = response.headers.get('location');
+          assert.ok(location, path);
+          const target = new URL(location, base);
+          assert.equal(target.pathname, path);
+          assert.equal(target.search, '?source=test');
+          assert.ok(!(await response.text()).includes(token), path);
+        }
+      },
+    );
+
     for (const [label, path, action, known, field] of [
       [
         'client',

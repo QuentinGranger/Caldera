@@ -2,6 +2,7 @@ import 'server-only';
 import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { requireAdmin } from './auth';
+import { adminTransaction } from './common';
 import { landedCost } from '@/lib/finance/landedCost';
 import {
   breakEvenRevenue,
@@ -340,7 +341,7 @@ export async function getBusinessPilotage() {
   };
 }
 
-export async function saveBusinessPilotage(form: FormData) {
+export async function saveBusinessPilotage(adminId: string, form: FormData) {
   whitelist(form, [
     'revenueTarget',
     'minimumMarginRate',
@@ -397,8 +398,7 @@ export async function saveBusinessPilotage(form: FormData) {
     ),
   ];
 
-  const db = getPrisma();
-  return db.$transaction(async (tx) => {
+  return adminTransaction(adminId, async (tx) => {
     if (launchProductIds.length) {
       const count = await tx.product.count({
         where: { id: { in: launchProductIds }, status: { not: 'ARCHIVED' } },

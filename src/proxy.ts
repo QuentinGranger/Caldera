@@ -2,6 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { REMOVED_CONTENT } from '@/lib/content/removed';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL, siteOrigin } from '@/lib/site';
 
+// Older e-mail links sometimes placed one-time credentials in the query.
+// Drop them before rendering so they never enter HTML or navigation data.
+const LEGACY_TOKEN_PATHS = new Set([
+  '/admin/nouveau-mot-de-passe',
+  '/compte/nouveau-mot-de-passe',
+  '/compte/verification',
+]);
+function stripLegacyToken(request: NextRequest) {
+  if (
+    !LEGACY_TOKEN_PATHS.has(request.nextUrl.pathname) ||
+    !request.nextUrl.searchParams.has('token')
+  )
+    return null;
+  const target = new URL(request.nextUrl.pathname, siteOrigin());
+  target.search = request.nextUrl.search;
+  target.searchParams.delete('token');
+  const response = NextResponse.redirect(target, 307);
+  response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+  response.headers.set('Referrer-Policy', 'no-referrer');
+  return response;
+}
+
 // www serves the same pages as the apex: one canonical host (308, path and query kept).
 function apexRedirect(request: NextRequest) {
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
@@ -158,6 +180,8 @@ function goneResponse(kind: keyof typeof GONE_PAGES) {
 }
 
 export async function proxy(request: NextRequest) {
+  const legacyTokenRedirect = stripLegacyToken(request);
+  if (legacyTokenRedirect) return legacyTokenRedirect;
   const redirect = apexRedirect(request);
   if (redirect) return redirect;
 

@@ -50,6 +50,33 @@ test('événement Sentry : aucune query string, cookie ni referer transmis', () 
     assert.doesNotMatch(sent, new RegExp(secret));
   assert.equal(event.request?.headers?.['user-agent'], 'UA');
 });
+test('événement Sentry : en-têtes et données sensibles arbitraires supprimés', () => {
+  const event = scrubEvent({
+    type: undefined,
+    message: `Impossible de traiter ${stripe}`,
+    user: { email: 'client@example.test' },
+    extra: { resetToken: 'top-secret' },
+    tags: { session_token: 'top-secret', destination: order },
+    request: {
+      data: { password: 'top-secret' },
+      env: { API_KEY: 'top-secret' },
+      headers: {
+        Authorization: 'Bearer top-secret',
+        Cookie: 'session=top-secret',
+        'X-Api-Key': 'top-secret',
+        'User-Agent': 'UA',
+      },
+    },
+    exception: { values: [{ value: `Erreur pour ${order}` }] },
+  } as unknown as ErrorEvent);
+  assert.doesNotMatch(
+    JSON.stringify(event),
+    /top-secret|client@example\.test|access=|client_secret/,
+  );
+  assert.equal(event.request?.headers?.['User-Agent'], 'UA');
+  assert.equal(event.tags?.destination, stripQuery(order));
+});
+
 test('transaction Sentry : spans et contexte de trace nettoyés', () => {
   const event = scrubEvent({
     type: 'transaction',

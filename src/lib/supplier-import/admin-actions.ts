@@ -155,6 +155,8 @@ export async function uploadChunkAction(form: FormData): Promise<UploadResult> {
     whitelist(form, ['id', 'index', 'chunk']);
     const chunk = form.get('chunk');
     if (!(chunk instanceof Blob)) throw new AdminError('Morceau manquant.');
+    if (chunk.size > CHUNK_SIZE)
+      throw new AdminError('Morceau de fichier trop volumineux.');
     await uploadChunk(
       id(form)!,
       integer(form, 'index', 0, 100),

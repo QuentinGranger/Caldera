@@ -2,7 +2,11 @@ import { after } from 'next/server';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { safelyProcessEmails } from '@/lib/email/processor';
 import { getStripe, stripeMode } from '@/lib/stripe/stripe';
-import { verifyWebhook } from '@/lib/stripe/webhook';
+import {
+  readWebhookBody,
+  verifyWebhook,
+  WebhookPayloadTooLargeError,
+} from '@/lib/stripe/webhook';
 import { paymentEvents, processPaymentEvent } from '@/lib/payments/events';
 import { stripeRefundGateway } from '@/lib/refunds/gateway';
 import { processRefundEvent } from '@/lib/refunds/service';
@@ -19,14 +23,18 @@ export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret)
     return Response.json({ error: 'Webhook indisponible' }, { status: 503 });
+  const signature = request.headers.get('stripe-signature');
+  if (!signature)
+    return Response.json({ error: 'Signature invalide' }, { status: 400 });
   let event;
   try {
-    event = verifyWebhook(
-      await request.text(),
-      request.headers.get('stripe-signature') ?? '',
-      secret,
-    );
-  } catch {
+    event = verifyWebhook(await readWebhookBody(request), signature, secret);
+  } catch (error) {
+    if (error instanceof WebhookPayloadTooLargeError)
+      return Response.json(
+        { error: 'Requête trop volumineuse' },
+        { status: 413 },
+      );
     console.error(
       JSON.stringify({
         scope: 'payments',

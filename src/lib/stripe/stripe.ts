@@ -31,6 +31,14 @@ export function assertPaymentConfiguration() {
     throw new OrderError(
       'Les commandes sont suspendues quelques minutes pour maintenance. Votre panier est conservé : réessayez un peu plus tard.',
     );
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.STORE_OPEN === '1' &&
+    stripeMode() !== 'live'
+  )
+    throw new OrderError(
+      'Le paiement en production nécessite une configuration Stripe active.',
+    );
   getStripe();
   if (
     !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith(

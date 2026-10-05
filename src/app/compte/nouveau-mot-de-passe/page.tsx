@@ -9,13 +9,8 @@ import styles from '@/components/account/Account.module.scss';
 
 export const metadata: Metadata = { title: 'Nouveau mot de passe' };
 
-type Props = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
 // The token arrives in the link fragment (#token=), read in the browser.
-export default async function ResetPasswordPage({ searchParams }: Props) {
-  const { token } = await searchParams;
+export default function ResetPasswordPage() {
   return (
     <AccountShell
       title="Nouveau mot de passe"
@@ -23,7 +18,6 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
     >
       <AccountForm action={resetPasswordAction} submit="Enregistrer" wide>
         <LinkTokenInput
-          fallback={typeof token === 'string' ? token : ''}
           className={styles.error}
           missing={
             <>
