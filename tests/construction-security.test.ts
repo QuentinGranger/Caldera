@@ -50,6 +50,7 @@ test('préouverture : les exceptions locales et admin restent utilisables', asyn
   for (const url of [
     'http://localhost:3000/catalogue',
     'https://les-terres-de-caldera.vercel.app/admin/login',
+    'https://les-terres-de-caldera.vercel.app/media/123e4567-e89b-42d3-a456-426614174000.webp',
   ]) {
     const request = new NextRequest(url, {
       headers: { host: new URL(url).host },

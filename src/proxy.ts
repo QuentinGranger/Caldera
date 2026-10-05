@@ -34,13 +34,14 @@ function shouldShowConstruction(request: NextRequest) {
     return false;
   if (pathname === CONSTRUCTION_PATH) return false;
 
-  // Branding files must stay as real image responses. In particular, Next.js
-  // serves app/icon.png through /icon; rewriting that route to the construction
-  // page prevents search engines from fetching the favicon.
+  // Image routes must stay as real image responses. Next.js serves app/icon.png
+  // through /icon and its optimizer fetches /media/<validated UUID> internally;
+  // rewriting either route would break the favicon or admin product images.
   if (
     pathname === '/icon' ||
     pathname === '/favicon.png' ||
-    pathname === '/apple-touch-icon.png'
+    pathname === '/apple-touch-icon.png' ||
+    pathname.startsWith('/media/')
   ) {
     return false;
   }
