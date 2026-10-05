@@ -160,13 +160,24 @@ test('410 : produit retiré définitivement, liste lue sur l’origine configur�
       'https://lesterresdecaldera.fr/produit/ancien-coffret',
       { headers: { host: 'attaquant.example' } },
     );
-    const gone = await proxy(forged);
+    const curtain = await proxy(forged);
+    assert.equal(
+      curtain.headers.get('x-middleware-rewrite'),
+      'https://lesterresdecaldera.fr/en-construction',
+    );
+    const gone = await proxy(
+      new NextRequest('http://localhost/produit/ancien-coffret', {
+        headers: { host: 'localhost' },
+      }),
+    );
     assert.equal(gone.status, 410);
     assert.equal(gone.headers.get('x-robots-tag'), 'noindex');
     assert.match(await gone.text(), /n’est plus proposé/);
     assert.deepEqual(called, ['https://lesterresdecaldera.fr/api/seo/gone']);
     const live = await proxy(
-      new NextRequest('https://lesterresdecaldera.fr/produit/etb-actuel'),
+      new NextRequest('http://localhost/produit/etb-actuel', {
+        headers: { host: 'localhost' },
+      }),
     );
     assert.notEqual(live.status, 410);
     // The list is cached: no second read within five minutes.
@@ -189,7 +200,9 @@ test('410 : guides et termes retirés, sans lecture réseau', async () => {
     assert.ok(REMOVED_CONTENT.size > 0);
     for (const path of REMOVED_CONTENT) {
       const gone = await proxy(
-        new NextRequest(`https://lesterresdecaldera.fr${path}`),
+        new NextRequest(`http://localhost${path}`, {
+          headers: { host: 'localhost' },
+        }),
       );
       assert.equal(gone.status, 410, path);
       assert.equal(gone.headers.get('x-robots-tag'), 'noindex', path);
@@ -199,7 +212,8 @@ test('410 : guides et termes retirés, sans lecture réseau', async () => {
     }
     const live = await proxy(
       new NextRequest(
-        'https://lesterresdecaldera.fr/guides/proteger-ses-cartes',
+        'http://localhost/guides/proteger-ses-cartes',
+        { headers: { host: 'localhost' } },
       ),
     );
     assert.notEqual(live.status, 410);
