@@ -6,6 +6,8 @@ import {
   EmailProviderError,
   resendProvider,
 } from '@/lib/email/provider';
+import { contactRetryAfter } from '@/lib/contact/limits';
+import { ContactRequestError, readContactBody } from '@/lib/contact/request';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 
 export const runtime = 'nodejs';
@@ -31,13 +33,13 @@ function escapeHtml(value: string) {
     /[&<>"']/g,
     (character) =>
       (
-        {
+        ({
           '&': '&amp;',
           '<': '&lt;',
           '>': '&gt;',
           '"': '&quot;',
           "'": '&#39;',
-        } as const
+        }) as const
       )[character as '&' | '<' | '>' | '"' | "'"]!,
   );
 }
@@ -53,14 +55,6 @@ function configurationError() {
 }
 
 export async function POST(request: Request) {
-  const contentLength = Number(request.headers.get('content-length') || 0);
-  if (contentLength > 20_000) {
-    return NextResponse.json(
-      { message: 'Le message envoyé est trop volumineux.' },
-      { status: 413 },
-    );
-  }
-
   const origin = request.headers.get('origin');
   if (origin) {
     try {
@@ -80,14 +74,16 @@ export async function POST(request: Request) {
 
   let body: Record<string, unknown>;
   try {
-    const value: unknown = await request.json();
-    if (!value || typeof value !== 'object' || Array.isArray(value))
-      throw new Error('invalid');
-    body = value as Record<string, unknown>;
-  } catch {
+    body = await readContactBody(request);
+  } catch (error) {
+    if (error instanceof ContactRequestError && error.status === 413)
+      return NextResponse.json(
+        { message: 'Le message envoyé est trop volumineux.' },
+        { status: 413 },
+      );
     return NextResponse.json(
       { message: 'Le formulaire envoyé est invalide.' },
-      { status: 400 },
+      { status: error instanceof ContactRequestError ? error.status : 400 },
     );
   }
 
@@ -121,13 +117,18 @@ export async function POST(request: Request) {
   if (!emailPattern.test(contactRecipient)) return configurationError();
 
   try {
+    const retryAfter = await contactRetryAfter(email);
+    if (retryAfter !== null) {
+      return NextResponse.json(
+        { message: 'Trop de messages envoyés. Réessayez plus tard.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+      );
+    }
     const settings = emailSettings();
     const provider = resendProvider();
     const recipient = settings.testRecipient ?? contactRecipient;
     const subject =
-      (settings.testRecipient ? '[TEST] ' : '') +
-      '[Contact] ' +
-      topics[topic];
+      (settings.testRecipient ? '[TEST] ' : '') + '[Contact] ' + topics[topic];
     const safeName = escapeHtml(name);
     const safeEmail = escapeHtml(email);
     const safeOrder = escapeHtml(orderNumber);
@@ -150,9 +151,7 @@ export async function POST(request: Request) {
           safeEmail +
           '<br><strong>Sujet :</strong> ' +
           escapeHtml(topics[topic]) +
-          (safeOrder
-            ? '<br><strong>Commande :</strong> ' + safeOrder
-            : '') +
+          (safeOrder ? '<br><strong>Commande :</strong> ' + safeOrder : '') +
           '</p><hr><p>' +
           safeMessage +
           '</p><hr><p style="font-size:12px;color:#60665d">Message envoyé depuis <a href="' +

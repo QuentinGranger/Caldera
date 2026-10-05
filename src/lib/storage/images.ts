@@ -57,7 +57,9 @@ export const blobBackend: ImageBackend = {
       });
     } catch (error) {
       if (!(error instanceof BlobError)) throw error;
-      console.error('Image storage write failed', { error: error.message });
+      console.error('Image storage write failed', {
+        code: 'BLOB_WRITE_FAILED',
+      });
       throw new AdminError(
         'Stockage des images indisponible ou mal configuré. Réessayez plus tard.',
       );

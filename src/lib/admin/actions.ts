@@ -282,9 +282,9 @@ export async function saveBusinessPilotageAction(
   _previous: AdminActionState,
   form: FormData,
 ): Promise<AdminActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   try {
-    await saveBusinessPilotage(form);
+    await saveBusinessPilotage(admin.id, form);
     revalidatePath('/admin');
     revalidatePath('/admin/pilotage');
     return {

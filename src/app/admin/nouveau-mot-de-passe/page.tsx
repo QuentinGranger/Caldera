@@ -6,12 +6,7 @@ import { LinkTokenInput } from '@/components/auth/LinkTokenInput';
 import { resetAdminPasswordAction } from '@/lib/admin/password-reset-actions';
 import styles from '@/components/admin/Admin.module.scss';
 
-export default async function AdminResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const { token } = await searchParams;
+export default function AdminResetPasswordPage() {
   return (
     <main id="contenu" className={styles.login}>
       <div className={styles.brand}>
@@ -37,7 +32,6 @@ export default async function AdminResetPasswordPage({
         >
           {/* The token arrives in the link fragment (#token=), read here. */}
           <LinkTokenInput
-            fallback={typeof token === 'string' ? token : ''}
             className={`${styles.message} ${styles.error}`}
             missing="Ce lien est incomplet : ouvrez le lien complet reçu par e-mail, ou demandez-en un nouveau."
           />

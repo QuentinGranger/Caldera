@@ -10,8 +10,39 @@ const ocrFiles = [
   './node_modules/tesseract.js-core/*.{js,wasm}',
 ];
 
+// Applied to every response, including API routes and static assets that do
+// not pass through src/proxy.ts. The nonce based CSP is set by the proxy for
+// HTML pages and deliberately stays out of this static configuration.
+const securityHeaders = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'no-referrer' },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=()',
+  },
+];
+
+// HSTS is meaningful only when the configured public site is HTTPS. Avoid
+// pinning localhost during production-mode tests.
+if (process.env.NODE_ENV === 'production') {
+  try {
+    if (new URL(process.env.SITE_URL ?? '').protocol === 'https:') {
+      securityHeaders.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000',
+      });
+    }
+  } catch {
+    // SITE_URL validation belongs to src/lib/site.ts at request time.
+  }
+}
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
   experimental: { serverActions: { bodySizeLimit: '6mb' } },
   images: {
     formats: ['image/avif', 'image/webp'],

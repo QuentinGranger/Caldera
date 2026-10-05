@@ -5,14 +5,11 @@ import { useEffect, useState, type ReactNode } from 'react';
  * Token of an e-mailed link, read from the URL fragment (#token=…): a
  * fragment is never sent to the server, so it stays out of access logs and
  * Referer headers. It is then removed from the address bar and the history.
- * `fallback` still accepts links e-mailed with ?token= before this change.
  */
 export function LinkTokenInput({
-  fallback = '',
   missing,
   className,
 }: {
-  fallback?: string;
   /** Shown when the page was opened without a token. */
   missing: ReactNode;
   className?: string;
@@ -24,10 +21,10 @@ export function LinkTokenInput({
       'token',
     );
     // eslint-disable-next-line react-hooks/set-state-in-effect -- read once, browser only
-    setToken(fromFragment || fallback);
+    setToken(fromFragment || '');
     if (window.location.hash || window.location.search)
       window.history.replaceState(null, '', window.location.pathname);
-  }, [fallback]);
+  }, []);
   return (
     <>
       <input type="hidden" name="token" value={token ?? ''} />

@@ -129,8 +129,8 @@ test('compte client HTTP : pages privées, connexion, historique, adresse, suppr
           '/compte/connexion',
           '/compte/inscription',
           '/compte/mot-de-passe-oublie',
-          '/compte/verification?token=x',
-          '/compte/nouveau-mot-de-passe?token=x',
+          '/compte/verification',
+          '/compte/nouveau-mot-de-passe',
         ]) {
           const result = await page(path, '');
           assert.equal(result.response.status, 200, path);
@@ -147,6 +147,21 @@ test('compte client HTTP : pages privées, connexion, historique, adresse, suppr
           assert.match(
             result.html,
             /<meta name="robots" content="noindex, nofollow"/,
+          );
+        }
+        for (const path of [
+          '/compte/verification?token=x',
+          '/compte/nouveau-mot-de-passe?token=x',
+        ]) {
+          const result = await page(path, '');
+          assert.equal(result.response.status, 307, path);
+          assert.equal(
+            new URL(
+              result.response.headers.get('location')!,
+              base,
+            ).searchParams.has('token'),
+            false,
+            path,
           );
         }
       },
@@ -226,6 +241,19 @@ test('compte client HTTP : pages privées, connexion, historique, adresse, suppr
         assert.match(
           admin.response.headers.get('location') ?? '',
           /\/admin\/login/,
+        );
+        const adminAction = await formAction(
+          'saveGameAction',
+          { name: 'Intrusion client', slug: `intrusion-${key}` },
+          cookie,
+        );
+        assert.match(
+          adminAction.redirect || adminAction.body,
+          /\/admin\/login/,
+        );
+        assert.equal(
+          await db.game.count({ where: { slug: `intrusion-${key}` } }),
+          0,
         );
       },
     );

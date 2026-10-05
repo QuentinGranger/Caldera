@@ -12,13 +12,8 @@ import styles from '@/components/account/Account.module.scss';
 
 export const metadata: Metadata = { title: 'Confirmer votre adresse' };
 
-type Props = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
 // Confirmation needs a click: mail scanners that open links do not consume it.
-export default async function VerifyEmailPage({ searchParams }: Props) {
-  const { token } = await searchParams;
+export default function VerifyEmailPage() {
   return (
     <AccountShell
       title="Confirmer votre adresse"
@@ -30,7 +25,6 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
         wide
       >
         <LinkTokenInput
-          fallback={typeof token === 'string' ? token : ''}
           className={styles.error}
           missing="Ce lien est incomplet : ouvrez le lien complet reçu par e-mail, ou demandez-en un nouveau ci-dessous."
         />
