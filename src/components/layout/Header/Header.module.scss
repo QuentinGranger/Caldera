@@ -22,18 +22,27 @@
 .header:has([data-menu-scrolled]) {
   border-bottom-color: rgb(232 194 97 / 22%);
 }
+@supports not selector(:has(*)) {
+  .header {
+    background: v.$color-night-soft;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
 // Home: the header floats over the hero, then settles as the hero leaves.
 // Without scroll timelines it simply stays solid.
-@supports (animation-timeline: scroll()) {
-  :global(body:has([data-home-hero])) .header {
-    animation: header-settle linear both;
-    animation-timeline: scroll(root);
-    animation-range: 12vh 62vh;
-  }
-  // The mobile menu is open: solid at once, whatever the scroll.
-  :global(body:has([data-home-hero]))
-    .header:has([aria-controls='mobile-navigation'][aria-expanded='true']) {
-    animation: none;
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    :global(body:has([data-home-hero])) .header {
+      animation: header-settle linear both;
+      animation-timeline: scroll(root);
+      animation-range: 12vh 62vh;
+    }
+    // The mobile menu is open: solid at once, whatever the scroll.
+    :global(body:has([data-home-hero]))
+      .header:has([aria-controls='mobile-navigation'][aria-expanded='true']) {
+      animation: none;
+    }
   }
 }
 @keyframes header-settle {

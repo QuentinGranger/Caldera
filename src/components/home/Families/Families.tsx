@@ -52,8 +52,8 @@ export function Families({ families }: { families: HomeFamily[] }) {
                     fill
                     sizes={
                       index === 0
-                        ? '(min-width: 1200px) 640px, (min-width: 768px) 55vw, 90vw'
-                        : '(min-width: 1200px) 420px, (min-width: 768px) 40vw, 90vw'
+                        ? '(min-width: 1200px) 420px, (min-width: 768px) 38vw, 62vw'
+                        : '(min-width: 1200px) 320px, (min-width: 768px) 32vw, 62vw'
                     }
                   />
                 </span>

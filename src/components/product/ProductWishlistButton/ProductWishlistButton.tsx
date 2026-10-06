@@ -18,7 +18,7 @@ export function ProductWishlistButton({
     <button
       type="button"
       className={`${styles.button} ${favorite ? styles.active : ''}`}
-      aria-label={`${favorite ? 'Retirer' : 'Ajouter'} ${productName} ${favorite ? 'des' : 'aux'} favoris`}
+      aria-label={`${pending ? 'Enregistrement…' : favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'} : ${productName}`}
       aria-pressed={favorite}
       aria-busy={pending || undefined}
       disabled={pending}
