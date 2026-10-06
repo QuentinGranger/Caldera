@@ -12,6 +12,8 @@ export function toFaqEntries(value: Prisma.JsonValue | null): FaqEntry[] {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
     const { question, answer } = entry;
     if (typeof question !== 'string' || typeof answer !== 'string') return [];
+    // Demo seed placeholders must not appear while the data migration is pending.
+    if (question.includes('[Démo]') || answer.includes('[Démo]')) return [];
     return question.trim() && answer.trim()
       ? [{ question: question.trim(), answer: answer.trim() }]
       : [];

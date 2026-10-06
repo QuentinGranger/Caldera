@@ -30,20 +30,70 @@ function daysFromToday(days: number) {
     ),
   );
 }
-function demoFaq(subject: string) {
-  return [
+const pokemonFaq = [
+  {
+    question: 'Quels produits Pokémon puis-je trouver sur Caldera ?',
+    answer:
+      'Caldera propose une sélection de produits du JCC Pokémon, notamment des boosters, displays, coffrets, bundles, ETB et autres produits scellés. La sélection évolue selon les sorties et les disponibilités.',
+  },
+  {
+    question: 'Comment choisir entre les différentes extensions Pokémon ?',
+    answer:
+      'Chaque extension possède son propre univers, ses cartes et ses raretés. Vous pouvez consulter les pages dédiées aux extensions pour découvrir leur contenu, leur date de sortie et les produits disponibles sur Caldera.',
+  },
+];
+const familyFaq: Record<string, { question: string; answer: string }[]> = {
+  scelles: [
     {
-      question: `[Démo] Question de démonstration sur ${subject} ?`,
+      question:
+        'Quels produits trouve-t-on dans la famille des produits scellés ?',
       answer:
-        '[Démo] Réponse de démonstration : ce texte sert uniquement à tester l’affichage de la FAQ et son balisage FAQPage.',
+        'Cette famille regroupe les boosters, displays, ETB et coffrets scellés présents au catalogue. Les produits affichés évoluent selon les sorties et les disponibilités.',
     },
+  ],
+  boosters: [
     {
-      question: '[Démo] Ces informations sont-elles réelles ?',
+      question: 'Quelles présentations de boosters puis-je consulter ?',
       answer:
-        '[Démo] Non. Les produits, prix, stocks et dates de ce jeu de données sont fictifs et réservés au développement.',
+        'Cette famille rassemble les boosters à l’unité, blisters, tripacks et bundles proposés au catalogue. Consultez la fiche de chaque produit pour connaître son extension, sa langue et sa disponibilité.',
     },
-  ];
-}
+  ],
+  displays: [
+    {
+      question: 'Qu’est-ce qu’un display de cartes à collectionner ?',
+      answer:
+        'Un display est une boîte de boosters scellée. Consultez sa fiche produit pour connaître l’extension, la langue et les informations propres à cette boîte.',
+    },
+  ],
+  etb: [
+    {
+      question: 'Que signifie ETB ?',
+      answer:
+        'ETB signifie « Elite Trainer Box », ou « Coffret Dresseur d’élite » en français. Consultez la fiche de chaque ETB pour connaître l’extension et le contenu indiqué pour ce produit.',
+    },
+  ],
+  coffrets: [
+    {
+      question: 'Quels formats trouve-t-on dans la famille des coffrets ?',
+      answer:
+        'Cette famille rassemble les coffrets de collection, tins et decks présents au catalogue. Le contenu varie selon le produit : consultez sa fiche pour le détail.',
+    },
+  ],
+  cartes: [
+    {
+      question: 'Où trouver des cartes vendues à l’unité ?',
+      answer:
+        'Les cartes proposées individuellement sont regroupées dans cette famille. Consultez chaque fiche pour vérifier la carte et les informations disponibles avant de choisir.',
+    },
+  ],
+  accessoires: [
+    {
+      question: 'Quels accessoires puis-je trouver dans cette famille ?',
+      answer:
+        'Cette famille regroupe les protège-cartes, classeurs et articles de rangement présents au catalogue. Consultez la fiche de chaque article pour vérifier son usage et ses caractéristiques.',
+    },
+  ],
+};
 function demoIntro(subject: string) {
   return `[Démo] Texte éditorial de démonstration pour ${subject}.\n\nIl sert à tester le rendu Markdown des pages : **mise en valeur**, listes et [liens internes](/catalogue).\n\n- Contenu fictif, non relu.\n- À remplacer par un texte écrit pour la boutique.`;
 }
@@ -71,7 +121,7 @@ const games = [
     description:
       'Le jeu de cartes à collectionner Pokémon : produits scellés, cartes à l’unité et accessoires.',
     intro: demoIntro('le hub Pokémon'),
-    faq: demoFaq('les produits Pokémon'),
+    faq: pokemonFaq,
     sortOrder: 0,
   },
 ] as const;
@@ -83,7 +133,7 @@ type CategorySeed = {
   sortOrder: number;
   description: string;
   intro?: string;
-  faq?: ReturnType<typeof demoFaq>;
+  faq?: { question: string; answer: string }[];
 };
 const categories: CategorySeed[] = [
   {
@@ -92,6 +142,7 @@ const categories: CategorySeed[] = [
     parent: null,
     sortOrder: 0,
     description: 'Boosters, displays, ETB et coffrets encore scellés.',
+    faq: familyFaq.scelles,
   },
   {
     slug: 'boosters',
@@ -100,6 +151,7 @@ const categories: CategorySeed[] = [
     sortOrder: 1,
     description: 'Boosters à l’unité, blisters, tripacks et bundles.',
     intro: demoIntro('la famille Boosters'),
+    faq: familyFaq.boosters,
   },
   {
     slug: 'displays',
@@ -107,6 +159,7 @@ const categories: CategorySeed[] = [
     parent: 'scelles',
     sortOrder: 2,
     description: 'Boîtes de boosters scellées.',
+    faq: familyFaq.displays,
   },
   {
     slug: 'etb',
@@ -115,7 +168,7 @@ const categories: CategorySeed[] = [
     sortOrder: 3,
     description: 'Coffrets Dresseur d’élite.',
     intro: demoIntro('la famille ETB'),
-    faq: demoFaq('les ETB'),
+    faq: familyFaq.etb,
   },
   {
     slug: 'coffrets',
@@ -123,6 +176,7 @@ const categories: CategorySeed[] = [
     parent: 'scelles',
     sortOrder: 4,
     description: 'Coffrets de collection, tins et decks.',
+    faq: familyFaq.coffrets,
   },
   {
     slug: 'cartes',
@@ -130,6 +184,7 @@ const categories: CategorySeed[] = [
     parent: null,
     sortOrder: 5,
     description: 'Cartes vendues à l’unité.',
+    faq: familyFaq.cartes,
   },
   {
     slug: 'accessoires',
@@ -137,6 +192,7 @@ const categories: CategorySeed[] = [
     parent: null,
     sortOrder: 6,
     description: 'Protège-cartes, classeurs et rangements.',
+    faq: familyFaq.accessoires,
   },
 ];
 
@@ -147,7 +203,6 @@ type SetSeed = {
   game: string;
   releaseDate: Date;
   intro?: string;
-  faq?: ReturnType<typeof demoFaq>;
   seoTitle?: string;
   seoDescription?: string;
 };
@@ -159,7 +214,6 @@ const sets: SetSeed[] = [
     game: 'pokemon',
     releaseDate: daysFromToday(-60),
     intro: demoIntro('l’extension Terres de Braise'),
-    faq: demoFaq('l’extension Terres de Braise'),
   },
   {
     slug: 'dev-vallees-oubliees',
