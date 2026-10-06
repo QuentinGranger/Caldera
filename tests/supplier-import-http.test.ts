@@ -13,6 +13,7 @@ import {
   startImport,
   uploadChunk,
 } from '../src/lib/supplier-import/service';
+import { enrollAdminFixture } from './helpers/admin-mfa';
 if (
   process.env.NODE_ENV === 'production' ||
   !['localhost', '127.0.0.1'].includes(
@@ -159,11 +160,17 @@ test('imports fournisseurs en HTTP : accès, analyse, import, annulation', async
         '/admin/login',
         '',
       );
+      assert.ok(
+        (result.response.headers.get('x-action-redirect') ?? '').startsWith(
+          '/admin/securite',
+        ),
+        result.body.slice(0, 300),
+      );
       const header = result.cookies.find((value) =>
         /caldera_admin\.session_token=/.test(value),
       );
       assert.ok(header, 'Cookie de session absent');
-      cookie = header.split(';')[0]!;
+      cookie = await enrollAdminFixture(password, header.split(';')[0]!);
     });
 
     await t.test('pages privées, sans erreur', async () => {
@@ -357,5 +364,6 @@ test('imports fournisseurs en HTTP : accès, analyse, import, annulation', async
     });
     await db.adminAuditLog.deleteMany({ where: { adminUserId: adminId } });
     await db.adminUser.delete({ where: { id: adminId } });
+    await db.$disconnect();
   }
 });

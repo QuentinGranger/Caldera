@@ -15,6 +15,7 @@ import {
   Menu,
   Package,
   PackageOpen,
+  ShieldCheck,
   ShoppingBag,
   TicketPercent,
   Warehouse,
@@ -32,6 +33,7 @@ const groups = [
         label: 'Pilotage économique',
         icon: BarChart3,
       },
+      { href: '/admin/securite', label: 'Sécurité du compte', icon: ShieldCheck },
     ],
   },
   {

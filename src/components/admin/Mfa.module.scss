@@ -1,0 +1,39 @@
+.steps {
+  padding-left: 1.4rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+.enrollment,
+.manage {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid currentColor;
+}
+.secret {
+  display: block;
+  overflow-wrap: anywhere;
+  padding: 0.9rem;
+  margin-block: 0.75rem 1.5rem;
+  background: #eeebf4;
+  user-select: all;
+}
+.codes {
+  margin-block: 1.5rem;
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.4rem 0.8rem;
+    list-style: none;
+    padding: 0;
+  }
+  code {
+    font-size: 0.9rem;
+    user-select: all;
+  }
+}
+.confirm {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-block: 0.6rem 1rem;
+}

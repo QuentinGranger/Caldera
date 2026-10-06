@@ -4,9 +4,12 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { hashPassword } from 'better-auth/crypto';
+import { createOTP } from '@better-auth/utils/otp';
+import { base32 } from '@better-auth/utils/base32';
 import sharp from 'sharp';
 import { imageStorage } from '../src/lib/storage/images';
 import { getPrisma } from '../src/lib/db/prisma';
+import { getAdminAuth } from '../src/lib/admin/auth';
 import { orderAccessUrl } from '../src/lib/orders/access';
 import { enqueueOrderEmail } from '../src/lib/email/outbox';
 import { cartTokenHash } from '../src/lib/cart/identity';
@@ -136,6 +139,9 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
     },
   });
   let cookie = '';
+  let backupCode = '';
+  let replacementCode = '';
+  let encryptedBackupCodes = '';
   const uploadedUrls: string[] = [];
   async function action(
     name: string,
@@ -155,7 +161,14 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       '0',
       JSON.stringify(noArgs ? [] : [{ success: false, message: '' }, '$K1']),
     );
-    const response = await fetch(`${base}/admin/login`, {
+    const route =
+      name === 'verifyMfaEnrollmentAction' ||
+      name === 'replaceAuthenticatorAction'
+        ? '/admin/securite'
+        : name === 'verifyAdminBackupCodeAction'
+          ? '/admin/second-facteur'
+          : '/admin/login';
+    const response = await fetch(`${base}${route}`, {
       method: 'POST',
       headers: {
         'Next-Action': actionId,
@@ -293,12 +306,12 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       });
     });
     await t.test(
-      'connexion réelle : HttpOnly, SameSite, Secure, huit heures et lastLogin',
+      'connexion, enrôlement MFA, révocation des sessions antérieures et cookies',
       async () => {
         const result = await action('loginAction', { email, password }, '');
         assert.ok(
           (result.response.headers.get('x-action-redirect') ?? '').startsWith(
-            '/admin',
+            '/admin/securite',
           ),
           `Connexion sans redirection, statut ${result.response.status}`,
         );
@@ -307,9 +320,61 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         assert.ok(/SameSite=Lax/i.test(header));
         assert.ok(/Secure/i.test(header));
         cookie = header.split(';')[0]!;
+        const passwordOnlyCookie = cookie;
+        const restricted = await page('/admin');
+        assert.ok(
+          (
+            restricted.response.headers.get('location') ?? restricted.html
+          ).includes('/admin/securite'),
+        );
+        const enrollment = await getAdminAuth().api.enableTwoFactor({
+          body: { password, method: 'totp' },
+          headers: new Headers({ Cookie: cookie, Origin: origin }),
+        });
+        assert.equal(enrollment.method, 'totp');
+        backupCode = enrollment.backupCodes[0]!;
+        replacementCode = enrollment.backupCodes[1]!;
+        encryptedBackupCodes = (
+          await db.adminTwoFactor.findFirstOrThrow({
+            where: { userId: admin.id },
+          })
+        ).backupCodes;
+        assert.ok(!encryptedBackupCodes.includes(backupCode));
+        const secret = new URL(enrollment.totpURI).searchParams.get('secret');
+        assert.ok(secret);
+        const code = await createOTP(
+          new TextDecoder().decode(base32.decode(secret)),
+          { period: 30, digits: 6 },
+        ).totp();
+        const verified = await action('verifyMfaEnrollmentAction', {
+          code,
+          backupSaved: 'on',
+        });
+        assert.ok(
+          (verified.response.headers.get('x-action-redirect') ?? '').startsWith(
+            '/admin',
+          ),
+          verified.body.slice(0, 300),
+        );
+        cookie = sessionCookie(verified.cookies).split(';')[0]!;
+        const revoked = await page('/admin', passwordOnlyCookie);
+        assert.ok(
+          (revoked.response.headers.get('location') ?? revoked.html).includes(
+            '/admin/login',
+          ),
+        );
+        assert.equal(
+          (await db.adminUser.findUniqueOrThrow({ where: { id: admin.id } }))
+            .twoFactorEnabled,
+          true,
+        );
         const session = await db.adminSession.findFirstOrThrow({
           where: { userId: admin.id },
         });
+        assert.equal(
+          await db.adminSession.count({ where: { userId: admin.id } }),
+          1,
+        );
         assert.ok(
           Math.abs(
             session.expiresAt.getTime() -
@@ -718,7 +783,44 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       'déconnexion révoque la session en base et le cookie',
       async () => {
         const login = await action('loginAction', { email, password }, '');
-        cookie = sessionCookie(login.cookies).split(';')[0]!;
+        assert.ok(
+          (login.response.headers.get('x-action-redirect') ?? '').startsWith(
+            '/admin/second-facteur',
+          ),
+        );
+        assert.ok(
+          login.cookies
+            .filter((value) => value.startsWith('caldera_admin.session_token='))
+            .every((value) =>
+              /^caldera_admin\.session_token=;.*max-age=0/i.test(value),
+            ),
+          'Le mot de passe seul ne doit pas laisser de cookie de session utilisable',
+        );
+        assert.equal(
+          await db.adminSession.count({
+            where: { userId: admin.id, expiresAt: { gt: new Date() } },
+          }),
+          0,
+        );
+        const challengeCookie = login.cookies
+          .filter((value) => /caldera_admin\.two_factor=/.test(value))
+          .map((value) => value.split(';')[0])
+          .join('; ');
+        assert.ok(challengeCookie);
+        const verified = await action(
+          'verifyAdminBackupCodeAction',
+          { code: backupCode },
+          challengeCookie,
+        );
+        cookie = sessionCookie(verified.cookies).split(';')[0]!;
+        assert.notEqual(
+          (
+            await db.adminTwoFactor.findFirstOrThrow({
+              where: { userId: admin.id },
+            })
+          ).backupCodes,
+          encryptedBackupCodes,
+        );
         const logout = await action('logoutAction', {}, cookie, origin, true);
         assert.ok(
           logout.cookies.some((value) =>
@@ -736,6 +838,52 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           (result.response.headers.get('location') ?? result.html).includes(
             '/admin/login',
           ),
+        );
+      },
+    );
+    await t.test(
+      'récupération avec un code de secours et remplacement du facteur',
+      async () => {
+        const login = await action('loginAction', { email, password }, '');
+        const challengeCookie = login.cookies
+          .filter((value) => /caldera_admin\.two_factor=/.test(value))
+          .map((value) => value.split(';')[0])
+          .join('; ');
+        assert.ok(challengeCookie);
+        const verified = await action(
+          'verifyAdminBackupCodeAction',
+          { code: replacementCode },
+          challengeCookie,
+        );
+        const recoverySession = sessionCookie(verified.cookies).split(';')[0]!;
+        const replaced = await action(
+          'replaceAuthenticatorAction',
+          { password },
+          recoverySession,
+        );
+        assert.ok(
+          (replaced.response.headers.get('x-action-redirect') ?? '').startsWith(
+            '/admin/login',
+          ),
+        );
+        assert.equal(
+          (await db.adminUser.findUniqueOrThrow({ where: { id: admin.id } }))
+            .twoFactorEnabled,
+          false,
+        );
+        assert.equal(
+          await db.adminTwoFactor.count({ where: { userId: admin.id } }),
+          0,
+        );
+        assert.equal(
+          await db.adminSession.count({ where: { userId: admin.id } }),
+          0,
+        );
+        const oldSession = await page('/admin', recoverySession);
+        assert.ok(
+          (
+            oldSession.response.headers.get('location') ?? oldSession.html
+          ).includes('/admin/login'),
         );
       },
     );

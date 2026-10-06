@@ -7,6 +7,7 @@ import { hashPassword } from 'better-auth/crypto';
 import { getPrisma } from '../src/lib/db/prisma';
 import { orderAccessUrl } from '../src/lib/orders/access';
 import { cartTokenHash } from '../src/lib/cart/identity';
+import { enrollAdminFixture } from './helpers/admin-mfa';
 if (
   process.env.NODE_ENV === 'production' ||
   !['localhost', '127.0.0.1'].includes(
@@ -208,7 +209,7 @@ test('remboursements : page commande, Server Action et vue client', async (t) =>
         /caldera_admin\.session_token=/.test(value),
       );
       assert.ok(header, 'Cookie de session absent');
-      cookie = header.split(';')[0]!;
+      cookie = await enrollAdminFixture(password, header.split(';')[0]!);
     });
 
     await t.test('section remboursements, privée et non indexée', async () => {
