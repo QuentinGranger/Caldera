@@ -5,8 +5,8 @@ import 'server-only';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { cache } from 'react';
-import matter from 'gray-matter';
 import { renderDocument } from './markdown';
+import { parseYamlFrontMatter } from './frontMatter';
 import type { ContentHeading } from './types';
 
 export interface GlossaryTerm extends ContentHeading {
@@ -34,19 +34,12 @@ export interface GlossaryDocument {
   closing: string | null;
 }
 
-// gray-matter would eval a ---js front-matter.
-function yamlOnly(): never {
-  throw new Error('seul le front-matter YAML (---) est accepté');
-}
-
 const text = (value: unknown) =>
   typeof value === 'string' && value.trim() ? value.trim() : null;
 
 /** Pure part of getGlossaryDocument, for tests. */
 export function parseGlossaryDocument(source: string): GlossaryDocument {
-  const { data, content } = matter(source, {
-    engines: { javascript: yamlOnly, json: yamlOnly },
-  });
+  const { data, content } = parseYamlFrontMatter(source);
   const start = content.search(/^## /m);
   const introSource = start < 0 ? content : content.slice(0, start);
   const bodySource = start < 0 ? '' : content.slice(start);
@@ -79,7 +72,13 @@ export function parseGlossaryDocument(source: string): GlossaryDocument {
       definition: definitions[index] ?? '',
     }));
 
-  const updated = data.updated instanceof Date ? data.updated : null;
+  const updated =
+    data.updated instanceof Date
+      ? data.updated
+      : typeof data.updated === 'string' &&
+          /^\d{4}-\d{2}-\d{2}$/.test(data.updated)
+        ? new Date(`${data.updated}T00:00:00.000Z`)
+        : null;
   return {
     title: text(data.title) ?? 'Glossaire',
     description: text(data.description) ?? '',
