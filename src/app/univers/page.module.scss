@@ -109,6 +109,9 @@
 
 .intro {
   @include m.section;
+  .eyebrow {
+    color: v.$color-green-dark;
+  }
 }
 
 .introGrid {

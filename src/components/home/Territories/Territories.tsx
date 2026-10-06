@@ -39,7 +39,7 @@ export function Territories() {
                     src={territory.image.src}
                     alt=""
                     fill
-                    sizes="(min-width: 64rem) 100vw, 80vw"
+                    sizes="(min-width: 64rem) 100vw, (min-width: 28rem) 22rem, 78vw"
                   />
                 </span>
                 <span className={styles.number} aria-hidden="true">

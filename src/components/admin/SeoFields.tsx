@@ -46,8 +46,11 @@ export function SeoFields({
               placeholder="Question :: Réponse"
             />
             <small id={`${id}-faq`}>
-              Une question par ligne, au format « Question :: Réponse ».
-              Affichées sur la page publique avec leurs données structurées.
+              Une question par ligne, au format « Question :: Réponse ». L’ordre
+              des lignes est celui de la page publique. Supprimez une ligne pour
+              retirer sa question. Ces questions sont associées à la page en
+              cours et affichées avec leurs données structurées. Rédigez-les au
+              vouvoiement.
             </small>
           </label>
         </>

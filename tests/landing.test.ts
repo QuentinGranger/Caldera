@@ -34,6 +34,7 @@ import {
   yearCalendarText,
 } from '../src/components/landing/landingText';
 import { shopAisleCopy } from '../src/components/catalog/pageCopy';
+import { toFaqEntries } from '../src/lib/catalog/taxonomy';
 import { landingKind, landingPath } from '../src/lib/seo/facets';
 import { breadcrumbListNode, breadcrumbTrail } from '../src/lib/seo/jsonld';
 import type {
@@ -100,6 +101,26 @@ const stats = (values: Partial<ScopeStats> = {}): ScopeStats => ({
   ...values,
 });
 const texts = (facts: ReturnType<typeof landingFacts>) => facts.map(factText);
+
+test('FAQ stockée : les entrées administrées restent ordonnées, les anciennes démos disparaissent', () => {
+  assert.deepEqual(
+    toFaqEntries([
+      { question: '[Démo] Ancienne question ?', answer: '[Démo] Réponse.' },
+      {
+        question: 'Première question ?',
+        answer: 'Vous trouverez la réponse ici.',
+      },
+      { question: 'Deuxième question ?', answer: 'Consultez la page dédiée.' },
+    ]),
+    [
+      {
+        question: 'Première question ?',
+        answer: 'Vous trouverez la réponse ici.',
+      },
+      { question: 'Deuxième question ?', answer: 'Consultez la page dédiée.' },
+    ],
+  );
+});
 
 test('H1 : intention de la landing, sans répéter le jeu', () => {
   const cases: [LandingScope, string, string][] = [
@@ -608,6 +629,14 @@ test('FAQ : l’éditorial d’abord, une question posée deux fois gardée une 
     ['Éditorial.', 'Oui.', 'Deux.'],
   );
   assert.deepEqual(mergeFaq([{ question: '  ?', answer: 'x' }]), []);
+  assert.deepEqual(
+    mergeFaq([
+      { question: 'Extension [Démo] ?', answer: 'Non.' },
+      { question: 'Quelles extensions ?', answer: '[Démo] Terres de Braise.' },
+      { question: 'Quelle langue ?', answer: 'Vous pouvez vérifier la fiche.' },
+    ]),
+    [{ question: 'Quelle langue ?', answer: 'Vous pouvez vérifier la fiche.' }],
+  );
 });
 
 test('fil d’Ariane : hiérarchie, niveaux intermédiaires indexables seulement', () => {

@@ -39,6 +39,7 @@ $wide: 64rem;
     }
   }
 }
+
 .inner {
   @include m.container;
 }
@@ -242,6 +243,21 @@ $wide: 64rem;
     }
     .link {
       padding-left: 0.9rem;
+    }
+  }
+}
+
+// Browsers without :has() keep the first landscape and its label visible.
+@supports not selector(:has(*)) {
+  @include m.from($wide) {
+    .item:first-child {
+      .visual,
+      .tagline {
+        opacity: 1;
+      }
+      .name {
+        color: v.$color-gold-light;
+      }
     }
   }
 }

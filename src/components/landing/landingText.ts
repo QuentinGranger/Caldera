@@ -577,6 +577,8 @@ export function factualFaq({
 export function mergeFaq(...lists: readonly (readonly FaqEntry[])[]) {
   const seen = new Set<string>();
   return lists.flat().filter((entry) => {
+    if (entry.question.includes('[Démo]') || entry.answer.includes('[Démo]'))
+      return false;
     const key = words(entry.question).join(' ');
     if (!key || seen.has(key)) return false;
     seen.add(key);
