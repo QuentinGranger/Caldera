@@ -127,12 +127,10 @@ test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
     `CAL-DIS-${key}`,
     eanB,
   );
-  const tripack = await product(
-    `Tripack Flammes ${key}`,
-    'TRIPACK',
-    `CAL-TRI-${key}`,
-    null,
-  );
+  // The OCR fixture must not depend on recognition of a random hexadecimal
+  // suffix (0/O and 1/l change fuzzy confidence across operating systems).
+  const tripackName = 'Tripack Validation Pyrovolcan';
+  const tripack = await product(tripackName, 'TRIPACK', `CAL-TRI-${key}`, null);
   const supplier = await saveSupplier(admin.id, undefined, {
     name: `Grossiste ${key}`,
     code,
@@ -206,7 +204,7 @@ test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
           csv([
             `ETB-1;Coffret Dresseur Elite Flammes ${key};${eanA};39,90;54,90;24;15/11/2026`,
             `DIS-1;Display 36 boosters Flammes ${key};${eanB};129,00;;0;`,
-            `TRI-1;Tripack Flammes ${key} VF;;14,50;;8;`,
+            `TRI-1;${tripackName} VF;;14,50;;8;`,
             `NEW-1;Classeur Portfolio Zzyzx ${key};${eanNew};26,40;32,90;5;`,
             `BAD-1;;;12,00;;;`,
             `DUP-1;Carte promo Qwv ${key};;1,00;;;`,
@@ -601,10 +599,7 @@ test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
         const scanSource = await PDFDocument.create();
         const fontB = await scanSource.embedFont(StandardFonts.Helvetica);
         draw(doc, rows);
-        draw(scanSource, [
-          rows[0]!,
-          ['PDF-3', `Tripack Flammes ${key}`, '', '14,50', '8'],
-        ]);
+        draw(scanSource, [rows[0]!, ['PDF-3', tripackName, '', '14,50', '8']]);
         const png = await renderPageAsImage(
           new Uint8Array(await scanSource.save()),
           1,

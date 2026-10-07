@@ -660,6 +660,7 @@ model Customer {
   orders        Order[]
   wishlistItems WishlistItem[]
   stockAlerts   StockAlert[]
+  discordLink   CustomerDiscordLink?
 }
 
 model WishlistItem {
@@ -684,8 +685,32 @@ model CustomerSession {
   userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  discordOAuthState DiscordOAuthState?
 
   @@index([userId])
+  @@index([expiresAt])
+}
+
+// A Discord identity can belong to exactly one Caldera customer. No OAuth
+// access or refresh tokens are persisted.
+model CustomerDiscordLink {
+  customerId     String   @id @db.Uuid
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  discordUserId  String   @unique
+  displayName    String
+  linkedAt       DateTime @default(now())
+  roleGrantedAt  DateTime?
+}
+
+// Only a SHA-256 digest of the one-use OAuth state is stored. Ending the
+// customer session also invalidates its pending Discord authorization.
+model DiscordOAuthState {
+  stateHash String          @id @db.Char(64)
+  sessionId String          @unique @db.Uuid
+  session   CustomerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime        @default(now())
+
   @@index([expiresAt])
 }
 

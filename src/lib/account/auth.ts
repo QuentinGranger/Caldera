@@ -9,6 +9,8 @@ import { getPrisma } from '@/lib/db/prisma';
 import { appOrigin } from '@/lib/orders/access';
 import { breachedPasswordCheck } from '@/lib/auth/passwordPolicy';
 import { sendAccountEmail } from './emails';
+import { changeDiscordLinkedRole } from '@/lib/discord/account';
+import { withDiscordCustomerLock } from '@/lib/discord/lock';
 import { clearAccountAttempts } from './limits';
 import { PASSWORD_MAX, PASSWORD_MIN } from './validation';
 
@@ -69,7 +71,32 @@ function createCustomerAuth() {
       sendVerificationEmail: ({ user, token }) =>
         sendAccountEmail('verify', user.email, token),
     },
-    user: { modelName: 'customer', deleteUser: { enabled: true } },
+    user: {
+      modelName: 'customer',
+      deleteUser: {
+        enabled: true,
+        // better-auth verifies the supplied password before this hook. The
+        // link row itself is cascade-deleted with the customer.
+        beforeDelete: async (user) => {
+          await withDiscordCustomerLock(user.id, async (db) => {
+            await db.discordOAuthState.deleteMany({
+              where: { session: { userId: user.id } },
+            });
+            const link = await db.customerDiscordLink.findUnique({
+              where: { customerId: user.id },
+            });
+            if (link) {
+              await changeDiscordLinkedRole(link.discordUserId, false);
+              // A failed account deletion can retry assigning the role.
+              await db.customerDiscordLink.update({
+                where: { customerId: user.id },
+                data: { roleGrantedAt: null },
+              });
+            }
+          });
+        },
+      },
+    },
     account: { modelName: 'customerAccount' },
     // Only a hash of each link token is stored: a database copy opens nothing.
     verification: {

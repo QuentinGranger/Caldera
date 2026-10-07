@@ -702,6 +702,16 @@
   font-size: 0.85rem;
 }
 
+.discordHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  svg {
+    flex-shrink: 0;
+    color: v.$color-gold;
+  }
+}
+
 .readonly {
   display: grid;
   gap: 0.35rem;
