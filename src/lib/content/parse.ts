@@ -1,8 +1,8 @@
 // Front-matter validation and rendering of one content/{section}/{slug}.md file.
-import matter from 'gray-matter';
 import { DESCRIPTION_MAX } from '@/lib/seo/metadata';
 import type { FaqEntry } from '@/lib/seo/types';
 import { renderDocument } from './markdown';
+import { parseYamlFrontMatter } from './frontMatter';
 import type { ContentKind, ContentPage, ContentSection } from './types';
 
 export const CONTENT_SECTIONS: readonly ContentSection[] = [
@@ -62,11 +62,6 @@ export interface ParsedContent {
   page: ContentPage;
   /** Rendered hrefs of the body links, for cross-file checks. */
   links: string[];
-}
-
-// gray-matter would eval a ---js front-matter.
-function yamlOnly(): never {
-  throw new Error('seul le front-matter YAML (---) est accepté');
 }
 
 function text(value: unknown): string | null {
@@ -139,10 +134,7 @@ export function parseContentFile({
   let data: Record<string, unknown>;
   let body: string;
   try {
-    // Passing options also disables gray-matter's cache of every source.
-    const parsed = matter(source, {
-      engines: { javascript: yamlOnly, json: yamlOnly },
-    });
+    const parsed = parseYamlFrontMatter(source);
     data = parsed.data;
     body = parsed.content;
   } catch (error) {
