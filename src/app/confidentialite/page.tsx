@@ -61,7 +61,7 @@ export default function ConfidentialitePage() {
           <p className={styles.eyebrow}>Vie privée & données</p>
           <h1>Politique de confidentialité</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
-          <p className={styles.version}>Dernière mise à jour : 28 septembre 2026</p>
+          <p className={styles.version}>Dernière mise à jour : 7 octobre 2026</p>
         </Container>
       </section>
 
@@ -257,6 +257,25 @@ export default function ConfidentialitePage() {
                 Des photographies peuvent par exemple être demandées afin de
                 constater un colis ou un produit endommagé, incorrect ou non
                 conforme.
+              </p>
+              <p>
+                Les messages envoyés depuis le formulaire de contact (nom,
+                adresse e-mail, sujet, numéro de commande s’il est indiqué et
+                contenu du message) sont transmis par e-mail à CALDERA et
+                enregistrés dans l’espace d’administration du site, réservé à
+                l’équipe CALDERA, afin qu’aucune demande ne soit perdue en cas
+                d’incident d’envoi.
+              </p>
+              <p>
+                Lorsqu’il déclare un article abîmé, défectueux ou différent de sa
+                commande depuis la page de celle-ci, le client peut joindre
+                jusqu’à trois photographies, de manière facultative. CALDERA peut
+                également ajouter au dossier du retour les photographies que le
+                client lui transmet par e-mail. Ces photographies sont
+                redimensionnées et leurs métadonnées, dont les éventuelles
+                données de localisation, sont supprimées dès leur réception. Elles
+                ne sont accessibles qu’à l’équipe CALDERA, depuis l’espace
+                d’administration, et ne sont jamais publiées.
               </p>
 
               <h3>2.8 Newsletter</h3>
@@ -488,7 +507,10 @@ export default function ConfidentialitePage() {
               <ul>
                 <li>l’hébergement et le déploiement du site ;</li>
                 <li>son infrastructure technique ;</li>
-                <li>le stockage des images du catalogue (Vercel Blob) ;</li>
+                <li>
+                  le stockage des images du catalogue et, en accès privé, des
+                  photographies jointes aux demandes de retour (Vercel Blob) ;
+                </li>
                 <li>Vercel Web Analytics lorsque cette fonctionnalité est activée ;</li>
                 <li>
                   Vercel Speed Insights, pour mesurer les performances de
@@ -691,6 +713,19 @@ export default function ConfidentialitePage() {
                 réclamation ne sont pas destinés à être conservés au-delà de la
                 durée nécessaire au traitement et à la justification de cette
                 réclamation, sauf nécessité légale ou contentieuse.
+              </p>
+              <p>
+                Les photographies jointes à une demande de retour sont
+                supprimées automatiquement <strong>un an après la clôture du
+                retour</strong>.
+              </p>
+              <p>
+                Les messages reçus par le formulaire de contact sont supprimés
+                automatiquement de l’espace d’administration{' '}
+                <strong>un an après avoir été traités</strong>, et au plus tard
+                deux ans après leur réception. Leurs copies reçues dans la
+                messagerie de CALDERA relèvent des règles du service client
+                décrites ci-dessus.
               </p>
 
               <h3>Données de sécurité</h3>
