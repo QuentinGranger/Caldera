@@ -2,6 +2,7 @@ import 'server-only';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
+import { twoFactor } from 'better-auth/plugins';
 import { headers } from 'next/headers';
 import { breachedPasswordCheck } from '@/lib/auth/passwordPolicy';
 import { getPrisma } from '@/lib/db/prisma';
@@ -112,7 +113,21 @@ function createAuth() {
       },
     },
     // nextCookies must stay last.
-    plugins: [breachedPasswordCheck(), nextCookies()],
+    plugins: [
+      twoFactor({
+        issuer: 'Caldera Administration',
+        twoFactorTable: 'adminTwoFactor',
+        twoFactorCookieMaxAge: 600,
+        backupCodeOptions: { storeBackupCodes: 'encrypted' },
+        accountLockout: {
+          enabled: true,
+          maxFailedAttempts: 10,
+          durationSeconds: 900,
+        },
+      }),
+      breachedPasswordCheck(),
+      nextCookies(),
+    ],
     logger: { disabled: true },
   });
 }
@@ -127,15 +142,19 @@ export async function currentAdmin() {
   if (!session) return null;
   return getPrisma().adminUser.findFirst({
     where: { id: session.user.id, isActive: true, role: 'ADMIN' },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, twoFactorEnabled: true },
   });
 }
-export async function requireAdmin() {
+export async function requireAdmin(options?: { allowMfaEnrollment?: boolean }) {
   const admin = await currentAdmin();
   if (!admin) {
     // Loaded here: this module is also used outside a request (tests, scripts).
     const { redirect } = await import('next/navigation');
     return redirect('/admin/login');
+  }
+  if (!admin.twoFactorEnabled && !options?.allowMfaEnrollment) {
+    const { redirect } = await import('next/navigation');
+    return redirect('/admin/securite');
   }
   return admin;
 }

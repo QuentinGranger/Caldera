@@ -70,6 +70,7 @@ export async function loginAction(
   _previous: AdminActionState,
   form: FormData,
 ): Promise<AdminActionState> {
+  let destination = '/admin';
   try {
     whitelist(form, ['email', 'password']);
     const email = text(form, 'email', 254).toLowerCase();
@@ -89,19 +90,27 @@ export async function loginAction(
       headers: await headers(),
       body: { email, password },
     });
-    const admin = await getPrisma().adminUser.findFirst({
-      where: { id: result.user.id, isActive: true, role: 'ADMIN' },
-      select: { id: true },
-    });
-    if (!admin) return { success: false, message: 'Identifiants incorrects.' };
-    await getPrisma().adminUser.update({
-      where: { id: admin.id },
-      data: { lastLoginAt: new Date() },
-    });
+    if ('twoFactorRedirect' in result && result.twoFactorRedirect) {
+      destination = '/admin/second-facteur';
+    } else {
+      if (!('user' in result))
+        return { success: false, message: 'Identifiants incorrects.' };
+      const admin = await getPrisma().adminUser.findFirst({
+        where: { id: result.user.id, isActive: true, role: 'ADMIN' },
+        select: { id: true, twoFactorEnabled: true },
+      });
+      if (!admin)
+        return { success: false, message: 'Identifiants incorrects.' };
+      await getPrisma().adminUser.update({
+        where: { id: admin.id },
+        data: { lastLoginAt: new Date() },
+      });
+      if (!admin.twoFactorEnabled) destination = '/admin/securite';
+    }
   } catch {
     return { success: false, message: 'Identifiants incorrects.' };
   }
-  redirect('/admin');
+  redirect(destination);
 }
 export async function logoutAction() {
   await getAdminAuth().api.signOut({ headers: await headers() });

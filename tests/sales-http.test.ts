@@ -10,6 +10,7 @@ import { cartTokenHash } from '../src/lib/cart/identity';
 import { transaction } from '../src/lib/orders/common';
 import { issueInvoice } from '../src/lib/invoices/service';
 import { purgeTestInvoices } from './helpers/invoices';
+import { enrollAdminFixture } from './helpers/admin-mfa';
 if (
   process.env.NODE_ENV === 'production' ||
   !['localhost', '127.0.0.1'].includes(
@@ -217,7 +218,7 @@ test('ventes : codes promo, retours, factures et fiscalité en HTTP', async (t) 
         /caldera_admin\.session_token=/.test(value),
       );
       assert.ok(header, 'Cookie de session absent');
-      cookie = header.split(';')[0]!;
+      cookie = await enrollAdminFixture(password, header.split(';')[0]!);
     });
 
     await t.test('pages admin privées, sans erreur', async () => {
