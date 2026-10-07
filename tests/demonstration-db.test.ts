@@ -60,6 +60,8 @@ test('examples remain visible but cannot be ordered, subscribed to or announced,
     assert.equal(route.product.isDemonstration, true);
     assert.equal(route.product.quickAddVariantId, null);
     assert.equal(route.product.price, null);
+    assert.equal(route.product.availability, 'OUT_OF_STOCK');
+    assert.equal(route.product.variants[0]!.maxQuantity, 0);
     assert.equal(productStructuredData(route.product), null);
     assert.ok((await getProducts(100)).some((p) => p.id === product.id));
     assert.equal(

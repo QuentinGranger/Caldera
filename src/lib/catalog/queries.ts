@@ -105,7 +105,9 @@ export function toCatalogProduct(
     product.name,
     product.images[0],
   );
-  const availability = getAvailability(product.preorder, product.variants);
+  const availability = product.isDemonstration
+    ? 'OUT_OF_STOCK'
+    : getAvailability(product.preorder, product.variants);
   const badge = product.isDemonstration
     ? undefined
     : getProductBadge(availability, product.newArrival);
@@ -345,8 +347,10 @@ function toProductDetail(product: ProductDetailRow) {
         compareAtPrice: variant.compareAtPrice?.greaterThan(variant.price)
           ? variant.compareAtPrice.toFixed(2)
           : null,
-        availability: getAvailability(product.preorder, [variant]),
-        maxQuantity: availableQuantity(variant),
+        availability: product.isDemonstration
+          ? 'OUT_OF_STOCK'
+          : getAvailability(product.preorder, [variant]),
+        maxQuantity: product.isDemonstration ? 0 : availableQuantity(variant),
         lowStockQuantity:
           getAvailability(product.preorder, [variant]) === 'LOW_STOCK'
             ? availableQuantity(variant)
