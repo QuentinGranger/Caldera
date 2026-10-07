@@ -92,12 +92,14 @@ Configuration serveur uniquement : `DISCORD_CLIENT_ID`,
 `DISCORD_LINKED_ROLE_ID`. Déclarer exactement
 `https://lesterresdecaldera.fr/api/discord/callback` comme redirect URI
 (et l'URL localhost choisie pour les tests locaux). Les secrets restent hors
-Git et ne sont jamais préfixés `NEXT_PUBLIC_`.
+Git et ne sont jamais préfixés `NEXT_PUBLIC_`. Les journaux de développement
+ignorent le callback OAuth et les arguments des Server Actions. Le filtrage
+Sentry existant retire les chaînes de requête des URL.
 
-Le rideau « Ouverture prochaine » masque encore `/compte` sur le site en
-production. Ne pas l'ouvrir implicitement lors de la mise en place de Discord.
-La liaison est testable en local sur le port et l'URL de callback déclarés ;
-elle deviendra accessible publiquement à l'ouverture décidée de la boutique.
+L’espace `/compte` est ouvert avant la boutique, sur décision du propriétaire,
+pour permettre la liaison Discord. Le rideau « Ouverture prochaine » continue
+de masquer le catalogue, le panier, le checkout et les pages d’accès aux
+commandes. Les routes du compte conservent leur authentification existante.
 
 Les futurs statuts Caldera devront être mappés par le serveur vers une liste
 explicite de rôles autorisés. Aucun statut commercial n'est défini ici.
@@ -122,3 +124,19 @@ Le bot et OAuth ont une configuration séparée des webhooks de publication.
 Références : [webhooks Discord](https://docs.discord.com/developers/resources/webhook),
 [limites de débit Discord](https://docs.discord.com/developers/topics/rate-limits),
 [OAuth2 Discord](https://docs.discord.com/developers/topics/oauth2).
+
+## Validation de cette étape
+
+Le test réel a utilisé un compte de QA dans une base PostgreSQL locale isolée
+et le véritable compte Discord du propriétaire du serveur. OAuth a créé la
+liaison ; après correction et enregistrement de la hiérarchie des rôles,
+la nouvelle tentative a attribué le rôle. La déliaison depuis le profil a
+supprimé la ligne et retiré le rôle, vérifié par l’API Discord. Aucun compte
+de QA n’a été créé dans Neon. Les notifications automatiques de production
+restent désactivées.
+
+La migration `20261007190000_add_discord_account_link` a été appliquée via
+la console Neon sur `caldera-eu / production` et enregistrée avec le checksum
+Prisma correspondant. L’URL de connexion Vercel, marquée sensible, reste
+non exportable par la CLI ; cette application sur Neon ne prouve pas à elle
+seule que l’instance Vercel utilise cette branche.

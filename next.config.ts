@@ -40,6 +40,11 @@ if (process.env.NODE_ENV === 'production') {
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // OAuth codes and server action arguments must not enter development logs.
+  logging: {
+    serverFunctions: false,
+    incomingRequests: { ignore: [/\/api\/discord\/callback(?:\?|$)/] },
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

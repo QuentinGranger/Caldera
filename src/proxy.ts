@@ -68,6 +68,10 @@ function shouldShowConstruction(request: NextRequest) {
     return false;
   }
 
+  // Customer OAuth is available before the shop opens. This exact path
+  // boundary does not open catalogue, cart, checkout or order access pages.
+  if (pathname === '/compte' || pathname.startsWith('/compte/')) return false;
+
   // Keep the back office usable on the live domain.
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return false;
 
