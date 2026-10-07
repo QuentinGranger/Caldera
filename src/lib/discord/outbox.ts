@@ -57,6 +57,7 @@ export async function queueProductRelease(
     where: {
       id: productId,
       ...storefrontProductWhere,
+      isDemonstration: false,
       newArrival: true,
       releaseDate: { not: null },
     },
@@ -93,6 +94,7 @@ export async function queueProductRestock(
     where: {
       id: productId,
       ...storefrontProductWhere,
+      isDemonstration: false,
       preorder: false,
       variants: {
         some: {
@@ -173,7 +175,11 @@ export async function processDiscordOutbox(
       };
       if (event.productId) {
         const p = await db.product.findFirst({
-          where: { id: event.productId, ...storefrontProductWhere },
+          where: {
+            id: event.productId,
+            ...storefrontProductWhere,
+            isDemonstration: false,
+          },
           select: {
             name: true,
             slug: true,

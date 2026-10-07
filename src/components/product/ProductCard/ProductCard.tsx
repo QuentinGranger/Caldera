@@ -33,7 +33,8 @@ export function ProductCard({
   layout?: 'default' | 'edition';
 }) {
   const edition = layout === 'edition';
-  const inStock = product.availability === 'IN_STOCK';
+  const inStock =
+    !product.isDemonstration && product.availability === 'IN_STOCK';
   return (
     <article
       className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''}`}
@@ -92,7 +93,15 @@ export function ProductCard({
           {/* The amount always ends the block: amounts align along a row. */}
           <div className={styles.price}>
             {product.price === null ? (
-              <span>Indisponible</span>
+              <span
+                className={
+                  product.isDemonstration ? styles.exampleLabel : undefined
+                }
+              >
+                {product.isDemonstration
+                  ? 'Exemple · non commercialisé'
+                  : 'Indisponible'}
+              </span>
             ) : (
               <>
                 {(product.priceFrom || product.compareAtPrice) && (
@@ -111,12 +120,14 @@ export function ProductCard({
               </>
             )}
           </div>
-          <ProductCardQuickAdd
-            className={styles.add}
-            productName={product.name}
-            variantId={product.quickAddVariantId ?? null}
-            unavailable={product.availability === 'OUT_OF_STOCK'}
-          />
+          {!product.isDemonstration && (
+            <ProductCardQuickAdd
+              className={styles.add}
+              productName={product.name}
+              variantId={product.quickAddVariantId ?? null}
+              unavailable={product.availability === 'OUT_OF_STOCK'}
+            />
+          )}
         </div>
       </div>
     </article>

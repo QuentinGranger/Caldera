@@ -63,6 +63,7 @@ const gameSelect = {
   name: true,
 } satisfies Prisma.GameSelect;
 export const catalogProductSelect = {
+  isDemonstration: true,
   id: true,
   name: true,
   slug: true,
@@ -81,7 +82,8 @@ export const catalogProductSelect = {
 } satisfies Prisma.ProductSelect;
 type Row = Prisma.ProductGetPayload<{ select: typeof catalogProductSelect }>;
 export function toCatalogProduct(
-  product: Omit<Row, 'tags' | 'variants'> & {
+  product: Omit<Row, 'tags' | 'variants' | 'isDemonstration'> & {
+    isDemonstration?: boolean;
     tags?: Row['tags'];
     variants: (Pick<
       Row['variants'][number],
@@ -103,8 +105,12 @@ export function toCatalogProduct(
     product.name,
     product.images[0],
   );
-  const availability = getAvailability(product.preorder, product.variants);
-  const badge = getProductBadge(availability, product.newArrival);
+  const availability = product.isDemonstration
+    ? 'OUT_OF_STOCK'
+    : getAvailability(product.preorder, product.variants);
+  const badge = product.isDemonstration
+    ? undefined
+    : getProductBadge(availability, product.newArrival);
   const quickAddVariant =
     [...product.variants]
       .filter((variant) => variant.isActive && availableQuantity(variant) > 0)
@@ -115,6 +121,7 @@ export function toCatalogProduct(
           a.sku.localeCompare(b.sku),
       )[0] ?? null;
   return {
+    isDemonstration: product.isDemonstration ?? false,
     id: product.id,
     name: product.name,
     slug: product.slug,
@@ -124,9 +131,14 @@ export function toCatalogProduct(
     image: image.url,
     imageAlt: image.alt,
     ...getPricing(product.variants),
+    ...(product.isDemonstration
+      ? { price: null, compareAtPrice: null, priceFrom: false }
+      : {}),
     availability,
     languages: variantLanguages(product.variants),
-    quickAddVariantId: quickAddVariant?.id ?? null,
+    quickAddVariantId: product.isDemonstration
+      ? null
+      : (quickAddVariant?.id ?? null),
     ...(badge ? { badge } : {}),
   };
 }
@@ -335,8 +347,10 @@ function toProductDetail(product: ProductDetailRow) {
         compareAtPrice: variant.compareAtPrice?.greaterThan(variant.price)
           ? variant.compareAtPrice.toFixed(2)
           : null,
-        availability: getAvailability(product.preorder, [variant]),
-        maxQuantity: availableQuantity(variant),
+        availability: product.isDemonstration
+          ? 'OUT_OF_STOCK'
+          : getAvailability(product.preorder, [variant]),
+        maxQuantity: product.isDemonstration ? 0 : availableQuantity(variant),
         lowStockQuantity:
           getAvailability(product.preorder, [variant]) === 'LOW_STOCK'
             ? availableQuantity(variant)

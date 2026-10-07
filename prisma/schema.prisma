@@ -117,6 +117,8 @@ model Product {
   slug             String                          @unique
   description      String?                         @db.Text
   shortDescription String?
+  /// Display-only example: cannot be purchased or announced as real stock.
+  isDemonstration  Boolean                         @default(false)
   status           ProductStatus                   @default(DRAFT)
   productType      ProductType
   featured         Boolean                         @default(false)

@@ -32,7 +32,11 @@ export type StockAlertOutcome =
 
 async function alertableVariant(variantId: string) {
   return getPrisma().productVariant.findFirst({
-    where: { id: variantId, isActive: true, product: publishedProductWhere },
+    where: {
+      id: variantId,
+      isActive: true,
+      product: { ...publishedProductWhere, isDemonstration: false },
+    },
     select: {
       id: true,
       price: true,

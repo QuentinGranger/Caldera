@@ -154,7 +154,8 @@ le statut d’envoi, le délai, le bail et l’identifiant Discord confirmé.
 
 Les mutations admin déclenchent immédiatement un lot en arrière-plan après
 commit. Le cron de maintenance existant reprend les événements différés ou
-planifiés (au moins une fois par jour via Vercel). `/api/cron/discord` permet
+planifiés toutes les minutes via le déclencheur Neon `caldera-maintenance-minute`
+(actif et vérifié), avec le cron quotidien Vercel en complément. `/api/cron/discord` permet
 également un déclenchement depuis un planificateur autorisé ; il refuse tout
 appel sans `CRON_SECRET` ou `DISCORD_WORKER_SECRET`. Le mode `?check=1` effectue
 uniquement des lectures de préparation Stripe, sans retourner de secret ni
@@ -171,3 +172,23 @@ Le cycle de liaison a aussi été validé sur le site de production : la ligne e
 `roleGrantedAt` ont été constatés dans `caldera-eu / production`, et le rôle
 vérifié dans l’API Discord. Cette observation confirme la base réellement
 utilisée par Vercel, dont la chaîne de connexion reste masquée.
+
+## Catalogue d’exemple demandé par le propriétaire
+
+`CATALOG_DEMO_MODE=1` affiche un bandeau explicite et une page checkout sans
+formulaire de paiement ; le contrôle serveur de paiement bloque également les
+appels directs. Les pages portent `X-Robots-Tag: noindex, nofollow`.
+Trois fiches `[Exemple]` illustrent Booster, Coffret et ETB, sans extension,
+date de sortie, prix ou stock commercial inventé.
+
+Chaque exemple porte `Product.isDemonstration=true` : il reste impossible à
+mettre au panier même si son stock est modifié ou le mode global désactivé.
+Les fiches masquent achats et alertes, et n’émettent pas de données structurées
+Product/Offer. Les sorties/restocks Discord ignorent ces références. Les
+modes de livraison `isDevelopment` sont refusés lorsque la boutique est ouverte
+en production.
+
+Pour vendre ultérieurement, créer de vraies références et de vrais modes de
+livraison, archiver les exemples puis désactiver `CATALOG_DEMO_MODE` et
+`CHECKOUT_PAUSED`. Les exemples ne doivent pas être transformés en produits
+commerciaux en changeant uniquement leur titre.
