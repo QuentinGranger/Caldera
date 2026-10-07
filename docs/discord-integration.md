@@ -2,11 +2,20 @@
 
 ## État actuel
 
-Le site ne contacte pas Discord. Aucun salon, bot, identifiant, webhook, lien de
-compte ou rôle n'est configuré ou simulé. `DISCORD_PUBLICATIONS_ENABLED` vaut
-`false` par défaut et aucun flux métier n'appelle encore le transport. Le
-contrat de messages publics et le transport webhook, dans `src/lib/discord/`,
-servent de point d'entrée pour la suite.
+Le serveur **Les Terres de Caldera** possède un salon privé
+`#test-integration` et un webhook nommé **Caldera Test**. Son URL est enregistrée
+uniquement dans le `.env` local, hors Git. Un message de test envoyé par le
+backend a été confirmé dans ce salon le 7 octobre 2026. Aucun bot, lien de
+compte ou rôle n'est encore configuré.
+
+L'application web ne publie rien automatiquement : aucun flux métier n'appelle
+le transport de `src/lib/discord/`. `DISCORD_PUBLICATIONS_ENABLED` vaut `false`
+par défaut dans le dépôt. La valeur `true` n'est utilisée que dans le `.env`
+local de test.
+
+`npm run test:discord` envoie un message technique par exécution dans ce salon.
+La commande n'expose aucune route publique et ne réessaie pas automatiquement
+un envoi incertain. Elle est réservée à un lancement volontaire en terminal.
 
 ## Publications publiques
 
@@ -73,9 +82,9 @@ restent la source fiable.
 
 ## Configuration future
 
-Après création du serveur, renseigner uniquement les webhooks des salons
-souhaités dans les variables serveur. Ajouter puis vérifier la file et les
-déclencheurs métier avant de mettre `DISCORD_PUBLICATIONS_ENABLED=true`.
+Avant d'activer des publications automatiques en production, créer les salons
+souhaités, renseigner uniquement leurs webhooks dans les variables serveur,
+ajouter puis vérifier la file et les déclencheurs métier.
 Le bot et OAuth auront une configuration séparée lors de leur implémentation ;
 aucun identifiant fictif n'est requis aujourd'hui.
 
