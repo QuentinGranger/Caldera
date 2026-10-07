@@ -75,6 +75,15 @@ export default async function DashboardPage() {
       words: ['email en échec', 'emails en échec'],
     },
     {
+      label: 'Produits publiés mais invisibles en boutique',
+      count: data.hidden,
+      href: '/admin/produits?visibility=hidden',
+      words: [
+        'produit publié invisible en boutique',
+        'produits publiés invisibles en boutique',
+      ],
+    },
+    {
       label: 'Produits en rupture',
       count: data.out,
       href: '/admin/produits?status=ACTIVE&availability=out',
@@ -295,7 +304,7 @@ export default async function DashboardPage() {
               <div>
                 <dt>
                   <Link href="/admin/produits?status=ACTIVE">
-                    Produits actifs
+                    Produits publiés
                   </Link>
                 </dt>
                 <dd>{data.active}</dd>

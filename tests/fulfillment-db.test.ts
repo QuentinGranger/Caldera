@@ -10,6 +10,7 @@ import {
   saveShipment,
 } from '../src/lib/fulfillment/service';
 import { enqueueOrderEmail } from '../src/lib/email/outbox';
+import { notifyShop } from '../src/lib/email/shop';
 import {
   processPendingEmails,
   retryEmail,
@@ -286,6 +287,55 @@ test('préparation, expédition et outbox PostgreSQL', async (t) => {
         assert.equal((await email(confirmationId)).attemptCount, 2);
         await assert.rejects(retryEmail(admin.id, confirmationId));
         assert.equal((await run(confirmationId)).sent, 0);
+      },
+    );
+    await t.test(
+      'notification boutique : à la boutique, réponse au client',
+      async () => {
+        const saved = {
+          notification: process.env.NOTIFICATION_EMAIL_TO,
+          contact: process.env.CONTACT_EMAIL_TO,
+        };
+        let noticeId = '';
+        try {
+          process.env.NOTIFICATION_EMAIL_TO = 'boutique@caldera.test';
+          const notice = (await db.$transaction((tx) =>
+            notifyShop(tx, order.id, { type: 'SHOP_ORDER_PAID' }),
+          ))!;
+          noticeId = notice.id;
+          assert.equal(notice.recipient, 'boutique@caldera.test');
+          assert.equal((await run(notice.id)).sent, 1);
+          const envelope = received.get(`caldera-email:${notice.id}`)!;
+          // Test mode still diverts everything to the test inbox.
+          assert.deepEqual(envelope.to, [settings.testRecipient]);
+          assert.equal(envelope.reply_to, order.email);
+          assert.match(envelope.subject, /^\[TEST\] Nouvelle commande /);
+          assert.ok(envelope.html.includes(`/admin/commandes/${order.id}`));
+          // No shop address: nothing queued, the payment goes on.
+          process.env.NOTIFICATION_EMAIL_TO = '';
+          process.env.CONTACT_EMAIL_TO = '';
+          assert.equal(
+            await db.$transaction((tx) =>
+              notifyShop(tx, order.id, {
+                type: 'SHOP_ORDER_REVIEW',
+                cause: 'STOCK',
+              }),
+            ),
+            null,
+          );
+        } finally {
+          for (const [name, value] of [
+            ['NOTIFICATION_EMAIL_TO', saved.notification],
+            ['CONTACT_EMAIL_TO', saved.contact],
+          ] as const)
+            if (value === undefined) delete process.env[name];
+            else process.env[name] = value;
+          // The next steps count the customer's e-mails only.
+          if (noticeId) {
+            received.delete(`caldera-email:${noticeId}`);
+            await db.emailDelivery.delete({ where: { id: noticeId } });
+          }
+        }
       },
     );
     await t.test(

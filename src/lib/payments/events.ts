@@ -1,5 +1,6 @@
 import 'server-only';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
+import { notifyShop } from '@/lib/email/shop';
 import { getPrisma } from '@/lib/db/prisma';
 import {
   lockOrder,
@@ -101,6 +102,10 @@ async function applyIntentState(
           where: { id: orderId },
           data: { status: 'PAYMENT_REVIEW' },
         });
+        await notifyShop(tx, orderId, {
+          type: 'SHOP_ORDER_REVIEW',
+          cause: 'STOCK',
+        });
         return 'PAYMENT_REVIEW';
       }
 
@@ -125,6 +130,7 @@ async function applyIntentState(
       // Issued with the payment, in the same transaction: numbered once.
       await issueInvoice(tx, orderId);
       await enqueueOrderEmail(tx, orderId, 'ORDER_CONFIRMATION');
+      await notifyShop(tx, orderId, { type: 'SHOP_ORDER_PAID' });
 
       return 'PAID';
     }

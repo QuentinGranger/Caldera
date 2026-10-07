@@ -6,6 +6,7 @@ import { AdminError } from '@/lib/admin/validation';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { getPrisma } from '@/lib/db/prisma';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
+import { notifyShop } from '@/lib/email/shop';
 import { issueCreditNote } from '@/lib/invoices/service';
 import { lockOrder, transaction } from '@/lib/orders/common';
 import {
@@ -238,6 +239,11 @@ async function markFailed(refundId: string, code: string) {
           code,
         },
       );
+    await notifyShop(tx, refund.orderId, {
+      type: 'SHOP_REFUND_FAILED',
+      refundId,
+      code,
+    });
   });
 }
 
@@ -332,20 +338,24 @@ export async function applyProviderRefund(
     // so the order shows why the money did not go back.
     if (
       (status === 'FAILED' || status === 'CANCELED') &&
-      refund.status !== status &&
-      refund.createdById
-    )
-      await audit(
-        tx,
-        refund.createdById,
-        'REFUND_FAILED',
-        'Order',
-        refund.orderId,
-        {
-          refundId: refund.id,
-          code: provider.failureReason ?? 'REFUS_STRIPE',
-        },
-      );
+      refund.status !== status
+    ) {
+      const code = provider.failureReason ?? 'REFUS_STRIPE';
+      if (refund.createdById)
+        await audit(
+          tx,
+          refund.createdById,
+          'REFUND_FAILED',
+          'Order',
+          refund.orderId,
+          { refundId: refund.id, code },
+        );
+      await notifyShop(tx, refund.orderId, {
+        type: 'SHOP_REFUND_FAILED',
+        refundId: refund.id,
+        code,
+      });
+    }
     let restockedNow = false;
     if (status === 'SUCCEEDED' && !refund.settledAt) {
       if (refund.restock && refund.createdById) {

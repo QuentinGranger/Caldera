@@ -47,6 +47,16 @@ export function SetCard({
         />
       )}
       <h3>
+        {/* The set's own mark, as printed on its cards: decorative here. */}
+        {entry.symbolUrl && (
+          <Image
+            className={styles.symbol}
+            src={entry.symbolUrl}
+            alt=""
+            width={22}
+            height={22}
+          />
+        )}
         {entry.href ? <Link href={entry.href}>{entry.name}</Link> : entry.name}
       </h3>
       {featured && date && <p className={styles.date}>{date}</p>}

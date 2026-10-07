@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { Prisma, type ReturnReason } from '@/generated/prisma/client';
 import type { AdminActionState } from '@/lib/admin/action-types';
 import { requireAdmin } from '@/lib/admin/auth';
@@ -12,6 +13,7 @@ import {
   text,
   whitelist,
 } from '@/lib/admin/validation';
+import { safelyProcessEmails } from '@/lib/email/processor';
 import { toCents } from '@/lib/refunds/amounts';
 import { returnReasonLabels } from './rules';
 import {
@@ -50,6 +52,10 @@ function refresh(returnId: string, orderId?: string) {
   revalidatePath('/admin/retours');
   revalidatePath(`/admin/retours/${returnId}`);
   if (orderId) revalidatePath(`/admin/commandes/${orderId}`);
+  // The customer's answer (accepted, refused) leaves after the response.
+  after(async () => {
+    await safelyProcessEmails();
+  });
 }
 
 async function simple(

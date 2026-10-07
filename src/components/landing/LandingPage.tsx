@@ -19,7 +19,7 @@ import {
   VIEWS,
   type AisleCopy,
 } from '@/components/catalog/pageCopy';
-import { HeroLogo, PageHero } from '@/components/catalog/PageHero';
+import { HeroLogo, HeroSymbol, PageHero } from '@/components/catalog/PageHero';
 import { GUIDES_PATH } from '@/components/editorial/editorial';
 import { landingPath } from '@/lib/seo/facets';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
@@ -117,6 +117,9 @@ export function LandingPage({
           }
         >
           {view.logo && <HeroLogo src={view.logo.url} alt={view.logo.alt} />}
+          {view.symbol && (
+            <HeroSymbol src={view.symbol.url} alt={view.symbol.alt} />
+          )}
         </PageHero>
       }
       jsonLd={graph(

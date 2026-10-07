@@ -1,5 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { safelyProcessEmails } from '@/lib/email/processor';
 import type { RefundReason } from '@/generated/prisma/client';
 import type { AdminActionState } from '@/lib/admin/action-types';
 import { requireAdmin } from '@/lib/admin/auth';
@@ -119,6 +121,10 @@ export async function refundOrderAction(
     if (orderId) {
       revalidatePath(`/admin/commandes/${orderId}`);
       revalidatePath('/admin/commandes');
+      // A refusal queues the shop's notice: sent after the response.
+      after(async () => {
+        await safelyProcessEmails();
+      });
     }
   }
 }
@@ -132,6 +138,9 @@ export async function syncOrderRefundsAction(
     const orderId = id(form)!;
     const result = await syncRefunds({ orderId, limit: 20 });
     revalidatePath(`/admin/commandes/${orderId}`);
+    after(async () => {
+      await safelyProcessEmails();
+    });
     return result.failed
       ? {
           success: false,

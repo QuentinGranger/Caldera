@@ -217,3 +217,22 @@ export async function processStockAlerts(
     disabled: false,
   };
 }
+
+/**
+ * After a catalogue change in the administration: whoever waited for a
+ * variant back in stock hears of it now, not at the next nightly run. Never
+ * throws (e-mails off, provider down): the nightly run catches up.
+ */
+export async function safelyProcessStockAlerts() {
+  try {
+    return await processStockAlerts({ limit: 20 });
+  } catch (error) {
+    console.error('Stock alert processor unavailable', {
+      code:
+        error instanceof EmailProviderError
+          ? error.code
+          : 'STOCK_ALERTS_UNAVAILABLE',
+    });
+    return null;
+  }
+}

@@ -22,9 +22,14 @@ export class EmailProviderError extends Error {
 }
 export function emailSettings() {
   const from = process.env.EMAIL_FROM ?? '';
-  const replyTo = process.env.EMAIL_REPLY_TO || undefined;
   const testRecipient = process.env.EMAIL_TEST_RECIPIENT || undefined;
   const email = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
+  // A customer answering an e-mail reaches the shop's inbox: the dedicated
+  // address, else the contact one (when valid: it must never stop sending).
+  const contact = process.env.CONTACT_EMAIL_TO?.trim();
+  const replyTo =
+    process.env.EMAIL_REPLY_TO ||
+    (contact && email.test(contact) ? contact : undefined);
   const address = /<([^<>]+)>$/.exec(from)?.[1] ?? from;
   if (
     !email.test(address) ||

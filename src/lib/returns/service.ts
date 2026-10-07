@@ -9,6 +9,7 @@ import { adminTransaction, audit } from '@/lib/admin/common';
 import { AdminError } from '@/lib/admin/validation';
 import { getPrisma } from '@/lib/db/prisma';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
+import { notifyShop } from '@/lib/email/shop';
 import { lockOrder, transaction } from '@/lib/orders/common';
 import { refundState } from '@/lib/refunds/amounts';
 import type { RefundGateway } from '@/lib/refunds/gateway';
@@ -182,6 +183,12 @@ async function createReturnIn(
     },
     include: withItems,
   });
+  // Declared by the customer: the shop has to answer.
+  if (!by)
+    await notifyShop(tx, order.id, {
+      type: 'SHOP_RETURN_REQUESTED',
+      returnId: request.id,
+    });
   if (!by || by.notify)
     await enqueueOrderEmail(
       tx,

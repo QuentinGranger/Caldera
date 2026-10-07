@@ -6,6 +6,8 @@ import { adminTransaction, audit } from '@/lib/admin/common';
 import { AdminError, uuid } from '@/lib/admin/validation';
 import { appOrigin, orderAccessUrl } from '@/lib/orders/access';
 import { parseEmailSnapshot, renderEmail } from '@/emails/templates';
+import { parseShopSnapshot, renderShopEmail } from '@/emails/shop';
+import { isShopEmail } from './shop';
 import {
   emailSettings,
   EmailProviderError,
@@ -34,7 +36,12 @@ export function canRetryEmail(
 }
 export function renderDelivery(
   email: Pick<EmailDelivery, 'type' | 'snapshot'>,
-) {
+): { subject: string; html: string; text: string; replyTo?: string } {
+  if (isShopEmail(email.type))
+    return renderShopEmail(email.type, parseShopSnapshot(email.snapshot), {
+      admin: appOrigin(),
+      logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
+    });
   const snapshot = parseEmailSnapshot(email.snapshot);
   return renderEmail(email.type, snapshot, {
     order: orderAccessUrl(snapshot.publicId),
@@ -123,12 +130,14 @@ export async function processPendingEmails(
       let envelope: EmailEnvelope;
       if (email.envelope) envelope = parseEnvelope(email.envelope);
       else {
-        const rendered = renderDelivery(email);
+        const { replyTo, ...rendered } = renderDelivery(email);
+        // The shop's e-mails answer the customer; the customer's, the shop.
+        const reply = replyTo ?? settings.replyTo;
         envelope = {
           from: settings.from,
           to: [settings.testRecipient ?? email.recipient],
           ...rendered,
-          ...(settings.replyTo ? { reply_to: settings.replyTo } : {}),
+          ...(reply ? { reply_to: reply } : {}),
           subject: `${settings.testRecipient ? '[TEST] ' : ''}${rendered.subject}`,
         };
         const persisted = await getPrisma().emailDelivery.updateMany({

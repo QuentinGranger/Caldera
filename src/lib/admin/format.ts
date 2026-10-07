@@ -95,6 +95,8 @@ export const labels: Record<string, string> = {
   ADMIN_MFA_AUTHENTICATOR_REPLACEMENT:
     'Application d’authentification remplacée',
   PASSWORD_RESET: 'Mot de passe réinitialisé',
+  SHIPPING_METHOD_UPDATED: 'Mode de livraison modifié',
+  SHIPPING_COUNTRIES_UPDATED: 'Pays de livraison modifiés',
   NEWSLETTER_CAMPAIGN_CREATED: 'Campagne newsletter créée',
   NEWSLETTER_CAMPAIGN_UPDATED: 'Campagne newsletter modifiée',
   NEWSLETTER_CAMPAIGN_TEST_SENT: 'Envoi de test de la newsletter',
@@ -196,6 +198,8 @@ const AUDIT_ENTITIES: Record<
   Game: { name: 'les jeux', href: () => '/admin/jeux' },
   Category: { name: 'les catégories', href: () => '/admin/categories' },
   TcgSet: { name: 'les extensions', href: () => '/admin/extensions' },
+  ShippingMethod: { name: 'la livraison', href: () => '/admin/livraison' },
+  ShippingCountry: { name: 'la livraison', href: () => '/admin/livraison' },
   InvoiceSettings: {
     name: 'les réglages',
     href: () => '/admin/factures/reglages',

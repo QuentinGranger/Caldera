@@ -24,9 +24,12 @@ import {
 import { processPaymentEvent } from '../src/lib/payments/events';
 import type { Intent, PaymentGateway } from '../src/lib/stripe/stripe';
 import { getProductBySlug } from '../src/lib/catalog/queries';
+import { parseShopSnapshot } from '../src/emails/shop';
 if (process.env.NODE_ENV === 'production')
   throw new Error('Tests réservés à la base de développement.');
 const db = getPrisma();
+// The shop's notices go here, whatever the local configuration.
+process.env.NOTIFICATION_EMAIL_TO = 'boutique@caldera.test';
 // Only the network boundary is fake. All order/cart/stock operations use PostgreSQL.
 class Gateway implements PaymentGateway {
   intents = new Map<string, Intent>();
@@ -330,6 +333,21 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
         assert.equal(confirmations.length, 1);
         assert.equal(confirmations[0]!.status, 'PENDING');
         assert.equal(confirmations[0]!.attemptCount, 0);
+        // The shop hears of it once, however often Stripe repeats itself.
+        const notices = await db.emailDelivery.findMany({
+          where: { orderId: current.id, type: 'SHOP_ORDER_PAID' },
+        });
+        assert.equal(notices.length, 1);
+        assert.equal(notices[0]!.recipient, 'boutique@caldera.test');
+        const notice = parseShopSnapshot(notices[0]!.snapshot);
+        assert.equal(notice.orderNumber, current.orderNumber);
+        assert.equal(notice.customer.email, 'payment@example.com');
+        assert.deepEqual(
+          notice.items.map((item) => [item.name, item.quantity]),
+          [['Coffret snapshot', 2]],
+        );
+        // 3 left, above the threshold of 2: nothing to restock.
+        assert.deepEqual(notice.stock, []);
         assert.equal(current.payment!.status, 'SUCCEEDED');
         assert.equal(current.items[0]!.productName, 'Coffret snapshot');
         assert.equal(current.items[0]!.unitPrice.toFixed(2), '59.90');
@@ -467,6 +485,35 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
         assert.equal((await currentOrder(a.order.id)).status, 'PAYMENT_REVIEW');
         assert.equal((await stock()).stockQuantity, 5);
         assert.equal((await stock()).reservedQuantity, 0);
+        // Paid but not confirmed: the shop is asked to check, not to ship.
+        const notices = await db.emailDelivery.findMany({
+          where: {
+            orderId: a.order.id,
+            type: { in: ['SHOP_ORDER_PAID', 'SHOP_ORDER_REVIEW'] },
+          },
+        });
+        assert.deepEqual(
+          notices.map((row) => row.type),
+          ['SHOP_ORDER_REVIEW'],
+        );
+        assert.equal(parseShopSnapshot(notices[0]!.snapshot).review, 'STOCK');
+      },
+    );
+    await t.test(
+      'nouvelle commande : la boutique sait ce qui est épuisé',
+      async () => {
+        await reset(2);
+        const a = await order(2),
+          pi = await ensureIntent(a.order.id, gateway);
+        await event(gateway.succeed(pi.id));
+        assert.equal((await currentOrder(a.order.id)).status, 'PAID');
+        const [notice] = await db.emailDelivery.findMany({
+          where: { orderId: a.order.id, type: 'SHOP_ORDER_PAID' },
+        });
+        assert.deepEqual(parseShopSnapshot(notice!.snapshot).stock, [
+          { sku: `PAY-${key}`, name: 'Coffret snapshot', available: 0 },
+        ]);
+        await reset();
       },
     );
     await t.test(

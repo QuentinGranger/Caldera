@@ -56,6 +56,14 @@ $hairline: rgb(23 62 50 / 14%);
     font: 500 1.5rem/1.1 v.$font-heading;
     overflow-wrap: anywhere;
   }
+  .symbol {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    margin-right: 0.35em;
+    vertical-align: -0.12em;
+    object-fit: contain;
+  }
   // The whole card opens the set.
   h3 a::after {
     content: '';

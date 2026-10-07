@@ -9,6 +9,8 @@ import {
 import { contactRetryAfter } from '@/lib/contact/limits';
 import { ContactRequestError, readContactBody } from '@/lib/contact/request';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
+import { appOrigin } from '@/lib/orders/access';
+import { renderContactEmail } from '@/emails/contact';
 
 export const runtime = 'nodejs';
 
@@ -26,22 +28,6 @@ const emailPattern = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
 
 function text(value: unknown, max: number) {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
-}
-
-function escapeHtml(value: string) {
-  return value.replace(
-    /[&<>"']/g,
-    (character) =>
-      (
-        ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-        }) as const
-      )[character as '&' | '<' | '>' | '"' | "'"]!,
-  );
 }
 
 function configurationError() {
@@ -127,47 +113,24 @@ export async function POST(request: Request) {
     const settings = emailSettings();
     const provider = resendProvider();
     const recipient = settings.testRecipient ?? contactRecipient;
-    const subject =
-      (settings.testRecipient ? '[TEST] ' : '') + '[Contact] ' + topics[topic];
-    const safeName = escapeHtml(name);
-    const safeEmail = escapeHtml(email);
-    const safeOrder = escapeHtml(orderNumber);
-    const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+    const rendered = renderContactEmail(
+      { name, email, topic: topics[topic], orderNumber, message },
+      {
+        admin: appOrigin(),
+        logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
+        site: PRODUCTION_SITE_URL,
+      },
+    );
 
     await provider.send(
       {
         from: settings.from,
         to: [recipient],
+        // « Répondre » answers the customer directly.
         reply_to: email,
-        subject,
-        html:
-          '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>' +
-          escapeHtml(subject) +
-          '</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;color:#173e32">' +
-          '<h1 style="font-family:Georgia,serif">Nouveau message depuis Les Terres de Caldera</h1>' +
-          '<p><strong>Nom :</strong> ' +
-          safeName +
-          '<br><strong>E-mail :</strong> ' +
-          safeEmail +
-          '<br><strong>Sujet :</strong> ' +
-          escapeHtml(topics[topic]) +
-          (safeOrder ? '<br><strong>Commande :</strong> ' + safeOrder : '') +
-          '</p><hr><p>' +
-          safeMessage +
-          '</p><hr><p style="font-size:12px;color:#60665d">Message envoyé depuis <a href="' +
-          PRODUCTION_SITE_URL +
-          '">lesterresdecaldera.fr</a>.</p></body></html>',
-        text: [
-          'Nouveau message depuis Les Terres de Caldera',
-          'Nom : ' + name,
-          'E-mail : ' + email,
-          'Sujet : ' + topics[topic],
-          ...(orderNumber ? ['Commande : ' + orderNumber] : []),
-          '',
-          message,
-          '',
-          'Site : ' + PRODUCTION_SITE_URL,
-        ].join('\n'),
+        subject: (settings.testRecipient ? '[TEST] ' : '') + rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
       },
       'caldera-contact:' + randomUUID(),
     );

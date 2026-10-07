@@ -2,9 +2,11 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
+import { safelyProcessStockAlerts } from '@/lib/stock-alerts/processor';
 import { getAdminAuth, requireAdmin } from './auth';
 import { allowLogin } from './login';
 import { AdminError, text, whitelist } from './validation';
@@ -15,6 +17,7 @@ import { saveCategory, saveGame, saveSet } from './taxonomy';
 import { editImage, uploadImage } from './images';
 import { cancelAdminOrder, saveOrderNote } from './orders';
 import { saveBusinessPilotage } from './pilotage';
+import { saveShippingCountries, saveShippingMethod } from './shipping';
 
 function failure(error: unknown): AdminActionState {
   if (error instanceof AdminError)
@@ -65,6 +68,10 @@ async function invalidateCatalog(productId?: string, previousSlug?: string) {
   revalidatePath('/admin');
   revalidatePath('/admin/produits');
   revalidatePath('/admin/stocks');
+  // Restocked, republished or reactivated: back-in-stock alerts leave now.
+  after(async () => {
+    await safelyProcessStockAlerts();
+  });
 }
 export async function loginAction(
   _previous: AdminActionState,
@@ -300,6 +307,44 @@ export async function saveBusinessPilotageAction(
       success: true,
       message: 'Modèle économique enregistré.',
     };
+  } catch (error) {
+    return failure(error);
+  }
+}
+/** Read live by the checkout, /livraison, the FAQ and the product pages. */
+function refreshShipping() {
+  revalidatePath('/admin/livraison');
+  revalidatePath('/livraison');
+  revalidatePath('/questions');
+  revalidatePath('/panier');
+  revalidatePath('/checkout', 'layout');
+  revalidatePath('/produit/[slug]', 'page');
+}
+export async function saveShippingMethodAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    const method = await saveShippingMethod(admin.id, form);
+    refreshShipping();
+    return {
+      success: true,
+      message: `« ${method.name} » enregistré : la boutique l’affiche dès maintenant.`,
+    };
+  } catch (error) {
+    return failure(error);
+  }
+}
+export async function saveShippingCountriesAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    await saveShippingCountries(admin.id, form);
+    refreshShipping();
+    return { success: true, message: 'Pays de livraison enregistrés.' };
   } catch (error) {
     return failure(error);
   }

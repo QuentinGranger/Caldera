@@ -829,6 +829,15 @@ enum EmailType {
   RETURN_REQUESTED
   RETURN_APPROVED
   RETURN_REJECTED
+  /// To the shop (src/lib/email/shop.ts): a paid order to prepare.
+  SHOP_ORDER_PAID
+  /// To the shop: an order held for review (stock short after payment, or a
+  /// payment attempt too old to resume).
+  SHOP_ORDER_REVIEW
+  /// To the shop: a return or withdrawal declared by the customer.
+  SHOP_RETURN_REQUESTED
+  /// To the shop: Stripe refused or canceled a refund after the request.
+  SHOP_REFUND_FAILED
 }
 
 enum EmailStatus {

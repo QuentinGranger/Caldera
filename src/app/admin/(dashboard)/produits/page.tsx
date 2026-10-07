@@ -41,7 +41,7 @@ export default async function ProductsPage({
       label: 'Tous',
       count: counts.DRAFT + counts.ACTIVE + counts.ARCHIVED,
     },
-    { value: 'ACTIVE', label: 'En ligne', count: counts.ACTIVE },
+    { value: 'ACTIVE', label: 'Publiés', count: counts.ACTIVE },
     { value: 'DRAFT', label: 'Brouillons', count: counts.DRAFT },
     { value: 'ARCHIVED', label: 'Archivés', count: counts.ARCHIVED },
   ];
@@ -55,6 +55,7 @@ export default async function ProductsPage({
       'tcgSetId',
       'language',
       'availability',
+      'visibility',
     ].filter((key) => param(params, key)).length +
     (sort && sort !== 'updated' ? 1 : 0);
   const enums = (values: string[]) =>
@@ -137,6 +138,12 @@ export default async function ProductsPage({
             { value: 'low', label: 'Stock faible' },
           ]}
         />
+        <FilterSelect
+          name="visibility"
+          label="Boutique"
+          value={param(params, 'visibility')}
+          options={[{ value: 'hidden', label: 'Publiés mais invisibles' }]}
+        />
         <label>
           Trier
           <select name="sort" defaultValue={param(params, 'sort') || 'updated'}>
@@ -189,6 +196,14 @@ export default async function ProductsPage({
               <td>{product.tcgSet?.name ?? '—'}</td>
               <td>
                 <Badge value={product.status} />
+                {product.hidden && (
+                  <span
+                    className={`${styles.badge} ${styles.danger}`}
+                    title="Publié, mais absent de la boutique : ouvrez le produit pour voir pourquoi."
+                  >
+                    Invisible en boutique
+                  </span>
+                )}
               </td>
               <td>{euros(product.price)}</td>
               <td>

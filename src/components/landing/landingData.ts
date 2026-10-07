@@ -227,6 +227,8 @@ export interface SetEntry {
   code: string | null;
   releaseDate: Date | null;
   logoUrl: string | null;
+  /** The set's symbol, the small mark printed on its cards. */
+  symbolUrl: string | null;
   gameName: string | null;
   /** Visible products. */
   count: number;
@@ -258,6 +260,8 @@ export interface LandingView {
   editorialHtml: string;
   faq: FaqEntry[];
   logo: { url: string; alt: string } | null;
+  /** A set page: the set's symbol, beside its logo. */
+  symbol: { url: string; alt: string } | null;
   guides: ContentEntry[];
   /** Game hub: upcoming sets (soonest first) and recent ones. */
   releases: { upcoming: SetEntry[]; recent: SetEntry[] } | null;
@@ -435,6 +439,7 @@ async function buildLandingView(
     code: set.code,
     releaseDate: set.releaseDate,
     logoUrl: set.logoUrl,
+    symbolUrl: set.symbolUrl,
     gameName: game.name,
     count: setCounts.get(set.id) ?? 0,
     href: hrefOf({ game: scope.game, set: toSetRef(set) }),
@@ -512,9 +517,11 @@ async function buildLandingView(
                 : null,
             }
           : null;
-  const setLogo = scope.set
-    ? (sets.find((set) => set.id === scope.set?.id)?.logoUrl ?? null)
-    : null;
+  const currentSet = scope.set
+    ? sets.find((set) => set.id === scope.set?.id)
+    : undefined;
+  const setLogo = currentSet?.logoUrl ?? null;
+  const setSymbol = currentSet?.symbolUrl ?? null;
 
   const gameHub = hrefOf({ game: scope.game });
   const fallbackLinks: SeoLink[] = [
@@ -620,6 +627,12 @@ async function buildLandingView(
     ),
     logo: setLogo
       ? { url: setLogo, alt: `Logo ${scope.set?.name ?? ''}` }
+      : null,
+    symbol: setSymbol
+      ? {
+          url: setSymbol,
+          alt: `Symbole de l’extension ${scope.set?.name ?? ''}`,
+        }
       : null,
     guides: await scopeGuides(
       { game: game.slug, ...(scope.set ? { set: scope.set.slug } : {}) },

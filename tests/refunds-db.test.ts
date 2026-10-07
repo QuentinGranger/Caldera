@@ -28,6 +28,8 @@ if (
 )
   throw new Error('Tests réservés à PostgreSQL local.');
 const db = getPrisma();
+// The shop's notices go here, whatever the local configuration.
+process.env.NOTIFICATION_EMAIL_TO = 'boutique@caldera.test';
 
 /** Stripe stand-in: same key, same refund, like the real idempotency. */
 function fakeStripe() {
@@ -205,6 +207,11 @@ test('remboursements depuis l’administration, PostgreSQL', async (t) => {
   const stock = async (id: string) =>
     (await db.productVariant.findUniqueOrThrow({ where: { id } }))
       .stockQuantity;
+  const shopNotices = () =>
+    db.emailDelivery.findMany({
+      where: { orderId: order.id, type: 'SHOP_REFUND_FAILED' },
+      orderBy: { createdAt: 'asc' },
+    });
   const refundEmails = () =>
     db.emailDelivery.findMany({
       where: { orderId: order.id, type: 'ORDER_REFUNDED' },
@@ -393,6 +400,11 @@ test('remboursements depuis l’administration, PostgreSQL', async (t) => {
         assert.equal(failed.status, 'FAILED');
         assert.equal(failed.failureReason, 'expired_or_canceled_card');
         assert.equal(await audits('REFUND_FAILED'), 1);
+        // Refused after the fact: the shop learns it by e-mail.
+        assert.deepEqual(
+          (await shopNotices()).map((row) => row.dedupeKey),
+          [`${order.id}:SHOP_REFUND_FAILED:${goodwillId}`],
+        );
         assert.equal((await remaining()).remainingCents, 8670 - 2995);
       },
     );
@@ -456,6 +468,7 @@ test('remboursements depuis l’administration, PostgreSQL', async (t) => {
         assert.equal(refused.status, 'FAILED');
         assert.equal(refused.failureReason, 'charge_disputed');
         assert.equal(await audits('REFUND_FAILED'), 2);
+        assert.equal((await shopNotices()).length, 2);
         assert.equal((await remaining()).shippingRemainingCents, 690);
 
         stripe.state.mode = 'pending';

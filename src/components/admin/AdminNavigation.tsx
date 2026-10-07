@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   ShoppingBag,
   TicketPercent,
+  Truck,
+  Users,
   Warehouse,
   X,
 } from 'lucide-react';
@@ -40,6 +42,8 @@ export const adminNavGroups = [
     links: [
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
+      { href: '/admin/clients', label: 'Clients', icon: Users },
+      { href: '/admin/livraison', label: 'Livraison', icon: Truck },
     ],
   },
   {

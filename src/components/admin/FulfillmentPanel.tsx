@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Printer } from 'lucide-react';
+import type { EmailType } from '@/generated/prisma/client';
 import type { getAdminOrder } from '@/lib/admin/queries';
 import { formatDate, label } from '@/lib/admin/format';
 import { carriers, fulfillmentLabels } from '@/lib/fulfillment/carriers';
@@ -101,6 +102,18 @@ function ShipmentForm({
     </AdminForm>
   );
 }
+const EMAIL_LABELS: Record<EmailType, string> = {
+  ORDER_CONFIRMATION: 'Confirmation de commande',
+  ORDER_SHIPPED: 'Confirmation d’expédition',
+  ORDER_REFUNDED: 'Remboursement',
+  RETURN_REQUESTED: 'Accusé de demande de retour',
+  RETURN_APPROVED: 'Retour accepté',
+  RETURN_REJECTED: 'Retour refusé',
+  SHOP_ORDER_PAID: 'Boutique · nouvelle commande',
+  SHOP_ORDER_REVIEW: 'Boutique · commande à vérifier',
+  SHOP_RETURN_REQUESTED: 'Boutique · demande de retour',
+  SHOP_REFUND_FAILED: 'Boutique · remboursement refusé',
+};
 const STEPS = [
   'UNFULFILLED',
   'PREPARING',
@@ -260,9 +273,8 @@ export function OrderEmailsPanel({ order }: { order: Order }) {
           {order.emails.map((email) => (
             <tr key={email.id}>
               <td>
-                {email.type === 'ORDER_CONFIRMATION'
-                  ? 'Confirmation de commande'
-                  : 'Confirmation d’expédition'}
+                {EMAIL_LABELS[email.type]}
+                <small>{email.recipient}</small>
               </td>
               <td>
                 {

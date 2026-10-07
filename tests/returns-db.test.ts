@@ -6,6 +6,7 @@ import { getPrisma } from '../src/lib/db/prisma';
 import { purgeTestInvoices } from './helpers/invoices';
 import { cartTokenHash } from '../src/lib/cart/identity';
 import { parseEmailSnapshot } from '../src/emails/templates';
+import { parseShopSnapshot } from '../src/emails/shop';
 import type { ProviderRefund, RefundGateway } from '../src/lib/refunds/gateway';
 import { RefundProviderError } from '../src/lib/refunds/gateway';
 import {
@@ -27,6 +28,8 @@ if (
 )
   throw new Error('Tests réservés à PostgreSQL local.');
 const db = getPrisma();
+// The shop's notices go here, whatever the local configuration.
+process.env.NOTIFICATION_EMAIL_TO = 'boutique@caldera.test';
 
 function stripe() {
   const state = { refuse: false };
@@ -197,6 +200,14 @@ test('retours et rétractations, PostgreSQL', async (t) => {
         assert.deepEqual(snapshot.returnRequest?.items, [
           { name: itemA.productName, quantity: 1 },
         ]);
+        // The shop is told, with the customer's own words.
+        const [notice, ...more] = await emails('SHOP_RETURN_REQUESTED');
+        assert.equal(more.length, 0);
+        assert.equal(notice!.recipient, 'boutique@caldera.test');
+        const told = parseShopSnapshot(notice!.snapshot).returnRequest;
+        assert.equal(told?.id, request.id);
+        assert.equal(told?.withdrawal, true);
+        assert.equal(told?.message, 'Finalement non');
         assert.deepEqual(await left(), { A: 1, B: 1 });
         await assert.rejects(
           requestReturn({
@@ -252,6 +263,8 @@ test('retours et rétractations, PostgreSQL', async (t) => {
         );
         assert.equal(admin_.source, 'ADMIN');
         assert.equal((await emails('RETURN_REQUESTED')).length, 1);
+        // Recorded by the shop itself: nothing to tell it.
+        assert.equal((await emails('SHOP_RETURN_REQUESTED')).length, 1);
         await cancelReturn(admin.id, admin_.id);
         await db.order.update({
           where: { id: order.id },

@@ -7,6 +7,7 @@ import {
   editorialMetadata,
 } from '@/components/editorial/editorial';
 import styles from './cgv.module.scss';
+import { CGV_FREE_RELAY_FROM } from '@/lib/legal/cgv';
 
 export const metadata = editorialMetadata({
   title: 'Conditions générales de vente',
@@ -380,7 +381,7 @@ export default function CgvPage() {
               <h3>10.5 Livraison offerte</h3>
               <p>
                 La livraison en Point Relais Mondial Relay est offerte à partir de
-                <strong> 100 euros d’achat</strong>, en France métropolitaine, sous
+                <strong> {CGV_FREE_RELAY_FROM} euros d’achat</strong>, en France métropolitaine, sous
                 réserve que ce mode de livraison soit disponible pour la commande concernée.
               </p>
               <p>Les éventuelles autres conditions sont affichées lors de la commande.</p>

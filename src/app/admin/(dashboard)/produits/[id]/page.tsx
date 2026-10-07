@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAdminProduct, getAdminOptions } from '@/lib/admin/queries';
 import { getProductSupplierOffers } from '@/lib/supplier-import/admin';
+import { getStorefrontStatus } from '@/lib/admin/storefront';
+import { StorefrontPanel } from '@/components/admin/StorefrontPanel';
 import { publicationAction } from '@/lib/admin/actions';
 import { euros, formatDate, label } from '@/lib/admin/format';
 import { PageHeader, Badge } from '@/components/admin/AdminUI';
@@ -21,7 +23,10 @@ export default async function ProductAdminPage({
     getAdminOptions(),
   ]);
   if (!product) notFound();
-  const offers = await getProductSupplierOffers(product.id);
+  const [offers, storefront] = await Promise.all([
+    getProductSupplierOffers(product.id),
+    getStorefrontStatus(product.id),
+  ]);
   return (
     <>
       <PageHeader
@@ -30,14 +35,10 @@ export default async function ProductAdminPage({
       >
         <div className={styles.inline}>
           <Badge value={product.status} />
-          {product.status === 'ACTIVE' && (
-            <Link href={`/produit/${product.slug}`}>
-              Voir sur la boutique ↗
-            </Link>
-          )}
           <Link href="/admin/produits">Retour aux produits</Link>
         </div>
       </PageHeader>
+      <StorefrontPanel {...storefront} href={`/produit/${product.slug}`} />
       <nav className={styles.tabs} aria-label="Sections produit">
         <a href="#informations">Informations & organisation</a>
         <a href="#variantes">Variantes</a>

@@ -1,7 +1,9 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import type { ReturnReason } from '@/generated/prisma/client';
 import { allowAccountAttempt } from '@/lib/account/limits';
+import { safelyProcessEmails } from '@/lib/email/processor';
 import { getCartCookie } from '@/lib/cart/cartCookie';
 import { getCustomerOrder } from '@/lib/orders/queries';
 import { returnReasonLabels } from './rules';
@@ -20,6 +22,13 @@ const REASONS = Object.keys(returnReasonLabels) as ReturnReason[];
 function field(form: FormData, name: string, max: number) {
   const value = form.get(name);
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
+/** The acknowledgment and the shop's notice leave after the response. */
+function sendSoon() {
+  after(async () => {
+    await safelyProcessEmails();
+  });
 }
 
 function failure(error: unknown): ReturnFormState {
@@ -73,6 +82,7 @@ export async function requestReturnAction(
       message: field(form, 'message', 2000),
     });
     revalidatePath(`/commande/${publicId}`);
+    sendSoon();
     return {
       success: true,
       number: request.number,
@@ -112,6 +122,7 @@ export async function withdrawalAction(
       email,
       field(form, 'message', 2000),
     );
+    sendSoon();
     return {
       success: true,
       number: request.number,

@@ -184,6 +184,16 @@ $gold-line: rgb(232 194 97 / 60%);
   margin-top: 0.35rem;
   object-fit: contain;
 }
+.logo + .symbol {
+  margin-left: 0.75rem;
+}
+.symbol {
+  width: 40px;
+  height: 40px;
+  margin-top: 0.35rem;
+  object-fit: contain;
+  vertical-align: bottom;
+}
 // The range: the first 1.1rem of every line is clipped, so no line starts
 // with a dot.
 .range {

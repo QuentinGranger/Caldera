@@ -183,6 +183,19 @@ export function HeroStats({
   );
 }
 
+/** A set's symbol, beside its logo (or alone): the mark printed on its cards. */
+export function HeroSymbol({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      className={styles.symbol}
+      src={src}
+      alt={alt}
+      width={40}
+      height={40}
+    />
+  );
+}
+
 /** A set's own logo, under the lead (an official visual, set in the admin). */
 export function HeroLogo({ src, alt }: { src: string; alt: string }) {
   return (

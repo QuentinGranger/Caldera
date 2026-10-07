@@ -334,6 +334,57 @@
   }
 }
 
+// Whether a product reaches the shop: the verdict, then rule by rule.
+.storefront {
+  border-left: 4px solid t.$danger;
+
+  &[data-listed] {
+    border-left-color: t.$purple;
+  }
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.storefrontChecks {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+
+  li {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+
+    svg {
+      flex: none;
+      margin-top: 0.15rem;
+    }
+  }
+
+  [data-state='ok'] svg {
+    color: t.$purple;
+  }
+
+  [data-state='warn'] svg {
+    color: t.$gold;
+  }
+
+  [data-state='block'] {
+    color: t.$danger;
+    font-weight: 600;
+  }
+
+  a {
+    color: t.$purple-dark;
+    font-weight: 700;
+  }
+}
+
 @media (max-width: 74.99rem) {
   .quickAccessTrigger {
     min-width: auto;

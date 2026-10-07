@@ -9,6 +9,7 @@ import {
 } from '@/lib/orders/common';
 import { stripeGateway, type PaymentGateway } from '@/lib/stripe/stripe';
 import { toStripeAmount } from '@/lib/stripe/amount';
+import { notifyShop } from '@/lib/email/shop';
 import { validateIntent } from './validation';
 
 /** Persist the attempt BEFORE network I/O. Every recovery replays the same parameters/key. */
@@ -30,6 +31,10 @@ export async function ensureIntent(
       await tx.order.update({
         where: { id: row.id },
         data: { status: 'PAYMENT_REVIEW' },
+      });
+      await notifyShop(tx, row.id, {
+        type: 'SHOP_ORDER_REVIEW',
+        cause: 'STALE_PAYMENT',
       });
       return null;
     }

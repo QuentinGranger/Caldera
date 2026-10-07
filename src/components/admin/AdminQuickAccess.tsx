@@ -25,6 +25,8 @@ const aliases: Record<string, string> = {
   '/admin/categories': 'familles faq questions',
   '/admin/produits': 'catalogue articles fiches',
   '/admin/commandes': 'ventes colis expédition',
+  '/admin/livraison': 'frais de port tarifs transporteur pays gratuité',
+  '/admin/clients': 'comptes acheteurs inscrits',
   '/admin/securite': 'compte mot de passe double authentification',
 };
 const normalize = (value: string) =>

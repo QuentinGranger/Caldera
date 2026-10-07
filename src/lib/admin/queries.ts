@@ -12,6 +12,7 @@ import {
 import { getPrisma } from '@/lib/db/prisma';
 import { parisDate } from './dates';
 import { requireAdmin } from './auth';
+import { hiddenPublishedWhere } from './storefront';
 import { uuid } from './validation';
 export type SearchParams = Record<string, string | string[] | undefined>;
 export const pageSize = 25;
@@ -192,6 +193,16 @@ export async function getAdminProducts(params: SearchParams) {
   if (availability === 'in')
     filters.push(Prisma.sql`COALESCE(v.available, 0) > 0`);
   if (availability === 'low') filters.push(Prisma.sql`v.low = TRUE`);
+  // Published, yet out of the shop (inactive parent, no variant, licence).
+  if (param(params, 'visibility') === 'hidden') {
+    const hidden = await db.product.findMany({
+      where: hiddenPublishedWhere,
+      select: { id: true },
+    });
+    filters.push(
+      Prisma.sql`p.id = ANY(${hidden.map((row) => row.id)}::uuid[])`,
+    );
+  }
   const from = Prisma.sql`FROM "Product" p LEFT JOIN LATERAL (
     SELECT MIN(price) AS price, SUM("availableQuantity") AS available, BOOL_OR("availableQuantity" > 0 AND "availableQuantity" <= "lowStockThreshold") AS low
     FROM "ProductVariant" WHERE "productId" = p.id AND "isActive" = TRUE
@@ -216,8 +227,17 @@ export async function getAdminProducts(params: SearchParams) {
     ],
     { isolationLevel: 'RepeatableRead' },
   );
+  const ids = rows.map((row) => row.id);
+  const hidden = new Set(
+    (
+      await db.product.findMany({
+        where: { id: { in: ids }, ...hiddenPublishedWhere },
+        select: { id: true },
+      })
+    ).map((row) => row.id),
+  );
   const products = await db.product.findMany({
-    where: { id: { in: rows.map((row) => row.id) } },
+    where: { id: { in: ids } },
     select: {
       id: true,
       name: true,
@@ -245,7 +265,14 @@ export async function getAdminProducts(params: SearchParams) {
     products: rows.flatMap((row) => {
       const product = products.find((item) => item.id === row.id);
       return product
-        ? [{ ...product, price: row.price, available: row.available }]
+        ? [
+            {
+              ...product,
+              price: row.price,
+              available: row.available,
+              hidden: hidden.has(product.id),
+            },
+          ]
         : [];
     }),
   };
@@ -364,6 +391,61 @@ export async function getAdminStocks(params: SearchParams) {
     db.productVariant.count({ where }),
   ]);
   return { variants, total, page };
+}
+/** Customer accounts opened in the shop, with what they bought. */
+export async function getAdminCustomers(params: SearchParams) {
+  await requireAdmin();
+  const db = getPrisma();
+  const page = pageNumber(params);
+  const search = param(params, 'search').trim();
+  const where: Prisma.CustomerWhereInput = search
+    ? {
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
+  const [customers, total] = await Promise.all([
+    db.customer.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerified: true,
+        createdAt: true,
+        _count: { select: { wishlistItems: true, stockAlerts: true } },
+      },
+    }),
+    db.customer.count({ where }),
+  ]);
+  const sales = await db.order.groupBy({
+    by: ['customerId'],
+    where: {
+      customerId: { in: customers.map((customer) => customer.id) },
+      status: 'PAID',
+    },
+    _count: { _all: true },
+    _sum: { totalAmount: true },
+    _max: { paidAt: true },
+  });
+  return {
+    page,
+    total,
+    customers: customers.map((customer) => {
+      const row = sales.find((sale) => sale.customerId === customer.id);
+      return {
+        ...customer,
+        orders: row?._count._all ?? 0,
+        spent: row?._sum.totalAmount ?? null,
+        lastOrderAt: row?._max.paidAt ?? null,
+      };
+    }),
+  };
 }
 /** Paid orders still to be shipped: the « À traiter » view. */
 export const ORDERS_TO_HANDLE = [
@@ -492,6 +574,7 @@ export async function getAdminOrder(id: string) {
         select: {
           id: true,
           type: true,
+          recipient: true,
           status: true,
           attemptCount: true,
           firstAttemptAt: true,
@@ -638,6 +721,7 @@ export async function getDashboard() {
     paidTotal,
     recentOrders,
     logs,
+    hidden,
   ] = await Promise.all([
     db.product.count({ where: { status: 'ACTIVE' } }),
     db.product.count({
@@ -683,6 +767,7 @@ export async function getDashboard() {
       orderBy: { createdAt: 'desc' },
       include: { adminUser: { select: { name: true } } },
     }),
+    db.product.count({ where: hiddenPublishedWhere }),
   ]);
   return {
     active,
@@ -696,6 +781,7 @@ export async function getDashboard() {
     paidTotal: paidTotal._sum.totalAmount,
     recentOrders,
     logs,
+    hidden,
   };
 }
 
