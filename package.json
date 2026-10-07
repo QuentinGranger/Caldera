@@ -72,6 +72,7 @@
     "test:maintenance": "node --conditions=react-server --import tsx --test tests/maintenance.test.ts tests/maintenance-scheduler.test.ts",
     "test:monitoring": "node --conditions=react-server --import tsx --test tests/monitoring.test.ts",
     "test:discord": "node --conditions=react-server --import tsx scripts/test-discord.ts",
+    "test:discord:account": "node --conditions=react-server --import tsx --test tests/discord-account.test.ts",
     "test:maintenance:http": "node --conditions=react-server --import tsx --test tests/maintenance-http.test.ts",
     "dev:stripe": "node scripts/dev-stripe.mjs",
     "seo": "node --conditions=react-server --import tsx scripts/seo-audit.ts",

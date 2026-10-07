@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronDown, Lock } from 'lucide-react';
+import { ChevronDown, Lock, MessagesSquare } from 'lucide-react';
 import { AccountField, AccountForm } from '@/components/account/AccountForm';
 import {
   changePasswordAction,
@@ -9,18 +9,55 @@ import {
 } from '@/lib/account/actions';
 import { requireCustomer } from '@/lib/account/guard';
 import { NAME_MAX, PASSWORD_MAX, PASSWORD_MIN } from '@/lib/account/validation';
+import { getPrisma } from '@/lib/db/prisma';
+import { discordAccountConfigured } from '@/lib/discord/account';
+import {
+  connectDiscordAction,
+  disconnectDiscordAction,
+  retryDiscordRoleAction,
+} from '@/lib/discord/actions';
 import styles from '@/components/account/Account.module.scss';
 
 export const metadata: Metadata = { title: 'Profil et sécurité' };
 
-export default async function AccountProfile() {
+const discordMessages: Record<string, string> = {
+  linked: 'Votre compte Discord est connecté et le rôle a été attribué.',
+  unlinked: 'Votre compte Discord a été délié et le rôle retiré.',
+  already_linked: 'Ce compte Discord est déjà associé à un compte Caldera.',
+  not_member: 'Rejoignez d’abord le serveur Discord Caldera, puis réessayez.',
+  refused: 'La connexion Discord a été annulée.',
+  authorization: 'La connexion Discord a expiré ou est invalide. Réessayez.',
+  session_expired: 'Votre session Caldera a expiré. Reconnectez-vous.',
+  unavailable: 'Discord est momentanément indisponible. Réessayez plus tard.',
+  limited: 'Trop de tentatives. Réessayez dans quelques minutes.',
+};
+
+export default async function AccountProfile({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const customer = await requireCustomer('/compte/profil');
+  const [discordLink, params] = await Promise.all([
+    getPrisma().customerDiscordLink.findUnique({
+      where: { customerId: customer.id },
+    }),
+    searchParams,
+  ]);
+  const result = typeof params.discord === 'string' ? params.discord : '';
+  const discordMessage = discordMessages[result];
   return (
     <>
       <header className={styles.pageHeader}>
         <p className={styles.eyebrow}>Mon compte</p>
         <h1 className={styles.title}>Profil et sécurité</h1>
       </header>
+
+      {discordMessage && (
+        <p className={styles.notice} role="status">
+          {discordMessage}
+        </p>
+      )}
 
       <section className={styles.panel} aria-labelledby="informations">
         <h2 id="informations">Informations personnelles</h2>
@@ -85,6 +122,57 @@ export default async function AccountProfile() {
             />
           </div>
         </AccountForm>
+      </section>
+
+      <section className={styles.panel} aria-labelledby="discord">
+        <h2 id="discord" className={styles.discordHeading}>
+          <MessagesSquare size={24} aria-hidden="true" /> Discord
+        </h2>
+        {discordLink ? (
+          <>
+            <p className={styles.panelLead}>
+              Compte connecté : <strong>{discordLink.displayName}</strong>
+            </p>
+            {discordLink.roleGrantedAt ? (
+              <p>Votre rôle « Compte Caldera lié » est actif sur le serveur.</p>
+            ) : (
+              <>
+                <p>
+                  Le rôle n’a pas encore pu être attribué. Vérifiez que vous
+                  êtes membre du serveur, puis réessayez.
+                </p>
+                <form action={retryDiscordRoleAction}>
+                  <button className={styles.submit} type="submit">
+                    Réessayer l’attribution
+                  </button>
+                </form>
+              </>
+            )}
+            <form action={disconnectDiscordAction}>
+              <button className={styles.secondary} type="submit">
+                Délier Discord
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            <p>
+              Reliez votre compte pour obtenir le rôle « Compte Caldera lié » si
+              vous êtes membre de notre serveur Discord.
+            </p>
+            {discordAccountConfigured() ? (
+              <form action={connectDiscordAction}>
+                <button className={styles.submit} type="submit">
+                  Connecter Discord
+                </button>
+              </form>
+            ) : (
+              <p className={styles.panelLead}>
+                La connexion Discord sera bientôt disponible.
+              </p>
+            )}
+          </>
+        )}
       </section>
 
       <details className={styles.dangerZone}>

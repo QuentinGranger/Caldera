@@ -5,8 +5,7 @@
 Le serveur **Les Terres de Caldera** possède un salon privé
 `#test-integration` et un webhook nommé **Caldera Test**. Son URL est enregistrée
 dans le `.env` local, hors Git. Un message de test envoyé par le
-backend a été confirmé dans ce salon le 7 octobre 2026. Aucun bot, lien de
-compte ou rôle n'est encore configuré.
+backend a été confirmé dans ce salon le 7 octobre 2026.
 
 Le webhook du salon test est aussi enregistré comme variable **chiffrée**
 `DISCORD_WEBHOOK_ANNOUNCEMENTS` dans l'environnement Production du projet
@@ -57,23 +56,43 @@ Conserver les secrets dans les variables serveur de l'hébergeur, jamais dans
 par salon, avec seulement les permissions nécessaires. Vérifier les salons et
 faire un essai explicite avant d'activer les publications.
 
-## Comptes et rôles : étape ultérieure
+## Comptes et rôle lié
 
-La liaison Caldera ↔ Discord doit être volontaire depuis un compte client
-authentifié. Prévoir OAuth2 `authorization_code` avec portée minimale
-`identify`, `state` à usage unique lié à la session, vérification de la
-redirection, et liaison unique entre identifiants Caldera et Discord. Ne pas
-fusionner les comptes sur la seule adresse e-mail. Permettre la déliaison et
-supprimer la liaison lors de la suppression du compte. Stocker les jetons
-OAuth uniquement si une fonctionnalité en a réellement besoin, chiffrés et
-avec durée de conservation limitée.
+Le profil client propose une liaison volontaire par OAuth2 `authorization_code`
+avec portée `identify`. Le `state` aléatoire est stocké sous forme de hachage,
+expire après dix minutes, est lié à la session Caldera et est consommé une
+seule fois. Le callback ne lit l'identité que via `/users/@me` avec le jeton
+reçu de Discord ; ni e-mail, ni jeton d'accès/rafraîchissement ne sont
+persistés. Le jeton d'accès est révoqué après usage dans la mesure du possible.
 
-L'attribution de rôles exige un bot, des permissions et une hiérarchie de rôles
-vérifiées. Prévoir une table de correspondance explicite entre un statut métier
-stable et un rôle autorisé, une synchronisation différée et réversible, un
-historique d'échec sans données personnelles et le retrait du rôle si le statut
-cesse. Aucun rôle n'est accordé par un simple paramètre de requête ou une
-information déclarée par le client.
+`CustomerDiscordLink` impose une liaison unique de chaque côté et disparaît
+avec le compte client. Une tentative d'attribution échouée laisse
+`roleGrantedAt` vide ; le profil propose alors de réessayer. La déliaison
+retire le rôle avant de supprimer la liaison ; en cas d'indisponibilité de
+Discord, elle reste en place pour permettre une nouvelle tentative sûre. La
+suppression du compte retire le rôle via le hook `beforeDelete` de better-auth,
+après vérification du mot de passe.
+
+Le bot lit l'appartenance au seul serveur `DISCORD_GUILD_ID` et ne gère que le
+rôle fixe `DISCORD_LINKED_ROLE_ID`. Le code ne reçoit jamais un rôle depuis le
+navigateur. Le bot ne doit avoir que `Gérer les rôles` et être placé sous tous
+les rôles d'administration, au-dessus de « Compte Caldera lié ». Aucune
+intention Gateway privilégiée ni permission Administrateur n'est requise.
+
+Configuration serveur uniquement : `DISCORD_CLIENT_ID`,
+`DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` et
+`DISCORD_LINKED_ROLE_ID`. Déclarer exactement
+`https://lesterresdecaldera.fr/api/discord/callback` comme redirect URI
+(et l'URL localhost choisie pour les tests locaux). Les secrets restent hors
+Git et ne sont jamais préfixés `NEXT_PUBLIC_`.
+
+Le rideau « Ouverture prochaine » masque encore `/compte` sur le site en
+production. Ne pas l'ouvrir implicitement lors de la mise en place de Discord.
+La liaison est testable en local sur le port et l'URL de callback déclarés ;
+elle deviendra accessible publiquement à l'ouverture décidée de la boutique.
+
+Les futurs statuts Caldera devront être mappés par le serveur vers une liste
+explicite de rôles autorisés. Aucun statut commercial n'est défini ici.
 
 ## Commandes et alertes stock
 
@@ -90,8 +109,7 @@ restent la source fiable.
 Avant d'activer des publications automatiques en production, créer les salons
 souhaités, renseigner uniquement leurs webhooks dans les variables serveur,
 ajouter puis vérifier la file et les déclencheurs métier.
-Le bot et OAuth auront une configuration séparée lors de leur implémentation ;
-aucun identifiant fictif n'est requis aujourd'hui.
+Le bot et OAuth ont une configuration séparée des webhooks de publication.
 
 Références : [webhooks Discord](https://docs.discord.com/developers/resources/webhook),
 [limites de débit Discord](https://docs.discord.com/developers/topics/rate-limits),
