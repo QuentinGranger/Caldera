@@ -81,7 +81,8 @@
     "test:landing": "node --conditions=react-server --import tsx --test tests/landing.test.ts",
     "test:sitemap": "node --conditions=react-server --import tsx --test tests/sitemap.test.ts",
     "test:editorial:db": "node --conditions=react-server --import tsx --test tests/editorial-db.test.ts",
-    "images:optimize": "node --import tsx scripts/optimize-images.ts"
+    "images:optimize": "node --import tsx scripts/optimize-images.ts",
+    "test:discord:account:db": "node --conditions=react-server --import tsx --test tests/discord-account-db.test.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.0.9",

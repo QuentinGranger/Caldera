@@ -65,6 +65,14 @@ seule fois. Le callback ne lit l'identité que via `/users/@me` avec le jeton
 reçu de Discord ; ni e-mail, ni jeton d'accès/rafraîchissement ne sont
 persistés. Le jeton d'accès est révoqué après usage dans la mesure du possible.
 
+Les tests PostgreSQL (`npm run test:discord:account:db`) vérifient le hachage,
+la liaison à la session, le remplacement, l’expiration et la consommation
+concurrente unique du `state`, ainsi que les contraintes d’unicité et les
+suppressions en cascade, la reprise après une panne Discord et les actions
+concurrentes. Ils refusent toute base non locale. Un verrou PostgreSQL par
+client sérialise attribution, nouvelle tentative et retrait du rôle entre
+les différentes instances du serveur.
+
 `CustomerDiscordLink` impose une liaison unique de chaque côté et disparaît
 avec le compte client. Une tentative d'attribution échouée laisse
 `roleGrantedAt` vide ; le profil propose alors de réessayer. La déliaison
