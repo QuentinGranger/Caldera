@@ -79,6 +79,38 @@ model SlugRedirect {
   @@unique([entityType, fromSlug])
 }
 
+enum DiscordPublicationStatus {
+  DRAFT
+  PENDING
+  PROCESSING
+  SENT
+  RETRY
+  REVIEW
+  REJECTED
+  CANCELLED
+}
+
+model DiscordOutbox {
+  id            String                   @id @default(uuid()) @db.Uuid
+  eventKey      String                   @unique
+  kind          String
+  title         String
+  summary       String
+  path          String
+  productId     String?                  @db.Uuid
+  status        DiscordPublicationStatus @default(PENDING)
+  attempts      Int                      @default(0)
+  nextAttemptAt DateTime                 @default(now())
+  lockedAt      DateTime?
+  messageId     String?
+  errorCode     String?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([productId])
+}
+
 model Product {
   id               String                          @id @default(uuid()) @db.Uuid
   name             String

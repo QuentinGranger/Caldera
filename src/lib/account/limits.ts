@@ -11,6 +11,7 @@ export type AccountAttemptScope =
   | 'stock-alert'
   | 'promotion'
   | 'return'
+  | 'discord-publish'
   | 'discord-connect'
   | 'discord-role'
   | 'discord-disconnect';
@@ -28,6 +29,7 @@ const RULES: Record<AccountAttemptScope, { maximum: number; seconds: number }> =
     // Per cart: codes cannot be found by trying them one after another.
     promotion: { maximum: 10, seconds: 3600 },
     return: { maximum: 5, seconds: 3600 },
+    'discord-publish': { maximum: 30, seconds: 900 },
     'discord-connect': { maximum: 5, seconds: 900 },
     'discord-role': { maximum: 5, seconds: 900 },
     'discord-disconnect': { maximum: 5, seconds: 900 },

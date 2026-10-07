@@ -6,6 +6,7 @@ import { runMaintenance, runMaintenanceJob } from '../src/lib/maintenance/jobs';
 import type { EmailProvider } from '../src/lib/email/provider';
 // Hors réseau : aucune base ni fournisseur ne doit être joint par cette suite.
 for (const key of [
+  'DISCORD_PUBLICATIONS_ENABLED',
   'CRON_SECRET',
   'DATABASE_URL',
   'PRIMARY_DB_CONNECTION_STRING',
@@ -122,6 +123,7 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
     [
       { ok: false, job: 'expire-reservations', action: 'job_failed' },
       { ok: false, job: 'process-emails', action: 'job_failed' },
+      { ok: true, job: 'process-discord', action: 'job_completed' },
       // Without a Stripe key nothing is read nor sent.
       { ok: true, job: 'sync-refunds', action: 'job_completed' },
       { ok: true, job: 'sync-tax', action: 'job_completed' },
