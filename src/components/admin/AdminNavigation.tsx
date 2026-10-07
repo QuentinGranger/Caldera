@@ -73,6 +73,7 @@ export const adminNavGroups = [
         icon: TicketPercent,
       },
       { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
+      { href: '/admin/discord', label: 'Discord', icon: MessageSquare },
     ],
   },
   {

@@ -5,6 +5,7 @@ import type {
 } from '@/generated/prisma/client';
 import { adminTransaction, audit } from './common';
 import { AdminError, choice, id, integer, text, whitelist } from './validation';
+import { discordEnabled, queueProductRestock } from '@/lib/discord/outbox';
 export async function changeStock(
   tx: Prisma.TransactionClient,
   adminId: string,
@@ -50,6 +51,18 @@ export async function changeStock(
     throw new AdminError(
       'Une perte, un dommage ou un remplacement retire du stock.',
     );
+  const wasUnavailable =
+    discordEnabled() &&
+    input.type === 'RESTOCK' &&
+    delta > 0 &&
+    !(await tx.productVariant.count({
+      where: {
+        productId: variant.productId,
+        isActive: true,
+        price: { gt: 0 },
+        availableQuantity: { gt: 0 },
+      },
+    }));
   const updated = await tx.productVariant.update({
     where: { id: variantId },
     data: { stockQuantity: next },
@@ -71,6 +84,7 @@ export async function changeStock(
     delta,
     type: input.type,
   });
+  if (wasUnavailable) await queueProductRestock(tx, variant.productId);
   return updated;
 }
 export async function adjustStock(adminId: string, form: FormData) {

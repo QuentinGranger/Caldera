@@ -6,7 +6,7 @@ import {
   type DiscordPublicationKind,
 } from './publication';
 
-const webhookVariables: Record<DiscordPublicationKind, string> = {
+export const webhookVariables: Record<DiscordPublicationKind, string> = {
   release: 'DISCORD_WEBHOOK_RELEASES',
   restock: 'DISCORD_WEBHOOK_RESTOCKS',
   announcement: 'DISCORD_WEBHOOK_ANNOUNCEMENTS',
@@ -39,11 +39,11 @@ export type DiscordDeliveryResult =
   | { status: 'disabled' }
   | { status: 'sent'; messageId: string }
   | { status: 'retry'; retryAfterMs: number | null }
+  | { status: 'review' }
   | { status: 'rejected' };
 
 /**
- * Transport boundary only: no caller enqueues publications yet. A future
- * transactional outbox must deduplicate events and decide how to retry.
+ * Transport boundary: the transactional outbox owns deduplication and retries.
  */
 export async function sendDiscordPublication(
   publication: DiscordPublication,
@@ -78,11 +78,11 @@ export async function sendDiscordPublication(
         status: 'retry',
         retryAfterMs:
           Number.isFinite(seconds) && seconds > 0
-            ? Math.min(Math.ceil(seconds * 1000), 60 * 60_000)
+            ? Math.ceil(seconds * 1000)
             : null,
       };
     }
-    if (response.status >= 500) return { status: 'retry', retryAfterMs: null };
+    if (response.status >= 500) return { status: 'review' };
     if (!response.ok) return { status: 'rejected' };
     const data: unknown = await response.json();
     if (
@@ -92,10 +92,10 @@ export async function sendDiscordPublication(
       typeof data.id !== 'string' ||
       !/^\d{15,25}$/.test(data.id)
     )
-      return { status: 'retry', retryAfterMs: null };
+      return { status: 'review' };
     return { status: 'sent', messageId: data.id };
   } catch {
-    // Outcome is unknown after a timeout: a future outbox must check before retry.
-    return { status: 'retry', retryAfterMs: null };
+    // Discord may have accepted the message: never retry an uncertain send blindly.
+    return { status: 'review' };
   }
 }

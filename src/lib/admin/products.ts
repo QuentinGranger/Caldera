@@ -10,6 +10,7 @@ import { recordSlugChange } from '@/lib/seo/redirects';
 import { adminTransaction, audit, lockProduct } from './common';
 import { changeStock } from './inventory';
 import { seoMetaFields } from './seo';
+import { queueProductRelease } from '@/lib/discord/outbox';
 import {
   AdminError,
   checked,
@@ -179,6 +180,12 @@ export async function saveProduct(adminId: string, form: FormData) {
         nextSlug: product.slug,
       },
     );
+    if (
+      previous?.status === 'ACTIVE' &&
+      ((!previous.newArrival && product.newArrival) ||
+        previous.releaseDate?.getTime() !== product.releaseDate?.getTime())
+    )
+      await queueProductRelease(tx, product.id);
     return { product, previousSlug: previous?.slug };
   });
 }
@@ -254,6 +261,7 @@ export async function changePublication(adminId: string, form: FormData) {
       previous: previous.status,
       next: status,
     });
+    await queueProductRelease(tx, product.id);
     return product;
   });
 }
@@ -285,11 +293,7 @@ export async function saveVariant(adminId: string, form: FormData) {
     throw new AdminError(
       'L’ancien prix ne peut pas être inférieur au prix actuel.',
     );
-  const requestedInboundShippingCost = money(
-    form,
-    'inboundShippingCost',
-    true,
-  );
+  const requestedInboundShippingCost = money(form, 'inboundShippingCost', true);
   const requestedProcurementFees = money(form, 'procurementFees', true);
   const data = {
     sku: text(form, 'sku', 100),

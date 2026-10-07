@@ -27,11 +27,14 @@ function cleanText(value: string, max: number) {
   return cleaned.replace(/([\\*_`~|>[\]()])/g, '\\$1').replace(/@/g, '@\u200b');
 }
 
-function publicUrl(path: string, origin: string) {
+export function publicUrl(path: string, origin: string) {
   if (
     !path.startsWith('/') ||
     path.startsWith('//') ||
-    /[\\?#\u0000-\u001f\u007f]/.test(path)
+    /[\\?#\u0000-\u001f\u007f]/.test(path) ||
+    !/^\/(?:$|catalogue$|pokemon(?:\/[a-z0-9-]+)*$|produit\/[a-z0-9-]+$|extensions(?:\/[a-z0-9-]+)?$|(?:guides|actualites)(?:\/[a-z0-9-]+)?$|calendrier-des-sorties$|nouveautes$|contact$)/.test(
+      path,
+    )
   )
     throw new Error('DISCORD_PATH_INVALID');
   const base = new URL(origin);

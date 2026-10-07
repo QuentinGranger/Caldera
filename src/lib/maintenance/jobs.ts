@@ -14,10 +14,12 @@ import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import type { PaymentGateway } from '@/lib/stripe/stripe';
+import { processDiscordOutbox } from '@/lib/discord/outbox';
 
 export const maintenanceJobs = [
   'expire-reservations',
   'process-emails',
+  'process-discord',
   'sync-refunds',
   'sync-tax',
   'purge-supplier-imports',
@@ -40,6 +42,10 @@ const tasks: Record<
     deps: Dependencies,
   ) => Promise<{ ok: boolean; counts: Record<string, number | boolean> }>
 > = {
+  'process-discord': async () => ({
+    ok: true,
+    counts: await processDiscordOutbox(),
+  }),
   'expire-reservations': async ({ gateway }) => {
     const counts = await expireReservations(gateway);
     // Released reservations put units back on sale.

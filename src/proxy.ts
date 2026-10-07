@@ -37,7 +37,7 @@ function apexRedirect(request: NextRequest) {
 }
 
 const CONSTRUCTION_PATH = '/en-construction';
-const CONSTRUCTION_CURTAIN_ENABLED = true;
+// A server-controlled switch opens the whole shop, including checkout.
 
 // Temporary launch curtain: every public hostname serving this deployment is
 // covered, including Vercel's production alias and preview URLs. Localhost is
@@ -45,7 +45,7 @@ const CONSTRUCTION_CURTAIN_ENABLED = true;
 // Access to the live storefront must never depend on a client-controlled cookie.
 // Remove this helper and the construction rewrite below when Caldera opens.
 function shouldShowConstruction(request: NextRequest) {
-  if (!CONSTRUCTION_CURTAIN_ENABLED) return false;
+  if (process.env.STORE_OPEN === '1') return false;
 
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   const { pathname } = request.nextUrl;

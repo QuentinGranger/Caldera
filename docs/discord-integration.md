@@ -7,54 +7,35 @@ Le serveur **Les Terres de Caldera** possède un salon privé
 dans le `.env` local, hors Git. Un message de test envoyé par le
 backend a été confirmé dans ce salon le 7 octobre 2026.
 
-Le webhook du salon test est aussi enregistré comme variable **chiffrée**
-`DISCORD_WEBHOOK_ANNOUNCEMENTS` dans l'environnement Production du projet
-Vercel `les-terres-de-caldera`. Le drapeau d'activation n'y est pas défini :
-aucun envoi de production n'est déclenché.
+L'intégration utilise quatre salons publics dédiés : `#annonces-caldera`,
+`#sorties-pokemon`, `#restocks`, `#campagnes`. Chaque webhook est conservé dans
+les `.env` hors Git et les variables serveur chiffrées Vercel. Le salon privé
+reste réservé aux essais techniques.
 
-L'application web ne publie rien automatiquement : aucun flux métier n'appelle
-le transport de `src/lib/discord/`. `DISCORD_PUBLICATIONS_ENABLED` vaut `false`
-par défaut dans le dépôt. La valeur `true` n'est utilisée que dans le `.env`
-local de test.
-
-`npm run test:discord` envoie un message technique par exécution dans ce salon.
-La commande n'expose aucune route publique et ne réessaie pas automatiquement
-un envoi incertain. Elle est réservée à un lancement volontaire en terminal.
+`DISCORD_PUBLICATIONS_ENABLED` vaut `false` par défaut dans le dépôt.
+L'activation en production nécessite les quatre webhooks et `STORE_OPEN=1`.
+Les mécanismes opérationnels et le contrôle préalable Stripe sont décrits ci-dessous.
 
 ## Publications publiques
 
-Quatre types sont prévus : `release`, `restock`, `announcement`, `campaign`.
-Chaque type pointe vers son propre secret `DISCORD_WEBHOOK_*`; il n'y a pas de
-repli implicite vers un autre salon. Le message ne contient que titre, résumé
-et lien interne au site. Le transport limite la longueur, neutralise les
-mentions et le Markdown, interdit les hôtes webhooks autres que
-`https://discord.com`, refuse les redirections et n'enregistre ni URL ni
-réponse brute dans les logs. Discord confirme l'envoi via `wait=true`.
+Quatre types sont disponibles : `release`, `restock`, `announcement`, `campaign`.
+Chaque type pointe vers son propre secret `DISCORD_WEBHOOK_*`, sans repli vers
+un autre salon. Les publications passent par une file transactionnelle en base.
+Les messages contiennent seulement un titre, un résumé et un lien public interne.
+Le transport neutralise les mentions et le Markdown, impose `https://discord.com`,
+refuse les redirections et ne journalise aucun secret ni réponse brute.
+Discord confirme l'envoi via `wait=true`. Un envoi incertain exige une revue
+manuelle et n'est jamais réessayé automatiquement.
 
-### Étape nécessaire avant activation
+Les sorties dépendent d'un produit réellement publié, marqué comme nouveauté
+avec une date de sortie renseignée. Les restocks dépendent d'un réapprovisionnement
+physique faisant passer un produit épuisé à un stock achetable. Les annonces et
+campagnes sont prévisualisées puis explicitement validées dans `/admin/discord`.
+La publication d'une newsletter ne publie pas automatiquement sur Discord.
 
-Créer une **file transactionnelle** en base, avec clé unique de l'événement,
-type, contenu public validé, état, nombre de tentatives, prochaine tentative,
-bail temporaire et identifiant du message Discord. Un worker borné, lancé par
-le cron de maintenance existant, devra prendre les lignes avec verrouillage
-concurrent, respecter les `429` et délais de Discord, et offrir une revue
-manuelle quand l'issue d'un envoi est incertaine. Un POST webhook n'a pas de
-clé d'idempotence fournie par Discord : après une coupure réseau, réessayer
-aveuglément peut créer un doublon. L'enregistrement de l'événement doit se
-faire dans la même transaction que sa publication ou le changement de stock.
-
-Les nouvelles sorties doivent dépendre d'une publication réellement visible,
-avec date vérifiée. Les restocks doivent dépendre du passage de zéro à un stock
-achetable, avec déduplication par produit et fenêtre de regroupement ; les
-variations internes de stock et les réservations ne doivent pas annoncer de
-faux restock. Les actualités et campagnes doivent être cochées et prévisualisées
-dans l'admin avant leur mise en file ; publier une newsletter ne publie pas
-automatiquement son contenu sur Discord.
-
-Conserver les secrets dans les variables serveur de l'hébergeur, jamais dans
-`NEXT_PUBLIC_*`, le dépôt ou un formulaire admin. Créer un webhook distinct
-par salon, avec seulement les permissions nécessaires. Vérifier les salons et
-faire un essai explicite avant d'activer les publications.
+`npm run test:discord` est une commande volontaire en terminal, utilisant le
+webhook Annonces configuré dans son environnement ; elle publie un message
+technique et ne doit pas être exécutée automatiquement en production.
 
 ## Comptes et rôle lié
 
@@ -96,10 +77,9 @@ Git et ne sont jamais préfixés `NEXT_PUBLIC_`. Les journaux de développement
 ignorent le callback OAuth et les arguments des Server Actions. Le filtrage
 Sentry existant retire les chaînes de requête des URL.
 
-L’espace `/compte` est ouvert avant la boutique, sur décision du propriétaire,
-pour permettre la liaison Discord. Le rideau « Ouverture prochaine » continue
-de masquer le catalogue, le panier, le checkout et les pages d’accès aux
-commandes. Les routes du compte conservent leur authentification existante.
+L’espace `/compte` a été ouvert avant la boutique pour permettre la liaison
+Discord. Le propriétaire a ensuite autorisé l’ouverture du catalogue et du
+checkout via `STORE_OPEN=1`. Les routes du compte conservent leur authentification.
 
 Les futurs statuts Caldera devront être mappés par le serveur vers une liste
 explicite de rôles autorisés. Aucun statut commercial n'est défini ici.
@@ -140,3 +120,54 @@ la console Neon sur `caldera-eu / production` et enregistrée avec le checksum
 Prisma correspondant. L’URL de connexion Vercel, marquée sensible, reste
 non exportable par la CLI ; cette application sur Neon ne prouve pas à elle
 seule que l’instance Vercel utilise cette branche.
+
+## Publications automatiques et ouverture de la boutique
+
+Le propriétaire a autorisé l’activation des publications et l’ouverture du
+catalogue et du checkout. `STORE_OPEN=1` est le seul interrupteur serveur du
+rideau ; aucun cookie ne le contourne. Les contrôles de paiement existants
+continuent d’exiger Stripe live, une clé publique live et le secret webhook.
+
+La migration `20261008003000_add_discord_outbox` ajoute une seule table et un
+enum, sans modifier les produits, clients, commandes ou liaisons existants.
+`DiscordOutbox` conserve seulement le contenu public validé, une clé unique,
+le statut d’envoi, le délai, le bail et l’identifiant Discord confirmé.
+
+- Les nouveautés publiées avec date de sortie connue sont mises en file dans
+  leur transaction d’administration ; la date future est respectée et relue.
+- Seuls les réapprovisionnements physiques `RESTOCK` faisant passer un produit
+  de rupture à disponible déclenchent un réassort. Les réservations, retours,
+  corrections et paiements n’en produisent pas. Les variantes sont regroupées
+  par produit, avec une seule annonce par heure.
+- Les annonces et campagnes sont créées en brouillon dans `/admin/discord`,
+  prévisualisées, puis mises en file avec confirmation explicite. Les campagnes
+  newsletter ne sont jamais copiées automatiquement.
+- Le worker relit visibilité, nom, URL et disponibilité avant l’envoi. Il
+  annule les événements devenus obsolètes et ne publie aucun lien personnel.
+- Les workers utilisent `FOR UPDATE SKIP LOCKED`, un bail borné et des écritures
+  conditionnées à sa possession. Un bail expiré, timeout, réponse 5xx ou réponse
+  sans identifiant confirmé passe en `REVIEW` : aucune nouvelle tentative aveugle.
+- Un `429` diffère l’envoi et impose un délai commun aux workers. Après huit
+  tentatives refusées, une vérification humaine est requise.
+- Les admins peuvent annuler, confirmer un message existant par son identifiant
+  ou réessayer après avoir vérifié l’absence du message dans le salon.
+
+Les mutations admin déclenchent immédiatement un lot en arrière-plan après
+commit. Le cron de maintenance existant reprend les événements différés ou
+planifiés (au moins une fois par jour via Vercel). `/api/cron/discord` permet
+également un déclenchement depuis un planificateur autorisé ; il refuse tout
+appel sans `CRON_SECRET` ou `DISCORD_WORKER_SECRET`. Le mode `?check=1` effectue
+uniquement des lectures de préparation Stripe, sans retourner de secret ni
+identifiant de compte. Aucun secret n’est accepté en query string.
+
+Les quatre `DISCORD_WEBHOOK_*` doivent pointer explicitement sur leurs salons
+respectifs. L’activation nécessite `DISCORD_PUBLICATIONS_ENABLED=true` et,
+en production, `STORE_OPEN=1`. Aucun ancien produit ou ancien stock n’est
+annoncé en masse à l’activation. La file ne garantit pas un envoi exactement une
+fois lors d’une réponse réseau perdue : ce cas est volontairement arrêté pour
+vérification, conformément au comportement des webhooks Discord.
+
+Le cycle de liaison a aussi été validé sur le site de production : la ligne et
+`roleGrantedAt` ont été constatés dans `caldera-eu / production`, et le rôle
+vérifié dans l’API Discord. Cette observation confirme la base réellement
+utilisée par Vercel, dont la chaîne de connexion reste masquée.

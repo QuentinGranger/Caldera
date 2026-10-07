@@ -7,6 +7,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { safelyProcessStockAlerts } from '@/lib/stock-alerts/processor';
+import { safelyProcessDiscordOutbox } from '@/lib/discord/outbox';
 import { getAdminAuth, requireAdmin } from './auth';
 import { allowLogin } from './login';
 import { AdminError, text, uuid, whitelist } from './validation';
@@ -72,6 +73,7 @@ async function invalidateCatalog(productId?: string, previousSlug?: string) {
   // Restocked, republished or reactivated: back-in-stock alerts leave now.
   after(async () => {
     await safelyProcessStockAlerts();
+    await safelyProcessDiscordOutbox();
   });
 }
 export async function loginAction(
