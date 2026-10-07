@@ -4,9 +4,14 @@
 
 Le serveur **Les Terres de Caldera** possède un salon privé
 `#test-integration` et un webhook nommé **Caldera Test**. Son URL est enregistrée
-uniquement dans le `.env` local, hors Git. Un message de test envoyé par le
+dans le `.env` local, hors Git. Un message de test envoyé par le
 backend a été confirmé dans ce salon le 7 octobre 2026. Aucun bot, lien de
 compte ou rôle n'est encore configuré.
+
+Le webhook du salon test est aussi enregistré comme variable **chiffrée**
+`DISCORD_WEBHOOK_ANNOUNCEMENTS` dans l'environnement Production du projet
+Vercel `les-terres-de-caldera`. Le drapeau d'activation n'y est pas défini :
+aucun envoi de production n'est déclenché.
 
 L'application web ne publie rien automatiquement : aucun flux métier n'appelle
 le transport de `src/lib/discord/`. `DISCORD_PUBLICATIONS_ENABLED` vaut `false`
