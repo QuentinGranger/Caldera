@@ -7,6 +7,13 @@ import { safelyProcessEmails } from '@/lib/email/processor';
 import { getCartCookie } from '@/lib/cart/cartCookie';
 import { getCustomerOrder } from '@/lib/orders/queries';
 import { returnReasonLabels } from './rules';
+import {
+  deleteReturnPhotoFiles,
+  MAX_REQUEST_PHOTOS,
+  photoFiles,
+  ReturnPhotoError,
+  storeReturnPhotos,
+} from './photos';
 import { requestReturn, requestWithdrawal, ReturnError } from './service';
 
 export type ReturnFormState = {
@@ -32,7 +39,7 @@ function sendSoon() {
 }
 
 function failure(error: unknown): ReturnFormState {
-  if (error instanceof ReturnError)
+  if (error instanceof ReturnError || error instanceof ReturnPhotoError)
     return { success: false, message: error.message };
   console.error(JSON.stringify({ scope: 'returns', action: 'request_failed' }));
   return {
@@ -47,6 +54,7 @@ export async function requestReturnAction(
   _previous: ReturnFormState,
   form: FormData,
 ): Promise<ReturnFormState> {
+  let photos: string[] = [];
   try {
     const publicId = field(form, 'publicId', 64);
     const order = await getCustomerOrder(
@@ -75,12 +83,22 @@ export async function requestReturnAction(
         quantity: Number(value.trim() || 0),
       });
     }
+    // Photos show a problem: a withdrawal needs none.
+    const files = reason === 'WITHDRAWAL' ? [] : photoFiles(form);
+    if (files.length > MAX_REQUEST_PHOTOS)
+      return {
+        success: false,
+        message: `${MAX_REQUEST_PHOTOS} photos au plus.`,
+      };
+    photos = await storeReturnPhotos(files);
     const request = await requestReturn({
       orderId: order.id,
       reason,
       items,
       message: field(form, 'message', 2000),
+      photos,
     });
+    photos = [];
     revalidatePath(`/commande/${publicId}`);
     sendSoon();
     return {
@@ -92,6 +110,8 @@ export async function requestReturnAction(
           : `Votre demande n° ${request.number} est enregistrée. Nous revenons vers vous par e-mail à ${order.email}.`,
     };
   } catch (error) {
+    // Refused request: the photos stored for it go too.
+    await deleteReturnPhotoFiles(photos);
     return failure(error);
   }
 }

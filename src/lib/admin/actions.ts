@@ -9,7 +9,8 @@ import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { safelyProcessStockAlerts } from '@/lib/stock-alerts/processor';
 import { getAdminAuth, requireAdmin } from './auth';
 import { allowLogin } from './login';
-import { AdminError, text, whitelist } from './validation';
+import { AdminError, text, uuid, whitelist } from './validation';
+import { setMessageHandled } from './messages';
 import type { AdminActionState } from './action-types';
 import { saveProduct, saveVariant, changePublication } from './products';
 import { adjustStock } from './inventory';
@@ -345,6 +346,26 @@ export async function saveShippingCountriesAction(
     await saveShippingCountries(admin.id, form);
     refreshShipping();
     return { success: true, message: 'Pays de livraison enregistrés.' };
+  } catch (error) {
+    return failure(error);
+  }
+}
+/** A contact message answered, or put back on the list. */
+export async function messageHandledAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    whitelist(form, ['id', 'handled']);
+    const handled = text(form, 'handled', 5) === 'true';
+    await setMessageHandled(admin.id, uuid(text(form, 'id', 36)), handled);
+    revalidatePath('/admin/messages');
+    revalidatePath('/admin');
+    return {
+      success: true,
+      message: handled ? 'Message marqué comme traité.' : 'Message rouvert.',
+    };
   } catch (error) {
     return failure(error);
   }

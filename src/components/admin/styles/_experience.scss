@@ -385,6 +385,65 @@
   }
 }
 
+// A return's photos: thumbnails opening the full picture.
+.returnPhotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: block;
+    border: 1px solid t.$border;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f2f5ef;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  small {
+    display: block;
+    margin-top: 0.3rem;
+    color: t.$muted;
+    font-size: 0.7rem;
+  }
+}
+
+// Contact messages: one card each, the handled ones quieter.
+.messages {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    margin: 0;
+  }
+
+  > li[data-handled] {
+    opacity: 0.75;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  blockquote {
+    white-space: pre-line;
+  }
+}
+
 @media (max-width: 74.99rem) {
   .quickAccessTrigger {
     min-width: auto;

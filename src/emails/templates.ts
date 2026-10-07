@@ -2,6 +2,7 @@ import { validTrackingUrl } from '@/lib/fulfillment/carriers';
 import type { EmailType } from '@/generated/prisma/client';
 import { LEGAL_IDENTITY, ORGANIZATION } from '@/lib/seo/policies';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
+import { endOfDayAfter, REFUND_DAYS } from '@/lib/returns/rules';
 export type EmailSnapshot = {
   version: number;
   orderNumber: string;
@@ -31,6 +32,8 @@ export type EmailSnapshot = {
     amount: string;
     shipping: string;
     items: { name: string; quantity: number; amount: string }[];
+    /** The order could not be honoured: cancelled, refunded in full. */
+    cancelled?: boolean;
   };
   /** RETURN_* only: the return request and the shop's answer. */
   returnRequest?: {
@@ -40,6 +43,12 @@ export type EmailSnapshot = {
     requestedAt: string;
     items: { name: string; quantity: number }[];
     resolution: string | null;
+    /** RETURN_REPLACED only: the parcel carrying the new item. */
+    replacement?: {
+      carrier: string;
+      trackingNumber: string | null;
+      trackingUrl: string | null;
+    };
   };
 };
 export function parseEmailSnapshot(value: unknown): EmailSnapshot {
@@ -108,7 +117,8 @@ export function parseEmailSnapshot(value: unknown): EmailSnapshot {
           typeof item.amount !== 'string' ||
           !Number.isInteger(item.quantity) ||
           item.quantity < 1,
-      )
+      ) ||
+      !(refund.cancelled === undefined || typeof refund.cancelled === 'boolean')
     )
       throw new Error('Snapshot email invalide.');
   }
@@ -132,6 +142,18 @@ export function parseEmailSnapshot(value: unknown): EmailSnapshot {
           !Number.isInteger(item.quantity) ||
           item.quantity < 1,
       )
+    )
+      throw new Error('Snapshot email invalide.');
+    const replacement = request.replacement as
+      Record<string, unknown> | undefined;
+    if (
+      replacement !== undefined &&
+      (!replacement ||
+        typeof replacement.carrier !== 'string' ||
+        !['trackingNumber', 'trackingUrl'].every(
+          (key) =>
+            replacement[key] === null || typeof replacement[key] === 'string',
+        ))
     )
       throw new Error('Snapshot email invalide.');
   }
@@ -186,6 +208,10 @@ const RETURN_ADDRESS = [
   `${LEGAL_IDENTITY.address.postalCode} ${LEGAL_IDENTITY.address.locality}`,
   'France',
 ];
+const longDay = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeZone: 'Europe/Paris',
+});
 const longDate = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'long',
   timeStyle: 'short',
@@ -208,9 +234,19 @@ function renderReturnEmail(
       ? ['Votre retour est accepté', 'Retour accepté']
       : type === 'RETURN_REJECTED'
         ? ['Réponse à votre demande de retour', 'Demande de retour']
-        : request.withdrawal
-          ? ['Nous avons reçu votre rétractation', 'Accusé de rétractation']
-          : ['Nous avons reçu votre demande de retour', 'Demande de retour'];
+        : type === 'RETURN_RECEIVED'
+          ? ['Nous avons reçu votre colis', 'Colis de retour reçu']
+          : type === 'RETURN_REPLACED'
+            ? [
+                'Votre article de remplacement est en route',
+                'Remplacement expédié',
+              ]
+            : request.withdrawal
+              ? ['Nous avons reçu votre rétractation', 'Accusé de rétractation']
+              : [
+                  'Nous avons reçu votre demande de retour',
+                  'Demande de retour',
+                ];
   const subject =
     `${subjectStart} ${request.number} — ${data.orderNumber}`.replace(
       /[\r\n]/g,
@@ -222,34 +258,63 @@ function renderReturnEmail(
       ? `Votre demande de ${kind} n° ${request.number} a été enregistrée le ${requested}.`
       : type === 'RETURN_APPROVED'
         ? `Votre demande de ${kind} n° ${request.number} est acceptée.`
-        : `Nous ne pouvons pas donner suite à votre demande de ${kind} n° ${request.number}.`;
+        : type === 'RETURN_RECEIVED'
+          ? `Votre colis de retour (demande n° ${request.number}) est bien arrivé.`
+          : type === 'RETURN_REPLACED'
+            ? `Suite à votre demande n° ${request.number}, nous vous avons expédié :`
+            : `Nous ne pouvons pas donner suite à votre demande de ${kind} n° ${request.number}.`;
+  // CGV art. 14: refunded at the latest 14 days after the withdrawal.
+  const refundBy = longDay.format(
+    new Date(
+      endOfDayAfter(new Date(request.requestedAt), REFUND_DAYS).getTime() - 1,
+    ),
+  );
+  const replacement = type === 'RETURN_REPLACED' ? request.replacement : null;
+  // The shop's words, where they answer: not repeated on a received parcel.
+  const resolution = type === 'RETURN_RECEIVED' ? null : request.resolution;
+  const replacementUrl = replacement?.trackingUrl
+    ? validTrackingUrl(replacement.trackingUrl)
+    : null;
   const next =
     type === 'RETURN_REJECTED'
       ? []
-      : type === 'RETURN_APPROVED'
+      : type === 'RETURN_RECEIVED'
         ? [
-            'Renvoyez les articles à l’adresse ci-dessous, dans leur état d’origine et avec leurs protections, par un envoi suivi :',
+            request.withdrawal
+              ? `Nous vous remboursons au plus tard le ${refundBy}, sur le moyen de paiement utilisé pour la commande.`
+              : 'Nous vérifions les articles et revenons vers vous par e-mail avec la suite donnée à votre demande.',
           ]
-        : request.withdrawal
+        : replacement
           ? [
-              'Renvoyez les articles au plus tard 14 jours après cette demande, à l’adresse ci-dessous, par un envoi suivi. Les frais de retour restent à votre charge.',
-              'Nous vous rembourserons au plus tard 14 jours après votre demande, frais de livraison initiaux compris si toute la commande est retournée. Le remboursement peut attendre la réception des articles ou la preuve de leur envoi.',
+              `Transporteur : ${replacement.carrier}${replacement.trackingNumber ? ` · suivi ${replacement.trackingNumber}` : ''}`,
             ]
-          : [
-              'Nous étudions votre demande et revenons vers vous rapidement avec les instructions de retour. N’expédiez rien avant notre réponse.',
-            ];
+          : type === 'RETURN_APPROVED'
+            ? [
+                'Renvoyez les articles à l’adresse ci-dessous, dans leur état d’origine et avec leurs protections, par un envoi suivi :',
+              ]
+            : request.withdrawal
+              ? [
+                  'Renvoyez les articles au plus tard 14 jours après cette demande, à l’adresse ci-dessous, par un envoi suivi. Les frais de retour restent à votre charge.',
+                  'Nous vous rembourserons au plus tard 14 jours après votre demande, frais de livraison initiaux compris si toute la commande est retournée. Le remboursement peut attendre la réception des articles ou la preuve de leur envoi.',
+                ]
+              : [
+                  'Nous étudions votre demande et revenons vers vous rapidement avec les instructions de retour. N’expédiez rien avant notre réponse.',
+                ];
   const showAddress =
     type === 'RETURN_APPROVED' ||
     (type === 'RETURN_REQUESTED' && request.withdrawal);
   const items = request.items.map((item) => `${item.quantity} × ${item.name}`);
   const content = [
     `<p>${escapeHtml(intro)}</p>`,
-    `<p>Motif : ${escapeHtml(request.reason)}</p>`,
+    type === 'RETURN_REPLACED'
+      ? ''
+      : `<p>Motif : ${escapeHtml(request.reason)}</p>`,
     `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`,
-    request.resolution
-      ? `<p style="padding:12px 14px;background:#f6f1e4;border-left:3px solid #0b6650;white-space:pre-line">${escapeHtml(request.resolution)}</p>`
+    resolution
+      ? `<p style="padding:12px 14px;background:#f6f1e4;border-left:3px solid #0b6650;white-space:pre-line">${escapeHtml(resolution)}</p>`
       : '',
     ...next.map((line) => `<p>${escapeHtml(line)}</p>`),
+    replacementUrl ? link(replacementUrl, 'Suivre mon colis') : '',
     showAddress
       ? `<p><strong>${RETURN_ADDRESS.map(escapeHtml).join('<br>')}</strong></p><p>Indiquez le numéro ${escapeHtml(request.number)} dans le colis.</p>`
       : '',
@@ -258,10 +323,11 @@ function renderReturnEmail(
     title,
     `Commande ${data.orderNumber}`,
     intro,
-    `Motif : ${request.reason}`,
+    ...(type === 'RETURN_REPLACED' ? [] : [`Motif : ${request.reason}`]),
     ...items,
-    ...(request.resolution ? [request.resolution] : []),
+    ...(resolution ? [resolution] : []),
     ...next,
+    ...(replacementUrl ? [`Suivre mon colis : ${replacementUrl}`] : []),
     ...(showAddress
       ? [
           ...RETURN_ADDRESS,
@@ -292,19 +358,25 @@ function renderRefundEmail(
 ) {
   const refund = data.refund;
   if (!refund) throw new Error('Snapshot de remboursement absent.');
-  const subject =
-    `Remboursement de ${money(refund.amount)} — ${data.orderNumber}`.replace(
-      /[\r\n]/g,
-      ' ',
-    );
-  const title = 'Votre remboursement est en route';
+  const subject = (
+    refund.cancelled
+      ? `Commande annulée et remboursée — ${data.orderNumber}`
+      : `Remboursement de ${money(refund.amount)} — ${data.orderNumber}`
+  ).replace(/[\r\n]/g, ' ');
+  const title = refund.cancelled
+    ? 'Votre commande est annulée et remboursée'
+    : 'Votre remboursement est en route';
+  // Said first when the order itself could not be honoured.
+  const cancelled = refund.cancelled
+    ? 'Nous n’avons pas pu honorer votre commande : elle est annulée et intégralement remboursée. Toutes nos excuses.'
+    : null;
   const lines = refund.items
     .map(
       (item) =>
         `<tr><td style="border-top:1px solid #d8d5c7">${escapeHtml(item.name)}</td><td align="center" style="border-top:1px solid #d8d5c7">${item.quantity}</td><td align="right" style="border-top:1px solid #d8d5c7;white-space:nowrap">${escapeHtml(money(item.amount))}</td></tr>`,
     )
     .join('');
-  const content = `<p>Nous avons remboursé <strong>${escapeHtml(money(refund.amount))}</strong> sur le moyen de paiement utilisé pour la commande. Selon votre banque, le montant apparaît sous 5 à 10 jours ouvrés.</p>${lines ? `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px"><thead><tr><th align="left">Article</th><th>Qté</th><th align="right">Remboursé</th></tr></thead><tbody>${lines}</tbody></table>` : ''}${Number(refund.shipping) > 0 ? `<p>Frais de livraison remboursés : ${escapeHtml(money(refund.shipping))}</p>` : ''}`;
+  const content = `${cancelled ? `<p>${escapeHtml(cancelled)}</p>` : ''}<p>Nous avons remboursé <strong>${escapeHtml(money(refund.amount))}</strong> sur le moyen de paiement utilisé pour la commande. Selon votre banque, le montant apparaît sous 5 à 10 jours ouvrés.</p>${lines ? `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px"><thead><tr><th align="left">Article</th><th>Qté</th><th align="right">Remboursé</th></tr></thead><tbody>${lines}</tbody></table>` : ''}${Number(refund.shipping) > 0 ? `<p>Frais de livraison remboursés : ${escapeHtml(money(refund.shipping))}</p>` : ''}`;
   const html = emailPage({
     subject,
     title,
@@ -316,6 +388,7 @@ function renderRefundEmail(
   const text = [
     title,
     `Commande ${data.orderNumber}`,
+    ...(cancelled ? [cancelled] : []),
     `Montant remboursé : ${money(refund.amount)}, sur le moyen de paiement de la commande. Selon votre banque, il apparaît sous 5 à 10 jours ouvrés.`,
     ...refund.items.map(
       (item) => `${item.quantity} × ${item.name} — ${money(item.amount)}`,
@@ -338,7 +411,9 @@ export function renderEmail(
   if (
     type === 'RETURN_REQUESTED' ||
     type === 'RETURN_APPROVED' ||
-    type === 'RETURN_REJECTED'
+    type === 'RETURN_REJECTED' ||
+    type === 'RETURN_RECEIVED' ||
+    type === 'RETURN_REPLACED'
   )
     return renderReturnEmail(type, data, urls);
   const shipped = type === 'ORDER_SHIPPED';

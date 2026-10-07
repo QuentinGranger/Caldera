@@ -74,6 +74,18 @@ export async function getAdminReturn(id: string) {
     where: { id },
     include: {
       createdBy: { select: { name: true } },
+      photos: {
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, source: true, createdAt: true },
+      },
+      replacement: {
+        select: {
+          carrierName: true,
+          trackingNumber: true,
+          trackingUrl: true,
+          shippedAt: true,
+        },
+      },
       refund: {
         select: {
           id: true,
@@ -94,6 +106,7 @@ export async function getAdminReturn(id: string) {
               lineTotal: true,
               discountAmount: true,
               variantId: true,
+              variant: { select: { availableQuantity: true } },
             },
           },
         },
@@ -103,8 +116,13 @@ export async function getAdminReturn(id: string) {
           id: true,
           orderNumber: true,
           email: true,
+          phone: true,
           status: true,
           shippingAmount: true,
+          addresses: {
+            where: { role: 'SHIPPING' },
+            select: { firstName: true, lastName: true },
+          },
           deliveredAt: true,
           paidAt: true,
           fulfillmentStatus: true,

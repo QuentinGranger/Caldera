@@ -7,6 +7,8 @@ export type RefundEmailInput = {
   amount: string;
   shippingAmount: string;
   items: { name: string; quantity: number; amount: string }[];
+  /** The order could not be honoured: cancelled and refunded in full. */
+  cancelled?: boolean;
 };
 
 /** What a return e-mail tells: number, reason, items and the shop's answer. */
@@ -18,12 +20,20 @@ export type ReturnEmailInput = {
   requestedAt: string;
   items: { name: string; quantity: number }[];
   resolution: string | null;
+  /** RETURN_REPLACED: the parcel carrying the new item. */
+  replacement?: {
+    carrier: string;
+    trackingNumber: string | null;
+    trackingUrl: string | null;
+  };
 };
 
 const RETURN_EMAILS: readonly EmailType[] = [
   'RETURN_REQUESTED',
   'RETURN_APPROVED',
   'RETURN_REJECTED',
+  'RETURN_RECEIVED',
+  'RETURN_REPLACED',
 ];
 
 /**
@@ -63,7 +73,14 @@ export async function enqueueOrderEmail(
       shipments: { where: { isPrimary: true } },
     },
   });
-  if (order.status !== 'PAID' || order.payment?.status !== 'SUCCEEDED')
+  // A refund may also close an order paid but never confirmed (review).
+  const refundOfUnconfirmed =
+    type === 'ORDER_REFUNDED' &&
+    ['PAYMENT_REVIEW', 'CANCELLED'].includes(order.status);
+  if (
+    (order.status !== 'PAID' && !refundOfUnconfirmed) ||
+    order.payment?.status !== 'SUCCEEDED'
+  )
     throw new Error('Email réservé aux commandes payées.');
   const shipment = order.shipments[0];
   if (
@@ -122,6 +139,7 @@ export async function enqueueOrderEmail(
             amount: refund.amount,
             shipping: refund.shippingAmount,
             items: refund.items,
+            ...(refund.cancelled ? { cancelled: true } : {}),
           },
         }
       : {}),
@@ -134,6 +152,9 @@ export async function enqueueOrderEmail(
             requestedAt: returnRequest.requestedAt,
             items: returnRequest.items,
             resolution: returnRequest.resolution,
+            ...(returnRequest.replacement
+              ? { replacement: returnRequest.replacement }
+              : {}),
           },
         }
       : {}),

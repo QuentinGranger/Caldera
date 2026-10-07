@@ -71,7 +71,14 @@ export default async function OrderPage({
   }
 
   if (!order) notFound();
-  const [title, description] = copy[order.status];
+  // Paid, then cancelled from the review: refunded, not a mere attempt.
+  const [title, description] =
+    order.status === 'CANCELLED' && order.payment?.status === 'SUCCEEDED'
+      ? [
+          'Commande annulée et remboursée',
+          'Nous n’avons pas pu honorer votre commande : elle est intégralement remboursée. Selon votre banque, le montant apparaît sous 5 à 10 jours ouvrés.',
+        ]
+      : copy[order.status];
   // Refunds confirmed or on their way; failed attempts are the shop's business.
   const refunds = await getPrisma().refund.findMany({
     where: {

@@ -46,7 +46,19 @@ export default async function OrderReturnPage({
     db.returnRequest.findMany({
       where: { orderId: order.id },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, number: true, status: true, createdAt: true },
+      select: {
+        id: true,
+        number: true,
+        status: true,
+        createdAt: true,
+        replacement: {
+          select: {
+            carrierName: true,
+            trackingNumber: true,
+            trackingUrl: true,
+          },
+        },
+      },
     }),
   ]);
   const withdraw = canWithdraw(order.deliveredAt);
@@ -79,31 +91,45 @@ export default async function OrderReturnPage({
                     <strong>{request.number}</strong>{' '}
                     <small>du {day.format(request.createdAt)}</small>
                   </span>
-                  <span>{returnStatusCustomerLabels[request.status]}</span>
+                  <span>
+                    {returnStatusCustomerLabels[request.status]}
+                    {request.replacement && (
+                      <small className={styles.tracking}>
+                        {request.replacement.carrierName}
+                        {request.replacement.trackingNumber &&
+                          ` · suivi ${request.replacement.trackingNumber}`}
+                        {request.replacement.trackingUrl && (
+                          <>
+                            {' · '}
+                            <a
+                              href={request.replacement.trackingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Suivre le colis
+                            </a>
+                          </>
+                        )}
+                      </small>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-          {open ? (
-            <ReturnRequestForm
-              publicId={publicId}
-              access={access}
-              lines={lines.map((line) => ({
-                id: line.id,
-                name: line.name,
-                quantity: line.quantity,
-                left: line.left,
-              }))}
-              canWithdraw={withdraw}
-              canReport={report}
-            />
-          ) : (
-            <p className={page.lead}>
-              Aucun article de cette commande ne peut plus faire l’objet d’une
-              demande en ligne. Écrivez-nous à contact@lesterresdecaldera.fr
-              pour toute question.
-            </p>
-          )}
+          <ReturnRequestForm
+            publicId={publicId}
+            access={access}
+            lines={lines.map((line) => ({
+              id: line.id,
+              name: line.name,
+              quantity: line.quantity,
+              left: line.left,
+            }))}
+            canWithdraw={withdraw}
+            canReport={report}
+            closed={!open}
+          />
           <p className={page.back}>
             <Link href={back}>Retour à la commande</Link>
           </p>

@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Mail,
   Menu,
+  MessageSquare,
   Package,
   PackageOpen,
   ShieldCheck,
@@ -43,6 +44,7 @@ export const adminNavGroups = [
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
       { href: '/admin/clients', label: 'Clients', icon: Users },
+      { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
       { href: '/admin/livraison', label: 'Livraison', icon: Truck },
     ],
   },
@@ -97,6 +99,7 @@ export type AdminNavCounts = Partial<Record<string, number>>;
 const COUNT_LABELS: Record<string, [string, string]> = {
   '/admin/commandes': ['commande à traiter', 'commandes à traiter'],
   '/admin/retours': ['retour à traiter', 'retours à traiter'],
+  '/admin/messages': ['message à traiter', 'messages à traiter'],
 };
 
 export function AdminNavigation({

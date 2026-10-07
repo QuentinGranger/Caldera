@@ -83,10 +83,23 @@ export interface PaymentGateway {
   ): Promise<Intent>;
   retrieve(id: string): Promise<Intent>;
   cancel(id: string): Promise<Intent>;
+  /**
+   * The intents created for an order, found by their metadata: for an
+   * attempt whose answer was never recorded (src/lib/payments/review.ts).
+   */
+  findByOrder?(orderId: string): Promise<Intent[]>;
 }
 export const stripeGateway: PaymentGateway = {
   create: (input, key) =>
     getStripe().paymentIntents.create(input, { idempotencyKey: key }),
   retrieve: (id) => getStripe().paymentIntents.retrieve(id),
   cancel: (id) => getStripe().paymentIntents.cancel(id),
+  findByOrder: async (orderId) => {
+    if (!/^[0-9a-f-]{36}$/i.test(orderId)) return [];
+    const found = await getStripe().paymentIntents.search({
+      query: `metadata['orderId']:'${orderId}'`,
+      limit: 10,
+    });
+    return found.data;
+  },
 };

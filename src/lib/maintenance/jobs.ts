@@ -8,6 +8,8 @@ import { stripeMode } from '@/lib/stripe/stripe';
 import type { TaxGateway } from '@/lib/tax/gateway';
 import { syncTax, taxWorkPending } from '@/lib/tax/service';
 import { purgeSupplierImports } from '@/lib/supplier-import/service';
+import { purgeReturnPhotos } from '@/lib/returns/photos';
+import { purgeContactMessages } from '@/lib/admin/messages';
 import type { EmailProvider } from '@/lib/email/provider';
 import { expireReservations } from '@/lib/payments/cancel';
 import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
@@ -19,6 +21,7 @@ export const maintenanceJobs = [
   'sync-refunds',
   'sync-tax',
   'purge-supplier-imports',
+  'purge-customer-data',
 ] as const;
 
 export type MaintenanceJob = (typeof maintenanceJobs)[number];
@@ -85,6 +88,14 @@ const tasks: Record<
   'purge-supplier-imports': async () => ({
     ok: true,
     counts: await purgeSupplierImports(),
+  }),
+  // Customers' photos and contact messages, once their time is up.
+  'purge-customer-data': async () => ({
+    ok: true,
+    counts: {
+      ...(await purgeReturnPhotos()),
+      ...(await purgeContactMessages()),
+    },
   }),
 };
 

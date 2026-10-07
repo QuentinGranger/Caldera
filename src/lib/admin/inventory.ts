@@ -41,8 +41,15 @@ export async function changeStock(
     throw new AdminError(
       'Un réapprovisionnement ou un retour ajoute du stock.',
     );
-  if ((input.type === 'DAMAGE' || input.type === 'LOSS') && delta > 0)
-    throw new AdminError('Une perte ou un dommage retire du stock.');
+  if (
+    (input.type === 'DAMAGE' ||
+      input.type === 'LOSS' ||
+      input.type === 'REPLACEMENT') &&
+    delta > 0
+  )
+    throw new AdminError(
+      'Une perte, un dommage ou un remplacement retire du stock.',
+    );
   const updated = await tx.productVariant.update({
     where: { id: variantId },
     data: { stockQuantity: next },

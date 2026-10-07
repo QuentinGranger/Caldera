@@ -13,16 +13,27 @@ import {
   text,
   whitelist,
 } from '@/lib/admin/validation';
+import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { safelyProcessEmails } from '@/lib/email/processor';
+import { shipmentFields } from '@/lib/fulfillment/service';
+import {
+  deleteReturnPhotoFiles,
+  MAX_RETURN_PHOTOS,
+  photoFiles,
+  ReturnPhotoError,
+  storeReturnPhotos,
+} from './photos';
 import { toCents } from '@/lib/refunds/amounts';
 import { returnReasonLabels } from './rules';
 import {
+  addReturnPhotos,
   approveReturn,
   cancelReturn,
   createAdminReturn,
   receiveReturn,
   refundReturn,
   rejectReturn,
+  replaceReturn,
   saveReturnNote,
 } from './service';
 
@@ -30,7 +41,7 @@ const QUANTITY_FIELD =
   /^qty:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 function failure(error: unknown): AdminActionState {
-  if (error instanceof AdminError)
+  if (error instanceof AdminError || error instanceof ReturnPhotoError)
     return { success: false, message: error.message };
   console.error(
     JSON.stringify({
@@ -121,8 +132,86 @@ export async function rejectReturnAction(
 export async function receiveReturnAction(
   _previous: AdminActionState,
   form: FormData,
-) {
-  return simple(form, receiveReturn, 'Colis marqué comme reçu.');
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    whitelist(form, ['id', 'notify']);
+    const returnId = id(form)!;
+    const notify = checked(form, 'notify');
+    const updated = await receiveReturn(admin.id, returnId, notify);
+    refresh(returnId, updated.orderId);
+    return {
+      success: true,
+      message: notify
+        ? 'Colis marqué comme reçu : le client est prévenu.'
+        : 'Colis marqué comme reçu.',
+    };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+/** New items instead of a refund: stock, parcel and the customer's e-mail. */
+export async function replaceReturnAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  try {
+    whitelist(form, [
+      'id',
+      'carrierCode',
+      'carrierName',
+      'hasTracking',
+      'trackingNumber',
+      'trackingUrl',
+      'message',
+    ]);
+    const returnId = id(form)!;
+    const updated = await replaceReturn(admin.id, returnId, {
+      shipment: shipmentFields(form),
+      message: text(form, 'message', 2000, false),
+    });
+    // Units left the stock: the shop shows it at once.
+    invalidateCatalogCache();
+    revalidatePath('/admin/stocks');
+    refresh(returnId, updated.orderId);
+    return {
+      success: true,
+      message:
+        'Remplacement enregistré : stock mis à jour, le client reçoit le suivi par e-mail.',
+    };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+/** Photos the customer sent by e-mail, joined to the return's file. */
+export async function addReturnPhotosAction(
+  _previous: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  let stored: string[] = [];
+  try {
+    whitelist(form, ['id', 'photos']);
+    const returnId = id(form)!;
+    const files = photoFiles(form);
+    if (!files.length) throw new AdminError('Choisissez au moins une photo.');
+    if (files.length > MAX_RETURN_PHOTOS)
+      throw new AdminError(`${MAX_RETURN_PHOTOS} photos au plus.`);
+    stored = await storeReturnPhotos(files);
+    const updated = await addReturnPhotos(admin.id, returnId, stored);
+    stored = [];
+    refresh(returnId, updated.orderId);
+    return {
+      success: true,
+      message: `${files.length} photo${files.length > 1 ? 's' : ''} ajoutée${files.length > 1 ? 's' : ''}.`,
+    };
+  } catch (error) {
+    await deleteReturnPhotoFiles(stored);
+    return failure(error);
+  }
 }
 
 export async function cancelReturnAction(

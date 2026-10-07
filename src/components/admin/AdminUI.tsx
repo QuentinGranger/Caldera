@@ -62,6 +62,7 @@ export function Badge({
           'COMPLETED',
           'PROMO_ACTIVE',
           'RETURN_STATE_REFUNDED',
+          'RETURN_STATE_REPLACED',
         ].includes(value)
       ? styles.success
       : [

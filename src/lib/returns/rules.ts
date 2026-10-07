@@ -3,7 +3,13 @@
 import { parisDate } from '@/lib/admin/dates';
 
 export type ReturnStatusCode =
-  'REQUESTED' | 'APPROVED' | 'RECEIVED' | 'REFUNDED' | 'REJECTED' | 'CANCELED';
+  | 'REQUESTED'
+  | 'APPROVED'
+  | 'RECEIVED'
+  | 'REFUNDED'
+  | 'REPLACED'
+  | 'REJECTED'
+  | 'CANCELED';
 
 export type ReturnReasonCode =
   'WITHDRAWAL' | 'DAMAGED' | 'DEFECTIVE' | 'WRONG_ITEM' | 'OTHER';
@@ -30,11 +36,13 @@ export const OPEN_RETURN_STATUSES: readonly ReturnStatusCode[] = [
   'RECEIVED',
 ];
 
+// A replacement may leave before the faulty item comes back: the shop decides.
 const transitions: Record<ReturnStatusCode, readonly ReturnStatusCode[]> = {
-  REQUESTED: ['APPROVED', 'REJECTED', 'RECEIVED', 'CANCELED'],
-  APPROVED: ['RECEIVED', 'CANCELED'],
-  RECEIVED: ['CANCELED'],
+  REQUESTED: ['APPROVED', 'REJECTED', 'RECEIVED', 'REPLACED', 'CANCELED'],
+  APPROVED: ['RECEIVED', 'REPLACED', 'CANCELED'],
+  RECEIVED: ['REPLACED', 'CANCELED'],
   REFUNDED: [],
+  REPLACED: [],
   REJECTED: [],
   CANCELED: [],
 };
@@ -114,6 +122,7 @@ export const returnStatusCustomerLabels: Record<ReturnStatusCode, string> = {
   APPROVED: 'Acceptée — en attente de votre colis',
   RECEIVED: 'Colis reçu',
   REFUNDED: 'Remboursé',
+  REPLACED: 'Article de remplacement expédié',
   REJECTED: 'Refusée',
   CANCELED: 'Annulée',
 };

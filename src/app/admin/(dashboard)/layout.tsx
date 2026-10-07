@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { logoutAction } from '@/lib/admin/actions';
 import { countOrdersToHandle } from '@/lib/admin/queries';
 import { countOpenReturns } from '@/lib/returns/admin';
+import { countOpenMessages } from '@/lib/admin/messages';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
 import { AdminBreadcrumbs } from '@/components/admin/AdminBreadcrumbs';
 import { AdminQuickAccess } from '@/components/admin/AdminQuickAccess';
@@ -14,13 +15,18 @@ export default async function DashboardLayout({
 }: {
   children: ReactNode;
 }) {
-  const [admin, orders, returns] = await Promise.all([
+  const [admin, orders, returns, messages] = await Promise.all([
     requireAdmin(),
     countOrdersToHandle(),
     countOpenReturns(),
+    countOpenMessages(),
   ]);
   // What waits for the shop, beside the menu entries that hold it.
-  const counts = { '/admin/commandes': orders, '/admin/retours': returns };
+  const counts = {
+    '/admin/commandes': orders,
+    '/admin/retours': returns,
+    '/admin/messages': messages,
+  };
   const initials = admin.name
     .split(/\s+/)
     .filter(Boolean)

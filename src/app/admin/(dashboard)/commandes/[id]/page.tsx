@@ -4,6 +4,7 @@ import {
   OrderEmailsPanel,
 } from '@/components/admin/FulfillmentPanel';
 import { RefundForm } from '@/components/admin/RefundForm';
+import { ReviewPanel } from '@/components/admin/ReviewPanel';
 import { syncOrderRefundsAction } from '@/lib/refunds/admin-actions';
 import { returnReasonLabels } from '@/lib/returns/rules';
 import { issueInvoiceAction } from '@/lib/invoices/admin-actions';
@@ -106,12 +107,7 @@ export default async function OrderAdminPage({
           Vérification technique nécessaire ; aucune correction automatique.
         </IntegrityWarning>
       )}
-      {order.status === 'PAYMENT_REVIEW' && (
-        <IntegrityWarning>
-          Cette commande nécessite une vérification du paiement et du stock.
-          Aucune action destructive n’est disponible.
-        </IntegrityWarning>
-      )}
+      {order.status === 'PAYMENT_REVIEW' && <ReviewPanel order={order} />}
       <div className={styles.orderLayout}>
         <div>
           <FulfillmentPanel order={order} />

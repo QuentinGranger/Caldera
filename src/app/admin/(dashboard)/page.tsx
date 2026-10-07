@@ -12,14 +12,16 @@ import {
 } from 'lucide-react';
 import { getDashboard, getFulfillmentDashboard } from '@/lib/admin/queries';
 import { countOpenReturns } from '@/lib/returns/admin';
+import { countOpenMessages } from '@/lib/admin/messages';
 import { auditLink, euros, formatDate, label } from '@/lib/admin/format';
 import { PageHeader, Badge, AdminTable } from '@/components/admin/AdminUI';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardPage() {
-  const [data, fulfillment, returns] = await Promise.all([
+  const [data, fulfillment, returns, messages] = await Promise.all([
     getDashboard(),
     getFulfillmentDashboard(),
     countOpenReturns(),
+    countOpenMessages(),
   ]);
   const stats = [
     {
@@ -67,6 +69,12 @@ export default async function DashboardPage() {
       count: returns,
       href: '/admin/retours?open=1',
       words: ['retour ouvert', 'retours ouverts'],
+    },
+    {
+      label: 'Messages de contact à traiter',
+      count: messages,
+      href: '/admin/messages',
+      words: ['message à traiter', 'messages à traiter'],
     },
     {
       label: 'Emails en échec',

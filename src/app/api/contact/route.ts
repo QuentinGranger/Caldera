@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import {
@@ -7,6 +6,7 @@ import {
   resendProvider,
 } from '@/lib/email/provider';
 import { contactRetryAfter } from '@/lib/contact/limits';
+import { getPrisma } from '@/lib/db/prisma';
 import { ContactRequestError, readContactBody } from '@/lib/contact/request';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import { appOrigin } from '@/lib/orders/access';
@@ -97,11 +97,6 @@ export async function POST(request: Request) {
     );
   }
 
-  if (process.env.EMAILS_ENABLED !== 'true') return configurationError();
-
-  const contactRecipient = process.env.CONTACT_EMAIL_TO?.trim() ?? '';
-  if (!emailPattern.test(contactRecipient)) return configurationError();
-
   try {
     const retryAfter = await contactRetryAfter(email);
     if (retryAfter !== null) {
@@ -110,34 +105,76 @@ export async function POST(request: Request) {
         { status: 429, headers: { 'Retry-After': String(retryAfter) } },
       );
     }
+    // Kept first: an e-mail that fails never loses the message, which waits
+    // in the administration (/admin/messages).
+    const saved = await getPrisma().contactMessage.create({
+      data: {
+        name,
+        email,
+        topic: topics[topic],
+        orderNumber: orderNumber || null,
+        message,
+      },
+      select: { id: true },
+    });
+    if (await emailShop(saved.id, { name, email, topic, orderNumber, message }))
+      await getPrisma().contactMessage.update({
+        where: { id: saved.id },
+        data: { emailedAt: new Date() },
+      });
+    return NextResponse.json({
+      message: 'Votre message a bien été envoyé.',
+    });
+  } catch {
+    console.error('Contact message unavailable', {
+      code: 'CONTACT_MESSAGE_UNAVAILABLE',
+    });
+    return configurationError();
+  }
+}
+
+/** The shop's copy by e-mail; false when e-mails are off or failing. */
+async function emailShop(
+  id: string,
+  contact: {
+    name: string;
+    email: string;
+    topic: Topic;
+    orderNumber: string;
+    message: string;
+  },
+) {
+  const contactRecipient = process.env.CONTACT_EMAIL_TO?.trim() ?? '';
+  if (
+    process.env.EMAILS_ENABLED !== 'true' ||
+    !emailPattern.test(contactRecipient)
+  )
+    return false;
+  try {
     const settings = emailSettings();
     const provider = resendProvider();
     const recipient = settings.testRecipient ?? contactRecipient;
     const rendered = renderContactEmail(
-      { name, email, topic: topics[topic], orderNumber, message },
+      { ...contact, topic: topics[contact.topic] },
       {
         admin: appOrigin(),
         logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
         site: PRODUCTION_SITE_URL,
       },
     );
-
     await provider.send(
       {
         from: settings.from,
         to: [recipient],
         // « Répondre » answers the customer directly.
-        reply_to: email,
+        reply_to: contact.email,
         subject: (settings.testRecipient ? '[TEST] ' : '') + rendered.subject,
         html: rendered.html,
         text: rendered.text,
       },
-      'caldera-contact:' + randomUUID(),
+      `caldera-contact:${id}`,
     );
-
-    return NextResponse.json({
-      message: 'Votre message a bien été envoyé.',
-    });
+    return true;
   } catch (error) {
     console.error('Contact email unavailable', {
       code:
@@ -145,6 +182,6 @@ export async function POST(request: Request) {
           ? error.code
           : 'CONTACT_EMAIL_UNAVAILABLE',
     });
-    return configurationError();
+    return false;
   }
 }

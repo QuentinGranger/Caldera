@@ -33,6 +33,8 @@ export type ShopEmailSnapshot = {
     reasonCode?: string;
     withdrawal: boolean;
     message: string | null;
+    /** Photos joined to the request: private, shown in the administration. */
+    photos?: number;
     items: { name: string; quantity: number }[];
   };
   /** SHOP_REFUND_FAILED: the refund Stripe did not make. */
@@ -99,6 +101,7 @@ export function parseShopSnapshot(value: unknown): ShopEmailSnapshot {
       typeof request.withdrawal !== 'boolean' ||
       !(request.reasonCode === undefined || isString(request.reasonCode)) ||
       !(request.message === null || isString(request.message)) ||
+      !(request.photos === undefined || Number.isInteger(request.photos)) ||
       !Array.isArray(request.items) ||
       !request.items.every(
         (item) => item && isString(item.name) && isQuantity(item.quantity),
@@ -262,6 +265,13 @@ export function renderShopEmail(
               html: `<h2 style="font-size:16px;margin:20px 0 6px">Message du client</h2><p style="margin:0;padding:12px 14px;background:#f6f1e4;border-left:3px solid #0b6650;white-space:pre-line">${escapeHtml(request.message)}</p>`,
               text: ['Message du client :', request.message],
             },
+          ]
+        : []),
+      ...(request.photos
+        ? [
+            paragraph(
+              `${request.photos} photo${request.photos > 1 ? 's' : ''} jointe${request.photos > 1 ? 's' : ''} : à voir dans l’admin (bouton « Traiter le retour »).`,
+            ),
           ]
         : []),
       ...(request.withdrawal

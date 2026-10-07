@@ -25,6 +25,14 @@ import { processPaymentEvent } from '../src/lib/payments/events';
 import type { Intent, PaymentGateway } from '../src/lib/stripe/stripe';
 import { getProductBySlug } from '../src/lib/catalog/queries';
 import { parseShopSnapshot } from '../src/emails/shop';
+import { parseEmailSnapshot } from '../src/emails/templates';
+import {
+  approveReviewedOrder,
+  checkReviewedPayment,
+  refundReviewedOrder,
+} from '../src/lib/payments/review';
+import type { RefundGateway } from '../src/lib/refunds/gateway';
+import { toStripeAmount } from '../src/lib/stripe/amount';
 if (process.env.NODE_ENV === 'production')
   throw new Error('Tests réservés à la base de développement.');
 const db = getPrisma();
@@ -75,7 +83,29 @@ class Gateway implements PaymentGateway {
     row.amount_received = row.amount;
     return { ...row };
   }
+  async findByOrder(orderId: string) {
+    return [...this.intents.values()]
+      .filter((intent) => intent.metadata.orderId === orderId)
+      .map((intent) => ({ ...intent }));
+  }
 }
+// Stripe refunds at once, as asked.
+const refunds: RefundGateway = {
+  async create(input) {
+    return {
+      id: `re_test_${randomUUID()}`,
+      amount: input.amount,
+      currency: 'eur',
+      status: 'succeeded',
+      paymentIntentId: input.paymentIntent,
+      metadata: input.metadata,
+      failureReason: null,
+    };
+  },
+  async retrieve() {
+    throw new Error('unused');
+  },
+};
 test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t) => {
   const key = randomUUID(),
     tokens = new Set<string>(),
@@ -98,6 +128,10 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
     include: { variants: true },
   });
   const variantId = product.variants[0]!.id;
+  // Decides on orders held for review.
+  const admin = await db.adminUser.create({
+    data: { name: 'Test paiement', email: `payment-${key}@example.com` },
+  });
   const country = await db.shippingCountry.findFirstOrThrow({
     where: { isActive: true },
   });
@@ -600,6 +634,134 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
       },
     );
     await t.test(
+      'à vérifier : valider après réassort, ou rembourser et annuler',
+      async () => {
+        // Paid after its reservation was released: held for review.
+        const held = async (quantity: number) => {
+          const a = await order(quantity),
+            pi = await ensureIntent(a.order.id, gateway);
+          await cancelOrder(a.order.id, false, gateway);
+          await event(gateway.succeed(pi.id));
+          assert.equal(
+            (await currentOrder(a.order.id)).status,
+            'PAYMENT_REVIEW',
+          );
+          return a.order.id;
+        };
+        const kept = await held(2);
+        await reset(1);
+        await assert.rejects(
+          approveReviewedOrder(admin.id, kept),
+          /Stock insuffisant/,
+        );
+        assert.equal((await currentOrder(kept)).status, 'PAYMENT_REVIEW');
+        await reset(5);
+        await approveReviewedOrder(admin.id, kept);
+        const approved = await currentOrder(kept);
+        assert.equal(approved.status, 'PAID');
+        assert.equal(approved.fulfillmentStatus, 'UNFULFILLED');
+        assert.ok(approved.reservations.every((r) => r.status === 'CONSUMED'));
+        assert.equal((await stock()).stockQuantity, 3);
+        assert.equal((await stock()).reservedQuantity, 0);
+        assert.equal(
+          await db.invoice.count({ where: { orderId: kept, kind: 'INVOICE' } }),
+          1,
+        );
+        assert.equal(
+          await db.emailDelivery.count({
+            where: { orderId: kept, type: 'ORDER_CONFIRMATION' },
+          }),
+          1,
+        );
+        await assert.rejects(
+          approveReviewedOrder(admin.id, kept),
+          /plus à vérifier/,
+        );
+        await reset();
+
+        const given = await held(1);
+        const outcome = await refundReviewedOrder(
+          admin.id,
+          given,
+          randomUUID(),
+          refunds,
+        );
+        assert.equal(outcome.status, 'SUCCEEDED');
+        const cancelled = await currentOrder(given);
+        assert.equal(cancelled.status, 'CANCELLED');
+        assert.ok(cancelled.cancelledAt);
+        // Never confirmed: no invoice, hence no credit note; stock untouched.
+        assert.equal(await db.invoice.count({ where: { orderId: given } }), 0);
+        assert.equal((await stock()).stockQuantity, 5);
+        const [mail] = await db.emailDelivery.findMany({
+          where: { orderId: given, type: 'ORDER_REFUNDED' },
+        });
+        assert.equal(
+          parseEmailSnapshot(mail!.snapshot).refund?.cancelled,
+          true,
+        );
+        await assert.rejects(
+          approveReviewedOrder(admin.id, given),
+          /plus à vérifier/,
+        );
+      },
+    );
+    await t.test(
+      'tentative perdue : Stripe décide, encaissé ou annulé',
+      async () => {
+        const stale = async () => {
+          const a = await order();
+          await db.payment.update({
+            where: { orderId: a.order.id },
+            data: { intentStartedAt: new Date(Date.now() - 24 * 3600000) },
+          });
+          await assert.rejects(ensureIntent(a.order.id, gateway));
+          assert.equal(
+            (await currentOrder(a.order.id)).status,
+            'PAYMENT_REVIEW',
+          );
+          return a.order;
+        };
+        // Nothing at Stripe: cancelled, reservation released.
+        const lost = await stale();
+        assert.deepEqual(
+          await checkReviewedPayment(admin.id, lost.id, gateway),
+          {
+            kind: 'cancelled',
+          },
+        );
+        const cancelled = await currentOrder(lost.id);
+        assert.equal(cancelled.status, 'CANCELLED');
+        assert.ok(cancelled.reservations.every((r) => r.status !== 'ACTIVE'));
+        assert.equal((await stock()).reservedQuantity, 0);
+
+        // Paid at Stripe though the answer was lost: recorded, then confirmed.
+        const found = await stale();
+        const intent = await gateway.create(
+          {
+            amount: toStripeAmount(found.totalAmount),
+            currency: 'eur',
+            metadata: { orderId: found.id, orderNumber: found.orderNumber },
+          },
+          `lost:${found.id}`,
+        );
+        gateway.succeed(intent.id);
+        assert.deepEqual(
+          await checkReviewedPayment(admin.id, found.id, gateway),
+          {
+            kind: 'paid',
+          },
+        );
+        const recorded = await currentOrder(found.id);
+        assert.equal(recorded.status, 'PAYMENT_REVIEW');
+        assert.equal(recorded.payment!.status, 'SUCCEEDED');
+        assert.equal(recorded.payment!.providerPaymentIntentId, intent.id);
+        await approveReviewedOrder(admin.id, found.id);
+        assert.equal((await currentOrder(found.id)).status, 'PAID');
+        await reset();
+      },
+    );
+    await t.test(
       'contraintes DB et saisies malveillantes refusées',
       async () => {
         await assert.rejects(
@@ -630,6 +792,8 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
       orders.map((row) => row.id),
     );
     for (const row of orders) {
+      await db.refund.deleteMany({ where: { orderId: row.id } });
+      await db.promotionRedemption.deleteMany({ where: { orderId: row.id } });
       await db.stockReservation.deleteMany({ where: { orderId: row.id } });
       await db.orderItem.deleteMany({ where: { orderId: row.id } });
       await db.orderAddress.deleteMany({ where: { orderId: row.id } });
@@ -649,6 +813,8 @@ test('paiements : transactions, concurrence et idempotence PostgreSQL', async (t
     await db.productVariant.delete({ where: { id: variantId } });
     await db.product.delete({ where: { id: product.id } });
     await db.category.delete({ where: { id: category.id } });
+    await db.adminAuditLog.deleteMany({ where: { adminUserId: admin.id } });
+    await db.adminUser.delete({ where: { id: admin.id } });
     await db.$disconnect();
   }
 });

@@ -126,6 +126,7 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
       { ok: true, job: 'sync-refunds', action: 'job_completed' },
       { ok: true, job: 'sync-tax', action: 'job_completed' },
       { ok: false, job: 'purge-supplier-imports', action: 'job_failed' },
+      { ok: false, job: 'purge-customer-data', action: 'job_failed' },
     ],
   );
   // Tâches concurrentes : l’ordre des lignes de log n’est pas garanti.
@@ -144,6 +145,11 @@ test('pannes isolées : chaque tâche journalise un code contrôlé, sans except
         scope: 'maintenance',
         job: 'process-emails',
         code: 'CONFIGURATION_EXPEDITEUR',
+      },
+      {
+        scope: 'maintenance',
+        job: 'purge-customer-data',
+        code: 'MAINTENANCE_JOB_FAILED',
       },
       {
         scope: 'maintenance',

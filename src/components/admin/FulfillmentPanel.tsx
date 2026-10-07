@@ -109,6 +109,8 @@ const EMAIL_LABELS: Record<EmailType, string> = {
   RETURN_REQUESTED: 'Accusé de demande de retour',
   RETURN_APPROVED: 'Retour accepté',
   RETURN_REJECTED: 'Retour refusé',
+  RETURN_RECEIVED: 'Retour : colis reçu',
+  RETURN_REPLACED: 'Retour : remplacement expédié',
   SHOP_ORDER_PAID: 'Boutique · nouvelle commande',
   SHOP_ORDER_REVIEW: 'Boutique · commande à vérifier',
   SHOP_RETURN_REQUESTED: 'Boutique · demande de retour',

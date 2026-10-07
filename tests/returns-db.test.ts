@@ -10,16 +10,27 @@ import { parseShopSnapshot } from '../src/emails/shop';
 import type { ProviderRefund, RefundGateway } from '../src/lib/refunds/gateway';
 import { RefundProviderError } from '../src/lib/refunds/gateway';
 import {
+  addReturnPhotos,
   approveReturn,
   cancelReturn,
   createAdminReturn,
   receiveReturn,
   refundReturn,
   rejectReturn,
+  replaceReturn,
   requestReturn,
   requestWithdrawal,
   returnableLines,
 } from '../src/lib/returns/service';
+import {
+  purgeReturnPhotos,
+  readReturnPhoto,
+  storeReturnPhotos,
+} from '../src/lib/returns/photos';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import sharp from 'sharp';
 if (
   process.env.NODE_ENV === 'production' ||
   !['localhost', '127.0.0.1'].includes(
@@ -430,7 +441,164 @@ test('retours et rétractations, PostgreSQL', async (t) => {
         assert.deepEqual(await left(), { A: 1, B: 1 });
       },
     );
+
+    await t.test(
+      'réclamation : photo, colis reçu, remplacement expédié',
+      async () => {
+        // Local files only: never a real Blob store from a test.
+        const saved = {
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+          store: process.env.BLOB_STORE_ID,
+          dir: process.env.UPLOAD_DIR,
+        };
+        const dir = await mkdtemp(path.join(tmpdir(), 'caldera-returns-'));
+        delete process.env.BLOB_READ_WRITE_TOKEN;
+        delete process.env.BLOB_STORE_ID;
+        process.env.UPLOAD_DIR = dir;
+        try {
+          const png = await sharp({
+            create: {
+              width: 24,
+              height: 24,
+              channels: 3,
+              background: '#c0392b',
+            },
+          })
+            .png()
+            .toBuffer();
+          const [photo] = await storeReturnPhotos([
+            new File([new Uint8Array(png)], 'coin.png', { type: 'image/png' }),
+          ]);
+          assert.ok(await readReturnPhoto(photo!));
+          await assert.rejects(
+            storeReturnPhotos([
+              new File(['pas une image'], 'faux.png', { type: 'image/png' }),
+            ]),
+            /faux\.png/,
+          );
+          const request = await requestReturn({
+            orderId: order.id,
+            reason: 'DAMAGED',
+            items: [{ orderItemId: itemB.id, quantity: 1 }],
+            message: 'Coin enfoncé',
+            photos: [photo!],
+          });
+          // The shop's notice counts the photo; the photo stays private.
+          const notice = (await emails('SHOP_RETURN_REQUESTED')).find((row) =>
+            row.dedupeKey.endsWith(request.id),
+          )!;
+          assert.equal(
+            parseShopSnapshot(notice.snapshot).returnRequest?.photos,
+            1,
+          );
+          await assert.rejects(
+            addReturnPhotos(admin.id, request.id, Array(6).fill('x.webp')),
+            /6 photos au plus/,
+          );
+
+          await receiveReturn(admin.id, request.id);
+          const [received] = (await emails('RETURN_RECEIVED')).filter((row) =>
+            row.dedupeKey.endsWith(request.id),
+          );
+          assert.ok(received, 'Client prévenu de la réception');
+
+          const stockB = async () =>
+            db.productVariant.findUniqueOrThrow({ where: { id: variantB.id } });
+          const before = (await stockB()).stockQuantity;
+          const shipment = {
+            carrierCode: 'COLISSIMO',
+            carrierName: 'Colissimo',
+            hasTracking: true,
+            trackingNumber: '8R00012345',
+            trackingUrl: 'https://www.laposte.fr/outils/suivre-vos-envois',
+          };
+          const replaced = await replaceReturn(admin.id, request.id, {
+            shipment,
+            message: 'Voici un coffret neuf.',
+          });
+          assert.equal(replaced.status, 'REPLACED');
+          assert.ok(replaced.closedAt);
+          assert.equal((await stockB()).stockQuantity, before - 1);
+          const adjustment = await db.inventoryAdjustment.findFirstOrThrow({
+            where: { variantId: variantB.id, type: 'REPLACEMENT' },
+          });
+          assert.equal(adjustment.quantityDelta, -1);
+          const parcel = await db.shipment.findUniqueOrThrow({
+            where: { returnId: request.id },
+          });
+          assert.equal(parcel.isPrimary, false);
+          assert.equal(parcel.status, 'SHIPPED');
+          const [mail] = (await emails('RETURN_REPLACED')).filter((row) =>
+            row.dedupeKey.endsWith(request.id),
+          );
+          const snapshot = parseEmailSnapshot(mail!.snapshot).returnRequest!;
+          assert.equal(snapshot.replacement?.trackingNumber, '8R00012345');
+          assert.equal(snapshot.resolution, 'Voici un coffret neuf.');
+          // Settled once: no second parcel, no refund on top.
+          await assert.rejects(
+            replaceReturn(admin.id, request.id, { shipment, message: '' }),
+            /changé d’état/,
+          );
+          // The new unit can itself be returned later.
+          assert.deepEqual(await left(), { A: 1, B: 1 });
+
+          // Not enough stock: refused, nothing moves.
+          const other = await requestReturn({
+            orderId: order.id,
+            reason: 'DEFECTIVE',
+            items: [{ orderItemId: itemA.id, quantity: 1 }],
+            message: 'Ne fonctionne pas',
+          });
+          const variant = await db.productVariant.findUniqueOrThrow({
+            where: { id: variantA.id },
+          });
+          await db.productVariant.update({
+            where: { id: variantA.id },
+            data: { stockQuantity: variant.reservedQuantity },
+          });
+          await assert.rejects(
+            replaceReturn(admin.id, other.id, { shipment, message: '' }),
+            /Stock insuffisant/,
+          );
+          assert.equal(
+            (
+              await db.returnRequest.findUniqueOrThrow({
+                where: { id: other.id },
+              })
+            ).status,
+            'REQUESTED',
+          );
+          await db.productVariant.update({
+            where: { id: variantA.id },
+            data: { stockQuantity: variant.stockQuantity },
+          });
+          await cancelReturn(admin.id, other.id);
+
+          // A year after closing, the photos go: rows and files.
+          await db.returnRequest.update({
+            where: { id: request.id },
+            data: { closedAt: new Date(Date.now() - 400 * 86400000) },
+          });
+          assert.ok((await purgeReturnPhotos()).photosPurged >= 1);
+          assert.equal(await readReturnPhoto(photo!), null);
+          assert.equal(
+            await db.returnPhoto.count({ where: { returnId: request.id } }),
+            0,
+          );
+        } finally {
+          for (const [name, value] of [
+            ['BLOB_READ_WRITE_TOKEN', saved.token],
+            ['BLOB_STORE_ID', saved.store],
+            ['UPLOAD_DIR', saved.dir],
+          ] as const)
+            if (value === undefined) delete process.env[name];
+            else process.env[name] = value;
+          await rm(dir, { recursive: true, force: true });
+        }
+      },
+    );
   } finally {
+    await db.shipment.deleteMany({ where: { orderId: order.id } });
     await purgeTestInvoices(db, [order.id]);
     await db.returnRequest.deleteMany({ where: { orderId: order.id } });
     await db.refund.deleteMany({ where: { orderId: order.id } });

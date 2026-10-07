@@ -585,7 +585,9 @@ export async function getAdminOrder(id: string) {
         },
       },
       reservations: {
-        include: { variant: { select: { sku: true } } },
+        include: {
+          variant: { select: { sku: true, availableQuantity: true } },
+        },
         orderBy: { createdAt: 'asc' },
       },
       invoices: {

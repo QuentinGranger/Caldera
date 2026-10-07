@@ -47,42 +47,55 @@ function filesystemBackend(directory: string): ImageBackend {
 }
 // Private store: blobs are only reachable through /media, never by their store URL.
 // On Vercel the SDK authenticates with OIDC + BLOB_STORE_ID; elsewhere with BLOB_READ_WRITE_TOKEN.
-export const blobBackend: ImageBackend = {
-  async write(filename, buffer) {
-    try {
-      await put(`media/${filename}`, buffer, {
-        access: 'private',
-        contentType: 'image/webp',
-        cacheControlMaxAge: 31536000,
-      });
-    } catch (error) {
-      if (!(error instanceof BlobError)) throw error;
-      console.error('Image storage write failed', {
-        code: 'BLOB_WRITE_FAILED',
-      });
-      throw new AdminError(
-        'Stockage des images indisponible ou mal configuré. Réessayez plus tard.',
-      );
-    }
-  },
-  async read(filename) {
-    const result = await get(`media/${filename}`, { access: 'private' });
-    if (result?.statusCode !== 200) return null;
-    return Buffer.from(await new Response(result.stream).arrayBuffer());
-  },
-  async remove(filename) {
-    await del(`media/${filename}`);
-  },
-};
-function backend(): ImageBackend | null {
-  if (process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN)
-    return blobBackend;
-  if (process.env.UPLOAD_DIR) return filesystemBackend(process.env.UPLOAD_DIR);
-  if (process.env.NODE_ENV !== 'production')
-    return filesystemBackend(path.join(process.cwd(), '.data/uploads'));
-  return null;
+/** `media`: product images served by /media; `returns`: customers' photos, admin only. */
+export type ImageFolder = 'media' | 'returns';
+function blobBackendIn(folder: ImageFolder): ImageBackend {
+  return {
+    async write(filename, buffer) {
+      try {
+        await put(`${folder}/${filename}`, buffer, {
+          access: 'private',
+          contentType: 'image/webp',
+          cacheControlMaxAge: 31536000,
+        });
+      } catch (error) {
+        if (!(error instanceof BlobError)) throw error;
+        console.error('Image storage write failed', {
+          code: 'BLOB_WRITE_FAILED',
+        });
+        throw new AdminError(
+          'Stockage des images indisponible ou mal configuré. Réessayez plus tard.',
+        );
+      }
+    },
+    async read(filename) {
+      const result = await get(`${folder}/${filename}`, { access: 'private' });
+      if (result?.statusCode !== 200) return null;
+      return Buffer.from(await new Response(result.stream).arrayBuffer());
+    },
+    async remove(filename) {
+      await del(`${folder}/${filename}`);
+    },
+  };
 }
-export async function normalizeImage(file: File) {
+export const blobBackend = blobBackendIn('media');
+// Product images sit at the root of the upload directory (existing files);
+// other folders in a subdirectory of their own.
+export function imageBackend(
+  folder: ImageFolder = 'media',
+): ImageBackend | null {
+  if (process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN)
+    return folder === 'media' ? blobBackend : blobBackendIn(folder);
+  const root =
+    process.env.UPLOAD_DIR ||
+    (process.env.NODE_ENV !== 'production'
+      ? path.join(process.cwd(), '.data/uploads')
+      : null);
+  if (!root) return null;
+  return filesystemBackend(folder === 'media' ? root : path.join(root, folder));
+}
+const backend = () => imageBackend('media');
+export async function normalizeImage(file: File, maxSide = 2400) {
   if (!file.size || file.size > 5 * 1024 * 1024)
     throw new AdminError('Image requise, limitée à 5 Mo.');
   const extension = path.extname(file.name).toLowerCase();
@@ -108,8 +121,8 @@ export async function normalizeImage(file: File) {
     return await decoder
       .rotate()
       .resize({
-        width: 2400,
-        height: 2400,
+        width: maxSide,
+        height: maxSide,
         fit: 'inside',
         withoutEnlargement: true,
       })

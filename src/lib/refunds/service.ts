@@ -8,7 +8,9 @@ import { getPrisma } from '@/lib/db/prisma';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
 import { notifyShop } from '@/lib/email/shop';
 import { issueCreditNote } from '@/lib/invoices/service';
+import { releaseReservations } from '@/lib/inventory/reservations';
 import { lockOrder, transaction } from '@/lib/orders/common';
+import { releasePromotion } from '@/lib/promotions/service';
 import {
   allocateRefund,
   fromCents,
@@ -42,6 +44,11 @@ export type RefundRequest = {
   restock: boolean;
   /** The customer return this refund settles (linked in the same transaction). */
   returnId?: string;
+  /**
+   * An order held for review (paid, never confirmed) given up: refunded in
+   * full, then cancelled once Stripe confirms (src/lib/payments/review.ts).
+   */
+  cancelReview?: boolean;
 };
 
 function statusOf(provider: ProviderRefund): RefundStatus {
@@ -72,8 +79,10 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
     }
     const order = await lockOrder(tx, request.orderId);
     const payment = order.payment;
+    const reviewing =
+      request.cancelReview === true && order.status === 'PAYMENT_REVIEW';
     if (
-      order.status !== 'PAID' ||
+      (order.status !== 'PAID' && !reviewing) ||
       payment?.status !== 'SUCCEEDED' ||
       !payment.providerPaymentIntentId
     )
@@ -156,6 +165,15 @@ async function reserveRefund(adminId: string, request: RefundRequest) {
       );
     if (request.restock && !lines.length)
       throw new AdminError('Sélectionnez les articles à remettre en stock.');
+    if (reviewing) {
+      // Never confirmed: no partial way out, nothing taken from the stock.
+      if (amountCents !== state.remainingCents || request.restock)
+        throw new AdminError(
+          'Une commande à vérifier se rembourse en totalité, sans remise en stock.',
+        );
+      await releaseReservations(tx, order, false);
+      await releasePromotion(tx, order.id);
+    }
     const allocation = allocateRefund({
       lines,
       shippingCents,
@@ -307,8 +325,8 @@ export async function applyProviderRefund(
       where: { id: refundId },
       include: {
         items: { include: { orderItem: true } },
-        payment: { select: { providerPaymentIntentId: true } },
-        order: { select: { orderNumber: true } },
+        payment: { select: { providerPaymentIntentId: true, amount: true } },
+        order: { select: { orderNumber: true, status: true } },
       },
     });
     // Never trust an object that does not match what was asked.
@@ -374,7 +392,19 @@ export async function applyProviderRefund(
             );
         restockedNow = true;
       }
+      // An order held for review and now refunded in full is given up.
+      const refunded =
+        refund.order.status === 'PAYMENT_REVIEW'
+          ? (
+              await tx.refund.aggregate({
+                where: { orderId: refund.orderId, status: 'SUCCEEDED' },
+                _sum: { amount: true },
+              })
+            )._sum.amount
+          : null;
+      const givenUp = Boolean(refunded?.gte(refund.payment.amount));
       await enqueueOrderEmail(tx, refund.orderId, 'ORDER_REFUNDED', {
+        ...(givenUp ? { cancelled: true } : {}),
         id: refund.id,
         amount: refund.amount.toFixed(2),
         shippingAmount: refund.shippingAmount.toFixed(2),
@@ -410,6 +440,25 @@ export async function applyProviderRefund(
         data: { status: 'REFUNDED', refundedAt: now, closedAt: now },
       });
       await issueCreditNote(tx, refund.id);
+      if (givenUp) {
+        // Also when refunded from the Stripe Dashboard: nothing stays held.
+        const order = await lockOrder(tx, refund.orderId);
+        await releaseReservations(tx, order, false);
+        await releasePromotion(tx, refund.orderId);
+        await tx.order.update({
+          where: { id: refund.orderId },
+          data: { status: 'CANCELLED', cancelledAt: now },
+        });
+        if (refund.createdById)
+          await audit(
+            tx,
+            refund.createdById,
+            'ORDER_REVIEW_REFUNDED',
+            'Order',
+            refund.orderId,
+            { refundId: refund.id, amount: refund.amount.toFixed(2) },
+          );
+      }
     }
     if (eventId)
       await tx.stripeWebhookEvent.create({

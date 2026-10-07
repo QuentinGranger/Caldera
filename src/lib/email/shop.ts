@@ -130,6 +130,7 @@ export async function notifyShop(
       where: { id: event.returnId },
       include: {
         items: { include: { orderItem: { select: { productName: true } } } },
+        _count: { select: { photos: true } },
       },
     });
     snapshot.returnRequest = {
@@ -139,6 +140,7 @@ export async function notifyShop(
       reasonCode: request.reason,
       withdrawal: request.reason === 'WITHDRAWAL',
       message: request.customerMessage,
+      photos: request._count.photos,
       items: request.items.map((item) => ({
         name: item.orderItem.productName,
         quantity: item.quantity,

@@ -153,3 +153,37 @@
     color: v.$color-text-muted;
   }
 }
+
+// Photos of the problem: the field, then what was picked.
+.photos {
+  display: grid;
+  gap: 0.5rem;
+
+  input[type='file'] {
+    max-width: 100%;
+  }
+}
+
+.previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  img {
+    display: block;
+    width: 4.5rem;
+    height: 4.5rem;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid rgb(23 62 50 / 18%);
+  }
+}
+
+// A replacement's carrier and tracking, under its status.
+.tracking {
+  display: block;
+  margin-top: 0.15rem;
+}

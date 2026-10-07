@@ -548,6 +548,8 @@ enum InventoryAdjustmentType {
   LOSS
   RETURN
   MANUAL
+  /// A new unit sent to replace a returned one (src/lib/returns/service.ts).
+  REPLACEMENT
 }
 
 model AdminUser {
@@ -573,6 +575,7 @@ model AdminUser {
   returns                ReturnRequest[]
   supplierImports        SupplierImport[]      @relation("ImportCreatedBy")
   appliedSupplierImports SupplierImport[]      @relation("ImportAppliedBy")
+  contactMessages        ContactMessage[]
 }
 
 model AdminTwoFactor {
@@ -829,6 +832,10 @@ enum EmailType {
   RETURN_REQUESTED
   RETURN_APPROVED
   RETURN_REJECTED
+  /// The returned parcel reached the shop.
+  RETURN_RECEIVED
+  /// A replacement item left for the customer, with its tracking.
+  RETURN_REPLACED
   /// To the shop (src/lib/email/shop.ts): a paid order to prepare.
   SHOP_ORDER_PAID
   /// To the shop: an order held for review (stock short after payment, or a
@@ -860,6 +867,9 @@ model Shipment {
   trackingUrl    String?
   shippedAt      DateTime?
   deliveredAt    DateTime?
+  /// A replacement parcel (never the primary one): the return it settles.
+  returnId       String?        @unique @db.Uuid
+  returnRequest  ReturnRequest? @relation(fields: [returnId], references: [id], onDelete: Restrict)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -1199,6 +1209,8 @@ enum ReturnStatus {
   RECEIVED
   /// Refund confirmed by Stripe.
   REFUNDED
+  /// Settled by sending a new item instead of a refund.
+  REPLACED
   REJECTED
   /// Withdrawn by the customer or closed by the shop.
   CANCELED
@@ -1220,36 +1232,74 @@ enum ReturnSource {
 
 /// Customer return or withdrawal (src/lib/returns), settled by a refund.
 model ReturnRequest {
-  id              String       @id @default(uuid()) @db.Uuid
+  id              String        @id @default(uuid()) @db.Uuid
   /// « RET-2026-XXXXXXXX », given to the customer.
-  number          String       @unique
-  orderId         String       @db.Uuid
-  order           Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  status          ReturnStatus @default(REQUESTED)
+  number          String        @unique
+  orderId         String        @db.Uuid
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  status          ReturnStatus  @default(REQUESTED)
   reason          ReturnReason
   source          ReturnSource
   /// Written by the customer; shown in the administration only.
-  customerMessage String?      @db.Text
+  customerMessage String?       @db.Text
   /// Instructions or answer sent to the customer by e-mail.
-  resolution      String?      @db.Text
+  resolution      String?       @db.Text
   /// Never shown to the customer.
-  internalNote    String?      @db.Text
-  createdById     String?      @db.Uuid
-  createdBy       AdminUser?   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  internalNote    String?       @db.Text
+  createdById     String?       @db.Uuid
+  createdBy       AdminUser?    @relation(fields: [createdById], references: [id], onDelete: Restrict)
   approvedAt      DateTime?
   receivedAt      DateTime?
   refundedAt      DateTime?
   closedAt        DateTime?
   /// The refund settling this return (a failed one can be replaced).
-  refundId        String?      @unique @db.Uuid
-  refund          Refund?      @relation(fields: [refundId], references: [id], onDelete: SetNull)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  refundId        String?       @unique @db.Uuid
+  refund          Refund?       @relation(fields: [refundId], references: [id], onDelete: SetNull)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   items           ReturnItem[]
+  photos          ReturnPhoto[]
+  replacement     Shipment?
 
   @@index([orderId])
   @@index([status, createdAt])
   @@index([createdById])
+}
+
+/// A message from the /contact form, kept even when its e-mail to the shop
+/// fails (src/app/api/contact/route.ts). Deleted a year after it is handled.
+model ContactMessage {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String
+  email       String
+  /// Topic chosen in the form, as shown to the customer.
+  topic       String
+  orderNumber String?
+  message     String     @db.Text
+  /// When the e-mail to the shop was accepted by the provider.
+  emailedAt   DateTime?
+  handledAt   DateTime?
+  handledById String?    @db.Uuid
+  handledBy   AdminUser? @relation(fields: [handledById], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  @@index([handledAt, createdAt])
+  @@index([email])
+}
+
+/// A photo of the problem, from the customer's form or added by the shop
+/// (src/lib/returns/photos.ts). Private: served to the administration only,
+/// deleted a year after the return is closed.
+model ReturnPhoto {
+  id            String        @id @default(uuid()) @db.Uuid
+  returnId      String        @db.Uuid
+  returnRequest ReturnRequest @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  /// Storage file name (« <uuid>.webp » under returns/).
+  filename      String        @unique
+  source        ReturnSource
+  createdAt     DateTime      @default(now())
+
+  @@index([returnId])
 }
 
 model ReturnItem {

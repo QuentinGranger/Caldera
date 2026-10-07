@@ -49,6 +49,7 @@ export function AdminForm({
   guard = true,
   confirm,
   confirmWhen = 'always',
+  tone,
 }: {
   action: AdminAction;
   children: ReactNode;
@@ -59,6 +60,8 @@ export function AdminForm({
   guard?: boolean;
   confirm?: string;
   confirmWhen?: 'always' | 'inactive' | 'stockZero';
+  /** `danger`: an irreversible way out (refund, cancellation). */
+  tone?: 'danger';
 }) {
   const [state, formAction, pending] = useActionState(action, {
     success: false,
@@ -143,7 +146,12 @@ export function AdminForm({
                 Modifications non enregistrées
               </span>
             )}
-            <button type="submit">{pending ? pendingLabel : submit}</button>
+            <button
+              type="submit"
+              className={tone === 'danger' ? styles.dangerButton : undefined}
+            >
+              {pending ? pendingLabel : submit}
+            </button>
           </div>
         </fieldset>
       </form>

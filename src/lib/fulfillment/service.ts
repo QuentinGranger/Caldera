@@ -13,6 +13,38 @@ import { lockOrder } from '@/lib/orders/common';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
 import { refundState } from '@/lib/refunds/amounts';
 import { carriers, validTrackingUrl } from './carriers';
+
+/**
+ * Carrier and tracking of a parcel, as typed in the administration: the
+ * order's shipment, or a replacement sent for a return.
+ */
+export function shipmentFields(form: FormData) {
+  const carrierCode = choice(
+    form,
+    'carrierCode',
+    carriers.map((carrier) => carrier.code),
+  );
+  const carrier = carriers.find((row) => row.code === carrierCode)!;
+  const carrierName =
+    carrierCode === 'OTHER' ? text(form, 'carrierName', 100) : carrier.label;
+  const hasTracking = carrier.supportsTracking || checked(form, 'hasTracking');
+  const trackingNumber = text(form, 'trackingNumber', 100, false) || null;
+  if (trackingNumber && /[\u0000-\u001f\u007f]/.test(trackingNumber))
+    throw new AdminError('Numéro de suivi invalide.');
+  let trackingUrl: string | null;
+  try {
+    trackingUrl = validTrackingUrl(text(form, 'trackingUrl', 2000, false));
+  } catch {
+    throw new AdminError(
+      'Renseignez une URL de suivi HTTP(S) valide, sans identifiants.',
+    );
+  }
+  if (hasTracking && !trackingNumber)
+    throw new AdminError('Un numéro est requis pour cet envoi suivi.');
+  if (!hasTracking && (trackingNumber || trackingUrl))
+    throw new AdminError('Cochez « envoi suivi » pour renseigner un suivi.');
+  return { carrierCode, carrierName, hasTracking, trackingNumber, trackingUrl };
+}
 const nextStatus: Partial<Record<FulfillmentStatus, FulfillmentStatus>> = {
   UNFULFILLED: 'PREPARING',
   PREPARING: 'READY_TO_SHIP',
@@ -153,30 +185,8 @@ export async function saveShipment(
   ]);
   const orderId = id(form, 'orderId')!;
   const shipmentId = id(form, 'shipmentId', true);
-  const carrierCode = choice(
-    form,
-    'carrierCode',
-    carriers.map((carrier) => carrier.code),
-  );
-  const carrier = carriers.find((row) => row.code === carrierCode)!;
-  const carrierName =
-    carrierCode === 'OTHER' ? text(form, 'carrierName', 100) : carrier.label;
-  const hasTracking = carrier.supportsTracking || checked(form, 'hasTracking');
-  const trackingNumber = text(form, 'trackingNumber', 100, false) || null;
-  if (trackingNumber && /[\u0000-\u001f\u007f]/.test(trackingNumber))
-    throw new AdminError('Numéro de suivi invalide.');
-  let trackingUrl: string | null;
-  try {
-    trackingUrl = validTrackingUrl(text(form, 'trackingUrl', 2000, false));
-  } catch {
-    throw new AdminError(
-      'Renseignez une URL de suivi HTTP(S) valide, sans identifiants.',
-    );
-  }
-  if (hasTracking && !trackingNumber)
-    throw new AdminError('Un numéro est requis pour cet envoi suivi.');
-  if (!hasTracking && (trackingNumber || trackingUrl))
-    throw new AdminError('Cochez « envoi suivi » pour renseigner un suivi.');
+  const { carrierCode, carrierName, hasTracking, trackingNumber, trackingUrl } =
+    shipmentFields(form);
   const reason = correction ? text(form, 'reason', 500) : null;
   return adminTransaction(adminId, async (tx) => {
     const order = await paidOrder(tx, orderId);

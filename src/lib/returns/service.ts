@@ -6,6 +6,7 @@ import type {
   ReturnStatus,
 } from '@/generated/prisma/client';
 import { adminTransaction, audit } from '@/lib/admin/common';
+import { changeStock } from '@/lib/admin/inventory';
 import { AdminError } from '@/lib/admin/validation';
 import { getPrisma } from '@/lib/db/prisma';
 import { enqueueOrderEmail } from '@/lib/email/outbox';
@@ -14,6 +15,7 @@ import { lockOrder, transaction } from '@/lib/orders/common';
 import { refundState } from '@/lib/refunds/amounts';
 import type { RefundGateway } from '@/lib/refunds/gateway';
 import { requestRefund } from '@/lib/refunds/service';
+import { MAX_RETURN_PHOTOS } from './photos';
 import {
   canMoveReturn,
   canReportProblem,
@@ -118,6 +120,8 @@ export type NewReturn = {
   reason: ReturnReason;
   items: { orderItemId: string; quantity: number }[];
   message: string;
+  /** Photos already stored (src/lib/returns/photos.ts), by file name. */
+  photos?: string[];
 };
 
 /**
@@ -180,6 +184,16 @@ async function createReturnIn(
       customerMessage: input.message || null,
       createdById: by?.adminId ?? null,
       items: { create: items },
+      ...(input.photos?.length
+        ? {
+            photos: {
+              create: input.photos.map((filename) => ({
+                filename,
+                source: by ? ('ADMIN' as const) : ('CUSTOMER' as const),
+              })),
+            },
+          }
+        : {}),
     },
     include: withItems,
   });
@@ -269,7 +283,7 @@ async function move(
   returnId: string,
   to: ReturnStatus,
   data: Prisma.ReturnRequestUpdateInput,
-  email?: 'RETURN_APPROVED' | 'RETURN_REJECTED',
+  email?: 'RETURN_APPROVED' | 'RETURN_REJECTED' | 'RETURN_RECEIVED',
 ) {
   return adminTransaction(adminId, async (tx) => {
     await tx.$queryRaw`SELECT id FROM "ReturnRequest" WHERE id = ${returnId}::uuid FOR UPDATE`;
@@ -326,8 +340,170 @@ export async function rejectReturn(
   );
 }
 
-export function receiveReturn(adminId: string, returnId: string) {
-  return move(adminId, returnId, 'RECEIVED', { receivedAt: new Date() });
+/** The parcel is back; the customer is told unless the shop opts out. */
+export function receiveReturn(
+  adminId: string,
+  returnId: string,
+  notify = true,
+) {
+  return move(
+    adminId,
+    returnId,
+    'RECEIVED',
+    { receivedAt: new Date() },
+    notify ? 'RETURN_RECEIVED' : undefined,
+  );
+}
+
+/**
+ * Settles a return with new items instead of money: the returned units leave
+ * the stock, a parcel is recorded against the return (never the order's own
+ * shipment) and the customer gets its tracking. The faulty item need not be
+ * back first: the shop decides.
+ */
+export async function replaceReturn(
+  adminId: string,
+  returnId: string,
+  input: {
+    shipment: {
+      carrierCode: string;
+      carrierName: string;
+      hasTracking: boolean;
+      trackingNumber: string | null;
+      trackingUrl: string | null;
+    };
+    message: string;
+  },
+) {
+  return adminTransaction(adminId, async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "ReturnRequest" WHERE id = ${returnId}::uuid FOR UPDATE`;
+    const current = await tx.returnRequest.findUnique({
+      where: { id: returnId },
+      include: {
+        items: {
+          include: {
+            orderItem: { select: { productName: true, variantId: true } },
+          },
+        },
+        refund: { select: { status: true } },
+        order: { select: { status: true } },
+      },
+    });
+    if (!current) throw new AdminError('Retour introuvable.');
+    if (!canMoveReturn(current.status, 'REPLACED'))
+      throw new AdminError(
+        'Ce retour a changé d’état entre-temps. Rechargez la page.',
+      );
+    if (current.order.status !== 'PAID')
+      throw new AdminError('Seule une commande payée peut être remplacée.');
+    if (
+      current.refund &&
+      ['PENDING', 'REQUIRES_ACTION', 'SUCCEEDED'].includes(
+        current.refund.status,
+      )
+    )
+      throw new AdminError(
+        'Un remboursement est déjà engagé pour ce retour : il ne peut plus être remplacé.',
+      );
+    const variantIds: string[] = [];
+    for (const item of current.items) {
+      const name = item.orderItem.productName;
+      const variantId = item.orderItem.variantId;
+      if (!variantId)
+        throw new AdminError(
+          `« ${name} » n’est plus au catalogue : remboursez plutôt ce retour.`,
+        );
+      const { availableQuantity } = await tx.productVariant.findUniqueOrThrow({
+        where: { id: variantId },
+        select: { availableQuantity: true },
+      });
+      if (availableQuantity < item.quantity)
+        throw new AdminError(
+          `Stock insuffisant pour « ${name} » : ${availableQuantity} disponible${availableQuantity > 1 ? 's' : ''}, ${item.quantity} à envoyer. Réapprovisionnez ou remboursez.`,
+        );
+      await changeStock(tx, adminId, variantId, {
+        quantity: -item.quantity,
+        mode: 'delta',
+        type: 'REPLACEMENT',
+        reason: `Remplacement ${current.number}`,
+      });
+      variantIds.push(variantId);
+    }
+    const now = new Date();
+    await tx.shipment.create({
+      data: {
+        orderId: current.orderId,
+        returnId,
+        isPrimary: false,
+        status: 'SHIPPED',
+        shippedAt: now,
+        ...input.shipment,
+      },
+    });
+    const updated = await tx.returnRequest.update({
+      where: { id: returnId },
+      data: {
+        status: 'REPLACED',
+        closedAt: now,
+        resolution: input.message || current.resolution,
+      },
+      include: withItems,
+    });
+    await enqueueOrderEmail(tx, updated.orderId, 'RETURN_REPLACED', {
+      ...emailInput(updated),
+      // This e-mail carries this message only, not the earlier answer.
+      resolution: input.message || null,
+      replacement: {
+        carrier: input.shipment.carrierName,
+        trackingNumber: input.shipment.trackingNumber,
+        trackingUrl: input.shipment.trackingUrl,
+      },
+    });
+    await audit(tx, adminId, 'RETURN_REPLACED', 'Order', updated.orderId, {
+      returnId,
+      number: updated.number,
+      carrier: input.shipment.carrierName,
+      trackingNumber: input.shipment.trackingNumber,
+    });
+    return { ...updated, variantIds };
+  });
+}
+
+/** Photos the customer sent by e-mail, added by the shop to the file. */
+export async function addReturnPhotos(
+  adminId: string,
+  returnId: string,
+  filenames: readonly string[],
+) {
+  return adminTransaction(adminId, async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "ReturnRequest" WHERE id = ${returnId}::uuid FOR UPDATE`;
+    const current = await tx.returnRequest.findUnique({
+      where: { id: returnId },
+      select: {
+        orderId: true,
+        number: true,
+        _count: { select: { photos: true } },
+      },
+    });
+    if (!current) throw new AdminError('Retour introuvable.');
+    if (current._count.photos + filenames.length > MAX_RETURN_PHOTOS)
+      throw new AdminError(
+        `${MAX_RETURN_PHOTOS} photos au plus par retour (${current._count.photos} déjà jointe${current._count.photos > 1 ? 's' : ''}).`,
+      );
+    await tx.returnPhoto.createMany({
+      data: filenames.map((filename) => ({
+        returnId,
+        filename,
+        source: 'ADMIN' as const,
+      })),
+    });
+    await audit(tx, adminId, 'RETURN_PHOTOS_ADDED', 'Order', current.orderId, {
+      returnId,
+      number: current.number,
+      count: filenames.length,
+    });
+    return current;
+  });
 }
 
 export function cancelReturn(adminId: string, returnId: string) {
