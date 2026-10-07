@@ -28,6 +28,7 @@ export const cartVariantSelect = {
       slug: true,
       productType: true,
       status: true,
+      isDemonstration: true,
       preorder: true,
       gameId: true,
       categoryId: true,

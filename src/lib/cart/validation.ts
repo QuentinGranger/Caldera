@@ -30,6 +30,7 @@ export type ValidatableVariant = {
   reservedQuantity: number;
   product: {
     status: string;
+    isDemonstration?: boolean;
     category: { isActive: boolean };
     tcgSet: { isActive: boolean } | null;
     game: { isActive: boolean } | null;
@@ -43,6 +44,7 @@ export function itemIssue(
     !variant ||
     !variant.isActive ||
     variant.product.status !== 'ACTIVE' ||
+    variant.product.isDemonstration === true ||
     !variant.product.category.isActive ||
     variant.product.tcgSet?.isActive === false ||
     // Same rule as the public catalogue: a product of an inactive game is withdrawn.

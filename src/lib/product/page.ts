@@ -134,7 +134,7 @@ export function productPageMetadata(
     title,
     description,
     path: productPath(product.slug),
-    index: decision.index,
+    index: !product.isDemonstration && decision.index,
     canonicalPath: decision.canonicalPath,
     image: productShareImage(product),
   });

@@ -20,6 +20,9 @@ export function calculateShipping(
 ) {
   if (
     !method.isActive ||
+    (process.env.NODE_ENV === 'production' &&
+      process.env.STORE_OPEN === '1' &&
+      method.isDevelopment) ||
     !method.countries.some(
       (country) => country.code === countryCode && country.isActive,
     )
@@ -40,6 +43,9 @@ export function getAvailableShippingMethods(
     .filter(
       (method) =>
         method.isActive &&
+        (process.env.NODE_ENV !== 'production' ||
+          process.env.STORE_OPEN !== '1' ||
+          !method.isDevelopment) &&
         method.countries.some(
           (country) => country.code === countryCode && country.isActive,
         ),

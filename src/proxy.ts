@@ -240,6 +240,8 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  if (process.env.CATALOG_DEMO_MODE === '1')
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   const { pathname } = request.nextUrl;
   if (
     ['/admin', '/compte', '/newsletter', '/alertes'].some(

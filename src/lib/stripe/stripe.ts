@@ -19,6 +19,10 @@ export function getStripe() {
   }));
 }
 export function assertPaymentConfiguration() {
+  if (process.env.CATALOG_DEMO_MODE === '1')
+    throw new OrderError(
+      'Catalogue de démonstration : les achats et paiements sont désactivés.',
+    );
   // Production is deliberately closed until the merchant completes the
   // pre-launch checklist. Opening requires an explicit environment change.
   if (process.env.NODE_ENV === 'production' && process.env.STORE_OPEN !== '1')

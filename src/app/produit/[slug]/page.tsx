@@ -48,11 +48,11 @@ async function ProductContent({
     : [{ url: product.image, alt: product.imageAlt }];
   const purchasable = product.availability !== 'OUT_OF_STOCK';
   // Back-in-stock alerts go to a signed-in customer's address.
-  const alertEmail = product.variants.some(
-    (variant) => variant.availability === 'OUT_OF_STOCK',
-  )
-    ? ((await currentCustomer())?.email ?? null)
-    : null;
+  const alertEmail =
+    !product.isDemonstration &&
+    product.variants.some((variant) => variant.availability === 'OUT_OF_STOCK')
+      ? ((await currentCustomer())?.email ?? null)
+      : null;
   const alternatives = purchasable
     ? []
     : page.related.filter((item) => item.availability !== 'OUT_OF_STOCK');
@@ -92,18 +92,30 @@ async function ProductContent({
               productId={product.id}
               productName={product.name}
             />
-            <ProductPurchasePanel
-              key={product.id}
-              productId={product.id}
-              variants={product.variants}
-              newArrival={product.newArrival}
-              preorder={product.preorder}
-              releaseDate={product.releaseDate}
-              typeLabel={productTypeLabels[product.productType]}
-              shipping={page.shipping}
-              accountEmail={alertEmail}
-            />
-            {!purchasable &&
+            {product.isDemonstration ? (
+              <div className={styles.notice}>
+                <strong>Produit d’exemple — non commercialisé.</strong>
+                <p>
+                  Cette fiche sert à présenter le site. Aucun prix, stock, date
+                  de sortie ou délai de livraison réel n’est annoncé. Aucun
+                  achat ni alerte stock n’est possible.
+                </p>
+              </div>
+            ) : (
+              <ProductPurchasePanel
+                key={product.id}
+                productId={product.id}
+                variants={product.variants}
+                newArrival={product.newArrival}
+                preorder={product.preorder}
+                releaseDate={product.releaseDate}
+                typeLabel={productTypeLabels[product.productType]}
+                shipping={page.shipping}
+                accountEmail={alertEmail}
+              />
+            )}
+            {!product.isDemonstration &&
+              !purchasable &&
               (product.variants.length > 0 || alternatives.length > 0) && (
                 <div className={styles.notice}>
                   {product.variants.length > 0 && (

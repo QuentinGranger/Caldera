@@ -35,6 +35,10 @@ test('achat : mêmes règles de visibilité que le catalogue public', () => {
     itemIssue(variant({ game: { isActive: false } }), 1),
     'UNAVAILABLE',
   );
+  assert.equal(
+    itemIssue(variant({ isDemonstration: true }, 100), 1),
+    'UNAVAILABLE',
+  );
   assert.equal(itemIssue(variant({}, 0), 1), 'OUT_OF_STOCK');
   assert.equal(itemIssue(variant({}, 2), 3), 'INSUFFICIENT_STOCK');
 });

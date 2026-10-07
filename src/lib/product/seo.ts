@@ -77,6 +77,7 @@ export function productStructuredData(
   product: ProductDetail,
   shippingMethods: readonly ShippingMethodInput[] = [],
 ): JsonLdNode | null {
+  if (product.isDemonstration) return null;
   return productNode({
     name: product.name,
     path: productPath(product.slug),
