@@ -95,6 +95,8 @@ function Enrollment() {
           <AdminForm
             action={verifyMfaEnrollmentAction}
             submit="Activer la protection"
+            pendingLabel="Vérification…"
+            guard={false}
           >
             <div className={styles.fields}>
               <div className={styles.full}>
@@ -171,6 +173,7 @@ function ManageMfa() {
         <AdminForm
           action={replaceAuthenticatorAction}
           submit="Remplacer mon application"
+          guard={false}
           confirm="Votre application actuelle et vos codes de secours seront révoqués. Vous devrez vous reconnecter et configurer une nouvelle application."
         >
           <Field

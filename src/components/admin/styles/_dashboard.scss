@@ -1,5 +1,72 @@
 @use '../tokens' as t;
 
+.dashboardHero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border: 1px solid #406451;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 85% 12%, #d1aa5552 0, transparent 30%),
+    linear-gradient(120deg, #173a2c, #205440);
+  color: #f7f5e9;
+
+  > div {
+    max-width: 42rem;
+  }
+
+  span {
+    color: #e6c677;
+    font: 700 0.65rem t.$mono;
+    letter-spacing: 0.13em;
+  }
+
+  h2 {
+    margin: 0.45rem 0;
+    color: #fff9e8;
+    font:
+      600 clamp(2rem, 3vw, 3rem)/1 var(--font-cormorant),
+      Georgia,
+      serif;
+  }
+
+  p {
+    max-width: 38rem;
+    color: #e5ebdf;
+    font-size: 0.82rem;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    flex: none;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid #dfbd68;
+    border-radius: 5px;
+    background: t.$gold-light;
+    color: t.$ink;
+    font-weight: 800;
+    font-size: 0.76rem;
+    text-decoration: none;
+
+    &:hover {
+      background: #fff9e9;
+      text-decoration: none;
+    }
+  }
+}
+
+.quickHeading {
+  margin-bottom: 0.7rem !important;
+  font-size: 0.9rem !important;
+}
+
 .statGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -58,7 +125,7 @@
 }
 .quickGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: 0.8rem;
   margin-bottom: 1.5rem;
 }
@@ -77,10 +144,24 @@
     color: t.$purple;
     flex: none;
   }
+  svg:last-child {
+    margin-left: auto;
+  }
   &:hover {
     border-color: t.$purple;
     text-decoration: none !important;
     background: t.$lavender;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .dashboardHero {
+    align-items: stretch;
+    flex-direction: column;
+
+    a {
+      align-self: flex-start;
+    }
   }
 }
 .attentionList {

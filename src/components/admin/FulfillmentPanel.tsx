@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Printer } from 'lucide-react';
 import type { getAdminOrder } from '@/lib/admin/queries';
 import { formatDate, label } from '@/lib/admin/format';
 import { carriers, fulfillmentLabels } from '@/lib/fulfillment/carriers';
@@ -100,8 +101,16 @@ function ShipmentForm({
     </AdminForm>
   );
 }
+const STEPS = [
+  'UNFULFILLED',
+  'PREPARING',
+  'READY_TO_SHIP',
+  'SHIPPED',
+  'DELIVERED',
+] as const;
 export function FulfillmentPanel({ order }: { order: Order }) {
   const shipment = order.shipments[0];
+  const current = STEPS.indexOf(order.fulfillmentStatus);
   const allowed =
     order.status === 'PAID' && order.payment?.status === 'SUCCEEDED';
   const next = {
@@ -115,180 +124,196 @@ export function FulfillmentPanel({ order }: { order: Order }) {
       ? null
       : next[order.fulfillmentStatus];
   return (
-    <>
-      <section className={styles.card}>
-        <h2>Préparation & expédition</h2>
+    <section className={styles.card}>
+      <h2>Préparation & expédition</h2>
+      <p>
+        <strong>
+          {allowed
+            ? fulfillmentLabels[order.fulfillmentStatus]
+            : 'En attente d’un paiement confirmé'}
+        </strong>{' '}
+        · {order.shippingMethodName}
+      </p>
+      <ol className={styles.steps} aria-label="Étapes de la commande">
+        {STEPS.map((step, index) => (
+          <li
+            key={step}
+            data-done={allowed && index < current ? '' : undefined}
+            aria-current={allowed && index === current ? 'step' : undefined}
+          >
+            {fulfillmentLabels[step]}
+          </li>
+        ))}
+      </ol>
+      {allowed && (
         <p>
-          <strong>
-            {allowed
-              ? fulfillmentLabels[order.fulfillmentStatus]
-              : 'En attente d’un paiement confirmé'}
-          </strong>{' '}
-          · {order.shippingMethodName}
-        </p>
-        <p className={styles.muted}>
-          Payée → Préparation → Prête → Expédiée → Livrée
-        </p>
-        {allowed && (
-          <Link href={`/admin/commandes/${order.id}/bon-preparation`}>
-            Ouvrir le bon de préparation imprimable
+          <Link
+            href={`/admin/commandes/${order.id}/bon-preparation`}
+            className={`${styles.button} ${styles.secondaryButton}`}
+          >
+            <Printer size={16} aria-hidden="true" />
+            Bon de préparation
           </Link>
-        )}
-        {shipment ? (
-          <>
+        </p>
+      )}
+      {shipment ? (
+        <>
+          <p>
+            Transporteur : {shipment.carrierName} ·{' '}
+            {shipment.status === 'DRAFT'
+              ? 'Brouillon'
+              : fulfillmentLabels[shipment.status]}
+          </p>
+          <p>Suivi : {shipment.trackingNumber ?? 'Envoi sans suivi'}</p>
+          {shipment.trackingUrl && (
             <p>
-              Transporteur : {shipment.carrierName} ·{' '}
-              {shipment.status === 'DRAFT'
-                ? 'Brouillon'
-                : fulfillmentLabels[shipment.status]}
+              <a
+                href={shipment.trackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ouvrir le suivi transporteur ↗
+              </a>
             </p>
-            <p>Suivi : {shipment.trackingNumber ?? 'Envoi sans suivi'}</p>
-            {shipment.trackingUrl && (
-              <p>
-                <a
-                  href={shipment.trackingUrl}
+          )}
+          <p>
+            Expédiée le : {formatDate(shipment.shippedAt)} · Livrée le :{' '}
+            {formatDate(shipment.deliveredAt)}
+          </p>
+        </>
+      ) : (
+        <p>Aucune expédition créée.</p>
+      )}
+      {allowed && order.fulfillmentStatus === 'READY_TO_SHIP' && (
+        <details open={!shipment}>
+          <summary>
+            {shipment
+              ? 'Modifier le brouillon d’expédition'
+              : 'Créer l’expédition'}
+          </summary>
+          <ShipmentForm order={order} />
+        </details>
+      )}
+      {allowed &&
+        shipment &&
+        ['SHIPPED', 'DELIVERED'].includes(shipment.status) && (
+          <details>
+            <summary>Corriger le suivi</summary>
+            <ShipmentForm order={order} correction />
+          </details>
+        )}
+      {allowed && action && (action[0] !== 'SHIPPED' || shipment) && (
+        <AdminForm
+          action={fulfillmentAction}
+          submit={action[1]}
+          confirm={
+            action[0] === 'SHIPPED'
+              ? 'Confirmer la remise réelle du colis au transporteur ? Cette action enregistrera l’expédition et préparera son email.'
+              : action[0] === 'DELIVERED'
+                ? 'Confirmer manuellement la livraison ? Aucun transporteur ne confirme automatiquement cette information.'
+                : undefined
+          }
+        >
+          <Hidden name="orderId" value={order.id} />
+          <Hidden name="next" value={action[0]} />
+        </AdminForm>
+      )}
+      <details>
+        <summary>Historique logistique</summary>
+        <ul className={styles.audit}>
+          {order.fulfillmentAudit.map((event) => (
+            <li key={event.id}>
+              <strong>{label(event.action)}</strong> · {event.adminUser.name}
+              <small>{formatDate(event.createdAt)}</small>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  );
+}
+export function OrderEmailsPanel({ order }: { order: Order }) {
+  return (
+    <section className={styles.card}>
+      <h2>Emails transactionnels</h2>
+      {process.env.EMAILS_ENABLED !== 'true' && (
+        <p className={styles.warning}>
+          Envois désactivés. Les emails restent en attente ; les aperçus sont
+          disponibles.
+        </p>
+      )}
+      <small>
+        « Envoyé » signifie accepté par le fournisseur, pas livré dans la boîte
+        de réception.
+      </small>
+      {order.emails.length ? (
+        <AdminTable
+          caption="Historique des emails"
+          headings={[
+            'Email',
+            'Statut',
+            'Tentatives',
+            'Date / référence',
+            'Action',
+          ]}
+        >
+          {order.emails.map((email) => (
+            <tr key={email.id}>
+              <td>
+                {email.type === 'ORDER_CONFIRMATION'
+                  ? 'Confirmation de commande'
+                  : 'Confirmation d’expédition'}
+              </td>
+              <td>
+                {
+                  {
+                    PENDING: 'En attente',
+                    SENDING: 'En cours',
+                    SENT: 'Envoyé',
+                    FAILED: 'Échec',
+                  }[email.status]
+                }
+                {email.lastError && <small>{email.lastError}</small>}
+                {email.retryBlocked && (
+                  <small>
+                    Vérification chez le fournisseur requise avant toute
+                    décision.
+                  </small>
+                )}
+              </td>
+              <td>
+                {email.attemptCount} / {MAX_EMAIL_ATTEMPTS}
+              </td>
+              <td>
+                {formatDate(email.sentAt)}
+                <small>{email.providerMessageId ?? '—'}</small>
+              </td>
+              <td>
+                <Link
+                  href={`/admin/emails/${email.id}/preview`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Ouvrir le suivi transporteur ↗
-                </a>
-              </p>
-            )}
-            <p>
-              Expédiée le : {formatDate(shipment.shippedAt)} · Livrée le :{' '}
-              {formatDate(shipment.deliveredAt)}
-            </p>
-          </>
-        ) : (
-          <p>Aucune expédition créée.</p>
-        )}
-        {allowed && order.fulfillmentStatus === 'READY_TO_SHIP' && (
-          <details open={!shipment}>
-            <summary>
-              {shipment
-                ? 'Modifier le brouillon d’expédition'
-                : 'Créer l’expédition'}
-            </summary>
-            <ShipmentForm order={order} />
-          </details>
-        )}
-        {allowed &&
-          shipment &&
-          ['SHIPPED', 'DELIVERED'].includes(shipment.status) && (
-            <details>
-              <summary>Corriger le suivi</summary>
-              <ShipmentForm order={order} correction />
-            </details>
-          )}
-        {allowed && action && (action[0] !== 'SHIPPED' || shipment) && (
-          <AdminForm
-            action={fulfillmentAction}
-            submit={action[1]}
-            confirm={
-              action[0] === 'SHIPPED'
-                ? 'Confirmer la remise réelle du colis au transporteur ? Cette action enregistrera l’expédition et préparera son email.'
-                : action[0] === 'DELIVERED'
-                  ? 'Confirmer manuellement la livraison ? Aucun transporteur ne confirme automatiquement cette information.'
-                  : undefined
-            }
-          >
-            <Hidden name="orderId" value={order.id} />
-            <Hidden name="next" value={action[0]} />
-          </AdminForm>
-        )}
-        <details>
-          <summary>Historique logistique</summary>
-          <ul className={styles.audit}>
-            {order.fulfillmentAudit.map((event) => (
-              <li key={event.id}>
-                <strong>{label(event.action)}</strong> · {event.adminUser.name}
-                <small>{formatDate(event.createdAt)}</small>
-              </li>
-            ))}
-          </ul>
-        </details>
-      </section>
-      <section className={styles.card}>
-        <h2>Emails transactionnels</h2>
-        {process.env.EMAILS_ENABLED !== 'true' && (
-          <p className={styles.warning}>
-            Envois désactivés. Les emails restent en attente ; les aperçus sont
-            disponibles.
-          </p>
-        )}
-        <small>
-          « Envoyé » signifie accepté par le fournisseur, pas livré dans la
-          boîte de réception.
-        </small>
-        {order.emails.length ? (
-          <AdminTable
-            caption="Historique des emails"
-            headings={[
-              'Email',
-              'Statut',
-              'Tentatives',
-              'Date / référence',
-              'Action',
-            ]}
-          >
-            {order.emails.map((email) => (
-              <tr key={email.id}>
-                <td>
-                  {email.type === 'ORDER_CONFIRMATION'
-                    ? 'Confirmation de commande'
-                    : 'Confirmation d’expédition'}
-                </td>
-                <td>
-                  {
-                    {
-                      PENDING: 'En attente',
-                      SENDING: 'En cours',
-                      SENT: 'Envoyé',
-                      FAILED: 'Échec',
-                    }[email.status]
-                  }
-                  {email.lastError && <small>{email.lastError}</small>}
-                  {email.retryBlocked && (
-                    <small>
-                      Vérification chez le fournisseur requise avant toute
-                      décision.
-                    </small>
-                  )}
-                </td>
-                <td>
-                  {email.attemptCount} / {MAX_EMAIL_ATTEMPTS}
-                </td>
-                <td>
-                  {formatDate(email.sentAt)}
-                  <small>{email.providerMessageId ?? '—'}</small>
-                </td>
-                <td>
-                  <Link
-                    href={`/admin/emails/${email.id}/preview`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  Aperçu
+                </Link>
+                {canRetryEmail(email) && (
+                  <AdminForm
+                    action={retryEmailAction}
+                    submit="Réessayer l’envoi"
                   >
-                    Aperçu
-                  </Link>
-                  {canRetryEmail(email) && (
-                    <AdminForm
-                      action={retryEmailAction}
-                      submit="Réessayer l’envoi"
-                    >
-                      <Hidden name="emailId" value={email.id} />
-                    </AdminForm>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </AdminTable>
-        ) : (
-          <p>
-            Aucun email enregistré. Les anciennes commandes payées avant cette
-            phase ne sont pas envoyées rétroactivement.
-          </p>
-        )}
-      </section>
-    </>
+                    <Hidden name="emailId" value={email.id} />
+                  </AdminForm>
+                )}
+              </td>
+            </tr>
+          ))}
+        </AdminTable>
+      ) : (
+        <p>
+          Aucun email enregistré. Les anciennes commandes payées avant cette
+          phase ne sont pas envoyées rétroactivement.
+        </p>
+      )}
+    </section>
   );
 }

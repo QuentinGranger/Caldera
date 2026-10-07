@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import styles from './Admin.module.scss';
 
-const groups = [
+export const adminNavGroups = [
   {
     label: 'Pilotage',
     links: [
@@ -33,23 +33,6 @@ const groups = [
         label: 'Pilotage économique',
         icon: BarChart3,
       },
-      { href: '/admin/securite', label: 'Sécurité du compte', icon: ShieldCheck },
-    ],
-  },
-  {
-    label: 'Catalogue',
-    links: [
-      { href: '/admin/jeux', label: 'Jeux', icon: Dices },
-      { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
-      { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
-      { href: '/admin/produits', label: 'Produits', icon: Package },
-    ],
-  },
-  {
-    label: 'Approvisionnement',
-    links: [
-      { href: '/admin/fournisseurs', label: 'Fournisseurs', icon: Warehouse },
-      { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
     ],
   },
   {
@@ -57,6 +40,22 @@ const groups = [
     links: [
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
       { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
+    ],
+  },
+  {
+    label: 'Catalogue',
+    links: [
+      { href: '/admin/produits', label: 'Produits', icon: Package },
+      { href: '/admin/jeux', label: 'Jeux', icon: Dices },
+      { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
+      { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
+    ],
+  },
+  {
+    label: 'Approvisionnement',
+    links: [
+      { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
+      { href: '/admin/fournisseurs', label: 'Fournisseurs', icon: Warehouse },
     ],
   },
   {
@@ -77,9 +76,32 @@ const groups = [
       { href: '/admin/fiscalite', label: 'Fiscalité', icon: Landmark },
     ],
   },
+  {
+    label: 'Compte',
+    links: [
+      {
+        href: '/admin/securite',
+        label: 'Sécurité du compte',
+        icon: ShieldCheck,
+      },
+    ],
+  },
 ] as const;
 
-export function AdminNavigation({ mobile = false }: { mobile?: boolean }) {
+/** Items waiting for the shop, by menu entry (absent or 0: no badge). */
+export type AdminNavCounts = Partial<Record<string, number>>;
+const COUNT_LABELS: Record<string, [string, string]> = {
+  '/admin/commandes': ['commande à traiter', 'commandes à traiter'],
+  '/admin/retours': ['retour à traiter', 'retours à traiter'],
+};
+
+export function AdminNavigation({
+  mobile = false,
+  counts = {},
+}: {
+  mobile?: boolean;
+  counts?: AdminNavCounts;
+}) {
   const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -88,13 +110,18 @@ export function AdminNavigation({ mobile = false }: { mobile?: boolean }) {
 
   const navigation = (
     <nav aria-label="Administration" className={styles.navigation}>
-      {groups.map((group) => (
+      {adminNavGroups.map((group) => (
         <div key={group.label} className={styles.navGroup}>
           <p>{group.label}</p>
           {group.links.map(({ href, label, icon: Icon }) => {
             const active =
               pathname === href ||
               (href !== '/admin' && pathname.startsWith(`${href}/`));
+            const count = counts[href] ?? 0;
+            const [one, many] = COUNT_LABELS[href] ?? [
+              'en attente',
+              'en attente',
+            ];
             return (
               <Link
                 key={href}
@@ -105,6 +132,14 @@ export function AdminNavigation({ mobile = false }: { mobile?: boolean }) {
               >
                 <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
                 <span>{label}</span>
+                {count > 0 && (
+                  <b className={styles.navCount}>
+                    {count > 99 ? '99+' : count}
+                    <span className={styles.visuallyHidden}>
+                      {` ${count > 1 ? many : one}`}
+                    </span>
+                  </b>
+                )}
                 {active && (
                   <i className={styles.navActive} aria-hidden="true" />
                 )}

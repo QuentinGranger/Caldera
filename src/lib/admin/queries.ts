@@ -275,6 +275,49 @@ export async function getAdminProduct(id: string) {
     },
   });
 }
+/** The stock page's views, by `availability`. */
+function stockViews() {
+  const db = getPrisma();
+  return {
+    out: { availableQuantity: 0 },
+    low: {
+      availableQuantity: {
+        gt: 0,
+        lte: db.productVariant.fields.lowStockThreshold,
+      },
+    },
+    reserved: { reservedQuantity: { gt: 0 } },
+    // Confirmed back-in-stock requests: what customers wait for.
+    alerts: { stockAlerts: { some: { status: 'ACTIVE' } } },
+  } satisfies Record<string, Prisma.ProductVariantWhereInput>;
+}
+type StockView = keyof ReturnType<typeof stockViews>;
+function isStockView(value: string): value is StockView {
+  return ['out', 'low', 'reserved', 'alerts'].includes(value);
+}
+/** How many variants each stock view holds, for its tab. */
+export async function getStockViewCounts() {
+  await requireAdmin();
+  const db = getPrisma();
+  const views = stockViews();
+  const [out, low, reserved, alerts] = await Promise.all(
+    (['out', 'low', 'reserved', 'alerts'] as const).map((view) =>
+      db.productVariant.count({ where: views[view] }),
+    ),
+  );
+  return { out, low, reserved, alerts };
+}
+/** Products by publication status, for the products' tabs. */
+export async function getProductStatusCounts() {
+  await requireAdmin();
+  const groups = await getPrisma().product.groupBy({
+    by: ['status'],
+    _count: { _all: true },
+  });
+  const counts = { DRAFT: 0, ACTIVE: 0, ARCHIVED: 0 };
+  for (const group of groups) counts[group.status] = group._count._all;
+  return counts;
+}
 export async function getAdminStocks(params: SearchParams) {
   await requireAdmin();
   const db = getPrisma();
@@ -290,18 +333,7 @@ export async function getAdminStocks(params: SearchParams) {
           ],
         }
       : {}),
-    ...(availability === 'out'
-      ? { availableQuantity: 0 }
-      : availability === 'low'
-        ? {
-            availableQuantity: {
-              gt: 0,
-              lte: db.productVariant.fields.lowStockThreshold,
-            },
-          }
-        : availability === 'reserved'
-          ? { reservedQuantity: { gt: 0 } }
-          : {}),
+    ...(isStockView(availability) ? stockViews()[availability] : {}),
   };
   const [variants, total] = await Promise.all([
     db.productVariant.findMany({
@@ -333,6 +365,12 @@ export async function getAdminStocks(params: SearchParams) {
   ]);
   return { variants, total, page };
 }
+/** Paid orders still to be shipped: the « À traiter » view. */
+export const ORDERS_TO_HANDLE = [
+  FulfillmentStatus.UNFULFILLED,
+  FulfillmentStatus.PREPARING,
+  FulfillmentStatus.READY_TO_SHIP,
+];
 export async function getAdminOrders(params: SearchParams) {
   await requireAdmin();
   const db = getPrisma();
@@ -356,13 +394,7 @@ export async function getAdminOrders(params: SearchParams) {
         ? [
             {
               status: 'PAID' as const,
-              fulfillmentStatus: {
-                in: [
-                  FulfillmentStatus.UNFULFILLED,
-                  FulfillmentStatus.PREPARING,
-                  FulfillmentStatus.READY_TO_SHIP,
-                ],
-              },
+              fulfillmentStatus: { in: ORDERS_TO_HANDLE },
             },
           ]
         : []),
@@ -667,6 +699,31 @@ export async function getDashboard() {
   };
 }
 
+/** Paid orders waiting to be shipped, for the navigation. */
+export async function countOrdersToHandle() {
+  await requireAdmin();
+  return getPrisma().order.count({
+    where: { status: 'PAID', fulfillmentStatus: { in: ORDERS_TO_HANDLE } },
+  });
+}
+/** Paid orders by preparation step, for the orders' tabs. */
+export async function getOrderQueue() {
+  await requireAdmin();
+  const groups = await getPrisma().order.groupBy({
+    by: ['fulfillmentStatus'],
+    where: { status: 'PAID' },
+    _count: { _all: true },
+  });
+  const queue = Object.fromEntries(
+    Object.values(FulfillmentStatus).map((value) => [value, 0]),
+  ) as Record<FulfillmentStatus, number>;
+  for (const group of groups)
+    queue[group.fulfillmentStatus] = group._count._all;
+  return {
+    ...queue,
+    todo: ORDERS_TO_HANDLE.reduce((sum, value) => sum + queue[value], 0),
+  };
+}
 export async function getFulfillmentDashboard() {
   await requireAdmin();
   const db = getPrisma();

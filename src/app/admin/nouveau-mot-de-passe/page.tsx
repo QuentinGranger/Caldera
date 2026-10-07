@@ -29,6 +29,7 @@ export default function AdminResetPasswordPage() {
         <AdminForm
           action={resetAdminPasswordAction}
           submit="Enregistrer le mot de passe"
+          guard={false}
         >
           {/* The token arrives in the link fragment (#token=), read here. */}
           <LinkTokenInput

@@ -1,12 +1,17 @@
 import Link from 'next/link';
-import { getAdminStocks, param, type SearchParams } from '@/lib/admin/queries';
+import { FilterPanel } from '@/components/admin/FilterPanel';
+import {
+  getAdminStocks,
+  getStockViewCounts,
+  param,
+  type SearchParams,
+} from '@/lib/admin/queries';
 import { label } from '@/lib/admin/format';
 import {
   PageHeader,
   AdminTable,
   Pagination,
   EmptyState,
-  FilterSelect,
 } from '@/components/admin/AdminUI';
 import { StockAdjustmentForms } from '@/components/admin/StockAdjustmentForms';
 import styles from '@/components/admin/Admin.module.scss';
@@ -16,36 +21,48 @@ export default async function StocksPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const data = await getAdminStocks(params);
+  const [data, counts] = await Promise.all([
+    getAdminStocks(params),
+    getStockViewCounts(),
+  ]);
+  const availability = param(params, 'availability');
+  const views = [
+    { value: '', label: 'Toutes' },
+    { value: 'out', label: 'Ruptures', count: counts.out },
+    { value: 'low', label: 'Stock faible', count: counts.low },
+    { value: 'alerts', label: 'Demandes clients', count: counts.alerts },
+    { value: 'reserved', label: 'Réservées', count: counts.reserved },
+  ];
   return (
     <>
       <PageHeader
         title="Stocks"
         description="Disponible = stock physique − quantités réservées. Les réservations sont gérées par le paiement."
       />
-      <form className={styles.filters} action="/admin/stocks">
-        <label>
-          Rechercher
-          <input
-            name="search"
-            defaultValue={param(params, 'search')}
-            placeholder="Produit ou SKU"
-            maxLength={200}
-          />
-        </label>
-        <FilterSelect
-          name="availability"
-          label="Disponibilité"
-          value={param(params, 'availability')}
-          options={[
-            { value: 'out', label: 'Rupture' },
-            { value: 'low', label: 'Stock faible' },
-            { value: 'reserved', label: 'Avec réservations' },
-          ]}
-        />
-        <button type="submit">Filtrer</button>
-        <Link href="/admin/stocks">Réinitialiser</Link>
-      </form>
+      <nav className={styles.tabs} aria-label="Vues stocks">
+        {views.map((view) => (
+          <Link
+            key={view.label}
+            href={
+              view.value
+                ? `/admin/stocks?availability=${view.value}`
+                : '/admin/stocks'
+            }
+            aria-current={availability === view.value ? 'page' : undefined}
+          >
+            {view.label}
+            {view.count !== undefined && (
+              <span className={styles.tabCount}>{view.count}</span>
+            )}
+          </Link>
+        ))}
+      </nav>
+      <FilterPanel
+        action="/admin/stocks"
+        search={param(params, 'search')}
+        placeholder="Produit ou SKU"
+        keep={{ availability }}
+      />
       {data.variants.length ? (
         <AdminTable
           caption="Stocks par variante"
@@ -75,7 +92,11 @@ export default async function StocksPage({
               <td>{variant.stockQuantity}</td>
               <td>
                 {variant.reservedQuantity}
-                <small>{variant._count.reservations} réservation(s)</small>
+                <small>
+                  {variant._count.reservations > 1
+                    ? `${variant._count.reservations} réservations`
+                    : `${variant._count.reservations} réservation`}
+                </small>
               </td>
               <td>
                 <strong>{variant.availableQuantity}</strong>

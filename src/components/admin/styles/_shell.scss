@@ -14,8 +14,29 @@
   flex-direction: column;
   gap: 2rem;
   padding: 1.75rem 1rem;
-  background: t.$surface;
-  border-right: 2px solid t.$ink;
+  background: #173b2d;
+  border-right: 3px solid t.$gold;
+  color: #f6f5e9;
+  scrollbar-color: #789586 #173b2d;
+  .brand {
+    color: #f8e3ac;
+  }
+  .navGroup > p,
+  .sidebarFoot {
+    color: #c7d7c9;
+  }
+  .navLink {
+    color: #f1f5eb;
+    &:hover {
+      background: #285440;
+    }
+    &[aria-current='page'] {
+      background: t.$gold-light;
+      color: t.$ink;
+      border-color: t.$gold;
+      box-shadow: none;
+    }
+  }
 }
 .brand {
   display: flex;
@@ -43,10 +64,10 @@
   flex: none;
   width: 2.8rem;
   height: 2.8rem;
-  color: #fff;
+  color: #f6d988;
   background: t.$purple;
-  border: 2px solid t.$ink;
-  box-shadow: 3px 3px 0 t.$ink;
+  border: 1px solid t.$gold;
+  border-radius: 8px;
 }
 .navigation {
   display: grid;
@@ -73,16 +94,15 @@
   border: 1px solid transparent;
   border-radius: 3px;
   font-weight: 600;
-  color: #55516c;
+  color: t.$muted;
   &:hover {
-    background: #f5f1fd;
+    background: #eef4ec;
     text-decoration: none !important;
   }
   &[aria-current='page'] {
-    background: t.$lavender;
+    background: t.$gold-light;
     color: t.$purple-dark;
-    border-color: t.$ink;
-    box-shadow: 3px 3px 0 t.$ink;
+    border-color: t.$gold;
   }
   svg {
     flex: none;
@@ -96,10 +116,21 @@
   height: 0.35rem;
   background: currentColor;
 }
+// Work waiting behind an entry (orders to ship, returns to answer).
+.navCount {
+  min-width: 1.45rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: t.$gold;
+  color: t.$ink;
+  font: 700 0.68rem/1.3 t.$mono;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 .sidebarFoot {
   margin-top: auto;
   padding: 1rem 0.65rem 0;
-  border-top: 1px dashed t.$border;
+  border-top: 1px solid #6b8975;
   color: t.$muted;
   font-size: 0.7rem;
   p {
@@ -121,7 +152,8 @@
   gap: 1rem;
   padding: 0.8rem 2rem;
   background: t.$surface;
-  border-bottom: 1px solid t.$ink;
+  border-bottom: 1px solid t.$border;
+  box-shadow: 0 3px 18px #182f2010;
 }
 .topbarLeft,
 .userMenu {
@@ -129,6 +161,9 @@
   align-items: center;
   gap: 0.8rem;
   min-width: 0;
+}
+.topbarLeft {
+  flex: 1;
 }
 .userInfo {
   max-width: 12rem;

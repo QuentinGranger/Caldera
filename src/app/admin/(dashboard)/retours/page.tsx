@@ -33,24 +33,65 @@ export default async function AdminReturnsPage({
   await requireAdmin();
   const params = await searchParams;
   const data = await getAdminReturns(params);
+  const count = (status: (typeof statuses)[number]) => data.counts[status] ?? 0;
+  const tabs = [
+    {
+      label: 'En cours',
+      query: '?open=1',
+      count: count('REQUESTED') + count('APPROVED') + count('RECEIVED'),
+    },
+    {
+      label: 'À examiner',
+      query: '?status=REQUESTED',
+      count: count('REQUESTED'),
+    },
+    {
+      label: 'En attente du colis',
+      query: '?status=APPROVED',
+      count: count('APPROVED'),
+    },
+    {
+      label: 'À rembourser',
+      query: '?status=RECEIVED',
+      count: count('RECEIVED'),
+    },
+    { label: 'Tous', query: '' },
+  ];
+  const status = param(params, 'status');
+  const currentTab = tabs.find((tab) =>
+    tab.query === '?open=1'
+      ? !status && param(params, 'open') === '1'
+      : tab.query
+        ? tab.query === `?status=${status}`
+        : !status && param(params, 'open') !== '1',
+  );
   return (
     <>
       <PageHeader
         title="Retours"
         description="Rétractations et retours déclarés par les clients ou créés ici. Acceptez, suivez la réception du colis, puis remboursez : le retour se clôt à la confirmation de Stripe."
       />
-      <section className={styles.card} aria-label="Retours à traiter">
-        <p>
-          <strong>{data.counts.REQUESTED ?? 0}</strong> à examiner ·{' '}
-          <strong>{data.counts.APPROVED ?? 0}</strong> en attente du colis ·{' '}
-          <strong>{data.counts.RECEIVED ?? 0}</strong> reçus à rembourser
-        </p>
-      </section>
+      <nav className={styles.tabs} aria-label="Vues retours">
+        {tabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={`/admin/retours${tab.query}`}
+            aria-current={tab === currentTab ? 'page' : undefined}
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className={styles.tabCount}>{tab.count}</span>
+            )}
+          </Link>
+        ))}
+      </nav>
       <FilterPanel
         action="/admin/retours"
         search={param(params, 'search')}
         placeholder="N° de retour, de commande ou e-mail"
-        activeCount={param(params, 'status') ? 1 : 0}
+        // A tab's status is a view, not a criterion.
+        activeCount={status && !currentTab ? 1 : 0}
+        keep={{ open: param(params, 'open') }}
       >
         <FilterSelect
           name="status"

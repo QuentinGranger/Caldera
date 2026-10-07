@@ -1,16 +1,18 @@
-// Administration only: a 16-bit console palette, independent of the storefront.
-$background: #f0eee7;
-$surface: #fffef9;
-$ink: #25243a;
-$muted: #646276;
-$border: #d4d1de;
-$purple: #6441c8;
-$purple-dark: #482b9d;
-$lavender: #eee8ff;
-$cyan: #daf4f2;
-$lime: #e4efbd;
-$peach: #ffebda;
+// Warm operational palette shared with the Caldera brand.
+$background: #f2f3eb;
+$surface: #fffdf8;
+$ink: #192d25;
+$muted: #53635b;
+$border: #cbd4c8;
+$purple: #1c654b;
+$purple-dark: #124731;
+$lavender: #e8f2e8;
+$cyan: #e1f1ec;
+$lime: #edf2d3;
+$peach: #fbebd6;
+$gold: #c29435;
+$gold-light: #faf0d7;
 $danger: #972e43;
 $mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 $body: var(--font-manrope), sans-serif;
-$shadow: 4px 4px 0 #25243a;
+$shadow: 4px 4px 0 #192d25;

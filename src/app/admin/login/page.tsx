@@ -30,7 +30,12 @@ export default async function LoginPage({
         <p className={styles.loginIntro}>
           Connectez-vous pour gérer les commandes, le catalogue et les stocks.
         </p>
-        <AdminForm action={loginAction} submit="Se connecter">
+        <AdminForm
+          action={loginAction}
+          submit="Se connecter"
+          pendingLabel="Connexion…"
+          guard={false}
+        >
           <div className={styles.fields}>
             <div className={styles.full}>
               <Field

@@ -3,7 +3,12 @@ import { FulfillmentStatus } from '@/generated/prisma/client';
 import { fulfillmentLabels } from '@/lib/fulfillment/carriers';
 import Link from 'next/link';
 import { OrderStatus, PaymentStatus } from '@/generated/prisma/client';
-import { getAdminOrders, param, type SearchParams } from '@/lib/admin/queries';
+import {
+  getAdminOrders,
+  getOrderQueue,
+  param,
+  type SearchParams,
+} from '@/lib/admin/queries';
 import { euros, formatDate, label } from '@/lib/admin/format';
 import {
   PageHeader,
@@ -15,13 +20,52 @@ import {
 } from '@/components/admin/AdminUI';
 import styles from '@/components/admin/Admin.module.scss';
 import { toCents } from '@/lib/refunds/amounts';
+const TAB_LABELS = {
+  UNFULFILLED: 'À préparer',
+  PREPARING: 'En préparation',
+  READY_TO_SHIP: 'Prêtes',
+  SHIPPED: 'Expédiées',
+} as const;
 export default async function OrdersPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const data = await getAdminOrders(params);
+  const [data, queue] = await Promise.all([
+    getAdminOrders(params),
+    getOrderQueue(),
+  ]);
+  const view = param(params, 'view');
+  const fulfillment = param(params, 'fulfillment');
+  const tabs = [
+    { label: 'À traiter', href: '?view=todo', count: queue.todo, view: 'todo' },
+    ...(['UNFULFILLED', 'PREPARING', 'READY_TO_SHIP', 'SHIPPED'] as const).map(
+      (value) => ({
+        label: TAB_LABELS[value],
+        href: `?fulfillment=${value}`,
+        count: value === 'SHIPPED' ? undefined : queue[value],
+        fulfillment: value,
+      }),
+    ),
+    { label: 'Toutes', href: '' },
+  ].map((tab) => ({ ...tab, href: `/admin/commandes${tab.href}` }));
+  const currentTab = tabs.find((tab) =>
+    'view' in tab
+      ? view === tab.view
+      : 'fulfillment' in tab
+        ? !view && fulfillment === tab.fulfillment
+        : !view && !fulfillment,
+  );
+  // A tab is a view, not a filter: only what was chosen beyond it opens
+  // the filters (and the default order is no criterion).
+  const fromTab = currentTab && 'fulfillment' in currentTab;
+  const sort = param(params, 'sort');
+  const activeCount =
+    ['emails', 'fulfillment', 'status', 'payment', 'from', 'to', 'shipping']
+      .filter((key) => !(fromTab && key === 'fulfillment'))
+      .filter((key) => param(params, key)).length +
+    (sort && sort !== 'newest' ? 1 : 0);
   const options = (values: string[]) =>
     values.map((value) => ({ value, label: label(value) }));
   return (
@@ -31,72 +75,25 @@ export default async function OrdersPage({
         description="Retrouvez une commande, suivez sa préparation et organisez les expéditions."
       />
       <nav className={styles.tabs} aria-label="Vues commandes">
-        <Link
-          href="/admin/commandes?view=todo"
-          aria-current={param(params, 'view') === 'todo' ? 'page' : undefined}
-        >
-          À traiter
-        </Link>
-        <Link
-          href="/admin/commandes?fulfillment=PREPARING"
-          aria-current={
-            !param(params, 'view') &&
-            param(params, 'fulfillment') === 'PREPARING'
-              ? 'page'
-              : undefined
-          }
-        >
-          En préparation
-        </Link>
-        <Link
-          href="/admin/commandes?fulfillment=READY_TO_SHIP"
-          aria-current={
-            !param(params, 'view') &&
-            param(params, 'fulfillment') === 'READY_TO_SHIP'
-              ? 'page'
-              : undefined
-          }
-        >
-          Prêtes
-        </Link>
-        <Link
-          href="/admin/commandes?fulfillment=SHIPPED"
-          aria-current={
-            !param(params, 'view') && param(params, 'fulfillment') === 'SHIPPED'
-              ? 'page'
-              : undefined
-          }
-        >
-          Expédiées
-        </Link>
-        <Link
-          href="/admin/commandes"
-          aria-current={
-            !param(params, 'view') && !param(params, 'fulfillment')
-              ? 'page'
-              : undefined
-          }
-        >
-          Toutes
-        </Link>
+        {tabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={tab.href}
+            aria-current={tab === currentTab ? 'page' : undefined}
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className={styles.tabCount}>{tab.count}</span>
+            )}
+          </Link>
+        ))}
       </nav>
       <FilterPanel
         action="/admin/commandes"
         search={param(params, 'search')}
         placeholder="Numéro, email, ID public, SKU ou suivi"
-        activeCount={
-          [
-            'emails',
-            'view',
-            'fulfillment',
-            'status',
-            'payment',
-            'from',
-            'to',
-            'shipping',
-            'sort',
-          ].filter((key) => param(params, key)).length
-        }
+        activeCount={activeCount}
+        keep={{ view }}
       >
         <FilterSelect
           name="emails"
@@ -104,9 +101,6 @@ export default async function OrdersPage({
           value={param(params, 'emails')}
           options={[{ value: 'failed', label: 'En échec' }]}
         />
-        {param(params, 'view') && (
-          <input type="hidden" name="view" value={param(params, 'view')} />
-        )}
         <FilterSelect
           name="fulfillment"
           label="Préparation"

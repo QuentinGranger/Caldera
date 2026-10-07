@@ -3,15 +3,24 @@ import Link from 'next/link';
 import { ExternalLink, Gamepad2, LogOut } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin/auth';
 import { logoutAction } from '@/lib/admin/actions';
+import { countOrdersToHandle } from '@/lib/admin/queries';
+import { countOpenReturns } from '@/lib/returns/admin';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
 import { AdminBreadcrumbs } from '@/components/admin/AdminBreadcrumbs';
+import { AdminQuickAccess } from '@/components/admin/AdminQuickAccess';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const admin = await requireAdmin();
+  const [admin, orders, returns] = await Promise.all([
+    requireAdmin(),
+    countOrdersToHandle(),
+    countOpenReturns(),
+  ]);
+  // What waits for the shop, beside the menu entries that hold it.
+  const counts = { '/admin/commandes': orders, '/admin/retours': returns };
   const initials = admin.name
     .split(/\s+/)
     .filter(Boolean)
@@ -35,7 +44,7 @@ export default async function DashboardLayout({
             <small>CONTROL ROOM</small>
           </span>
         </Link>
-        <AdminNavigation />
+        <AdminNavigation counts={counts} />
         <div className={styles.sidebarFoot}>
           <p>LES TERRES DE CALDERA</p>
           <span>Votre boutique, aux commandes.</span>
@@ -44,9 +53,10 @@ export default async function DashboardLayout({
       <div className={styles.workspace}>
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
-            <AdminNavigation mobile />
+            <AdminNavigation mobile counts={counts} />
             <AdminBreadcrumbs />
           </div>
+          <AdminQuickAccess />
           <div className={styles.userMenu}>
             <Link
               href="/"

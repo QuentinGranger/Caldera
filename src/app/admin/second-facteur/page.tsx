@@ -21,7 +21,12 @@ export default async function SecondFactorPage() {
           Saisissez le code à six chiffres de votre application
           d’authentification. La demande expire après dix minutes.
         </p>
-        <AdminForm action={verifyAdminTotpAction} submit="Vérifier le code">
+        <AdminForm
+          action={verifyAdminTotpAction}
+          submit="Vérifier le code"
+          pendingLabel="Vérification…"
+          guard={false}
+        >
           <div className={styles.fields}>
             <div className={styles.full}>
               <Field
@@ -43,6 +48,8 @@ export default async function SecondFactorPage() {
         <AdminForm
           action={verifyAdminBackupCodeAction}
           submit="Utiliser un code de secours"
+          pendingLabel="Vérification…"
+          guard={false}
         >
           <div className={styles.fields}>
             <div className={styles.full}>

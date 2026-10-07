@@ -4,8 +4,7 @@
   min-height: 100dvh;
   color-scheme: light;
   background-color: t.$background;
-  background-image: radial-gradient(#25243a15 0.7px, transparent 0.7px);
-  background-size: 12px 12px;
+  background-image: linear-gradient(120deg, #f7f5e8 0%, transparent 40%);
   color: t.$ink;
   font-family: t.$body;
   font-size: 0.875rem;
@@ -22,9 +21,10 @@
     font-weight: 700;
   }
   h1 {
-    font-family: t.$mono;
-    font-size: clamp(1.5rem, 2.5vw, 2.1rem);
-    letter-spacing: -0.055em;
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-size: clamp(2.2rem, 3vw, 3.2rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
   }
   h2 {
     font-family: t.$body;
@@ -50,7 +50,7 @@
     min-height: 2.75rem;
     padding: 0.65rem 1rem;
     border: 1px solid t.$ink;
-    border-radius: 3px;
+    border-radius: 6px;
     background: t.$purple;
     color: #fff;
     box-shadow: 2px 2px 0 t.$ink;
@@ -106,16 +106,16 @@
     width: 100%;
     min-height: 2.75rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid #a7a3b8;
-    border-radius: 3px;
+    border: 1px solid #9cae9d;
+    border-radius: 5px;
     background: #fff;
     color: t.$ink;
     font: inherit;
     &::placeholder {
-      color: #757186;
+      color: #69766d;
     }
     &:disabled {
-      background: #eeeaf2;
+      background: #edf0e8;
       color: t.$muted;
     }
     &:focus {
@@ -131,6 +131,9 @@
     min-height: 0;
     display: inline-block;
     accent-color: t.$purple;
+  }
+  input[type='search']::-webkit-search-cancel-button {
+    cursor: pointer;
   }
   input[type='file'] {
     padding: 0.45rem;

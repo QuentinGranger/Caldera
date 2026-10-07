@@ -10,9 +10,9 @@
   max-height: 85dvh;
   overflow-y: auto;
   margin: auto;
-  box-shadow: 6px 6px 0 #171426;
+  box-shadow: 6px 6px 0 t.$ink;
   &::backdrop {
-    background: #18132699;
+    background: #112c20a6;
   }
   h2 {
     font-family: t.$mono;
@@ -56,7 +56,8 @@
     color: t.$muted;
     margin-bottom: 1.75rem;
   }
-  .actions button {
+  .actions button,
+  .formActions button {
     width: 100%;
   }
   > p {
@@ -72,18 +73,24 @@
     display: block;
     object-fit: contain;
     width: 100%;
-    background: #eeebf4;
+    background: #eef2e9;
     margin-bottom: 1rem;
   }
 }
 .tabs {
   display: flex;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  // One line: the views scroll sideways on phones instead of piling up.
+  overflow-x: auto;
+  scrollbar-width: thin;
   margin-bottom: 1.5rem;
   padding-bottom: 0.8rem;
   border-bottom: 1px solid t.$border;
   a {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     padding: 0.6rem 0.8rem;
     border: 1px solid transparent;
     border-radius: 3px;
@@ -98,6 +105,20 @@
       background: t.$lavender;
       border-color: t.$purple;
     }
+  }
+}
+.tabCount {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #e4e9df;
+  color: t.$ink;
+  font: 700 0.68rem/1.4 t.$mono;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  [aria-current] > & {
+    background: t.$purple;
+    color: #fff;
   }
 }
 .audit {
@@ -124,8 +145,19 @@
     display: block;
     margin-top: 0.5rem;
     padding: 0.75rem;
-    background: #eeebf4;
+    background: #eef2e9;
+    overflow-wrap: anywhere;
   }
+  details summary {
+    color: t.$muted;
+    font-size: 0.72rem;
+  }
+}
+.auditLink {
+  display: inline-block;
+  margin-block: 0.15rem 0.35rem;
+  color: t.$purple-dark;
+  font-weight: 700;
 }
 .auditScroll {
   max-height: 30rem;

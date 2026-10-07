@@ -27,20 +27,20 @@
     width: 6px;
     height: 6px;
     background: currentColor;
-    box-shadow: 8px 0 0 #bbaae9;
+    box-shadow: 8px 0 0 t.$gold;
     margin-right: 8px;
   }
 }
 .card {
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   min-width: 0;
   .card {
     box-shadow: none;
-    background: #f8f7fc;
+    background: #f6f8f2;
   }
   > p + p {
     margin-top: 0.6rem;
@@ -169,13 +169,13 @@
   td {
     text-align: left;
     padding: 1rem 0.9rem;
-    border-bottom: 1px solid #e6e2ed;
+    border-bottom: 1px solid #e4e9df;
     vertical-align: middle;
   }
   th {
     white-space: nowrap;
-    background: #efecf5;
-    color: #615a78;
+    background: #e9f0e7;
+    color: #365648;
     font: 600 0.66rem t.$mono;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -185,7 +185,7 @@
   }
   tbody tr:hover,
   tbody tr:focus-within {
-    background: #f5f1ff;
+    background: #f0f6ed;
   }
   td:first-child {
     min-width: 10rem;
@@ -204,8 +204,8 @@
   }
   img {
     object-fit: contain;
-    background: #f4f2f7;
-    border: 1px solid #e5e1eb;
+    background: #f2f5ef;
+    border: 1px solid #dfe8dc;
     border-radius: 3px;
     flex: none;
   }
@@ -217,10 +217,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: #eeeaf5;
-  color: #5b536f;
+  background: #edf0e8;
+  color: #42594c;
   padding: 0.2rem 0.55rem;
-  border: 1px solid #d6d0e3;
+  border: 1px solid #cbd5c9;
   border-radius: 3px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -318,7 +318,7 @@
     color: t.$purple-dark;
   }
   span {
-    color: #757186;
-    background: #eae7ef;
+    color: t.$muted;
+    background: #edf0e8;
   }
 }

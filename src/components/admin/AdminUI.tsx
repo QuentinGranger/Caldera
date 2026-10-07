@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
-import type { ReactNode } from 'react';
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { label } from '@/lib/admin/format';
 import type { SearchParams } from '@/lib/admin/queries';
 import styles from './Admin.module.scss';
@@ -84,6 +90,32 @@ export function Badge({
           : '';
   return <span className={`${styles.badge} ${tone}`}>{label(value)}</span>;
 }
+/**
+ * Gives each cell its column heading (`data-label`): on phones the rows
+ * become cards and every value keeps its name, without each table having
+ * to repeat its headings.
+ */
+function labelRows(rows: ReactNode, headings: string[]) {
+  return Children.map(rows, (row) => {
+    if (!isValidElement<{ children?: ReactNode }>(row) || row.type !== 'tr')
+      return row;
+    let column = 0;
+    return cloneElement(
+      row,
+      {},
+      Children.map(row.props.children, (cell) => {
+        if (!isValidElement(cell) || (cell.type !== 'td' && cell.type !== 'th'))
+          return cell;
+        const heading = headings[column++];
+        return heading
+          ? cloneElement(cell as ReactElement<Record<string, unknown>>, {
+              'data-label': heading,
+            })
+          : cell;
+      }),
+    );
+  });
+}
 export function AdminTable({
   headings,
   children,
@@ -100,7 +132,7 @@ export function AdminTable({
       aria-label={caption}
       tabIndex={0}
     >
-      <table className={styles.table}>
+      <table className={`${styles.table} ${styles.cardTable}`}>
         <caption className={styles.visuallyHidden}>{caption}</caption>
         <thead>
           <tr>
@@ -111,7 +143,7 @@ export function AdminTable({
             ))}
           </tr>
         </thead>
-        <tbody>{children}</tbody>
+        <tbody>{labelRows(children, headings)}</tbody>
       </table>
     </div>
   );

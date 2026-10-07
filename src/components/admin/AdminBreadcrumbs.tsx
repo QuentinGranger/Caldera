@@ -17,6 +17,7 @@ const sections: Record<string, string> = {
   factures: 'Factures',
   fiscalite: 'Fiscalité',
   fournisseurs: 'Fournisseurs',
+  securite: 'Sécurité du compte',
 };
 export function AdminBreadcrumbs() {
   const parts = usePathname().split('/').filter(Boolean);

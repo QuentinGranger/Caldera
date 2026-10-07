@@ -90,6 +90,15 @@ export const labels: Record<string, string> = {
   ES: 'Espagnol',
   IT: 'Italien',
   NEW: 'Neuf',
+  ADMIN_MFA_ENABLED: 'Double authentification activée',
+  ADMIN_MFA_BACKUP_CODES_REGENERATED: 'Codes de secours renouvelés',
+  ADMIN_MFA_AUTHENTICATOR_REPLACEMENT:
+    'Application d’authentification remplacée',
+  PASSWORD_RESET: 'Mot de passe réinitialisé',
+  NEWSLETTER_CAMPAIGN_CREATED: 'Campagne newsletter créée',
+  NEWSLETTER_CAMPAIGN_UPDATED: 'Campagne newsletter modifiée',
+  NEWSLETTER_CAMPAIGN_TEST_SENT: 'Envoi de test de la newsletter',
+  NEWSLETTER_CAMPAIGN_QUEUED: 'Campagne newsletter lancée',
   PRODUCT_CREATED: 'Produit créé',
   PRODUCT_UPDATED: 'Produit modifié',
   PRODUCT_STATUS_CHANGED: 'Publication modifiée',
@@ -163,6 +172,44 @@ export const labels: Record<string, string> = {
 };
 export function label(value: string) {
   return labels[value] ?? value;
+}
+const AUDIT_ENTITIES: Record<
+  string,
+  { name: string; href?: (id: string) => string }
+> = {
+  Order: { name: 'la commande', href: (id) => `/admin/commandes/${id}` },
+  Product: { name: 'le produit', href: (id) => `/admin/produits/${id}` },
+  ProductVariant: { name: 'la variante' },
+  Promotion: { name: 'le code promo', href: (id) => `/admin/promotions/${id}` },
+  Supplier: {
+    name: 'le fournisseur',
+    href: (id) => `/admin/fournisseurs/${id}`,
+  },
+  SupplierImport: {
+    name: 'l’import',
+    href: (id) => `/admin/fournisseurs/imports/${id}`,
+  },
+  NewsletterCampaign: {
+    name: 'la campagne',
+    href: (id) => `/admin/newsletter/campagnes/${id}`,
+  },
+  Game: { name: 'les jeux', href: () => '/admin/jeux' },
+  Category: { name: 'les catégories', href: () => '/admin/categories' },
+  TcgSet: { name: 'les extensions', href: () => '/admin/extensions' },
+  InvoiceSettings: {
+    name: 'les réglages',
+    href: () => '/admin/factures/reglages',
+  },
+};
+/** Where a journal entry leads: the page of what it changed, if it still exists. */
+export function auditLink(
+  action: string,
+  entityType: string,
+  entityId: string,
+) {
+  const entity = AUDIT_ENTITIES[entityType];
+  if (!entity?.href || action.endsWith('_DELETED')) return null;
+  return { href: entity.href(entityId), label: `Voir ${entity.name}` };
 }
 export function formatDate(value: Date | string | null) {
   return value

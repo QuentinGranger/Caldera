@@ -4,13 +4,15 @@ import {
   Boxes,
   CheckCheck,
   ClipboardList,
+  FolderTree,
+  MessageCircleQuestion,
   PackageCheck,
   PackagePlus,
   Truck,
 } from 'lucide-react';
 import { getDashboard, getFulfillmentDashboard } from '@/lib/admin/queries';
 import { countOpenReturns } from '@/lib/returns/admin';
-import { euros, formatDate, label } from '@/lib/admin/format';
+import { auditLink, euros, formatDate, label } from '@/lib/admin/format';
 import { PageHeader, Badge, AdminTable } from '@/components/admin/AdminUI';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardPage() {
@@ -58,40 +60,67 @@ export default async function DashboardPage() {
       label: 'Commandes à vérifier',
       count: data.review,
       href: '/admin/commandes?status=PAYMENT_REVIEW',
+      words: ['commande à vérifier', 'commandes à vérifier'],
     },
     {
       label: 'Retours à examiner ou à rembourser',
       count: returns,
       href: '/admin/retours?open=1',
+      words: ['retour ouvert', 'retours ouverts'],
     },
     {
       label: 'Emails en échec',
       count: fulfillment.failedEmails,
       href: '/admin/commandes?emails=failed',
+      words: ['email en échec', 'emails en échec'],
     },
     {
       label: 'Produits en rupture',
       count: data.out,
       href: '/admin/produits?status=ACTIVE&availability=out',
+      words: ['produit en rupture', 'produits en rupture'],
     },
     {
       label: 'Produits avec stock faible',
       count: data.low,
       href: '/admin/produits?status=ACTIVE&availability=low',
+      words: ['produit en stock faible', 'produits en stock faible'],
     },
   ].filter((item) => item.count > 0);
+  // The day starts with the parcels: paid orders not shipped yet.
+  const toHandle =
+    fulfillment.unfulfilled + fulfillment.preparing + fulfillment.ready;
+  const alerts = attention.length
+    ? `${attention.length} alerte${attention.length > 1 ? 's' : ''} à surveiller : ${attention
+        .map(({ count, words }) => `${count} ${words[count > 1 ? 1 : 0]}`)
+        .join(', ')}.`
+    : 'Aucune alerte sur les paiements, les retours, les emails ou le stock.';
   return (
     <>
       <span className={styles.eyebrow}>Votre centre de contrôle</span>
       <PageHeader
         title="Tableau de bord"
-        description="Les priorités du jour. Les bonnes actions, au bon endroit."
-      >
-        <Link className={styles.button} href="/admin/commandes?view=todo">
-          <ClipboardList size={17} aria-hidden="true" />
-          Traiter les commandes
+        description="Un aperçu clair des commandes, du stock et des actions à mener."
+      />
+      <section className={styles.dashboardHero} aria-label="Priorités du jour">
+        <div>
+          <span>AUJOURD’HUI SUR CALDERA</span>
+          <h2>
+            {toHandle
+              ? `${toHandle} commande${toHandle > 1 ? 's' : ''} à traiter`
+              : attention.length
+                ? 'Aucune commande à traiter'
+                : 'Tout est à jour'}
+          </h2>
+          <p>{alerts}</p>
+        </div>
+        <Link
+          href={toHandle ? '/admin/commandes?view=todo' : '/admin/commandes'}
+        >
+          {toHandle ? 'Traiter les commandes' : 'Voir les commandes'}
+          <ArrowUpRight size={17} aria-hidden="true" />
         </Link>
-      </PageHeader>
+      </section>
       <section
         aria-label="Préparation et expédition"
         className={styles.statGrid}
@@ -107,6 +136,7 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </section>
+      <h2 className={styles.quickHeading}>Accès rapides</h2>
       <nav className={styles.quickGrid} aria-label="Actions rapides">
         <Link className={styles.quickLink} href="/admin/produits/nouveau">
           <PackagePlus size={21} aria-hidden="true" />
@@ -124,6 +154,16 @@ export default async function DashboardPage() {
         >
           <Truck size={21} aria-hidden="true" />
           Préparer les expéditions
+          <ArrowUpRight size={15} aria-hidden="true" />
+        </Link>
+        <Link className={styles.quickLink} href="/admin/jeux">
+          <MessageCircleQuestion size={21} aria-hidden="true" />
+          Modifier les FAQ des jeux
+          <ArrowUpRight size={15} aria-hidden="true" />
+        </Link>
+        <Link className={styles.quickLink} href="/admin/categories">
+          <FolderTree size={21} aria-hidden="true" />
+          Gérer les familles
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
       </nav>
@@ -164,7 +204,11 @@ export default async function DashboardPage() {
           <section className={styles.card}>
             <div className={styles.panelHeader}>
               <h2>Journal d’activité</h2>
-              <span className={styles.badge}>20 dernières actions</span>
+              {data.logs.length > 1 && (
+                <span className={styles.badge}>
+                  {data.logs.length} dernières actions
+                </span>
+              )}
             </div>
             <div
               className={styles.auditScroll}
@@ -173,19 +217,32 @@ export default async function DashboardPage() {
               tabIndex={0}
             >
               <ul className={styles.audit}>
-                {data.logs.map((log) => (
-                  <li key={log.id}>
-                    <strong>{label(log.action)}</strong> · {log.adminUser.name}
-                    <small>{formatDate(log.createdAt)}</small>
-                    <details>
-                      <summary>Détails de l’action</summary>
-                      <small>
-                        {log.entityType} · {log.entityId}
-                      </small>
-                      <code>{JSON.stringify(log.metadata)}</code>
-                    </details>
-                  </li>
-                ))}
+                {data.logs.map((log) => {
+                  const link = auditLink(
+                    log.action,
+                    log.entityType,
+                    log.entityId,
+                  );
+                  return (
+                    <li key={log.id}>
+                      <strong>{label(log.action)}</strong> ·{' '}
+                      {log.adminUser.name}
+                      <small>{formatDate(log.createdAt)}</small>
+                      {link && (
+                        <Link href={link.href} className={styles.auditLink}>
+                          {link.label} ↗
+                        </Link>
+                      )}
+                      <details>
+                        <summary>Détails techniques</summary>
+                        <small>
+                          {log.entityType} · {log.entityId}
+                        </small>
+                        <code>{JSON.stringify(log.metadata)}</code>
+                      </details>
+                    </li>
+                  );
+                })}
               </ul>
               {!data.logs.length && (
                 <p className={styles.muted}>
@@ -201,7 +258,7 @@ export default async function DashboardPage() {
             <div className={styles.panelHeader}>
               <h2>À surveiller</h2>
               <span className={styles.badge}>
-                {attention.length} point{attention.length > 1 ? 's' : ''}
+                {attention.length} alerte{attention.length > 1 ? 's' : ''}
               </span>
             </div>
             {attention.length ? (
@@ -222,7 +279,10 @@ export default async function DashboardPage() {
             )}
             {data.failed > 0 && (
               <p className={styles.warning}>
-                {data.failed} paiement(s) échoué(s) sur les 7 derniers jours.{' '}
+                {data.failed > 1
+                  ? `${data.failed} paiements échoués`
+                  : '1 paiement échoué'}{' '}
+                sur les 7 derniers jours.{' '}
                 <Link href="/admin/commandes?payment=FAILED">
                   Consulter les échecs
                 </Link>

@@ -30,6 +30,8 @@ export default async function AdminForgotPasswordPage() {
         <AdminForm
           action={requestAdminPasswordResetAction}
           submit="Recevoir le lien"
+          pendingLabel="Envoi…"
+          guard={false}
         >
           <div className={styles.fields}>
             <div className={styles.full}>

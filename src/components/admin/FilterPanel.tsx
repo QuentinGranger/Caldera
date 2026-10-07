@@ -6,14 +6,18 @@ export function FilterPanel({
   action,
   search,
   placeholder,
-  activeCount,
+  activeCount = 0,
+  keep = {},
   children,
 }: {
   action: string;
   search: string;
   placeholder: string;
-  activeCount: number;
-  children: ReactNode;
+  activeCount?: number;
+  /** The current view (a tab), kept through a new search. */
+  keep?: Record<string, string>;
+  /** The filters; none: the search alone. */
+  children?: ReactNode;
 }) {
   return (
     <form action={action} className={styles.filterPanel}>
@@ -34,20 +38,26 @@ export function FilterPanel({
         </button>
         <Link href={action}>Réinitialiser</Link>
       </div>
-      <details open={activeCount > 0}>
-        <summary>
-          Filtres & tri
-          {activeCount > 0
-            ? ` · ${activeCount} critère${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}`
-            : ''}
-        </summary>
-        <div className={styles.filterFields}>{children}</div>
-        <div className={styles.actions}>
-          <button type="submit" className={styles.secondaryButton}>
-            Appliquer les filtres
-          </button>
-        </div>
-      </details>
+      {Object.entries(keep).map(
+        ([name, value]) =>
+          value && <input key={name} type="hidden" name={name} value={value} />,
+      )}
+      {children && (
+        <details open={activeCount > 0}>
+          <summary>
+            Filtres & tri
+            {activeCount > 0
+              ? ` · ${activeCount} critère${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}`
+              : ''}
+          </summary>
+          <div className={styles.filterFields}>{children}</div>
+          <div className={styles.actions}>
+            <button type="submit" className={styles.secondaryButton}>
+              Appliquer les filtres
+            </button>
+          </div>
+        </details>
+      )}
     </form>
   );
 }

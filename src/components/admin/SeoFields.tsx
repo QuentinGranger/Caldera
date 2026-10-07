@@ -1,10 +1,10 @@
 import { useId } from 'react';
 import {
-  FAQ_MAX_LENGTH,
   INTRO_MAX_LENGTH,
   SEO_DESCRIPTION_MAX_LENGTH,
   SEO_TITLE_MAX_LENGTH,
 } from '@/lib/admin/limits';
+import { FaqEditor } from './FaqEditor';
 import styles from './Admin.module.scss';
 export function SeoFields({
   seoTitle,
@@ -35,24 +35,7 @@ export function SeoFields({
               **gras** sont acceptés. Uniquement des faits vérifiables.
             </small>
           </label>
-          <label className={styles.full}>
-            Questions fréquentes
-            <textarea
-              name="faq"
-              rows={6}
-              maxLength={FAQ_MAX_LENGTH}
-              defaultValue={editorial.faq}
-              aria-describedby={`${id}-faq`}
-              placeholder="Question :: Réponse"
-            />
-            <small id={`${id}-faq`}>
-              Une question par ligne, au format « Question :: Réponse ». L’ordre
-              des lignes est celui de la page publique. Supprimez une ligne pour
-              retirer sa question. Ces questions sont associées à la page en
-              cours et affichées avec leurs données structurées. Rédigez-les au
-              vouvoiement.
-            </small>
-          </label>
+          <FaqEditor initialValue={editorial.faq} />
         </>
       )}
       <label className={styles.full}>

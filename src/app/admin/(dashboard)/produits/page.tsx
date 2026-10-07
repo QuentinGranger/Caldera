@@ -9,6 +9,7 @@ import {
 import {
   getAdminOptions,
   getAdminProducts,
+  getProductStatusCounts,
   param,
   type SearchParams,
 } from '@/lib/admin/queries';
@@ -28,10 +29,34 @@ export default async function ProductsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [data, options] = await Promise.all([
+  const [data, options, counts] = await Promise.all([
     getAdminProducts(params),
     getAdminOptions(),
+    getProductStatusCounts(),
   ]);
+  const status = param(params, 'status');
+  const tabs = [
+    {
+      value: '',
+      label: 'Tous',
+      count: counts.DRAFT + counts.ACTIVE + counts.ARCHIVED,
+    },
+    { value: 'ACTIVE', label: 'En ligne', count: counts.ACTIVE },
+    { value: 'DRAFT', label: 'Brouillons', count: counts.DRAFT },
+    { value: 'ARCHIVED', label: 'Archivés', count: counts.ARCHIVED },
+  ];
+  // The status is a tab, the default order no criterion: neither opens
+  // the filters.
+  const sort = param(params, 'sort');
+  const activeCount =
+    [
+      'productType',
+      'categoryId',
+      'tcgSetId',
+      'language',
+      'availability',
+    ].filter((key) => param(params, key)).length +
+    (sort && sort !== 'updated' ? 1 : 0);
   const enums = (values: string[]) =>
     values.map((value) => ({ value, label: label(value) }));
   return (
@@ -44,21 +69,27 @@ export default async function ProductsPage({
           Créer un produit
         </Link>
       </PageHeader>
+      <nav className={styles.tabs} aria-label="Statut des produits">
+        {tabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={
+              tab.value
+                ? `/admin/produits?status=${tab.value}`
+                : '/admin/produits'
+            }
+            aria-current={status === tab.value ? 'page' : undefined}
+          >
+            {tab.label}
+            <span className={styles.tabCount}>{tab.count}</span>
+          </Link>
+        ))}
+      </nav>
       <FilterPanel
         action="/admin/produits"
         search={param(params, 'search')}
         placeholder="Nom, slug, SKU ou EAN"
-        activeCount={
-          [
-            'status',
-            'productType',
-            'categoryId',
-            'tcgSetId',
-            'language',
-            'availability',
-            'sort',
-          ].filter((key) => param(params, key)).length
-        }
+        activeCount={activeCount}
       >
         <FilterSelect
           name="status"
@@ -160,7 +191,15 @@ export default async function ProductsPage({
                 <Badge value={product.status} />
               </td>
               <td>{euros(product.price)}</td>
-              <td>{product.available}</td>
+              <td>
+                {product.available > 0 ? (
+                  product.available
+                ) : (
+                  <span className={`${styles.badge} ${styles.danger}`}>
+                    Rupture
+                  </span>
+                )}
+              </td>
               <td>{formatDate(product.updatedAt)}</td>
             </tr>
           ))}

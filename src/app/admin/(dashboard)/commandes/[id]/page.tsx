@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { FulfillmentPanel } from '@/components/admin/FulfillmentPanel';
+import {
+  FulfillmentPanel,
+  OrderEmailsPanel,
+} from '@/components/admin/FulfillmentPanel';
 import { RefundForm } from '@/components/admin/RefundForm';
 import { syncOrderRefundsAction } from '@/lib/refunds/admin-actions';
 import { returnReasonLabels } from '@/lib/returns/rules';
@@ -109,412 +112,426 @@ export default async function OrderAdminPage({
           Aucune action destructive n’est disponible.
         </IntegrityWarning>
       )}
-      <section className={styles.card}>
-        <h2>Identifiants & client</h2>
-        <p>
-          {order.email}
-          {order.phone ? ` · ${order.phone}` : ''}
-        </p>
-        <small>Identifiant public</small>
-        <div className={styles.inline}>
-          <code>{order.publicId}</code>
-          <CopyButton value={order.publicId} label="l’identifiant public" />
-        </div>
-      </section>
-      <section className={styles.card}>
-        <h2>Articles commandés</h2>
-        <AdminTable
-          caption="Snapshots des articles"
-          headings={[
-            'Article',
-            'SKU / langue',
-            'Prix unitaire',
-            'Quantité',
-            'Total',
-          ]}
-        >
-          {order.items.map((item) => (
-            <tr key={item.id}>
-              <td>
-                <div className={styles.inline}>
-                  <Image src={item.imageUrl} alt="" width={45} height={55} />
-                  <span>
-                    {item.productName}
-                    {item.productId && (
-                      <small>
-                        <Link href={`/admin/produits/${item.productId}`}>
-                          Ouvrir le produit actuel
-                        </Link>
-                      </small>
+      <div className={styles.orderLayout}>
+        <div>
+          <FulfillmentPanel order={order} />
+          <section className={styles.card}>
+            <h2>Articles commandés</h2>
+            <AdminTable
+              caption="Snapshots des articles"
+              headings={[
+                'Article',
+                'SKU / langue',
+                'Prix unitaire',
+                'Quantité',
+                'Total',
+              ]}
+            >
+              {order.items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className={styles.inline}>
+                      <Image
+                        src={item.imageUrl}
+                        alt=""
+                        width={45}
+                        height={55}
+                      />
+                      <span>
+                        {item.productName}
+                        {item.productId && (
+                          <small>
+                            <Link href={`/admin/produits/${item.productId}`}>
+                              Ouvrir le produit actuel
+                            </Link>
+                          </small>
+                        )}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <code>{item.sku}</code>
+                    <small>{label(item.language)}</small>
+                    <CopyButton value={item.sku} label="le SKU" />
+                  </td>
+                  <td>{euros(item.unitPrice)}</td>
+                  <td>{item.quantity}</td>
+                  <td>
+                    {euros(item.lineTotal)}
+                    {item.discountAmount.greaterThan(0) && (
+                      <small>dont remise −{euros(item.discountAmount)}</small>
                     )}
-                  </span>
-                </div>
-              </td>
-              <td>
-                <code>{item.sku}</code>
-                <small>{label(item.language)}</small>
-                <CopyButton value={item.sku} label="le SKU" />
-              </td>
-              <td>{euros(item.unitPrice)}</td>
-              <td>{item.quantity}</td>
-              <td>
-                {euros(item.lineTotal)}
-                {item.discountAmount.greaterThan(0) && (
-                  <small>dont remise −{euros(item.discountAmount)}</small>
+                  </td>
+                </tr>
+              ))}
+            </AdminTable>
+            <p>
+              Sous-total : {euros(order.subtotalAmount)} ·{' '}
+              {order.promotionCode && (
+                <>
+                  Code <code>{order.promotionCode}</code> : −
+                  {euros(
+                    order.discountAmount.plus(order.shippingDiscountAmount),
+                  )}{' '}
+                  ·{' '}
+                </>
+              )}
+              Livraison : {euros(order.shippingAmount)} ·{' '}
+              <strong>Total : {euros(order.totalAmount)}</strong>
+            </p>
+            <small>
+              Les informations ci-dessus sont celles enregistrées au moment de
+              la commande.
+            </small>
+          </section>
+          <section className={styles.card}>
+            <h2>Paiement</h2>
+            {payment ? (
+              <>
+                <p>
+                  {payment.provider} · <Badge value={payment.status} /> ·{' '}
+                  {euros(payment.amount)} · {payment.currency}
+                </p>
+                <p>Payé le : {formatDate(payment.paidAt)}</p>
+                {payment.providerPaymentIntentId ? (
+                  <div className={styles.inline}>
+                    <code>{payment.providerPaymentIntentId}</code>
+                    <CopyButton
+                      value={payment.providerPaymentIntentId}
+                      label="le PaymentIntent"
+                    />
+                  </div>
+                ) : (
+                  <p>Aucun PaymentIntent créé.</p>
                 )}
-              </td>
-            </tr>
-          ))}
-        </AdminTable>
-        <p>
-          Sous-total : {euros(order.subtotalAmount)} ·{' '}
-          {order.promotionCode && (
-            <>
-              Code <code>{order.promotionCode}</code> : −
-              {euros(order.discountAmount.plus(order.shippingDiscountAmount))}{' '}
-              ·{' '}
-            </>
-          )}
-          Livraison : {euros(order.shippingAmount)} ·{' '}
-          <strong>Total : {euros(order.totalAmount)}</strong>
-        </p>
-        <small>
-          Les informations ci-dessus sont celles enregistrées au moment de la
-          commande.
-        </small>
-      </section>
-      <FulfillmentPanel order={order} />
-      <div className={styles.grid}>
-        {order.addresses.map((address) => (
-          <section className={styles.card} key={address.id}>
-            <h2>
-              {address.role === 'SHIPPING'
-                ? 'Adresse de livraison'
-                : 'Adresse de facturation'}
-            </h2>
-            <address>
-              {address.firstName} {address.lastName}
-              <br />
-              {address.company && (
-                <>
-                  {address.company}
-                  <br />
-                </>
-              )}
-              {address.addressLine1}
-              <br />
-              {address.addressLine2 && (
-                <>
-                  {address.addressLine2}
-                  <br />
-                </>
-              )}
-              {address.postalCode} {address.city}
-              <br />
-              {address.region && (
-                <>
-                  {address.region}
-                  <br />
-                </>
-              )}
-              {address.countryCode}
-              {address.phone && (
-                <>
-                  <br />
-                  {address.phone}
-                </>
-              )}
-            </address>
-            {address.role === 'SHIPPING' && (
+              </>
+            ) : (
+              <p>Aucun paiement associé.</p>
+            )}
+            {(order.status === 'PENDING_PAYMENT' ||
+              order.status === 'PAYMENT_FAILED') && (
+              <AdminForm
+                action={cancelOrderAction}
+                submit="Annuler la commande impayée"
+                confirm="Annuler cette commande ? Le service de paiement vérifiera Stripe avant de libérer les réservations."
+              >
+                <Hidden name="id" value={order.id} />
+              </AdminForm>
+            )}
+          </section>
+          <section className={styles.card} id="remboursements">
+            <h2>Remboursements</h2>
+            {refunds && payment ? (
               <p>
-                {order.shippingMethodName} · {order.shippingMethodCode}
+                Payé : <strong>{euros(payment.amount)}</strong> · remboursé :{' '}
+                <strong>{centsLabel(refunds.refundedCents)}</strong>
+                {refunds.pendingCents > 0 &&
+                  ` · en cours : ${centsLabel(refunds.pendingCents)}`}{' '}
+                · reste remboursable :{' '}
+                <strong>{centsLabel(refunds.remainingCents)}</strong>
+              </p>
+            ) : (
+              <p className={styles.muted}>Aucun paiement à rembourser.</p>
+            )}
+            {refunds?.full &&
+              order.fulfillmentStatus !== 'SHIPPED' &&
+              order.fulfillmentStatus !== 'DELIVERED' && (
+                <IntegrityWarning>
+                  Commande intégralement remboursée : elle ne doit plus être
+                  préparée ni expédiée.
+                </IntegrityWarning>
+              )}
+            {order.refunds.length > 0 && (
+              <AdminTable
+                caption="Historique des remboursements"
+                headings={[
+                  'Date',
+                  'Montant',
+                  'Motif',
+                  'Statut',
+                  'Détail',
+                  'Stripe',
+                ]}
+              >
+                {order.refunds.map((refund) => (
+                  <tr key={refund.id}>
+                    <td>
+                      {formatDate(refund.createdAt)}
+                      <small>
+                        {refund.createdBy?.name ?? 'Dashboard Stripe'}
+                      </small>
+                    </td>
+                    <td>
+                      <strong>{euros(refund.amount)}</strong>
+                    </td>
+                    <td>{refundReasonLabels[refund.reason]}</td>
+                    <td>
+                      <Badge value={refund.status} />
+                      {refund.failureReason && (
+                        <small title={refund.failureReason}>
+                          {refundFailureLabel(refund.failureReason)}
+                        </small>
+                      )}
+                    </td>
+                    <td>
+                      {refund.items.map((item) => (
+                        <small key={item.orderItemId}>
+                          {item.quantity} × {item.orderItem.productName} ·{' '}
+                          {euros(item.amount)}
+                        </small>
+                      ))}
+                      {toCents(refund.shippingAmount) > 0 && (
+                        <small>
+                          Livraison · {euros(refund.shippingAmount)}
+                        </small>
+                      )}
+                      {refund.restock && (
+                        <small>
+                          {refund.restockedAt
+                            ? 'Remis en stock'
+                            : 'Remise en stock à la confirmation'}
+                        </small>
+                      )}
+                      {refund.note && <small>Note : {refund.note}</small>}
+                    </td>
+                    <td>
+                      {refund.providerRefundId ? (
+                        <div className={styles.inline}>
+                          <code>{refund.providerRefundId}</code>
+                          <CopyButton
+                            value={refund.providerRefundId}
+                            label="le remboursement Stripe"
+                          />
+                        </div>
+                      ) : (
+                        <small>
+                          {refund.status === 'PENDING'
+                            ? 'En attente de Stripe'
+                            : 'Non transmis à Stripe'}
+                        </small>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </AdminTable>
+            )}
+            {unsynced && (
+              <AdminForm
+                action={syncOrderRefundsAction}
+                submit="Synchroniser avec Stripe"
+              >
+                <Hidden name="id" value={order.id} />
+              </AdminForm>
+            )}
+            {refundable && refunds && (
+              <details open={!order.refunds.length}>
+                <summary>Rembourser</summary>
+                <RefundForm
+                  key={order.updatedAt.toISOString()}
+                  orderId={order.id}
+                  idempotencyKey={randomUUID()}
+                  shippingCents={refunds.shippingRemainingCents}
+                  remainingCents={refunds.remainingCents}
+                  lines={order.items.map((item) => ({
+                    id: item.id,
+                    name: item.productName,
+                    sku: item.sku,
+                    netCents:
+                      toCents(item.lineTotal) - toCents(item.discountAmount),
+                    quantity: item.quantity,
+                    refunded: refunds.refundedQuantities.get(item.id) ?? 0,
+                    left:
+                      item.quantity -
+                      (refunds.refundedQuantities.get(item.id) ?? 0),
+                    restockable: Boolean(item.variantId),
+                  }))}
+                />
+              </details>
+            )}
+          </section>
+          <section className={styles.card} id="factures">
+            <h2>Factures et avoirs</h2>
+            {order.invoices.length > 0 ? (
+              <ul className={styles.plainList}>
+                {order.invoices.map((invoice) => (
+                  <li key={invoice.id}>
+                    <a
+                      href={`/admin/factures/${invoice.id}/pdf`}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {invoice.kind === 'INVOICE' ? 'Facture' : 'Avoir'}{' '}
+                      {invoice.number}
+                    </a>{' '}
+                    · {formatDate(invoice.issuedAt)} ·{' '}
+                    {invoice.kind === 'CREDIT_NOTE' ? '−' : ''}
+                    {euros(invoice.totalAmount)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.muted}>Aucune facture émise.</p>
+            )}
+            {order.status === 'PAID' &&
+              payment?.status === 'SUCCEEDED' &&
+              !order.invoices.some((invoice) => invoice.kind === 'INVOICE') && (
+                <AdminForm
+                  action={issueInvoiceAction}
+                  submit="Émettre la facture"
+                  confirm="Émettre maintenant la facture de cette commande ? Elle prendra le prochain numéro et ne pourra plus être modifiée."
+                >
+                  <Hidden name="id" value={order.id} />
+                </AdminForm>
+              )}
+          </section>
+          <section className={styles.card} id="retours">
+            <h2>Retours</h2>
+            {order.returns.length > 0 ? (
+              <AdminTable
+                caption="Retours de cette commande"
+                headings={['Retour', 'Motif', 'Date', 'État']}
+              >
+                {order.returns.map((request) => (
+                  <tr key={request.id}>
+                    <td>
+                      <Link href={`/admin/retours/${request.id}`}>
+                        {request.number}
+                      </Link>
+                    </td>
+                    <td>{returnReasonLabels[request.reason]}</td>
+                    <td>{formatDate(request.createdAt)}</td>
+                    <td>
+                      <Badge value={`RETURN_STATE_${request.status}`} />
+                    </td>
+                  </tr>
+                ))}
+              </AdminTable>
+            ) : (
+              <p className={styles.muted}>Aucun retour sur cette commande.</p>
+            )}
+            {order.status === 'PAID' && (
+              <p>
+                <Link
+                  className={`${styles.button} ${styles.secondaryButton}`}
+                  href={`/admin/retours/nouveau?commande=${order.id}`}
+                >
+                  Créer un retour
+                </Link>
               </p>
             )}
           </section>
-        ))}
-      </div>
-      <section className={styles.card}>
-        <h2>Paiement</h2>
-        {payment ? (
-          <>
+          <section className={styles.card}>
+            <h2>Réservations de stock</h2>
+            <AdminTable
+              caption="Réservations"
+              headings={['SKU', 'Quantité', 'Statut', 'Échéance']}
+            >
+              {order.reservations.map((reservation) => (
+                <tr key={reservation.id}>
+                  <td>{reservation.variant.sku}</td>
+                  <td>{reservation.quantity}</td>
+                  <td>
+                    <Badge value={reservation.status} />
+                  </td>
+                  <td>{formatDate(reservation.expiresAt)}</td>
+                </tr>
+              ))}
+            </AdminTable>
+          </section>
+          <OrderEmailsPanel order={order} />
+        </div>
+        <aside aria-label="Client et suivi">
+          <section className={styles.card}>
+            <h2>Client</h2>
             <p>
-              {payment.provider} · <Badge value={payment.status} /> ·{' '}
-              {euros(payment.amount)} · {payment.currency}
+              {order.email}
+              {order.phone ? ` · ${order.phone}` : ''}
             </p>
-            <p>Payé le : {formatDate(payment.paidAt)}</p>
-            {payment.providerPaymentIntentId ? (
-              <div className={styles.inline}>
-                <code>{payment.providerPaymentIntentId}</code>
-                <CopyButton
-                  value={payment.providerPaymentIntentId}
-                  label="le PaymentIntent"
-                />
-              </div>
-            ) : (
-              <p>Aucun PaymentIntent créé.</p>
-            )}
-          </>
-        ) : (
-          <p>Aucun paiement associé.</p>
-        )}
-        {(order.status === 'PENDING_PAYMENT' ||
-          order.status === 'PAYMENT_FAILED') && (
-          <AdminForm
-            action={cancelOrderAction}
-            submit="Annuler la commande impayée"
-            confirm="Annuler cette commande ? Le service de paiement vérifiera Stripe avant de libérer les réservations."
-          >
-            <Hidden name="id" value={order.id} />
-          </AdminForm>
-        )}
-      </section>
-      <section className={styles.card} id="remboursements">
-        <h2>Remboursements</h2>
-        {refunds && payment ? (
-          <p>
-            Payé : <strong>{euros(payment.amount)}</strong> · remboursé :{' '}
-            <strong>{centsLabel(refunds.refundedCents)}</strong>
-            {refunds.pendingCents > 0 &&
-              ` · en cours : ${centsLabel(refunds.pendingCents)}`}{' '}
-            · reste remboursable :{' '}
-            <strong>{centsLabel(refunds.remainingCents)}</strong>
-          </p>
-        ) : (
-          <p className={styles.muted}>Aucun paiement à rembourser.</p>
-        )}
-        {refunds?.full &&
-          order.fulfillmentStatus !== 'SHIPPED' &&
-          order.fulfillmentStatus !== 'DELIVERED' && (
-            <IntegrityWarning>
-              Commande intégralement remboursée : elle ne doit plus être
-              préparée ni expédiée.
-            </IntegrityWarning>
-          )}
-        {order.refunds.length > 0 && (
-          <AdminTable
-            caption="Historique des remboursements"
-            headings={[
-              'Date',
-              'Montant',
-              'Motif',
-              'Statut',
-              'Détail',
-              'Stripe',
-            ]}
-          >
-            {order.refunds.map((refund) => (
-              <tr key={refund.id}>
-                <td>
-                  {formatDate(refund.createdAt)}
-                  <small>{refund.createdBy?.name ?? 'Dashboard Stripe'}</small>
-                </td>
-                <td>
-                  <strong>{euros(refund.amount)}</strong>
-                </td>
-                <td>{refundReasonLabels[refund.reason]}</td>
-                <td>
-                  <Badge value={refund.status} />
-                  {refund.failureReason && (
-                    <small title={refund.failureReason}>
-                      {refundFailureLabel(refund.failureReason)}
-                    </small>
-                  )}
-                </td>
-                <td>
-                  {refund.items.map((item) => (
-                    <small key={item.orderItemId}>
-                      {item.quantity} × {item.orderItem.productName} ·{' '}
-                      {euros(item.amount)}
-                    </small>
-                  ))}
-                  {toCents(refund.shippingAmount) > 0 && (
-                    <small>Livraison · {euros(refund.shippingAmount)}</small>
-                  )}
-                  {refund.restock && (
-                    <small>
-                      {refund.restockedAt
-                        ? 'Remis en stock'
-                        : 'Remise en stock à la confirmation'}
-                    </small>
-                  )}
-                  {refund.note && <small>Note : {refund.note}</small>}
-                </td>
-                <td>
-                  {refund.providerRefundId ? (
-                    <div className={styles.inline}>
-                      <code>{refund.providerRefundId}</code>
-                      <CopyButton
-                        value={refund.providerRefundId}
-                        label="le remboursement Stripe"
-                      />
-                    </div>
-                  ) : (
-                    <small>
-                      {refund.status === 'PENDING'
-                        ? 'En attente de Stripe'
-                        : 'Non transmis à Stripe'}
-                    </small>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </AdminTable>
-        )}
-        {unsynced && (
-          <AdminForm
-            action={syncOrderRefundsAction}
-            submit="Synchroniser avec Stripe"
-          >
-            <Hidden name="id" value={order.id} />
-          </AdminForm>
-        )}
-        {refundable && refunds && (
-          <details open={!order.refunds.length}>
-            <summary>Rembourser</summary>
-            <RefundForm
-              key={order.updatedAt.toISOString()}
-              orderId={order.id}
-              idempotencyKey={randomUUID()}
-              shippingCents={refunds.shippingRemainingCents}
-              remainingCents={refunds.remainingCents}
-              lines={order.items.map((item) => ({
-                id: item.id,
-                name: item.productName,
-                sku: item.sku,
-                netCents:
-                  toCents(item.lineTotal) - toCents(item.discountAmount),
-                quantity: item.quantity,
-                refunded: refunds.refundedQuantities.get(item.id) ?? 0,
-                left:
-                  item.quantity -
-                  (refunds.refundedQuantities.get(item.id) ?? 0),
-                restockable: Boolean(item.variantId),
-              }))}
-            />
-          </details>
-        )}
-      </section>
-      <section className={styles.card} id="factures">
-        <h2>Factures et avoirs</h2>
-        {order.invoices.length > 0 ? (
-          <ul className={styles.plainList}>
-            {order.invoices.map((invoice) => (
-              <li key={invoice.id}>
-                <a
-                  href={`/admin/factures/${invoice.id}/pdf`}
-                  target="_blank"
-                  rel="noopener"
-                >
-                  {invoice.kind === 'INVOICE' ? 'Facture' : 'Avoir'}{' '}
-                  {invoice.number}
-                </a>{' '}
-                · {formatDate(invoice.issuedAt)} ·{' '}
-                {invoice.kind === 'CREDIT_NOTE' ? '−' : ''}
-                {euros(invoice.totalAmount)}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={styles.muted}>Aucune facture émise.</p>
-        )}
-        {order.status === 'PAID' &&
-          payment?.status === 'SUCCEEDED' &&
-          !order.invoices.some((invoice) => invoice.kind === 'INVOICE') && (
+            <small>Identifiant public</small>
+            <div className={styles.inline}>
+              <code>{order.publicId}</code>
+              <CopyButton value={order.publicId} label="l’identifiant public" />
+            </div>
+          </section>
+          {order.addresses.map((address) => (
+            <section className={styles.card} key={address.id}>
+              <h2>
+                {address.role === 'SHIPPING'
+                  ? 'Adresse de livraison'
+                  : 'Adresse de facturation'}
+              </h2>
+              <address>
+                {address.firstName} {address.lastName}
+                <br />
+                {address.company && (
+                  <>
+                    {address.company}
+                    <br />
+                  </>
+                )}
+                {address.addressLine1}
+                <br />
+                {address.addressLine2 && (
+                  <>
+                    {address.addressLine2}
+                    <br />
+                  </>
+                )}
+                {address.postalCode} {address.city}
+                <br />
+                {address.region && (
+                  <>
+                    {address.region}
+                    <br />
+                  </>
+                )}
+                {address.countryCode}
+                {address.phone && (
+                  <>
+                    <br />
+                    {address.phone}
+                  </>
+                )}
+              </address>
+              {address.role === 'SHIPPING' && (
+                <p>
+                  {order.shippingMethodName} · {order.shippingMethodCode}
+                </p>
+              )}
+            </section>
+          ))}
+          <section className={styles.card}>
+            <h2>Note interne</h2>
             <AdminForm
-              action={issueInvoiceAction}
-              submit="Émettre la facture"
-              confirm="Émettre maintenant la facture de cette commande ? Elle prendra le prochain numéro et ne pourra plus être modifiée."
+              key={order.updatedAt.toISOString()}
+              action={orderNoteAction}
             >
               <Hidden name="id" value={order.id} />
+              <Hidden name="version" value={order.updatedAt.toISOString()} />
+              <TextField
+                label="Note réservée à l’équipe"
+                name="internalNote"
+                defaultValue={order.internalNote}
+                maxLength={5000}
+              />
             </AdminForm>
-          )}
-      </section>
-      <section className={styles.card} id="retours">
-        <h2>Retours</h2>
-        {order.returns.length > 0 ? (
-          <AdminTable
-            caption="Retours de cette commande"
-            headings={['Retour', 'Motif', 'Date', 'État']}
-          >
-            {order.returns.map((request) => (
-              <tr key={request.id}>
-                <td>
-                  <Link href={`/admin/retours/${request.id}`}>
-                    {request.number}
-                  </Link>
-                </td>
-                <td>{returnReasonLabels[request.reason]}</td>
-                <td>{formatDate(request.createdAt)}</td>
-                <td>
-                  <Badge value={`RETURN_STATE_${request.status}`} />
-                </td>
-              </tr>
-            ))}
-          </AdminTable>
-        ) : (
-          <p className={styles.muted}>Aucun retour sur cette commande.</p>
-        )}
-        {order.status === 'PAID' && (
-          <p>
-            <Link
-              className={`${styles.button} ${styles.secondaryButton}`}
-              href={`/admin/retours/nouveau?commande=${order.id}`}
-            >
-              Créer un retour
-            </Link>
-          </p>
-        )}
-      </section>
-      <section className={styles.card}>
-        <h2>Réservations de stock</h2>
-        <AdminTable
-          caption="Réservations"
-          headings={['SKU', 'Quantité', 'Statut', 'Échéance']}
-        >
-          {order.reservations.map((reservation) => (
-            <tr key={reservation.id}>
-              <td>{reservation.variant.sku}</td>
-              <td>{reservation.quantity}</td>
-              <td>
-                <Badge value={reservation.status} />
-              </td>
-              <td>{formatDate(reservation.expiresAt)}</td>
-            </tr>
-          ))}
-        </AdminTable>
-      </section>
-      <div className={styles.grid}>
-        <section className={styles.card}>
-          <h2>Chronologie</h2>
-          <ol className={styles.audit}>
-            {timeline.map((event, index) => (
-              <li key={index}>
-                {event.text}
-                <small>{formatDate(event.date)}</small>
-              </li>
-            ))}
-          </ol>
-          <small>
-            Vue basée sur les dates enregistrées ; ne représente pas un journal
-            exhaustif des événements Stripe.
-          </small>
-        </section>
-        <section className={styles.card}>
-          <h2>Note interne</h2>
-          <AdminForm
-            key={order.updatedAt.toISOString()}
-            action={orderNoteAction}
-          >
-            <Hidden name="id" value={order.id} />
-            <Hidden name="version" value={order.updatedAt.toISOString()} />
-            <TextField
-              label="Note réservée à l’équipe"
-              name="internalNote"
-              defaultValue={order.internalNote}
-              maxLength={5000}
-            />
-          </AdminForm>
-        </section>
+          </section>
+          <section className={styles.card}>
+            <h2>Chronologie</h2>
+            <ol className={styles.audit}>
+              {timeline.map((event, index) => (
+                <li key={index}>
+                  {event.text}
+                  <small>{formatDate(event.date)}</small>
+                </li>
+              ))}
+            </ol>
+            <small>
+              Vue basée sur les dates enregistrées ; ne représente pas un
+              journal exhaustif des événements Stripe.
+            </small>
+          </section>
+        </aside>
       </div>
     </>
   );
