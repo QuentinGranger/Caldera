@@ -188,7 +188,7 @@ utilisée par Vercel, dont la chaîne de connexion reste masquée.
 | 2     | CALDERA        | nouveautés, restocks, offres, actualités-tcg, suggestions |
 | 3     | COMMUNAUTÉ     | général, pokémon-tcg, vos-pulls, deckbuilding, collection |
 | 4     | AIDE           | aide-caldera, faq                                         |
-| 5     | VOCAUX         | Général                                                   |
+| 5     | VOCAUX         | Général, TCG / Deckbuilding                                |
 | 6     | STAFF (privée) | staff, logs, discord-tech, test-integration               |
 
 Les salons COMMENCER ICI, les quatre publications, actualités-tcg et faq sont
@@ -200,12 +200,77 @@ l'API Discord et l'aperçu de rôle `@everyone`, sans utiliser le compte d'un
 tiers. La liste des salons a aussi été inspectée à une largeur de 390 px ;
 ce contrôle n'est pas un test de l'application Discord sur téléphone physique.
 
-Staff possède uniquement Gérer les messages et Exclure temporairement des
-membres au niveau serveur, plus les accès et publications par salon. Il n'est
+Staff possède Gérer les messages, Épingler les messages, Gérer les fils,
+Exclure temporairement des membres, Rendre muet, Mettre en sourdine et Déplacer
+les membres au niveau serveur, plus les accès et publications par salon. Il n'est
 attribué à aucun membre. La hiérarchie est Staff > bot > Compte Caldera lié :
 le bot ne peut pas attribuer le rôle Staff. `@everyone` n'a ni administration,
 gestion des rôles, gestion des salons, gestion des webhooks, mentions collectives
 ni publications d'applications externes.
+
+### Permissions et modération contrôlées le 8 octobre 2026
+
+Les 22 salons (20 textuels, 2 vocaux) ont été vérifiés après application des
+permissions. Les droits effectifs du rôle lié sont identiques à ceux de
+`@everyone` : aucun accès Staff supplémentaire. Les membres peuvent consulter
+les historiques et réagir dans les neuf salons en lecture seule, mais ni écrire,
+joindre des fichiers ni créer des fils. Les sept espaces de discussion autorisent
+messages, images, liens, réactions et fils publics ; les fils privés et mentions
+collectives restent refusés. Les deux vocaux autorisent connexion, parole et
+vidéo/partage d'écran, sans priorité vocale. Aucun enregistrement vocal n'est actif.
+
+Le bot conserve exactement `Manage Roles` (`268435456`) au niveau serveur.
+Ses permissions par salon sont explicites :
+
+- lecture et historique uniquement dans bienvenue, règles et rôles ;
+- lecture, historique, envoi et embeds uniquement dans annonces, nouveautés,
+  restocks, offres et test-integration ;
+- aucun accès dans les autres salons, notamment Staff, logs, discord-tech,
+  aide, communauté et vocaux ;
+- aucune gestion de salon, permission, webhook, message, fil, épingle,
+  invitation ou mention collective dans les salons accessibles.
+
+Discord ne permet pas de limiter `Manage Roles` à un identifiant de rôle unique :
+la hiérarchie protège Staff et le code de `src/lib/discord/account.ts` fixe
+le serveur et `DISCORD_LINKED_ROLE_ID`, sans accepter de rôle fourni par le client.
+Un bot compromis pourrait techniquement gérer d'autres rôles placés sous lui ;
+ne pas placer de rôle privilégié sous ce bot.
+Une confirmation idempotente du rôle lié déjà présent sur le propriétaire a
+renvoyé `204`, sans nouvelle attribution : les restrictions de permissions
+par salon n'empêchent pas cette gestion de rôle au niveau serveur.
+
+Le contrôle API a confirmé les refus `403` de lecture du bot dans staff, logs,
+discord-tech, aide-caldera et général, ainsi qu'un envoi réel dans le salon privé
+test-integration (message `1557623909023748159`). Les cinq webhooks existants ont
+été vérifiés sur leurs destinations. Les messages des huit salons lisibles par
+le bot ont été contrôlés sans exposition d'URL de webhook ni des secrets Discord.
+Les aperçus `@everyone` et Compte Caldera lié confirment les salons privés
+invisibles, l'accueil verrouillé et la discussion générale accessible.
+
+AutoMod comporte quatre règles actives, toutes limitées au blocage du message :
+mentions excessives (seuil 5), spam suspect, contenus graves/explicites et sept
+phrases françaises ciblant menaces et demandes de mots de passe/tokens. Aucun
+bannissement, timeout automatique ou copie des messages détectés dans les logs.
+Les listes intégrées de spam/contenus Discord sont surtout anglophones ; elles
+ne remplacent pas la modération humaine ni un filtre exhaustif anti-phishing.
+Le filtre d'images sensibles couvre tous les membres (`explicit_content_filter=2`).
+Le niveau de vérification est Faible (e-mail Discord vérifié, sans téléphone
+imposé) ; Discord exempte les membres ayant un rôle en l'absence d'accueil
+communautaire. Les purges de membres inactifs sont réservées aux administrateurs.
+Suggestions utilise un mode lent de 30 secondes.
+
+Les douze règles générales et la procédure Staff sont publiées. Le message
+d'aide est épinglé et interdit explicitement adresse, e-mail personnel,
+téléphone, données bancaires/paiement, mots de passe, tokens, numéro complet de
+commande et captures privées ; le formulaire officiel du site accueille les
+dossiers sensibles. Staff peut modifier ses propres messages et supprimer ceux
+des autres, mais Discord ne permet pas de réécrire les messages d'un autre auteur.
+Expulsion et bannissement restent réservés au propriétaire.
+
+L'A2F des modérateurs n'est pas encore imposée : Discord demande d'abord au
+propriétaire d'activer l'A2F sur son compte. Les contrôles 390×844 et 844×390
+concernent l'aperçu web, pas l'application mobile sur appareil physique.
+Les notifications automatiques de production restent désactivées.
 
 | Événement      | Variable serveur                         | Salon            |
 | -------------- | ---------------------------------------- | ---------------- |
