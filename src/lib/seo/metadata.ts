@@ -22,6 +22,10 @@ export const SITE_NAME = ORGANIZATION.name;
 export const TITLE_MAX = 60;
 export const DESCRIPTION_MAX = 160;
 
+/** Public preview copy while examples cannot be purchased. */
+export const DEMO_SITE_DESCRIPTION =
+  'Découvrez Caldera et nos guides sur les cartes Pokémon. Boutique en préparation : catalogue de démonstration, achats non ouverts.';
+
 export interface MetadataImage {
   /** Site path or absolute URL. */
   url: string;

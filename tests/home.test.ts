@@ -4,16 +4,37 @@ import {
   HOME_PROMISE,
   distinctSections,
   familyTargets,
+  getHomeDescription,
   homeDescription,
   isDemoCatalogue,
 } from '../src/components/home/homeData';
 import { isShopGame } from '../src/lib/catalog/shopGame';
+import { rootMetadata } from '../src/components/layout/siteMetadata';
 import type { NavigationFamily } from '../src/lib/seo/links';
 import type { CatalogProduct } from '../src/types/product';
 
 // Seuls les champs lus par les fonctions.
 const product = (id: string, name = `Produit ${id}`) =>
   ({ id, name }) as CatalogProduct;
+
+test('mode démo : aperçus de recherche et de partage sans offre ni livraison fictive', async () => {
+  const previous = process.env.CATALOG_DEMO_MODE;
+  try {
+    process.env.CATALOG_DEMO_MODE = '1';
+    const description = await getHomeDescription();
+    const root = rootMetadata();
+    assert.match(description, /cartes Pokémon/);
+    assert.match(description, /démonstration, achats non ouverts/);
+    assert.doesNotMatch(description, /\d+ produits|en stock|Livraison|expédi/i);
+    assert.ok(description.length <= 160);
+    assert.equal(root.description, description);
+    assert.equal(root.openGraph?.description, description);
+    assert.equal(root.twitter?.description, description);
+  } finally {
+    if (previous === undefined) delete process.env.CATALOG_DEMO_MODE;
+    else process.env.CATALOG_DEMO_MODE = previous;
+  }
+});
 
 test('accueil : un produit apparaît une fois, dans la première section qui le montre', () => {
   const [selected, latest, restocked] = distinctSections([

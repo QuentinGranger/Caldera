@@ -7,6 +7,7 @@ import {
   editorialMetadata,
 } from '@/components/editorial/editorial';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
+import { INSTAGRAM_PROFILE_URL } from '@/lib/social';
 import { ContactForm } from './ContactForm';
 import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import styles from './contact.module.scss';
@@ -85,6 +86,16 @@ export default function ContactPage() {
                 utilisez le formulaire privé de cette page.
               </p>
               <DiscordInviteLink />
+              <p>
+                <a
+                  href={INSTAGRAM_PROFILE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Suivre Les Terres de Caldera sur Instagram (nouvel onglet)"
+                >
+                  Suivre Les Terres de Caldera sur Instagram
+                </a>
+              </p>
             </section>
           </aside>
 

@@ -32,6 +32,7 @@ import {
 } from '@/lib/seo/links';
 import {
   DESCRIPTION_MAX,
+  DEMO_SITE_DESCRIPTION,
   formatEuro,
   listFr,
   truncateAtWord,
@@ -153,6 +154,7 @@ async function getShopOffer(): Promise<ShopOffer> {
 }
 
 export async function getHomeDescription(): Promise<string> {
+  if (process.env.CATALOG_DEMO_MODE === '1') return DEMO_SITE_DESCRIPTION;
   return homeDescription(await getShopOffer());
 }
 
