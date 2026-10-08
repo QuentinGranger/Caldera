@@ -1,3 +1,4 @@
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
@@ -71,71 +72,73 @@ async function ProductContent({
             name={product.name}
             slug={product.slug}
           />
-          <div className={styles.info} data-arrive="sequence">
-            <p className={styles.eyebrow}>
-              {productTypeLabels[product.productType]}
-            </p>
-            <h1>{product.name}</h1>
-            {product.tcgSet &&
-              (page.setHref ? (
-                <Link href={page.setHref} className={styles.setLink}>
-                  Extension : {product.tcgSet.name}
-                </Link>
-              ) : (
-                <p className={styles.setName}>
-                  Extension : {product.tcgSet.name}
-                </p>
-              ))}
-            {product.shortDescription && (
-              <p className={styles.summary}>{product.shortDescription}</p>
-            )}
-            <ProductWishlistButton
-              productId={product.id}
-              productName={product.name}
-            />
-            {product.isDemonstration ? (
-              <div className={styles.notice}>
-                <strong>Produit d’exemple — non commercialisé.</strong>
-                <p>
-                  Cette fiche sert à présenter le site. Aucun prix, stock, date
-                  de sortie ou délai de livraison réel n’est annoncé. Aucun
-                  achat ni alerte stock n’est possible.
-                </p>
-              </div>
-            ) : (
-              <ProductPurchasePanel
-                key={product.id}
-                productId={product.id}
-                variants={product.variants}
-                newArrival={product.newArrival}
-                preorder={product.preorder}
-                releaseDate={product.releaseDate}
-                typeLabel={productTypeLabels[product.productType]}
-                shipping={page.shipping}
-                accountEmail={alertEmail}
-              />
-            )}
-            {!product.isDemonstration &&
-              !purchasable &&
-              (product.variants.length > 0 || alternatives.length > 0) && (
-                <div className={styles.notice}>
-                  {product.variants.length > 0 && (
-                    <p>
-                      <strong>Produit épuisé.</strong>{' '}
-                      {product.variants.length > 1
-                        ? 'Toutes les versions de ce produit sont en rupture de stock.'
-                        : 'Ce produit est en rupture de stock.'}
-                    </p>
-                  )}
-                  {alternatives.length > 0 && (
-                    <a href="#alternatives-title">
-                      {alternatives.length > 1
-                        ? `Voir les ${alternatives.length} produits similaires disponibles`
-                        : 'Voir un produit similaire disponible'}
-                    </a>
-                  )}
-                </div>
+          <div className={styles.info}>
+            <ArrivalLayers>
+              <p className={styles.eyebrow}>
+                {productTypeLabels[product.productType]}
+              </p>
+              <h1>{product.name}</h1>
+              {product.tcgSet &&
+                (page.setHref ? (
+                  <Link href={page.setHref} className={styles.setLink}>
+                    Extension : {product.tcgSet.name}
+                  </Link>
+                ) : (
+                  <p className={styles.setName}>
+                    Extension : {product.tcgSet.name}
+                  </p>
+                ))}
+              {product.shortDescription && (
+                <p className={styles.summary}>{product.shortDescription}</p>
               )}
+              <ProductWishlistButton
+                productId={product.id}
+                productName={product.name}
+              />
+              {product.isDemonstration ? (
+                <div className={styles.notice}>
+                  <strong>Produit d’exemple — non commercialisé.</strong>
+                  <p>
+                    Cette fiche sert à présenter le site. Aucun prix, stock,
+                    date de sortie ou délai de livraison réel n’est annoncé.
+                    Aucun achat ni alerte stock n’est possible.
+                  </p>
+                </div>
+              ) : (
+                <ProductPurchasePanel
+                  key={product.id}
+                  productId={product.id}
+                  variants={product.variants}
+                  newArrival={product.newArrival}
+                  preorder={product.preorder}
+                  releaseDate={product.releaseDate}
+                  typeLabel={productTypeLabels[product.productType]}
+                  shipping={page.shipping}
+                  accountEmail={alertEmail}
+                />
+              )}
+              {!product.isDemonstration &&
+                !purchasable &&
+                (product.variants.length > 0 || alternatives.length > 0) && (
+                  <div className={styles.notice}>
+                    {product.variants.length > 0 && (
+                      <p>
+                        <strong>Produit épuisé.</strong>{' '}
+                        {product.variants.length > 1
+                          ? 'Toutes les versions de ce produit sont en rupture de stock.'
+                          : 'Ce produit est en rupture de stock.'}
+                      </p>
+                    )}
+                    {alternatives.length > 0 && (
+                      <a href="#alternatives-title">
+                        {alternatives.length > 1
+                          ? `Voir les ${alternatives.length} produits similaires disponibles`
+                          : 'Voir un produit similaire disponible'}
+                      </a>
+                    )}
+                  </div>
+                )}
+            </ArrivalLayers>
           </div>
         </div>
         {alternatives.length > 0 && (

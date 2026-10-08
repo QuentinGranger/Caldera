@@ -1,5 +1,5 @@
 import type { ViewTransitionClassPerType } from 'react';
-import { transitionType, type TransitionName } from './matrix';
+import { TRANSITIONS, transitionType, type TransitionName } from './matrix';
 
 /**
  * A <ViewTransition> class for some journeys only: every other transition,
@@ -21,11 +21,20 @@ export function perTransition(
 
 /** A product's image, from its card to its page and back. */
 export const productTransitionName = (slug: string) =>
-  `product-image-${slug.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+  `product-image-${Array.from(slug, (character) => character.codePointAt(0)!.toString(16)).join('-')}`;
 export const PRODUCT_MORPH = perTransition({
   product: 'caldera-product',
   'product-return': 'caldera-product',
 });
+
+export const LANDSCAPE_REVEAL = perTransition(
+  Object.fromEntries(
+    TRANSITIONS.filter((name) => name !== 'instant').map((name) => [
+      name,
+      'caldera-landscape',
+    ]),
+  ),
+);
 
 /** The landscape of a hero, carried into and through the world. */
 export const WORLD_HERO_NAME = 'caldera-world-hero';

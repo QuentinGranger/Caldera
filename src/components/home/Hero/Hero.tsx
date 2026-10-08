@@ -1,3 +1,4 @@
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowDown, ArrowRight } from 'lucide-react';
@@ -5,7 +6,11 @@ import { ViewTransition } from 'react';
 import { Button } from '@/components/ui/Button/Button';
 import { HOME_PROMISE, type HomeLinks } from '@/components/home/homeData';
 import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
-import { WORLD_HERO, WORLD_HERO_NAME } from '@/lib/transitions/classes';
+import {
+  LANDSCAPE_REVEAL,
+  WORLD_HERO,
+  WORLD_HERO_NAME,
+} from '@/lib/transitions/classes';
 import styles from './Hero.module.scss';
 
 /**
@@ -22,25 +27,35 @@ export function Hero({
 }) {
   return (
     // Into the universe, the landscape carries the visitor in.
-    <ViewTransition name={WORLD_HERO_NAME} share={WORLD_HERO} default="none">
-      <section
-        className={styles.hero}
-        aria-labelledby="hero-title"
-        data-home-hero=""
+    <section
+      className={styles.hero}
+      aria-labelledby="hero-title"
+      data-home-hero=""
+    >
+      <ViewTransition
+        name={WORLD_HERO_NAME}
+        share={WORLD_HERO}
+        enter={LANDSCAPE_REVEAL}
+        exit={LANDSCAPE_REVEAL}
+        default="none"
       >
-        <div className={styles.media} aria-hidden="true">
-          <Image
-            className={styles.image}
-            src="/assets/images/editorial/hero-banner.png"
-            alt=""
-            fill
-            sizes="100vw"
-            preload
-          />
-          <span className={styles.mist} />
+        <div className={styles.landscape}>
+          <div className={styles.media} aria-hidden="true">
+            <Image
+              className={styles.image}
+              src="/assets/images/editorial/hero-banner.png"
+              alt=""
+              fill
+              sizes="100vw"
+              preload
+            />
+            <span className={styles.mist} />
+          </div>
         </div>
-        <div className={styles.inner}>
-          <div className={styles.content} data-arrive="layers">
+      </ViewTransition>
+      <div className={styles.inner}>
+        <div className={styles.content}>
+          <ArrivalLayers>
             <p className={styles.eyebrow}>
               <span aria-hidden="true" />
               Boutique spécialisée {'Pokémon\u00a0TCG'}
@@ -64,13 +79,13 @@ export function Hero({
                 Découvrir l’univers <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
-          </div>
-          <a className={styles.cue} href={next}>
-            <span>Défiler</span>
-            <ArrowDown size={16} aria-hidden="true" />
-          </a>
+          </ArrivalLayers>
         </div>
-      </section>
-    </ViewTransition>
+        <a className={styles.cue} href={next}>
+          <span>Défiler</span>
+          <ArrowDown size={16} aria-hidden="true" />
+        </a>
+      </div>
+    </section>
   );
 }

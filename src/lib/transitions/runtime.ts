@@ -5,6 +5,7 @@ import {
   type TransitionName,
 } from './matrix';
 import { productSlug, routeKind, samePage } from './routes';
+import { isPageJourney } from './navigation';
 
 /*
  * The browser side of the transition engine. Next.js calls
@@ -25,26 +26,47 @@ let lastClick: { path: string; transition: string | null; at: number } | null =
 let pendingArrival: { path: string; name: TransitionName | null } | null = null;
 
 /*
- * The page as the stage. React animates only its <ViewTransition>
- * boundaries and hides the rest of the page, unless <html> carries its own
- * view-transition-name inline. It does so for a journey only, until shortly
- * after it lands: filters, back/forward, an `instant` page, every other
- * update stays as React keeps it, still. Set through the CSSOM, never as an
- * HTML attribute (strict CSP).
+ * Only decorative landscapes and text are captured. Never name the HTML,
+ * main, header, footer or controls: a named ancestor excludes its descendants
+ * from native hit-testing. Navigation remains live during the animation.
  */
 let stageTimer: ReturnType<typeof setTimeout> | undefined;
-function stage(on: boolean) {
-  clearTimeout(stageTimer);
-  document.documentElement.style.viewTransitionName = on ? 'root' : '';
-  // A navigation that never lands releases the stage all the same.
-  if (on) releaseStage(10_000);
+let generation = 0;
+
+/** All three features are necessary for our typed CSS choreography. */
+export function canAnimateJourney() {
+  return (
+    typeof document.startViewTransition === 'function' &&
+    CSS.supports('view-transition-class', 'caldera') &&
+    CSS.supports('selector(:active-view-transition-type(caldera-shop))') &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 }
-/** The journey has landed: its transition is over well within 1.5 s. */
-export function releaseStage(after = 1500) {
+
+export function resetPresentation() {
   clearTimeout(stageTimer);
-  stageTimer = setTimeout(() => {
-    document.documentElement.style.viewTransitionName = '';
-  }, after);
+  delete document.documentElement.dataset.calderaArrival;
+  document.documentElement.style.removeProperty('--caldera-chrome-bottom');
+}
+
+function stage(on: boolean) {
+  resetPresentation();
+  generation++;
+  if (!on) return;
+  // A navigation that never lands releases the stage all the same.
+  stageTimer = setTimeout(resetPresentation, 10_000);
+}
+
+/** React calls this after capture; cleanup runs when the native animation ends.
+ * An older journey must never clean up a more recent navigation. */
+export function finishPresentation() {
+  const ownGeneration = generation;
+  return () => {
+    if (generation !== ownGeneration) return;
+    resetPresentation();
+    setActiveCard(null);
+    setReturnSlug(null);
+  };
 }
 
 const decode = (path: string) => {
@@ -60,6 +82,11 @@ const sameDestination = (a: string, b: string) =>
 /** The page on screen, once React has committed it. */
 export function notePath(pathname: string) {
   currentPath = pathname;
+  const header = document.querySelector('header');
+  document.documentElement.style.setProperty(
+    '--caldera-chrome-bottom',
+    `${Math.max(0, Math.ceil(header?.getBoundingClientRect().bottom ?? 0))}px`,
+  );
 }
 
 export function beginNavigation(url: string, navigation: string) {
@@ -69,8 +96,14 @@ export function beginNavigation(url: string, navigation: string) {
     if (target.origin !== window.location.origin) return;
     // Back/forward: the address bar already shows the destination.
     const from = currentPath ?? window.location.pathname;
-    if (sameDestination(from, target.pathname)) return stage(false);
-    if (navigation === 'traverse') {
+    if (
+      navigation === 'traverse' ||
+      !isPageJourney({
+        from: new URL(from, window.location.origin),
+        to: target,
+      }) ||
+      !canAnimateJourney()
+    ) {
       setActiveCard(null);
       setReturnSlug(null);
       pendingArrival = { path: target.pathname, name: null };
@@ -82,19 +115,26 @@ export function beginNavigation(url: string, navigation: string) {
       sameDestination(lastClick.path, target.pathname)
         ? lastClick
         : null;
+    lastClick = null;
+    if (!click) setActiveCard(null);
     // Leaving a product for its listing: its card receives the image, if
     // it is in sight (React leaves an element off screen out of it).
-    setReturnSlug(routeKind(from) === 'PRODUCT' ? productSlug(from) : null);
-    const name = chooseTransition({
+    const journey = chooseTransition({
       from,
       to: target.pathname,
       override: click?.transition ?? null,
     });
-    pendingArrival = { path: target.pathname, name };
-    stage(name !== null && name !== 'instant');
-    if (name) addTransitionType(transitionType(name));
+    setReturnSlug(
+      journey === 'product-return' && routeKind(from) === 'PRODUCT'
+        ? productSlug(from)
+        : null,
+    );
+    pendingArrival = { path: target.pathname, name: journey };
+    stage(journey !== null && journey !== 'instant');
+    if (journey) addTransitionType(transitionType(journey));
   } catch {
     // Never in the way of a navigation.
+    resetPresentation();
   }
 }
 
@@ -111,21 +151,22 @@ export function takeArrival(pathname: string) {
 
 /** Remembers the link that starts a navigation, before React handles it. */
 export function noteClick(event: MouseEvent) {
-  if (
-    event.defaultPrevented ||
-    event.button !== 0 ||
-    event.metaKey ||
-    event.ctrlKey ||
-    event.shiftKey ||
-    event.altKey
-  )
-    return;
+  if (event.defaultPrevented) return;
   const link = (event.target as Element | null)?.closest?.('a[href]');
   if (!(link instanceof HTMLAnchorElement)) return;
-  if ((link.target && link.target !== '_self') || link.hasAttribute('download'))
-    return;
   const url = new URL(link.href);
-  if (url.origin !== window.location.origin) return;
+  if (
+    !isPageJourney({
+      from: new URL(window.location.href),
+      to: url,
+      button: event.button,
+      modified:
+        event.metaKey || event.ctrlKey || event.shiftKey || event.altKey,
+      target: link.target,
+      download: link.hasAttribute('download'),
+    })
+  )
+    return;
   lastClick = {
     path: url.pathname,
     transition: link.dataset.transition ?? null,
@@ -133,11 +174,13 @@ export function noteClick(event: MouseEvent) {
   };
   // A product card: its image becomes the product page's image.
   const card = link.closest('[data-product-card]');
+  const image = card?.querySelector<HTMLImageElement>('img[data-vt-product]');
   const id =
-    url.pathname.startsWith('/produit/') && card
-      ? (card
-          .querySelector('[data-vt-product]')
-          ?.getAttribute('data-vt-product') ?? null)
+    url.pathname.startsWith('/produit/') &&
+    card &&
+    image?.complete &&
+    image.naturalWidth > 0
+      ? (image.getAttribute('data-vt-product') ?? null)
       : null;
   setActiveCard(id);
 }

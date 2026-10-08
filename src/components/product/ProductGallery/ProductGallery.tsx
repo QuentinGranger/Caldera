@@ -38,7 +38,7 @@ export function ProductGallery({
         onClick={() => dialog.current?.showModal()}
       >
         <ViewTransition
-          name={productTransitionName(slug)}
+          name={index === 0 ? productTransitionName(slug) : undefined}
           share={PRODUCT_MORPH}
           default="none"
         >

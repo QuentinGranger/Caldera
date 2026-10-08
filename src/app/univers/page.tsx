@@ -1,3 +1,4 @@
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Compass } from 'lucide-react';
@@ -14,7 +15,11 @@ import {
 } from '@/data/universe';
 import { ViewTransition } from 'react';
 import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
-import { WORLD_HERO, WORLD_HERO_NAME } from '@/lib/transitions/classes';
+import {
+  LANDSCAPE_REVEAL,
+  WORLD_HERO,
+  WORLD_HERO_NAME,
+} from '@/lib/transitions/classes';
 import styles from './page.module.scss';
 
 export const metadata = universeIndexMetadata();
@@ -24,20 +29,30 @@ export default function UniversePage() {
   return (
     <main id="contenu" className={styles.main}>
       {/* Its landscape opens onto each chronicle's. */}
-      <ViewTransition name={WORLD_HERO_NAME} share={WORLD_HERO} default="none">
-        <section className={styles.hero} aria-labelledby="universe-title">
-          {hero && (
-            <Image
-              src={hero.src}
-              alt={hero.alt}
-              fill
-              preload
-              sizes="100vw"
-              className={styles.heroImage}
-            />
-          )}
-          <div className={styles.heroShade} aria-hidden="true" />
-          <Container className={styles.heroInner} data-arrive="layers">
+      <section className={styles.hero} aria-labelledby="universe-title">
+        <ViewTransition
+          name={WORLD_HERO_NAME}
+          share={WORLD_HERO}
+          enter={LANDSCAPE_REVEAL}
+          exit={LANDSCAPE_REVEAL}
+          default="none"
+        >
+          <div className={styles.landscape}>
+            {hero && (
+              <Image
+                src={hero.src}
+                alt={hero.alt}
+                fill
+                preload
+                sizes="100vw"
+                className={styles.heroImage}
+              />
+            )}
+            <div className={styles.heroShade} aria-hidden="true" />
+          </div>
+        </ViewTransition>
+        <Container className={styles.heroInner}>
+          <ArrivalLayers>
             <div className={styles.heroBreadcrumb}>
               <Breadcrumb
                 items={[{ label: 'Accueil', href: '/' }, { label: 'Univers' }]}
@@ -62,9 +77,9 @@ export default function UniversePage() {
               Commencer par les origines
               <ArrowRight size={17} aria-hidden="true" />
             </Link>
-          </Container>
-        </section>
-      </ViewTransition>
+          </ArrivalLayers>
+        </Container>
+      </section>
 
       <section className={styles.intro}>
         <Container className={styles.introGrid}>

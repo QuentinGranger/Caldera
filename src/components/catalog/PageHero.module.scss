@@ -363,23 +363,6 @@ $gold-line: rgb(232 194 97 / 60%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .content > * {
-    animation: rise 800ms v.$ease-out both;
-  }
-  .content > :nth-child(2) {
-    animation-delay: 90ms;
-  }
-  .content > :nth-child(3) {
-    animation-delay: 180ms;
-  }
-  .content > :nth-child(n + 4) {
-    animation-delay: 270ms;
-  }
-  .hero:not([data-frame='backdrop']) .view {
-    @include m.from($split) {
-      animation: open 1100ms v.$ease-out both;
-    }
-  }
   // The view drifts a little as the page goes down to the products.
   @supports (animation-timeline: scroll()) {
     .view img {
@@ -387,26 +370,6 @@ $gold-line: rgb(232 194 97 / 60%);
       animation-timeline: scroll(root);
       animation-range: 0 80vh;
     }
-  }
-}
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(1rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes open {
-  from {
-    opacity: 0;
-    transform: translateY(1.25rem) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes drift {

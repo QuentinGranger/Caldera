@@ -1,3 +1,4 @@
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { CatalogGrid } from '@/components/catalog/CatalogGrid';
@@ -23,12 +24,14 @@ export function EditorialHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className={styles.header} data-arrive="layers">
-      <p className={styles.eyebrow}>{eyebrow}</p>
-      <h1>{title}</h1>
-      {lead && <p className={styles.lead}>{lead}</p>}
-      {children && <div className={styles.facts}>{children}</div>}
-      {updated && <UpdatedOn date={updated} className={styles.updated} />}
+    <header className={styles.header}>
+      <ArrivalLayers>
+        <p className={styles.eyebrow}>{eyebrow}</p>
+        <h1>{title}</h1>
+        {lead && <p className={styles.lead}>{lead}</p>}
+        {children && <div className={styles.facts}>{children}</div>}
+        {updated && <UpdatedOn date={updated} className={styles.updated} />}
+      </ArrivalLayers>
     </header>
   );
 }

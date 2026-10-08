@@ -1,5 +1,7 @@
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
-import type { CSSProperties, ReactNode } from 'react';
+import { ViewTransition, type CSSProperties, type ReactNode } from 'react';
+import { LANDSCAPE_REVEAL } from '@/lib/transitions/classes';
 import Link from 'next/link';
 import { ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
@@ -92,52 +94,60 @@ export function PageHero({
       )}
       <div className={styles.inner}>
         <Breadcrumb items={breadcrumb} currentPath={path} />
-        <div className={styles.content} data-arrive="layers">
-          <p className={styles.eyebrow}>
-            <span aria-hidden="true" />
-            {eyebrow}
-          </p>
-          <h1 id="page-title">{title}</h1>
-          <p className={styles.lead}>{lead}</p>
-          {note && <p className={styles.note}>{note}</p>}
-          {up && (
-            <Link href={up.href} className={styles.up}>
-              <ArrowLeft size={16} aria-hidden="true" />
-              {up.label}
-            </Link>
-          )}
-          {children}
-          {action && (
-            <Button href={action.href} variant="gold" className={styles.action}>
-              {action.label}
-              {action.href.startsWith('#') ? (
-                <ArrowDown aria-hidden="true" />
-              ) : (
-                <ArrowRight aria-hidden="true" />
-              )}
-            </Button>
-          )}
+        <div className={styles.content}>
+          <ArrivalLayers>
+            <p className={styles.eyebrow}>
+              <span aria-hidden="true" />
+              {eyebrow}
+            </p>
+            <h1 id="page-title">{title}</h1>
+            <p className={styles.lead}>{lead}</p>
+            {note && <p className={styles.note}>{note}</p>}
+            {up && (
+              <Link href={up.href} className={styles.up}>
+                <ArrowLeft size={16} aria-hidden="true" />
+                {up.label}
+              </Link>
+            )}
+            {children}
+            {action && (
+              <Button
+                href={action.href}
+                variant="gold"
+                className={styles.action}
+              >
+                {action.label}
+                {action.href.startsWith('#') ? (
+                  <ArrowDown aria-hidden="true" />
+                ) : (
+                  <ArrowRight aria-hidden="true" />
+                )}
+              </Button>
+            )}
+          </ArrivalLayers>
         </div>
-        <div
-          className={styles.view}
-          aria-hidden="true"
-          data-arrive={framed ? 'hero' : undefined}
+        <ViewTransition
+          enter={LANDSCAPE_REVEAL}
+          update={LANDSCAPE_REVEAL}
+          default="none"
         >
-          <Image
-            src={view.src}
-            alt=""
-            fill
-            sizes={
-              view.frame === 'arch'
-                ? '(min-width: 60rem) 23rem, 100vw'
-                : view.frame === 'window'
-                  ? '(min-width: 60rem) 30rem, 100vw'
-                  : '100vw'
-            }
-            loading="eager"
-            fetchPriority="high"
-          />
-        </div>
+          <div className={styles.view} aria-hidden="true">
+            <Image
+              src={view.src}
+              alt=""
+              fill
+              sizes={
+                view.frame === 'arch'
+                  ? '(min-width: 60rem) 23rem, 100vw'
+                  : view.frame === 'window'
+                    ? '(min-width: 60rem) 30rem, 100vw'
+                    : '100vw'
+              }
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
+        </ViewTransition>
       </div>
     </section>
   );
