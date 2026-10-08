@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { NewsletterForm } from '@/components/home/Newsletter/NewsletterForm';
 import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
+import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import styles from './FinalCall.module.scss';
 
 /**
@@ -34,6 +35,14 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
               {ALL_PRODUCTS_LABEL} <ArrowRight size={16} aria-hidden="true" />
             </Link>
           )}
+          <div className={styles.community}>
+            <h3>La communauté Caldera</h3>
+            <p>
+              Échangez autour du JCC Pokémon, partagez vos pulls et discutez de
+              vos decks sur notre serveur officiel.
+            </p>
+            <DiscordInviteLink className={styles.catalogue} />
+          </div>
         </div>
         <div className={styles.form} data-reveal="">
           <NewsletterForm />

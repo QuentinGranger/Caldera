@@ -7,12 +7,15 @@ Le serveur **Les Terres de Caldera** possède un salon privé
 dans le `.env` local, hors Git. Un message de test envoyé par le
 backend a été confirmé dans ce salon le 7 octobre 2026.
 
-L'intégration utilise quatre salons publics dédiés : `#annonces-caldera`,
-`#sorties-pokemon`, `#restocks`, `#campagnes`. Chaque webhook est conservé dans
+L'intégration utilise quatre salons publics dédiés : `#annonces`,
+`#nouveautés`, `#restocks`, `#offres`. Chaque webhook est conservé dans
 les `.env` hors Git et les variables serveur chiffrées Vercel. Le salon privé
 reste réservé aux essais techniques.
 
-`DISCORD_PUBLICATIONS_ENABLED` vaut `false` par défaut dans le dépôt.
+**État vérifié le 8 octobre 2026 : `DISCORD_PUBLICATIONS_ENABLED=false`
+en production**, après redéploiement et contrôle du worker protégé.
+La dernière demande du propriétaire suspend l'activation autorisée auparavant.
+`DISCORD_PUBLICATIONS_ENABLED` vaut également `false` dans les `.env` locaux.
 L'activation en production nécessite les quatre webhooks et `STORE_OPEN=1`.
 Les mécanismes opérationnels et le contrôle préalable Stripe sont décrits ci-dessous.
 
@@ -33,9 +36,13 @@ physique faisant passer un produit épuisé à un stock achetable. Les annonces 
 campagnes sont prévisualisées puis explicitement validées dans `/admin/discord`.
 La publication d'une newsletter ne publie pas automatiquement sur Discord.
 
-`npm run test:discord` est une commande volontaire en terminal, utilisant le
-webhook Annonces configuré dans son environnement ; elle publie un message
-technique et ne doit pas être exécutée automatiquement en production.
+`npm run test:discord` est une commande volontaire en terminal utilisant
+uniquement `DISCORD_WEBHOOK_TEST`. Elle vérifie que le webhook appartient à
+`DISCORD_GUILD_ID` et `DISCORD_TEST_CHANNEL_ID`, puis envoie un seul message
+technique. Une configuration absente ou incohérente arrête le test ; aucun repli
+vers un salon public n'est permis. L'autorisation du transport est temporaire,
+limitée à ce processus CLI, puis restaurée ; les variables locales et de
+production restent inchangées. Ne pas planifier cette commande en production.
 
 ## Comptes et rôle lié
 
@@ -123,7 +130,7 @@ seule que l’instance Vercel utilise cette branche.
 
 ## Publications automatiques et ouverture de la boutique
 
-Le propriétaire a autorisé l’activation des publications et l’ouverture du
+Le propriétaire avait autorisé l’activation des publications et l’ouverture du
 catalogue et du checkout. `STORE_OPEN=1` est le seul interrupteur serveur du
 rideau ; aucun cookie ne le contourne. Les contrôles de paiement existants
 continuent d’exiger Stripe live, une clé publique live et le secret webhook.
@@ -172,6 +179,141 @@ Le cycle de liaison a aussi été validé sur le site de production : la ligne e
 `roleGrantedAt` ont été constatés dans `caldera-eu / production`, et le rôle
 vérifié dans l’API Discord. Cette observation confirme la base réellement
 utilisée par Vercel, dont la chaîne de connexion reste masquée.
+
+## Structure du serveur validée le 8 octobre 2026
+
+| Ordre | Catégorie      | Salons                                                    |
+| ----- | -------------- | --------------------------------------------------------- |
+| 1     | COMMENCER ICI  | bienvenue, règles, annonces, rôles                        |
+| 2     | CALDERA        | nouveautés, restocks, offres, actualités-tcg, suggestions |
+| 3     | COMMUNAUTÉ     | général, pokémon-tcg, vos-pulls, deckbuilding, collection |
+| 4     | AIDE           | aide-caldera, faq                                         |
+| 5     | VOCAUX         | Général, TCG / Deckbuilding                                |
+| 6     | STAFF (privée) | staff, logs, discord-tech, test-integration               |
+
+Les salons COMMENCER ICI, les quatre publications, actualités-tcg et faq sont
+en lecture seule pour les membres standards et liés. Les suggestions, l'aide
+et la communauté permettent les discussions ; les images sont autorisées,
+notamment dans vos-pulls. STAFF et ses quatre salons refusent Voir le salon à
+`@everyone` et l'autorisent au rôle Staff. Ces droits ont été contrôlés par
+l'API Discord et l'aperçu de rôle `@everyone`, sans utiliser le compte d'un
+tiers. La liste des salons a aussi été inspectée à une largeur de 390 px ;
+ce contrôle n'est pas un test de l'application Discord sur téléphone physique.
+
+Staff possède Gérer les messages, Épingler les messages, Gérer les fils,
+Exclure temporairement des membres, Rendre muet, Mettre en sourdine et Déplacer
+les membres au niveau serveur, plus les accès et publications par salon. Il n'est
+attribué à aucun membre. La hiérarchie est Staff > bot > Compte Caldera lié :
+le bot ne peut pas attribuer le rôle Staff. `@everyone` n'a ni administration,
+gestion des rôles, gestion des salons, gestion des webhooks, mentions collectives
+ni publications d'applications externes.
+
+### Permissions et modération contrôlées le 8 octobre 2026
+
+Les 22 salons (20 textuels, 2 vocaux) ont été vérifiés après application des
+permissions. Les droits effectifs du rôle lié sont identiques à ceux de
+`@everyone` : aucun accès Staff supplémentaire. Les membres peuvent consulter
+les historiques et réagir dans les neuf salons en lecture seule, mais ni écrire,
+joindre des fichiers ni créer des fils. Les sept espaces de discussion autorisent
+messages, images, liens, réactions et fils publics ; les fils privés et mentions
+collectives restent refusés. Les deux vocaux autorisent connexion, parole et
+vidéo/partage d'écran, sans priorité vocale. Aucun enregistrement vocal n'est actif.
+
+Le bot conserve exactement `Manage Roles` (`268435456`) au niveau serveur.
+Ses permissions par salon sont explicites :
+
+- lecture et historique uniquement dans bienvenue, règles et rôles ;
+- lecture, historique, envoi et embeds uniquement dans annonces, nouveautés,
+  restocks, offres et test-integration ;
+- aucun accès dans les autres salons, notamment Staff, logs, discord-tech,
+  aide, communauté et vocaux ;
+- aucune gestion de salon, permission, webhook, message, fil, épingle,
+  invitation ou mention collective dans les salons accessibles.
+
+Discord ne permet pas de limiter `Manage Roles` à un identifiant de rôle unique :
+la hiérarchie protège Staff et le code de `src/lib/discord/account.ts` fixe
+le serveur et `DISCORD_LINKED_ROLE_ID`, sans accepter de rôle fourni par le client.
+Un bot compromis pourrait techniquement gérer d'autres rôles placés sous lui ;
+ne pas placer de rôle privilégié sous ce bot.
+Une confirmation idempotente du rôle lié déjà présent sur le propriétaire a
+renvoyé `204`, sans nouvelle attribution : les restrictions de permissions
+par salon n'empêchent pas cette gestion de rôle au niveau serveur.
+
+Le contrôle API a confirmé les refus `403` de lecture du bot dans staff, logs,
+discord-tech, aide-caldera et général, ainsi qu'un envoi réel dans le salon privé
+test-integration (message `1557623909023748159`). Les cinq webhooks existants ont
+été vérifiés sur leurs destinations. Les messages des huit salons lisibles par
+le bot ont été contrôlés sans exposition d'URL de webhook ni des secrets Discord.
+Les aperçus `@everyone` et Compte Caldera lié confirment les salons privés
+invisibles, l'accueil verrouillé et la discussion générale accessible.
+
+AutoMod comporte quatre règles actives, toutes limitées au blocage du message :
+mentions excessives (seuil 5), spam suspect, contenus graves/explicites et sept
+phrases françaises ciblant menaces et demandes de mots de passe/tokens. Aucun
+bannissement, timeout automatique ou copie des messages détectés dans les logs.
+Les listes intégrées de spam/contenus Discord sont surtout anglophones ; elles
+ne remplacent pas la modération humaine ni un filtre exhaustif anti-phishing.
+Le filtre d'images sensibles couvre tous les membres (`explicit_content_filter=2`).
+Le niveau de vérification est Faible (e-mail Discord vérifié, sans téléphone
+imposé) ; Discord exempte les membres ayant un rôle en l'absence d'accueil
+communautaire. Les purges de membres inactifs sont réservées aux administrateurs.
+Suggestions utilise un mode lent de 30 secondes.
+
+Les douze règles générales et la procédure Staff sont publiées. Le message
+d'aide est épinglé et interdit explicitement adresse, e-mail personnel,
+téléphone, données bancaires/paiement, mots de passe, tokens, numéro complet de
+commande et captures privées ; le formulaire officiel du site accueille les
+dossiers sensibles. Staff peut modifier ses propres messages et supprimer ceux
+des autres, mais Discord ne permet pas de réécrire les messages d'un autre auteur.
+Expulsion et bannissement restent réservés au propriétaire.
+
+L'A2F des modérateurs n'est pas encore imposée : Discord demande d'abord au
+propriétaire d'activer l'A2F sur son compte. Les contrôles 390×844 et 844×390
+concernent l'aperçu web, pas l'application mobile sur appareil physique.
+Les notifications automatiques de production restent désactivées.
+
+### Invitation publique depuis le site
+
+L'invitation officielle `https://discord.gg/RQ8AMYaGVq` ouvre le salon règles
+du serveur Les Terres de Caldera. Discord a confirmé l'absence d'expiration
+(`expires_at=null`) et aucune attribution de rôle n'est configurée sur ce lien.
+Ce lien est public, distinct des webhooks, du token bot et de l'autorisation OAuth.
+
+Sa valeur est centralisée dans `src/data/community.ts`. Le composant partagé
+`DiscordInviteLink` est présent sur l'accueil, dans le pied de page global,
+le menu mobile, la page contact et le panneau Discord du profil (lié ou non).
+Il ouvre un nouvel onglet avec `noopener noreferrer`, l'annonce aux lecteurs
+d'écran et propose une zone tactile de 44 px minimum. Le clic depuis le menu
+mobile ferme celui-ci. L'invitation ne connecte pas automatiquement le compte
+Caldera ; la liaison OAuth reste une action séparée et facultative.
+
+La page contact rappelle de conserver les dossiers de commande et données
+personnelles dans le formulaire privé. Aucun widget Discord, script externe,
+promesse de promotion ou notification automatique n'a été ajouté.
+
+| Événement      | Variable serveur                         | Salon            |
+| -------------- | ---------------------------------------- | ---------------- |
+| `announcement` | `DISCORD_WEBHOOK_ANNOUNCEMENTS`          | annonces         |
+| `release`      | `DISCORD_WEBHOOK_RELEASES`               | nouveautés       |
+| `restock`      | `DISCORD_WEBHOOK_RESTOCKS`               | restocks         |
+| `campaign`     | `DISCORD_WEBHOOK_CAMPAIGNS`              | offres           |
+| Test manuel    | `DISCORD_WEBHOOK_TEST` (local seulement) | test-integration |
+
+Les quatre webhooks publics ont été réutilisés sans rotation ni changement
+d'identifiant. Le webhook privé Caldera Test est conservé et un nouvel envoi
+par le transport backend a été confirmé après son déplacement dans STAFF.
+Les URL restent hors Git ; aucune variable Discord n'est `NEXT_PUBLIC_*`.
+Les textes d'accueil, règles, rôles, FAQ et aide sont publiés. Aucun fait
+commercial, produit, stock, prix ou campagne n'a été inventé.
+
+Le support privé futur suivra demande → ticket individuel → Staff, avec accès
+limité au demandeur et au Staff, fermeture et conservation définies. Aucun
+ticket ou transfert de données client vers Discord n'est actif. Les demandes
+personnelles passent actuellement par le formulaire de contact du site.
+
+Prochaine étape : revoir les déclencheurs métier déjà préparés, leur contenu,
+les horaires et les brouillons en attente avant une activation explicitement
+autorisée. Les produits de démonstration restent exclus des sorties/restocks.
 
 ## Catalogue d’exemple demandé par le propriétaire
 

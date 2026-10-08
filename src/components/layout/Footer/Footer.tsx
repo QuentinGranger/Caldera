@@ -10,11 +10,12 @@ import {
 import { getSiteNavigation, type NavLink } from '@/data/navigation';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { ORGANIZATION } from '@/lib/seo/policies';
+import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import styles from './Footer.module.scss';
 
 /**
- * The end of every page: the brand and its two ways to stay in touch (the
- * newsletter, a real address), then the whole site in four columns. The
+ * The end of every page: the brand, community and ways to stay in touch,
+ * then the whole site in four columns. The
  * service line only repeats what the CGV state.
  */
 export async function Footer() {
@@ -76,6 +77,7 @@ export async function Footer() {
             <p className={styles.statement}>
               Pour ceux qui collectionnent <em>bien plus que des cartes.</em>
             </p>
+            <DiscordInviteLink className={styles.link} />
           </div>
           <div className={styles.contact}>
             <div className={styles.letter}>
