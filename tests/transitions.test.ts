@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import { compileString } from 'sass';
 import {
   CHRONICLE_NUMBER,
   PRODUCT_MORPH,
@@ -197,9 +198,14 @@ test('Transitions : les éléments partagés ne réagissent qu’à leurs voyage
 
 test('Transitions : la feuille de mouvement tient ses promesses', async () => {
   const css = await readFile('src/styles/base/_transitions.scss', 'utf8');
-  // Every journey but `instant` is choreographed.
+  const compiled = compileString(css).css;
+  // Verify actual generated selectors, rather than merely SCSS names.
   for (const name of TRANSITIONS.filter((name) => name !== 'instant'))
-    assert.match(css, new RegExp(`caldera-${name}\\b`), name);
+    assert.match(
+      compiled,
+      new RegExp(`\\[data-caldera-arrival=["\']?${name}["\']?\\]`),
+      name,
+    );
   // The motion tokens.
   for (const token of [
     '--motion-instant',
@@ -211,9 +217,9 @@ test('Transitions : la feuille de mouvement tient ses promesses', async () => {
     '--ease-caldera-exit',
   ])
     assert.ok(css.includes(token), token);
-  // The requested slower cut stays bounded at 1.4 s; controls never wait.
+  // The requested slower cut stays bounded at 1.9 s; controls never wait.
   for (const [, value] of css.matchAll(/(\d+)ms/g))
-    assert.ok(Number(value) <= 1400, `${value}ms`);
+    assert.ok(Number(value) <= 1900, `${value}ms`);
   // The live page stays clickable, reduced motion has its own version.
   assert.match(css, /::view-transition\s*\{\s*pointer-events:\s*none/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);

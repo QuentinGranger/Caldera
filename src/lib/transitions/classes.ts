@@ -29,10 +29,9 @@ export const PRODUCT_MORPH = perTransition({
 
 export const LANDSCAPE_REVEAL = perTransition(
   Object.fromEntries(
-    TRANSITIONS.filter((name) => name !== 'instant').map((name) => [
-      name,
-      'caldera-landscape',
-    ]),
+    TRANSITIONS.filter(
+      (name) => !['instant', 'product', 'product-return'].includes(name),
+    ).map((name) => [name, 'caldera-landscape']),
   ),
 );
 

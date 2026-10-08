@@ -1,36 +1,17 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { useEffect, useLayoutEffect, ViewTransition } from 'react';
-import { perTransition } from '@/lib/transitions/classes';
-import { TRANSITIONS } from '@/lib/transitions/matrix';
+import { useEffect, useLayoutEffect } from 'react';
 import {
   noteClick,
   presentArrival,
-  finishPresentation,
   resetPresentation,
 } from '@/lib/transitions/runtime';
 
-/**
- * The veil: one empty, fixed element whose identity changes with the page.
- * It is what makes React run a View Transition on each navigation; the page
- * keeps its controls live; individual landscapes/text travel above it, while
- * the veil carries the shadow of volcanic rock or the mist of the world.
- * `instant` gets no veil class: React then runs no transition at all.
- */
-const VEIL = perTransition(
-  Object.fromEntries(
-    TRANSITIONS.filter((name) => name !== 'instant').map((name) => [
-      name,
-      `veil-${name}`,
-    ]),
-  ),
-);
-
+/** Real, pointer-transparent scenery, independent of native snapshot support.
+ * Keying the stage restarts its CSS timeline for every destination. */
 export function TransitionStage() {
   const pathname = usePathname();
-  // In the commit of the new page, before capture: select the snapshot
-  // choreography in _transitions.scss. The live content stays visible.
-  // A first visit or a reload is left alone: it renders at once, as before.
+  // First visits/reloads have no pending journey and remain immediately visible.
   useLayoutEffect(() => {
     presentArrival(pathname);
   }, [pathname]);
@@ -50,15 +31,10 @@ export function TransitionStage() {
     };
   }, []);
   return (
-    <ViewTransition
-      key={pathname}
-      name="caldera-veil"
-      share={VEIL}
-      default="none"
-      onShare={finishPresentation}
-      onEnter={finishPresentation}
-    >
-      <div className="caldera-veil" aria-hidden="true" />
-    </ViewTransition>
+    <div key={pathname} className="caldera-veil" aria-hidden="true">
+      <div className="caldera-veil__mist" />
+      <div className="caldera-veil__frame caldera-veil__frame--top" />
+      <div className="caldera-veil__frame caldera-veil__frame--bottom" />
+    </div>
   );
 }
