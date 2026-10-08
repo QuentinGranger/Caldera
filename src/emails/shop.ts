@@ -1,3 +1,7 @@
+import {
+  EMAIL_SOCIAL_LINKS_HTML,
+  EMAIL_SOCIAL_LINKS_TEXT,
+} from './social-links';
 import type { EmailType } from '@/generated/prisma/client';
 import { customerReplyLink } from './reply';
 import { escapeHtml } from './templates';
@@ -317,7 +321,7 @@ export function renderShopEmail(
     : button(url, action, true) + button(replyHref, replyLabel, false);
   const note =
     '« Répondre » dans votre messagerie écrit aussi au client, mais en citant cette notification : le bouton ci-dessus ouvre un message vierge, sans rien d’interne.';
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:20px 8px;background:#f2f3eb;font-family:Arial,sans-serif;color:#192d25;line-height:1.6"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffdf8"><tr><td style="padding:20px 24px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(urls.logo)}" width="180" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:24px"><p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#1c654b">Administration · commande ${escapeHtml(data.orderNumber)}</p><h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.2;margin:8px 0 16px">${escapeHtml(title)}</h1>${blocks.map((block) => block.html).join('')}<p style="margin:20px 0 8px">${buttons}</p><p style="font-size:12px;color:#53635b">${escapeHtml(note)}</p></td></tr></table></td></tr></table></body></html>`;
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:20px 8px;background:#f2f3eb;font-family:Arial,sans-serif;color:#192d25;line-height:1.6"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffdf8"><tr><td style="padding:20px 24px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(urls.logo)}" width="180" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:24px"><p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#1c654b">Administration · commande ${escapeHtml(data.orderNumber)}</p><h1 style="font-family:Georgia,serif;font-size:26px;line-height:1.2;margin:8px 0 16px">${escapeHtml(title)}</h1>${blocks.map((block) => block.html).join('')}<p style="margin:20px 0 8px">${buttons}</p><p style="font-size:12px;color:#53635b">${escapeHtml(note)}</p></td></tr><tr><td style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera${EMAIL_SOCIAL_LINKS_HTML}</td></tr></table></td></tr></table></body></html>`;
   const text = [
     title,
     `Commande ${data.orderNumber}`,
@@ -325,6 +329,7 @@ export function renderShopEmail(
     `${action} : ${url}`,
     `${replyLabel} : ${data.customer.email} (objet : ${reply.subject})`,
     'Notification automatique de la boutique. « Répondre » écrit au client en citant cette notification.',
+    EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
   return { subject, html, text, replyTo: data.customer.email };
 }

@@ -1,3 +1,5 @@
+import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
+
 /** Longest customer text quoted in a reply link (mail clients cut long mailto). */
 const QUOTE_MAX = 700;
 
@@ -41,6 +43,7 @@ export function customerReplyLink({
     '',
     'Bien à vous,',
     'Les Terres de Caldera',
+    EMAIL_SOCIAL_LINKS_TEXT,
     ...quoted,
   ].join('\n');
   // RFC 6068: the address and every header value percent-encoded.

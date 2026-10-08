@@ -1,3 +1,7 @@
+import {
+  EMAIL_SOCIAL_LINKS_HTML,
+  EMAIL_SOCIAL_LINKS_TEXT,
+} from './social-links';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { escapeHtml } from './templates';
 
@@ -10,7 +14,7 @@ export type StockAlertEmailProduct = {
 };
 
 function layout(title: string, content: string, logo: string) {
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head><body style="margin:0;padding:20px 8px;background:#f6f1e4;font-family:Arial,sans-serif;color:#173e32;line-height:1.6"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffcf5"><tr><td style="padding:26px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(logo)}" width="240" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:24px">${content}</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera<br><a href="${PRODUCTION_SITE_URL}" style="color:#173e32">${PRODUCTION_HOST}</a></td></tr></table></td></tr></table></body></html>`;
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head><body style="margin:0;padding:20px 8px;background:#f6f1e4;font-family:Arial,sans-serif;color:#173e32;line-height:1.6"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffcf5"><tr><td style="padding:26px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(logo)}" width="240" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:24px">${content}</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera<br><a href="${PRODUCTION_SITE_URL}" style="color:#173e32">${PRODUCTION_HOST}</a>${EMAIL_SOCIAL_LINKS_HTML}</td></tr></table></td></tr></table></body></html>`;
 }
 
 function button(url: string, text: string) {
@@ -38,6 +42,7 @@ export function renderStockAlertConfirmationEmail(
     'Lien valable 24 heures. Sans confirmation, l’alerte et votre adresse sont effacées. Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.',
     `Annuler cette alerte : ${urls.removal}`,
     'Les Terres de Caldera',
+    EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
   return { subject, html, text };
 }
@@ -64,6 +69,7 @@ export function renderStockAlertNotificationEmail(
     `Voir le produit : ${urls.product}`,
     'Vous recevez ce message une seule fois : cette alerte est maintenant terminée.',
     'Les Terres de Caldera',
+    EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
   return { subject, html, text };
 }
