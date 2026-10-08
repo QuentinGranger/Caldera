@@ -39,7 +39,7 @@ export function Hero({
         exit={LANDSCAPE_REVEAL}
         default="none"
       >
-        <div className={styles.landscape}>
+        <div className={styles.landscape} data-caldera-landscape>
           <div className={styles.media} aria-hidden="true">
             <Image
               className={styles.image}

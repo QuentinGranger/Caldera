@@ -5,10 +5,9 @@ import { perTransition } from '@/lib/transitions/classes';
 import { TRANSITIONS } from '@/lib/transitions/matrix';
 import {
   noteClick,
-  notePath,
+  presentArrival,
   finishPresentation,
   resetPresentation,
-  takeArrival,
 } from '@/lib/transitions/runtime';
 
 /**
@@ -33,12 +32,7 @@ export function TransitionStage() {
   // choreography in _transitions.scss. The live content stays visible.
   // A first visit or a reload is left alone: it renders at once, as before.
   useLayoutEffect(() => {
-    notePath(pathname);
-    const arrival = takeArrival(pathname);
-    if (arrival === undefined) return;
-    const root = document.documentElement;
-    if (arrival && arrival !== 'instant') root.dataset.calderaArrival = arrival;
-    else delete root.dataset.calderaArrival;
+    presentArrival(pathname);
   }, [pathname]);
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');

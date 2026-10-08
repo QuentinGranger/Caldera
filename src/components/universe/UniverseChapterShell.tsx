@@ -66,7 +66,7 @@ export async function UniverseChapterShell({
           update={WORLD_HERO}
           default="none"
         >
-          <div className={styles.landscape}>
+          <div className={styles.landscape} data-caldera-landscape>
             {hero && (
               <Image
                 src={hero.src}
