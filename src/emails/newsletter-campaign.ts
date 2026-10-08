@@ -1,3 +1,7 @@
+import {
+  EMAIL_SOCIAL_LINKS_HTML,
+  EMAIL_SOCIAL_LINKS_TEXT,
+} from './social-links';
 import { decodeEntities, renderMarkdown } from '@/lib/content/markdown';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { escapeHtml } from './templates';
@@ -62,7 +66,7 @@ export function renderNewsletterCampaignEmail(
   const preheader = campaign.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(campaign.preheader)}</div>`
     : '';
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:20px 8px;background:#f6f1e4;font-family:Arial,sans-serif;color:#173e32;line-height:1.6">${preheader}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffcf5"><tr><td style="padding:26px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(urls.logo)}" width="240" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:28px 24px"><h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:30px;line-height:1.2">${escapeHtml(campaign.heading)}</h1>${content}${cta}</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera<br><a href="${PRODUCTION_SITE_URL}" style="color:#173e32">${PRODUCTION_HOST}</a>${unsubscribe}</td></tr></table></td></tr></table></body></html>`;
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:20px 8px;background:#f6f1e4;font-family:Arial,sans-serif;color:#173e32;line-height:1.6">${preheader}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fffcf5"><tr><td style="padding:26px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(urls.logo)}" width="240" alt="Les Terres de Caldera" style="display:block;max-width:100%;height:auto;color:#f7e9be"></td></tr><tr><td style="padding:28px 24px"><h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:30px;line-height:1.2">${escapeHtml(campaign.heading)}</h1>${content}${cta}</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera<br><a href="${PRODUCTION_SITE_URL}" style="color:#173e32">${PRODUCTION_HOST}</a>${EMAIL_SOCIAL_LINKS_HTML}${unsubscribe}</td></tr></table></td></tr></table></body></html>`;
   const text = [
     campaign.heading,
     plainMarkdown(campaign.bodyMarkdown),
@@ -71,6 +75,7 @@ export function renderNewsletterCampaignEmail(
       : []),
     'Les Terres de Caldera',
     `Site : ${PRODUCTION_SITE_URL}`,
+    EMAIL_SOCIAL_LINKS_TEXT,
     urls.unsubscribe
       ? `Se désinscrire : ${urls.unsubscribe}`
       : 'E-mail de test — aucun abonné ne l’a reçu.',
