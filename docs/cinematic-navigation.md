@@ -10,7 +10,7 @@ vide à `z-index: -1`, animé seulement dans une capture native. La durée CSS e
 callback ne prouvaient donc pas la visibilité de l’effet.
 
 Le voile est maintenant composé de vrais éléments DOM : une brume directionnelle
-et deux bandes de cadrage avec un filet doré. Il est affiché au-dessus de la page,
+sans bandes de cadrage, retirées à la demande de l’utilisateur. Il est affiché au-dessus de la page,
 sous le header, avec `pointer-events: none` et `aria-hidden`. La caméra anime
 le décor existant et les textes arrivent progressivement. Les snapshots natifs
 sont réservés à l’image partagée produit ; aucun callback ne peut désactiver le
@@ -33,8 +33,7 @@ utilitaires conservent leur fonctionnement immédiat.
 | Paiement, administration, pages utilitaires, ancres, filtres, historique | Aucun effet de page | Aucun effet de page |
 
 La caméra passe de 1,12 à 1, sans blur du texte. Entre chapitres, elle ajoute un
-mouvement latéral orienté. Le cadrage reste en place pendant 35 % du parcours puis
-s’ouvre lentement. Le voile se dissipe sans écran totalement noir. Les textes
+mouvement latéral orienté. Le voile se dissipe sans écran totalement noir. Les textes
 s’animent sur 800 ms, avec 100 ms de départ et 60 ms entre couches.
 
 ## Dégradation et nettoyage
@@ -55,7 +54,7 @@ s’animent sur 800 ms, avec 100 ms de départ et 60 ms entre couches.
   répété, chapitres consécutifs, mouvement réduit, filtres, historique et utilitaires.
 - Le test CSS compile le SCSS avant de vérifier les sélecteurs de chaque parcours.
 - Vérification visuelle locale dans Chromium : arrivée Accueil → Univers avec
-  brume réellement peinte, bandes visibles et décor présent. Le mode DOM est
+  brume réellement peinte et décor présent. Le mode DOM est
   `live` ; l’opacité mesurée de la brume pendant la capture est 0,664.
 - Les tests physiques iPhone/Android restent dispensés par l’utilisateur. Aucune
   mesure de 60 FPS ou de Core Web Vitals sur appareil réel n’est revendiquée.
