@@ -22,7 +22,10 @@ export default function CheckoutLayout({ children }: { children: ReactNode }) {
       </header>
       {children}
       <footer className={styles.footer}>
-        Les Terres de Caldera · Votre commande en préparation
+        Les Terres de Caldera ·{' '}
+        {process.env.CATALOG_DEMO_MODE === '1'
+          ? 'Démonstration — aucun achat possible'
+          : 'Votre commande en préparation'}
       </footer>
     </>
   );

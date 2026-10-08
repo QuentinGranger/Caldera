@@ -18,6 +18,7 @@ import styles from './Footer.module.scss';
  * service line only repeats what the CGV state.
  */
 export async function Footer() {
+  const demonstration = process.env.CATALOG_DEMO_MODE === '1';
   const navigation = await getSiteNavigation();
   const groups: { title: string; links: NavLink[] }[] = [
     {
@@ -117,10 +118,16 @@ export async function Footer() {
             <Link href={PRODUCTION_SITE_URL}>{PRODUCTION_HOST}</Link>
           </p>
           <p>
-            Paiement sécurisé par Stripe ·{' '}
-            <Link href={DELIVERY_PATH}>
-              Expédition sous {handlingLabel()} en {DELIVERY_ZONE}
-            </Link>
+            {demonstration ? (
+              'Catalogue de démonstration · Aucun achat ni expédition'
+            ) : (
+              <>
+                Paiement sécurisé par Stripe ·{' '}
+                <Link href={DELIVERY_PATH}>
+                  Expédition sous {handlingLabel()} en {DELIVERY_ZONE}
+                </Link>
+              </>
+            )}
           </p>
           {/* « #top » without a target: the browser scrolls to the very top. */}
           <a href="#top" className={styles.top}>

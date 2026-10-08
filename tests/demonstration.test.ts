@@ -8,6 +8,7 @@ import {
 import { assertPaymentConfiguration } from '../src/lib/stripe/stripe';
 import { proxy } from '../src/proxy';
 import { NextRequest } from 'next/server';
+import { listingText } from '../src/lib/seo/metadata';
 test('demo mode blocks payments and indexing; production excludes fictitious shipping', async () => {
   const previous = {
     node: process.env.NODE_ENV,
@@ -24,6 +25,21 @@ test('demo mode blocks payments and indexing; production excludes fictitious shi
     );
     assert.equal(response.headers.get('x-middleware-rewrite'), null);
     assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+    const metadata = listingText({
+      listing: 'catalogue',
+      stats: {
+        productCount: 3,
+        inStockCount: 3,
+        preorderCount: 0,
+        newArrivalCount: 0,
+        minPrice: '0',
+        maxPrice: '0',
+        languages: ['FR'],
+        lastModified: null,
+      },
+    });
+    assert.match(metadata.description, /démonstration/);
+    assert.doesNotMatch(metadata.description, /€|en stock/);
     const method = {
       id: 'example',
       name: 'Exemple',

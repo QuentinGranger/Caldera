@@ -210,14 +210,14 @@ function productFactsSql(filter: FactFilter): Prisma.Sql {
     conditions.push(Prisma.sql`p."preorder"`);
   if (filter.status === 'nouveautes')
     conditions.push(Prisma.sql`p."newArrival"`);
-  const inStock = Prisma.sql`(NOT p."preorder" AND BOOL_OR(${active} AND v."availableQuantity" > 0))`;
+  const inStock = Prisma.sql`(NOT p."isDemonstration" AND NOT p."preorder" AND BOOL_OR(${active} AND v."availableQuantity" > 0))`;
   return Prisma.sql`
     SELECT p."id", p."gameId", g."slug" AS "gameSlug", p."tcgSetId",
       p."categoryId", p."preorder", p."newArrival",
       ${inStock} AS "inStock",
-      (p."preorder" AND BOOL_OR(${active} AND v."availableQuantity" > 0)) AS "preorderOpen",
-      MIN(v."price") FILTER (WHERE ${active}) AS "minPrice",
-      MAX(v."price") FILTER (WHERE ${active}) AS "maxPrice",
+      (NOT p."isDemonstration" AND p."preorder" AND BOOL_OR(${active} AND v."availableQuantity" > 0)) AS "preorderOpen",
+      MIN(v."price") FILTER (WHERE ${active} AND NOT p."isDemonstration") AS "minPrice",
+      MAX(v."price") FILTER (WHERE ${active} AND NOT p."isDemonstration") AS "maxPrice",
       ARRAY_AGG(DISTINCT v."language"::text) FILTER (WHERE ${active}) AS "languages",
       GREATEST(p."updatedAt", MAX(v."updatedAt")) AS "modified"
     FROM "Product" p
