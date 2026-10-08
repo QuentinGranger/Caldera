@@ -33,8 +33,6 @@ export function TransitionStage() {
   return (
     <div key={pathname} className="caldera-veil" aria-hidden="true">
       <div className="caldera-veil__mist" />
-      <div className="caldera-veil__frame caldera-veil__frame--top" />
-      <div className="caldera-veil__frame caldera-veil__frame--bottom" />
     </div>
   );
 }

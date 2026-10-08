@@ -135,24 +135,8 @@
         radial-gradient(ellipse at 85% 70%, #b3bd9a55, transparent 65%);
       animation: caldera-mist-reveal var(--journey-duration) ease-in-out both;
     }
-    .caldera-veil__frame {
-      position: absolute;
-      inset-inline: 0;
-      height: clamp(24px, 7vh, 70px);
-      background: #03140e;
-      animation: caldera-frame-reveal var(--journey-duration) ease-in-out both;
-      &--top {
-        top: 0;
-        transform-origin: top;
-        border-bottom: 1px solid #c9aa5e66;
-      }
-      &--bottom {
-        bottom: 0;
-        transform-origin: bottom;
-        border-top: 1px solid #c9aa5e66;
-      }
-    }
   }
+
   @media (max-width: 47.99rem) {
     @include journey(archive) {
       --journey-duration: 900ms;
@@ -199,18 +183,6 @@
     transform: translateX(12%);
   }
 }
-@keyframes caldera-frame-reveal {
-  0%,
-  35% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scaleY(0);
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
