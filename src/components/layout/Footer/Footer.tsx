@@ -10,8 +10,7 @@ import {
 import { getSiteNavigation, type NavLink } from '@/data/navigation';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { ORGANIZATION } from '@/lib/seo/policies';
-import { INSTAGRAM_PROFILE_URL } from '@/lib/social';
-import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
+import { FooterSocialLinks } from './FooterSocialLinks';
 import styles from './Footer.module.scss';
 
 /**
@@ -78,17 +77,7 @@ export async function Footer() {
             <p className={styles.statement}>
               Pour ceux qui collectionnent <em>bien plus que des cartes.</em>
             </p>
-            <DiscordInviteLink className={styles.link} />
-            <a
-              href={INSTAGRAM_PROFILE_URL}
-              className={styles.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Suivre Caldera sur Instagram (nouvel onglet)"
-            >
-              Suivre Caldera sur Instagram
-              <ArrowRight size={16} aria-hidden="true" />
-            </a>
+            <FooterSocialLinks />
           </div>
           <div className={styles.contact}>
             <div className={styles.letter}>

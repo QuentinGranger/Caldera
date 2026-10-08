@@ -54,6 +54,34 @@
     font-weight: 400;
   }
 }
+.socialLinks {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: v.$color-text-on-dark;
+  transition:
+    color v.$duration-short v.$ease-out,
+    background-color v.$duration-short v.$ease-out;
+  &:hover {
+    color: v.$color-gold-light;
+    background: rgb(255 255 255 / 6%);
+  }
+  &:focus-visible {
+    outline: 2px solid v.$color-gold-light;
+    outline-offset: 3px;
+  }
+  svg {
+    flex-shrink: 0;
+  }
+}
 .contact {
   display: grid;
   gap: 2rem 3rem;
