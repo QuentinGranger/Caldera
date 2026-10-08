@@ -39,8 +39,8 @@ function stage(on: boolean) {
   // A navigation that never lands releases the stage all the same.
   if (on) releaseStage(10_000);
 }
-/** The journey has landed: its transition is over within the second. */
-export function releaseStage(after = 1000) {
+/** The journey has landed: its transition is over well within 1.5 s. */
+export function releaseStage(after = 1500) {
   clearTimeout(stageTimer);
   stageTimer = setTimeout(() => {
     document.documentElement.style.viewTransitionName = '';
