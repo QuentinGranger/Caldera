@@ -1,7 +1,11 @@
 // Site-wide metadata defaults (docs/seo-architecture.md §5): the root layout
 // uses them, pages replace them through buildMetadata.
 import type { Metadata } from 'next';
-import { DEFAULT_OG_IMAGE, SITE_NAME } from '@/lib/seo/metadata';
+import {
+  DEFAULT_OG_IMAGE,
+  DEMO_SITE_DESCRIPTION,
+  SITE_NAME,
+} from '@/lib/seo/metadata';
 import { HANDLING_TIME } from '@/lib/seo/policies';
 import { absoluteUrl, siteOrigin } from '@/lib/site';
 
@@ -15,6 +19,10 @@ export const TITLE_TEMPLATE = '%s | Caldera';
 export const DEFAULT_DESCRIPTION = `Boutique en ligne de cartes Pokémon. Livraison en France métropolitaine, commandes préparées sous ${HANDLING_TIME.minDays} à ${HANDLING_TIME.maxDays} jours ouvrés après paiement.`;
 
 export function rootMetadata(): Metadata {
+  const description =
+    process.env.CATALOG_DEMO_MODE === '1'
+      ? DEMO_SITE_DESCRIPTION
+      : DEFAULT_DESCRIPTION;
   const image = {
     url: absoluteUrl(DEFAULT_OG_IMAGE.url),
     width: DEFAULT_OG_IMAGE.width,
@@ -24,7 +32,7 @@ export function rootMetadata(): Metadata {
   return {
     metadataBase: new URL(siteOrigin()),
     title: { default: DEFAULT_TITLE, template: TITLE_TEMPLATE },
-    description: DEFAULT_DESCRIPTION,
+    description,
     applicationName: SITE_NAME,
     icons: {
       icon: '/favicon.png',
@@ -36,13 +44,13 @@ export function rootMetadata(): Metadata {
       locale: 'fr_FR',
       siteName: SITE_NAME,
       title: DEFAULT_TITLE,
-      description: DEFAULT_DESCRIPTION,
+      description,
       images: [image],
     },
     twitter: {
       card: 'summary_large_image',
       title: DEFAULT_TITLE,
-      description: DEFAULT_DESCRIPTION,
+      description,
       images: [image.url],
     },
   };
