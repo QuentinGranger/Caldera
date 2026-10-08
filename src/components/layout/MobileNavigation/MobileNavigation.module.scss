@@ -213,6 +213,12 @@ $ivory-muted: rgb(251 244 223 / 68%);
 }
 
 // Account and help: at hand, quieter than the shop.
+.discord {
+  color: v.$color-gold-light;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .service {
   .eyebrow {
     color: rgb(232 194 97 / 70%);

@@ -8,6 +8,7 @@ import {
 } from '@/components/editorial/editorial';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { ContactForm } from './ContactForm';
+import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import styles from './contact.module.scss';
 
 export const metadata = editorialMetadata({
@@ -56,7 +57,10 @@ export default function ContactPage() {
 
       <section className={styles.content}>
         <Container className={styles.grid}>
-          <aside className={styles.help} aria-label="Conseils avant de nous écrire">
+          <aside
+            className={styles.help}
+            aria-label="Conseils avant de nous écrire"
+          >
             <p className={styles.eyebrow}>Avant d’envoyer</p>
             <h2>Les informations qui nous aident</h2>
             <div className={styles.cards}>
@@ -70,6 +74,18 @@ export default function ContactPage() {
                 </article>
               ))}
             </div>
+            <section
+              className={styles.community}
+              aria-labelledby="community-title"
+            >
+              <h3 id="community-title">Échanger avec la communauté</h3>
+              <p>
+                Retrouvez Caldera sur Discord pour les discussions autour du JCC
+                Pokémon. Pour une commande ou des informations personnelles,
+                utilisez le formulaire privé de cette page.
+              </p>
+              <DiscordInviteLink />
+            </section>
           </aside>
 
           <ContactForm />

@@ -116,3 +116,22 @@ $dusk: clamp(6rem, 12vw, 10rem);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
+
+.community {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgb(232 194 97 / 25%);
+  h3 {
+    color: v.$color-gold-light;
+    font-family: v.$font-heading;
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+  p {
+    max-width: 34rem;
+    color: #e6ebdf;
+    line-height: 1.6;
+  }
+}

@@ -272,6 +272,25 @@ propriétaire d'activer l'A2F sur son compte. Les contrôles 390×844 et 844×39
 concernent l'aperçu web, pas l'application mobile sur appareil physique.
 Les notifications automatiques de production restent désactivées.
 
+### Invitation publique depuis le site
+
+L'invitation officielle `https://discord.gg/RQ8AMYaGVq` ouvre le salon règles
+du serveur Les Terres de Caldera. Discord a confirmé l'absence d'expiration
+(`expires_at=null`) et aucune attribution de rôle n'est configurée sur ce lien.
+Ce lien est public, distinct des webhooks, du token bot et de l'autorisation OAuth.
+
+Sa valeur est centralisée dans `src/data/community.ts`. Le composant partagé
+`DiscordInviteLink` est présent sur l'accueil, dans le pied de page global,
+le menu mobile, la page contact et le panneau Discord du profil (lié ou non).
+Il ouvre un nouvel onglet avec `noopener noreferrer`, l'annonce aux lecteurs
+d'écran et propose une zone tactile de 44 px minimum. Le clic depuis le menu
+mobile ferme celui-ci. L'invitation ne connecte pas automatiquement le compte
+Caldera ; la liaison OAuth reste une action séparée et facultative.
+
+La page contact rappelle de conserver les dossiers de commande et données
+personnelles dans le formulaire privé. Aucun widget Discord, script externe,
+promesse de promotion ou notification automatique n'a été ajouté.
+
 | Événement      | Variable serveur                         | Salon            |
 | -------------- | ---------------------------------------- | ---------------- |
 | `announcement` | `DISCORD_WEBHOOK_ANNOUNCEMENTS`          | annonces         |

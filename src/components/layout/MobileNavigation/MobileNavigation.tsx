@@ -6,6 +6,7 @@ import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import type { NavItem, NavLink, SiteNavigation } from '@/data/navigation';
 import { universeChapters } from '@/data/universe';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
+import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import styles from './MobileNavigation.module.scss';
 
 const NEW_ARRIVALS = '/nouveautes';
@@ -318,6 +319,13 @@ export function MobileNavigation({
                 );
               })}
             </ol>
+          </section>
+
+          <section className={styles.group} aria-labelledby="mobile-community">
+            <p id="mobile-community" className={styles.eyebrow}>
+              Communauté
+            </p>
+            <DiscordInviteLink className={styles.discord} onClick={close} />
           </section>
 
           <section

@@ -11,6 +11,7 @@ import { requireCustomer } from '@/lib/account/guard';
 import { NAME_MAX, PASSWORD_MAX, PASSWORD_MIN } from '@/lib/account/validation';
 import { getPrisma } from '@/lib/db/prisma';
 import { discordAccountConfigured } from '@/lib/discord/account';
+import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import {
   connectDiscordAction,
   disconnectDiscordAction,
@@ -128,6 +129,11 @@ export default async function AccountProfile({
         <h2 id="discord" className={styles.discordHeading}>
           <MessagesSquare size={24} aria-hidden="true" /> Discord
         </h2>
+        <p className={styles.panelLead}>
+          Rejoignez notre serveur officiel pour échanger avec la communauté. La
+          liaison de votre compte Caldera reste facultative.
+        </p>
+        <DiscordInviteLink className={styles.secondary} />
         {discordLink ? (
           <>
             <p className={styles.panelLead}>
