@@ -1,6 +1,7 @@
 // schema.org builders (docs/seo-architecture.md §6). The structured data only
 // describes what the page shows; missing facts are omitted, never guessed.
 import { absoluteUrl, siteOrigin } from '@/lib/site';
+import { INSTAGRAM_PROFILE_URL } from '@/lib/social';
 import type { Availability } from '@/types/product';
 import {
   HANDLING_TIME,
@@ -75,6 +76,7 @@ export function organizationNode(): JsonLdNode {
       height: ORGANIZATION.logo.height,
     },
     email: ORGANIZATION.email,
+    sameAs: [INSTAGRAM_PROFILE_URL],
     // Registered office, not a shop open to the public.
     address: {
       '@type': 'PostalAddress',
