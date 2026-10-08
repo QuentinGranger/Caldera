@@ -2,13 +2,12 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   beginNavigation,
-  finishPresentation,
   notePath,
   presentArrival,
   resetPresentation,
 } from '../../src/lib/transitions/runtime';
 
-test('page arrivals remain visible with missing or skipped native captures', async (t) => {
+test('real scenery is independent of native captures and remains disposable', async (t) => {
   const names = [
     'window',
     'document',
@@ -70,52 +69,47 @@ test('page arrivals remain visible with missing or skipped native captures', asy
     notePath('/');
   };
   try {
-    await t.test('partial API support gets a CSS entrance', () => {
+    await t.test('partial API support gets the real entrance', () => {
       prepare();
       beginNavigation('/univers', 'push');
       presentArrival('/univers');
       assert.equal(dataset.calderaArrival, 'enter-world');
-      assert.equal(dataset.calderaMotion, 'fallback');
+      assert.equal(dataset.calderaMotion, 'live');
+    });
+    await t.test('full API support cannot suppress the real entrance', () => {
+      prepare();
+      beginNavigation('/univers', 'push');
+      native = true;
+      presentArrival('/univers');
+      assert.equal(dataset.calderaMotion, 'live');
+      flushFrames();
+      assert.equal(dataset.calderaMotion, 'live');
     });
     await t.test(
-      'streaming without a native callback gets the entrance after commit',
+      'first visits and repeated commits never replay an entrance',
       () => {
         prepare();
+        presentArrival('/');
+        assert.equal(dataset.calderaMotion, undefined);
         beginNavigation('/univers', 'push');
-        native = true;
         presentArrival('/univers');
-        assert.equal(dataset.calderaMotion, 'native');
-        flushFrames();
-        assert.equal(dataset.calderaMotion, 'fallback');
-      },
-    );
-    await t.test(
-      'native callback wins and releases presentation on completion',
-      () => {
-        prepare();
-        beginNavigation('/univers', 'push');
-        native = true;
+        resetPresentation();
         presentArrival('/univers');
-        const cleanup = finishPresentation();
-        flushFrames();
-        assert.equal(dataset.calderaMotion, 'native');
-        cleanup();
-        assert.equal(dataset.calderaArrival, undefined);
         assert.equal(dataset.calderaMotion, undefined);
       },
     );
-    await t.test('old cleanup cannot erase a newer navigation', () => {
-      prepare();
-      beginNavigation('/univers', 'push');
-      presentArrival('/univers');
-      const oldCleanup = finishPresentation();
-      native = false;
-      beginNavigation('/univers/origines', 'push');
-      presentArrival('/univers/origines');
-      oldCleanup();
-      assert.equal(dataset.calderaArrival, 'descend');
-      assert.equal(dataset.calderaMotion, 'fallback');
-    });
+    await t.test(
+      'consecutive same-type journeys select the new destination',
+      () => {
+        prepare();
+        beginNavigation('/univers/origines', 'push');
+        presentArrival('/univers/origines');
+        beginNavigation('/univers/archives', 'push');
+        presentArrival('/univers/archives');
+        assert.equal(dataset.calderaArrival, 'chapter-forward');
+        assert.equal(dataset.calderaMotion, 'live');
+      },
+    );
     await t.test(
       'reduced motion, filters, history and utilities skip both effects',
       () => {

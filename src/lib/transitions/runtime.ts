@@ -26,32 +26,26 @@ let lastClick: { path: string; transition: string | null; at: number } | null =
 let pendingArrival: { path: string; name: TransitionName | null } | null = null;
 
 /*
- * Only decorative landscapes and text are captured. Never name the HTML,
+ * Only the selected product image is captured. Never name the HTML,
  * main, header, footer or controls: a named ancestor excludes its descendants
  * from native hit-testing. Navigation remains live during the animation.
  */
 let stageTimer: ReturnType<typeof setTimeout> | undefined;
-let generation = 0;
-let nativeGeneration = -1;
-let arrivalFrame = 0;
-let verificationFrame = 0;
 
-/** All three features are necessary for our typed CSS choreography. */
+/** Native capabilities are needed only for optional product-image morphs. */
 export function canAnimateJourney() {
   return (
     typeof document.startViewTransition === 'function' &&
     typeof CSS !== 'undefined' &&
     typeof CSS.supports === 'function' &&
     CSS.supports('view-transition-class', 'caldera') &&
-    CSS.supports('selector(:active-view-transition-type(caldera-shop))') &&
+    CSS.supports('selector(:active-view-transition-type(caldera-product))') &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
 }
 
 export function resetPresentation() {
   clearTimeout(stageTimer);
-  cancelAnimationFrame(arrivalFrame);
-  cancelAnimationFrame(verificationFrame);
   delete document.documentElement.dataset.calderaArrival;
   delete document.documentElement.dataset.calderaMotion;
   document.documentElement.style.removeProperty('--caldera-chrome-bottom');
@@ -59,25 +53,9 @@ export function resetPresentation() {
 
 function stage(on: boolean) {
   resetPresentation();
-  generation++;
   if (!on) return;
   // A navigation that never lands releases the stage all the same.
   stageTimer = setTimeout(resetPresentation, 10_000);
-}
-
-/** React calls this after capture; cleanup runs when the native animation ends.
- * An older journey must never clean up a more recent navigation. */
-export function finishPresentation() {
-  const ownGeneration = generation;
-  nativeGeneration = ownGeneration;
-  // A native capture takes precedence over the CSS-only entrance.
-  document.documentElement.dataset.calderaMotion = 'native';
-  return () => {
-    if (generation !== ownGeneration) return;
-    resetPresentation();
-    setActiveCard(null);
-    setReturnSlug(null);
-  };
 }
 
 const decode = (path: string) => {
@@ -142,7 +120,12 @@ export function beginNavigation(url: string, navigation: string) {
     );
     pendingArrival = { path: target.pathname, name: journey };
     stage(journey !== null && journey !== 'instant');
-    if (journey && canAnimateJourney())
+    // Native snapshots are reserved for the shared product image. A browser
+    // callback is not evidence that a decorative capture painted anything.
+    if (
+      (journey === 'product' || journey === 'product-return') &&
+      canAnimateJourney()
+    )
       addTransitionType(transitionType(journey));
   } catch {
     // Never in the way of a navigation.
@@ -161,35 +144,29 @@ export function takeArrival(pathname: string) {
   return pending.name;
 }
 
-/** Select presentation at commit. Streaming or older engines may produce no
- * native capture: in that case animate only the incoming decorative layers.
- * Two frames let React's native callbacks run first; navigation never waits. */
+/** Animate real decorative DOM at commit in every engine. The stage is keyed
+ * by pathname, so consecutive journeys restart even when they have the same
+ * type. No native callback can prematurely suppress or remove the entrance. */
 export function presentArrival(pathname: string) {
   notePath(pathname);
   const arrival = takeArrival(pathname);
   if (arrival === undefined) return;
-  if (!arrival || arrival === 'instant') return resetPresentation();
+  if (
+    !arrival ||
+    arrival === 'instant' ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+    return resetPresentation();
   const root = document.documentElement;
   root.dataset.calderaArrival = arrival;
-  const ownGeneration = generation;
-  const fallback = () => {
-    if (
-      ownGeneration !== generation ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    )
-      return;
-    root.dataset.calderaMotion = 'fallback';
-    // Longer than the longest CSS entrance, with no page visibility gate.
-    clearTimeout(stageTimer);
-    stageTimer = setTimeout(resetPresentation, 1800);
-  };
-  if (!canAnimateJourney()) return fallback();
-  root.dataset.calderaMotion = 'native';
-  arrivalFrame = requestAnimationFrame(() => {
-    verificationFrame = requestAnimationFrame(() => {
-      if (nativeGeneration !== ownGeneration) fallback();
-    });
-  });
+  root.dataset.calderaMotion = 'live';
+  clearTimeout(stageTimer);
+  // All timelines finish within 1.9 s, including text delays.
+  stageTimer = setTimeout(() => {
+    resetPresentation();
+    setActiveCard(null);
+    setReturnSlug(null);
+  }, 2200);
 }
 
 /** Remembers the link that starts a navigation, before React handles it. */

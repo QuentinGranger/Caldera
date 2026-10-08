@@ -1,34 +1,25 @@
 @use 'sass:list';
 
-// Le Souffle de Caldera. Native snapshots, or decorative CSS arrivals when
-// capture is unavailable. First visits and no-JS HTML are never hidden.
+// Real scenery on every page journey; native capture only for product morphs.
+// SSR/first visits are never hidden and navigation never waits for animation.
 :root {
+  view-transition-name: none;
   --motion-instant: 100ms;
   --motion-fast: 240ms;
-  --motion-page: 600ms;
-  --motion-cinematic: 1400ms;
+  --motion-page: 1600ms;
+  --motion-cinematic: 1900ms;
   --ease-caldera: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-caldera-enter: cubic-bezier(0.2, 0.65, 0.25, 1);
   --ease-caldera-exit: cubic-bezier(0.45, 0, 0.55, 1);
-  --motion-exit: 400ms;
-  --motion-reveal: 800ms;
-  --motion-layer: 580ms;
-  --motion-layer-start: 120ms;
+  --motion-layer: 800ms;
+  --motion-layer-start: 100ms;
   --motion-layer-step: 60ms;
   --motion-depth: 1;
-  --motion-layer-distance: 14px;
-  --motion-shadow-travel: 2%;
-  --motion-shadow-scale: 1.025;
+  --motion-layer-distance: 24px;
 
   @media (max-width: 47.99rem) {
-    --motion-fast: 200ms;
-    --motion-page: 480ms;
-    --motion-cinematic: 1100ms;
-    --motion-exit: 300ms;
-    --motion-reveal: 650ms;
-    --motion-layer: 440ms;
-    --motion-layer-start: 90ms;
-    --motion-layer-step: 45ms;
+    --motion-page: 1400ms;
+    --motion-cinematic: 1600ms;
     --motion-depth: 0.5;
   }
 }
@@ -38,7 +29,7 @@
   @each $name in $names {
     $selectors: list.append(
       $selectors,
-      ':root[data-caldera-arrival="#{$name}"]:is(:active-view-transition-type(caldera-#{$name}), [data-caldera-motion="fallback"])',
+      ':root[data-caldera-arrival="#{$name}"]',
       comma
     );
   }
@@ -46,56 +37,34 @@
     @content;
   }
 }
-$world:
-  enter-world, descend, ascend, chapter-forward, chapter-back, leave-world;
 
+// Outside a journey this decorative layer has no paint, no events or semantics.
 .caldera-veil {
   position: fixed;
-  inset: 0;
-  z-index: -1;
+  inset: var(--caldera-chrome-bottom, 0px) 0 0;
+  z-index: 30;
   pointer-events: none;
+  overflow: hidden;
+  visibility: hidden;
+  & * {
+    pointer-events: none;
+  }
 }
 ::view-transition {
   pointer-events: none;
-  // A moving landscape must never paint over the live sticky header.
   clip-path: inset(var(--caldera-chrome-bottom, 0px) 0 0);
 }
 
-// No choreography for refreshes, filters, anchors, utilities or history.
-$journeys: 'caldera-souffle, caldera-shop, caldera-archive, caldera-product, caldera-product-return, caldera-enter-world, caldera-descend, caldera-ascend, caldera-chapter-forward, caldera-chapter-back, caldera-leave-world';
-:root:active-view-transition:not(:active-view-transition-type(#{$journeys})) {
-  &::view-transition-group(*),
-  &::view-transition-old(*),
-  &::view-transition-new(*) {
-    animation: none;
-  }
-}
-
-// Header/footer and all interactive controls remain live, outside snapshots.
-::view-transition-group(caldera-world-hero),
-::view-transition-group(.caldera-landscape) {
-  z-index: 1;
-  overflow: clip;
-}
-::view-transition-old(caldera-world-hero),
-::view-transition-new(caldera-world-hero) {
-  height: 100%;
-  object-fit: cover;
-  mix-blend-mode: normal;
-}
-::view-transition-group(caldera-veil) {
-  z-index: 2;
-}
-::view-transition-old(caldera-veil),
-::view-transition-new(caldera-veil) {
-  mix-blend-mode: normal;
-}
-::view-transition-group(.caldera-product),
-::view-transition-group(caldera-chronicle-number) {
+// Native product capture paints only the shared pack art, over the live page.
+::view-transition-group(.caldera-product) {
   z-index: 4;
   overflow: clip;
+  animation-duration: 850ms;
+  animation-timing-function: var(--ease-caldera);
+  @media (max-width: 47.99rem) {
+    animation-duration: 650ms;
+  }
 }
-// Contain at both ends: no stretched pack art as the card becomes a square.
 ::view-transition-old(.caldera-product),
 ::view-transition-new(.caldera-product) {
   width: 100%;
@@ -103,286 +72,47 @@ $journeys: 'caldera-souffle, caldera-shop, caldera-archive, caldera-product, cal
   object-fit: contain;
   mix-blend-mode: normal;
 }
-@for $layer from 0 through 5 {
-  ::view-transition-group(.caldera-layer-#{$layer}) {
-    z-index: 3;
-  }
-}
-
-@keyframes caldera-out {
-  to {
-    opacity: 0;
-    transform: translate(
-        calc(var(--exit-x, 0px) * var(--motion-depth)),
-        calc(var(--exit-y, 8px) * var(--motion-depth))
-      )
-      scale(var(--exit-scale, 0.985));
-  }
-}
-@keyframes caldera-in {
-  from {
-    opacity: 0;
-    transform: translate(
-        calc(var(--enter-x, 0px) * var(--motion-depth)),
-        calc(var(--enter-y, 10px) * var(--motion-depth))
-      )
-      scale(var(--enter-scale, 1));
-  }
-}
-@keyframes caldera-shadow {
-  from {
-    opacity: 0;
-    transform: translate(
-        calc(-1 * var(--motion-shadow-travel) * var(--chapter-direction, 1)),
-        4%
-      )
-      scale(var(--motion-shadow-scale));
-  }
-  42% {
-    opacity: var(--veil-opacity, 0.35);
-  }
-  to {
-    opacity: 0;
-    transform: translate(
-        calc(var(--motion-shadow-travel) * var(--chapter-direction, 1)),
-        -4%
-      )
-      scale(var(--motion-shadow-scale));
-  }
-}
-@keyframes caldera-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes caldera-layer-in {
-  from {
-    opacity: 0;
-    transform: translateY(
-      calc(var(--motion-layer-distance) * var(--motion-depth))
-    );
-  }
-}
-@keyframes caldera-number-out {
-  to {
-    opacity: 0;
-    transform: translateY(calc(-12px * var(--chapter-direction, 1)));
-  }
-}
-@keyframes caldera-number-in {
-  from {
-    opacity: 0;
-    transform: translateY(calc(12px * var(--chapter-direction, 1)));
+:root:active-view-transition:not(
+    :active-view-transition-type(caldera-product, caldera-product-return)
+  ) {
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
+    animation: none;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  @include journey(souffle, shop, archive, product, product-return, $world...) {
+  @include journey(
+    souffle,
+    enter-world,
+    descend,
+    ascend,
+    chapter-forward,
+    chapter-back,
+    leave-world
+  ) {
     --journey-duration: var(--motion-cinematic);
-
-    &::view-transition-group(.caldera-landscape),
-    &::view-transition-group(caldera-world-hero) {
-      animation-duration: var(--journey-duration);
-      animation-timing-function: var(--ease-caldera);
-    }
-    &::view-transition-old(.caldera-landscape) {
-      animation: caldera-out var(--motion-exit) var(--ease-caldera-exit) both;
-    }
-    &::view-transition-new(.caldera-landscape) {
-      --enter-y: 14px;
-      --enter-scale: 1.065;
-      animation: caldera-in var(--motion-reveal) var(--ease-caldera-enter)
-        var(--motion-layer-start) both;
-    }
-    &::view-transition-old(caldera-veil) {
-      // Irregular, translucent volcanic shadow: no solid blackout.
-      background:
-        radial-gradient(ellipse at 15% 25%, #071b13, transparent 65%),
-        radial-gradient(ellipse at 85% 70%, #12231b, transparent 70%);
-      animation: caldera-shadow var(--journey-duration) var(--ease-caldera) both;
-    }
-    &::view-transition-new(caldera-veil) {
-      display: none;
-    }
-    @for $layer from 0 through 5 {
-      &::view-transition-group(.caldera-layer-#{$layer}) {
-        animation-duration: var(--motion-layer);
-        animation-timing-function: var(--ease-caldera);
-      }
-      &::view-transition-old(.caldera-layer-#{$layer}) {
-        animation: caldera-fade-out var(--motion-instant) ease-out both;
-      }
-      &::view-transition-new(.caldera-layer-#{$layer}) {
-        animation: caldera-layer-in
-          var(--motion-layer)
-          var(--ease-caldera)
-          calc(var(--motion-layer-start) + #{$layer} * var(--motion-layer-step))
-          both;
-      }
-    }
   }
-
-  // A clearly perceptible shop entrance; controls stay immediately available.
   @include journey(shop) {
     --journey-duration: var(--motion-page);
-    --veil-opacity: 0;
-    --motion-exit: 240ms;
-    --motion-reveal: 480ms;
-    --motion-layer: 360ms;
-    --motion-layer-start: 65ms;
-    --motion-layer-step: 30ms;
-    &::view-transition-old(.caldera-landscape) {
-      --exit-y: 4px;
-      --exit-scale: 0.995;
-    }
-    &::view-transition-new(.caldera-landscape) {
-      --enter-y: 8px;
-    }
-    &::view-transition-old(caldera-veil) {
-      display: none;
-    }
   }
-
-  // Archives/reading: the title settles first, text stays sharp throughout.
   @include journey(archive) {
-    --journey-duration: var(--motion-page);
-    --veil-opacity: 0;
-    --motion-exit: 240ms;
-    --motion-reveal: 480ms;
-    --motion-layer: 360ms;
-    --motion-layer-start: 60ms;
-    --motion-layer-step: 24ms;
-    &::view-transition-old(.caldera-landscape) {
-      --exit-y: -8px;
-      --exit-scale: 1;
-    }
-    &::view-transition-new(.caldera-landscape) {
-      --enter-y: 10px;
-    }
-    &::view-transition-old(caldera-veil) {
-      display: none;
-    }
+    --journey-duration: 1100ms;
   }
-
-  // The selected pack travels above a faint vignette. No blur on artwork.
   @include journey(product, product-return) {
     --journey-duration: 850ms;
-    &::view-transition-group(.caldera-product) {
-      animation-duration: var(--journey-duration);
-      animation-timing-function: var(--ease-caldera);
-    }
-    &::view-transition-old(caldera-veil) {
-      --veil-opacity: 0.2;
-      background: radial-gradient(ellipse, transparent 35%, #071b13);
-    }
   }
-  @include journey(product-return) {
-    &::view-transition-new(.caldera-landscape) {
-      --enter-y: -8px;
-    }
-  }
-
-  @include journey($world...) {
-    // A travelling cloud casts its shadow across the frame. The landscape
-    // moves first; the typography follows, without capturing any controls.
-    --motion-shadow-travel: 16%;
-    --motion-shadow-scale: 1.28;
-    --motion-layer-distance: 28px;
-    --motion-layer-start: 200ms;
-    --motion-layer-step: 75ms;
-    --veil-opacity: 0.68;
-    &::view-transition-old(caldera-world-hero) {
-      --exit-scale: 1.055;
-      --exit-y: -6px;
-      animation: caldera-out var(--motion-reveal) var(--ease-caldera-exit) both;
-    }
-    &::view-transition-new(caldera-world-hero) {
-      --enter-scale: 1.065;
-      --enter-y: 14px;
-      animation: caldera-in var(--motion-cinematic) var(--ease-caldera-enter)
-        both;
-    }
-    &::view-transition-old(caldera-veil) {
-      --veil-opacity: 0.68;
-      background:
-        radial-gradient(ellipse 52% 75% at 12% 30%, #071b13, transparent 75%),
-        radial-gradient(ellipse 45% 90% at 85% 70%, #35463b, transparent 75%),
-        radial-gradient(ellipse 65% 30% at 45% 100%, #839184, transparent 80%),
-        linear-gradient(
-          115deg,
-          transparent 35%,
-          rgb(207 182 123 / 8%) 55%,
-          transparent 72%
-        );
-    }
-  }
-  @include journey(enter-world) {
-    &::view-transition-old(.caldera-landscape) {
-      --exit-scale: 1.012;
-      --exit-y: 0px;
-    }
-    &::view-transition-old(caldera-world-hero) {
-      --exit-scale: 1.075;
-    }
-  }
-  @include journey(leave-world) {
-    --veil-opacity: 0.3;
-    &::view-transition-old(caldera-world-hero) {
-      --exit-scale: 0.985;
-    }
-    &::view-transition-old(caldera-veil) {
-      --veil-opacity: 0.25;
-    }
-  }
-  @include journey(descend, ascend) {
-    &::view-transition-old(.caldera-landscape) {
-      --exit-y: -10px;
-    }
-    &::view-transition-new(.caldera-landscape) {
-      --enter-y: 14px;
-    }
-  }
-  @include journey(ascend) {
-    &::view-transition-old(.caldera-landscape) {
-      --exit-y: 10px;
-    }
-    &::view-transition-new(.caldera-landscape),
-    &::view-transition-new(caldera-world-hero) {
-      --enter-y: -14px;
-    }
-  }
-  @include journey(chapter-forward, chapter-back) {
+  @include journey(chapter-forward) {
     --chapter-direction: 1;
-    &::view-transition-old(.caldera-landscape),
-    &::view-transition-old(caldera-world-hero) {
-      --exit-x: calc(-4.5vw * var(--chapter-direction));
-      --exit-y: 0px;
-    }
-    &::view-transition-new(.caldera-landscape),
-    &::view-transition-new(caldera-world-hero) {
-      --enter-x: calc(4.5vw * var(--chapter-direction));
-      --enter-y: 0px;
-    }
-    &::view-transition-group(caldera-chronicle-number) {
-      animation-duration: var(--motion-fast);
-    }
-    &::view-transition-old(caldera-chronicle-number) {
-      animation: caldera-number-out var(--motion-fast) var(--ease-caldera-exit)
-        both;
-    }
-    &::view-transition-new(caldera-chronicle-number) {
-      animation: caldera-number-in var(--motion-fast) var(--ease-caldera) both;
-    }
   }
   @include journey(chapter-back) {
     --chapter-direction: -1;
   }
 
-  // An older engine or a streamed commit may not form native snapshots.
-  // This entrance affects decorative surfaces/text only, never main or links.
-  :root[data-caldera-motion='fallback'] {
+  :root[data-caldera-motion='live'] {
     [data-caldera-landscape] {
-      animation: caldera-fallback-landscape var(--journey-duration)
+      animation: caldera-camera var(--journey-duration)
         var(--ease-caldera-enter) both;
     }
     @for $layer from 0 through 5 {
@@ -395,28 +125,37 @@ $journeys: 'caldera-souffle, caldera-shop, caldera-archive, caldera-product, cal
       }
     }
     .caldera-veil {
-      z-index: 20;
-      inset: var(--caldera-chrome-bottom, 0px) 0 0;
-      overflow: hidden;
-      &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(ellipse 52% 75% at 12% 30%, #071b13, transparent 75%),
-          radial-gradient(ellipse 45% 90% at 85% 70%, #35463b, transparent 75%),
-          radial-gradient(ellipse 65% 30% at 45% 100%, #839184, transparent 80%);
-        animation: caldera-shadow var(--journey-duration) var(--ease-caldera)
-          both;
+      visibility: visible;
+    }
+    .caldera-veil__mist {
+      position: absolute;
+      inset: -15%;
+      background:
+        linear-gradient(110deg, #03140ef0 5%, #09251ab3 30%, transparent 62%),
+        radial-gradient(ellipse at 85% 70%, #b3bd9a55, transparent 65%);
+      animation: caldera-mist-reveal var(--journey-duration) ease-in-out both;
+    }
+    .caldera-veil__frame {
+      position: absolute;
+      inset-inline: 0;
+      height: clamp(24px, 7vh, 70px);
+      background: #03140e;
+      animation: caldera-frame-reveal var(--journey-duration) ease-in-out both;
+      &--top {
+        top: 0;
+        transform-origin: top;
+        border-bottom: 1px solid #c9aa5e66;
+      }
+      &--bottom {
+        bottom: 0;
+        transform-origin: bottom;
+        border-top: 1px solid #c9aa5e66;
       }
     }
   }
-
   @media (max-width: 47.99rem) {
-    @include journey($world...) {
-      --motion-shadow-travel: 8%;
-      --motion-layer-start: 140ms;
-      --motion-layer-step: 55ms;
+    @include journey(archive) {
+      --journey-duration: 900ms;
     }
     @include journey(product, product-return) {
       --journey-duration: 650ms;
@@ -424,29 +163,64 @@ $journeys: 'caldera-souffle, caldera-shop, caldera-archive, caldera-product, cal
   }
 }
 
-@keyframes caldera-fallback-landscape {
+@keyframes caldera-camera {
   from {
     transform: translateX(
-        calc(2vw * var(--chapter-direction, 0) * var(--motion-depth))
+        calc(3vw * var(--chapter-direction, 0) * var(--motion-depth))
       )
-      scale(1.065);
+      scale(1.12);
   }
   to {
     transform: translateX(0) scale(1);
   }
 }
+@keyframes caldera-layer-in {
+  from {
+    opacity: 0;
+    transform: translateY(
+      calc(var(--motion-layer-distance) * var(--motion-depth))
+    );
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes caldera-mist-reveal {
+  0% {
+    opacity: 0.85;
+    transform: translateX(-8%);
+  }
+  25% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(12%);
+  }
+}
+@keyframes caldera-frame-reveal {
+  0%,
+  35% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
 
-// The runtime also skips presentation for reduced motion. These rules cover
-// a preference changed while a snapshot is already playing.
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
-  }
+  ::view-transition-new(*),
   [data-caldera-landscape],
   [data-caldera-layer],
-  .caldera-veil::before {
+  .caldera-veil * {
     animation: none !important;
+  }
+  .caldera-veil {
+    visibility: hidden !important;
   }
 }
