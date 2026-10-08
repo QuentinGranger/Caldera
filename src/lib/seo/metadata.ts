@@ -309,6 +309,10 @@ function statsSentences(
     skipLanguages,
   }: StatsSentenceOptions,
 ): string[] {
+  if (process.env.CATALOG_DEMO_MODE === '1')
+    return [
+      `${subject} : catalogue de démonstration. Produits d’exemple non commercialisés, aucun achat possible.`,
+    ];
   const count = stats.productCount;
   const range = count ? priceRange(stats.minPrice, stats.maxPrice) : null;
   const first = count
