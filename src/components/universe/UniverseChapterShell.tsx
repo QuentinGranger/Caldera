@@ -1,3 +1,4 @@
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -19,6 +20,7 @@ import { articleNode, graph } from '@/lib/seo/jsonld';
 import {
   CHRONICLE_NUMBER,
   CHRONICLE_NUMBER_NAME,
+  LANDSCAPE_REVEAL,
   WORLD_HERO,
   WORLD_HERO_NAME,
 } from '@/lib/transitions/classes';
@@ -55,25 +57,31 @@ export async function UniverseChapterShell({
     <main id="contenu" className={styles.main}>
       {/* The landscape and its number travel from one chronicle to the
           next (src/styles/base/_transitions.scss). */}
-      <ViewTransition
-        name={WORLD_HERO_NAME}
-        share={WORLD_HERO}
-        update={WORLD_HERO}
-        default="none"
-      >
-        <section className={styles.hero} aria-labelledby="chapter-title">
-          {hero && (
-            <Image
-              src={hero.src}
-              alt={hero.alt}
-              fill
-              preload
-              sizes="100vw"
-              className={styles.heroImage}
-            />
-          )}
-          <div className={styles.heroShade} aria-hidden="true" />
-          <Container className={styles.heroInner} data-arrive="layers">
+      <section className={styles.hero} aria-labelledby="chapter-title">
+        <ViewTransition
+          name={WORLD_HERO_NAME}
+          share={WORLD_HERO}
+          enter={LANDSCAPE_REVEAL}
+          exit={LANDSCAPE_REVEAL}
+          update={WORLD_HERO}
+          default="none"
+        >
+          <div className={styles.landscape}>
+            {hero && (
+              <Image
+                src={hero.src}
+                alt={hero.alt}
+                fill
+                preload
+                sizes="100vw"
+                className={styles.heroImage}
+              />
+            )}
+            <div className={styles.heroShade} aria-hidden="true" />
+          </div>
+        </ViewTransition>
+        <Container className={styles.heroInner}>
+          <ArrivalLayers>
             <div className={styles.heroBreadcrumb}>
               <Breadcrumb
                 items={[
@@ -96,9 +104,9 @@ export async function UniverseChapterShell({
             </ViewTransition>
             <h1 id="chapter-title">{title}</h1>
             <p className={styles.heroLead}>{lead}</p>
-          </Container>
-        </section>
-      </ViewTransition>
+          </ArrivalLayers>
+        </Container>
+      </section>
 
       <section className={styles.reading}>
         <Container className={styles.readingGrid}>

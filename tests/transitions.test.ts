@@ -6,7 +6,9 @@ import {
   PRODUCT_MORPH,
   WORLD_HERO,
   perTransition,
+  productTransitionName,
 } from '@/lib/transitions/classes';
+import { isPageJourney } from '@/lib/transitions/navigation';
 import {
   TRANSITIONS,
   chooseTransition,
@@ -42,6 +44,45 @@ test('Transitions : chaque route a sa famille', () => {
   assert.equal(routeKind('/checkout'), 'UTILITY');
   assert.equal(routeKind('/admin/commandes'), 'UTILITY');
   assert.equal(routeKind('/cgv'), 'UTILITY');
+});
+
+test('Transitions : gestes natifs, ancres et liens externes sont exclus', () => {
+  const from = new URL('https://lesterresdecaldera.fr/catalogue');
+  const to = new URL('/produit/coffret', from);
+  assert.equal(isPageJourney({ from, to }), true);
+  for (const settings of [
+    { button: 1 },
+    { button: 2 },
+    { modified: true },
+    { target: '_blank' },
+    { download: true },
+  ])
+    assert.equal(isPageJourney({ from, to, ...settings }), false);
+  for (const href of [
+    '/catalogue?langue=FR',
+    '/catalogue#resultats',
+    '/univers/territoires#forets',
+    'https://discord.gg/RQ8AMYaGVq',
+    'mailto:contact@lesterresdecaldera.fr',
+    'tel:+33123456789',
+  ])
+    assert.equal(isPageJourney({ from, to: new URL(href, from) }), false, href);
+  assert.equal(isPageJourney({ from, to, target: '_self' }), true);
+});
+
+test('Transitions : les noms produit sont uniques, même pour les caractères encodés', () => {
+  const slugs = [
+    'coffret-a',
+    'coffret_a',
+    'coffret/a',
+    'coffret a',
+    'é',
+    'e',
+    '💎',
+  ];
+  const names = slugs.map(productTransitionName);
+  assert.equal(new Set(names).size, slugs.length);
+  for (const name of names) assert.match(name, /^product-image-[a-f0-9-]+$/);
 });
 
 test('Transitions : les chroniques se lisent dans l’ordre', () => {

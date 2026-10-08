@@ -12,6 +12,12 @@
   background: v.$color-night;
   color: v.$color-text-on-dark;
 }
+.landscape {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  z-index: -1;
+}
 // Three depth planes: the landscape (slowest), the mist, then the words.
 .media {
   position: absolute;
@@ -26,7 +32,7 @@
   }
 }
 // Legibility and atmosphere: dark where the text is, night at the bottom.
-.hero::before {
+.landscape::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -146,22 +152,6 @@
 
 // Motion, only for visitors who accept it.
 @media (prefers-reduced-motion: no-preference) {
-  // Arrival: the words rise one after the other.
-  .eyebrow,
-  .content h1,
-  .lead,
-  .actions {
-    animation: rise 900ms v.$ease-out both;
-  }
-  .content h1 {
-    animation-delay: 120ms;
-  }
-  .lead {
-    animation-delay: 260ms;
-  }
-  .actions {
-    animation-delay: 380ms;
-  }
   // Ambient: the landscape breathes, the mist drifts. Barely.
   .image {
     animation: breathe 26s ease-in-out infinite alternate;
@@ -184,16 +174,6 @@
       animation-timeline: scroll(root);
       animation-range: 0 90vh;
     }
-  }
-}
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(1.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes breathe {

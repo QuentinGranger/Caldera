@@ -10,8 +10,6 @@
   border-bottom: 1px solid rgb(255 255 255 / 8%);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
   backdrop-filter: blur(16px) saturate(1.15);
-  // Page transitions leave it in place (src/styles/base/_transitions.scss).
-  view-transition-name: caldera-header;
 }
 // The mobile menu is open: the header is its opaque top bar. Without the
 // backdrop filter, the menu panel is fixed to the screen, not to the header;

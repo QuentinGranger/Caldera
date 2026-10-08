@@ -16,6 +16,13 @@
   background: v.$color-green-dark;
 }
 
+.landscape {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  z-index: -1;
+}
+
 .heroImage {
   z-index: -3;
   object-fit: cover;
