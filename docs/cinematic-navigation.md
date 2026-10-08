@@ -2,6 +2,11 @@
 
 Audit et réalisation du 8 octobre 2026.
 
+Révision à la demande de l’utilisateur : cadence ralentie et mouvement plus visible.
+L’Univers passe de 620 à 1 400 ms (1 100 ms sur écran étroit), sans délai
+ajouté à la navigation. La limite initiale d’une seconde est remplacée par
+cette nouvelle demande explicite.
+
 ## Architecture vérifiée
 
 - Next.js **16.3.8**, React / React DOM **19.3.0**, App Router.
@@ -40,24 +45,24 @@ et `opacity`. Les gradients sont statiques à l’intérieur du voile animé.
 
 ## Correspondance des parcours
 
-| Parcours                                                 | Langage                                                                | Durée desktop / écran étroit |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------- |
-| Accueil → catalogue, catégories, collections, compte     | `shop`, mouvement précis, sans voile                                   | 360 / 300 ms                 |
-| Accueil ou boutique → Univers / chronique                | `enter-world`, poussée caméra et ombre traversante                     | 620 / 520 ms                 |
-| Univers → chronique                                      | `descend`, profondeur verticale                                        | 620 / 520 ms                 |
-| Chronique → Univers                                      | `ascend`, direction inverse                                            | 620 / 520 ms                 |
-| Chronique → suivante / précédente                        | `chapter-forward` / `chapter-back`, déplacement latéral de 3vw / 1.5vw | 620 / 520 ms                 |
-| Univers ou chronique → boutique                          | `leave-world`, paysage qui s’éloigne, brume qui se dissipe             | 620 / 520 ms                 |
-| Catalogue ou sélection → produit                         | `product`, image partagée si la paire existe                           | 500 / 400 ms                 |
-| Produit → boutique, collection, accueil                  | `product-return`, retour partagé si la carte est visible               | 500 / 400 ms                 |
-| Guides, actualités, glossaire, questions                 | `archive`, texte et lecture                                            | 360 / 300 ms                 |
-| Autres grands changements                                | `souffle`, ombre volcanique discrète                                   | 620 / 520 ms                 |
-| Pages utilitaires, paiement, administration              | `instant`                                                              | aucun effet de page          |
-| Filtres, recherche dans un catalogue, ancres, historique | navigation / interaction native                                        | aucun effet de page          |
+| Parcours                                                 | Langage                                                                   | Durée desktop / écran étroit |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------- |
+| Accueil → catalogue, catégories, collections, compte     | `shop`, mouvement précis, sans voile                                      | 600 / 480 ms                 |
+| Accueil ou boutique → Univers / chronique                | `enter-world`, poussée caméra et ombre traversante                        | 1 400 / 1 100 ms             |
+| Univers → chronique                                      | `descend`, profondeur verticale                                           | 1 400 / 1 100 ms             |
+| Chronique → Univers                                      | `ascend`, direction inverse                                               | 1 400 / 1 100 ms             |
+| Chronique → suivante / précédente                        | `chapter-forward` / `chapter-back`, déplacement latéral de 4.5vw / 2.25vw | 1 400 / 1 100 ms             |
+| Univers ou chronique → boutique                          | `leave-world`, paysage qui s’éloigne, brume qui se dissipe                | 1 400 / 1 100 ms             |
+| Catalogue ou sélection → produit                         | `product`, image partagée si la paire existe                              | 850 / 650 ms                 |
+| Produit → boutique, collection, accueil                  | `product-return`, retour partagé si la carte est visible                  | 850 / 650 ms                 |
+| Guides, actualités, glossaire, questions                 | `archive`, texte et lecture                                               | 600 / 480 ms                 |
+| Autres grands changements                                | `souffle`, ombre volcanique discrète                                      | 1 400 / 1 100 ms             |
+| Pages utilitaires, paiement, administration              | `instant`                                                                 | aucun effet de page          |
+| Filtres, recherche dans un catalogue, ancres, historique | navigation / interaction native                                           | aucun effet de page          |
 
 Le numéro de chronique dispose d’une identité partagée distincte et d’un mouvement
 typographique de 240 / 200 ms. Dans l’Univers, l’image arrive d’abord, puis les
-textes démarrent progressivement à partir de 90 ms (60 ms sur écran étroit).
+textes démarrent progressivement à partir de 200 ms (140 ms sur écran étroit).
 L’ombre est irrégulière et translucide, avec une faible lumière chaude ; aucun
 écran noir, flou animé, particule, vidéo, son ou effet élastique n’est ajouté.
 
@@ -79,9 +84,13 @@ L’ombre est irrégulière et translucide, avec une faible lumière chaude ; au
 ## Accessibilité, compatibilité, SEO et performance
 
 - Détection conjointe de l’API, de `view-transition-class` et des types de
-  transition. Si une capacité manque, navigation standard sans contenu caché.
+  transition. Si une capacité manque, arrivée CSS des paysages et textes, sans morphing partagé.
+  Deux frames après le commit, la même arrivée prend le relais si React n’a
+  déclenché aucune capture native (notamment lors d’un rendu progressif).
+  Elle ne bloque aucun lien ou bouton, se nettoie après 1 800 ms et ne se
+  déclenche jamais sur un refresh, un filtre, une ancre ou un retour navigateur.
 - `prefers-reduced-motion: reduce` désactive la chorégraphie dans le runtime et
-  toutes les animations de snapshots en CSS. Les parallaxes et mouvements ambiants
+  toutes les animations de snapshots et de fallback en CSS. Les parallaxes et mouvements ambiants
   existants des Heroes restent dans `no-preference` et leurs `@supports` respectifs.
 - Sur écran étroit : déplacements divisés par deux, durées raccourcies, ombre
   parcourant deux fois moins de distance. Aucun blur ajouté.
@@ -98,7 +107,11 @@ L’ombre est irrégulière et translucide, avec une faible lumière chaude ; au
 ## Vérifications
 
 - `typecheck`, lint sans avertissement et build de production : réussis.
-- 48 tests ciblés transitions, SEO, registre et contenu éditorial : réussis.
+- Tests ciblés transitions, SEO, registre et contenu éditorial : réussis.
+- Cinq scénarios runtime supplémentaires : API partielle, absence de capture
+  après streaming, priorité native, nettoyage obsolète, mouvement réduit /
+  filtres / historique / utilitaires. Exécutés avec React client dans un
+  sous-processus car le reste de la CI utilise `react-server`.
 - Navigation réelle contrôlée sur Chrome **154.0.8037.99**, Safari **26.5**,
   Firefox **157.0.1** et Chromium du navigateur de test.
 - Accueil → catalogue / Univers, Univers → Origines, les cinq chroniques dans
@@ -114,14 +127,19 @@ L’ombre est irrégulière et translucide, avec une faible lumière chaude ; au
 - Console du navigateur de test : aucune erreur. Chrome affiche un avertissement
   de preload CSS Next non utilisé immédiatement ; aucune erreur applicative observée.
 - Instrumentation temporaire du callback React (retirée du code livré) : type
-  `leave-world`, animation native du paysage et du voile de **520 ms** sur écran
-  étroit, cleanup observé après **549 ms**, attribut décoratif bien libéré.
+  `enter-world`, animation native du paysage de **1 400 ms** sur desktop,
+  cleanup observé après **1 453 ms** ; `descend` nettoyée après **1 450 ms**.
+  Capacités natives temporairement désactivées dans le code local de QA :
+  fallback `chapter-forward` exécuté en **1 400 ms**. Tous ces réglages et
+  logs temporaires sont retirés du code livré.
 - Les 60 FPS et les Core Web Vitals sur smartphone moyen ne sont pas mesurés par
   ces contrôles. Les durées indiquées sont celles de la chorégraphie, hors latence réseau.
 
 ## Fichiers créés
 
 - `src/components/transitions/ArrivalLayers.tsx`
+- `tests/transitions-runtime.test.ts`
+- `tests/helpers/transitions-runtime.client.ts`
 - `src/lib/transitions/navigation.ts`
 - `docs/cinematic-navigation.md`
 

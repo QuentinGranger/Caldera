@@ -1,8 +1,10 @@
 import {
   Children,
+  cloneElement,
   isValidElement,
   ViewTransition,
   type ReactNode,
+  type ReactElement,
 } from 'react';
 import { perTransition } from '@/lib/transitions/classes';
 import { TRANSITIONS } from '@/lib/transitions/matrix';
@@ -21,7 +23,7 @@ const layers = Array.from({ length: 6 }, (_, index) =>
 /**
  * No DOM wrapper, no client bundle, no initially hidden content. React
  * captures each layer at full opacity, then animates its native snapshot.
- * Live CSS entrance animations would otherwise be captured at opacity 0.
+ * CSS entrance animations are enabled only when no native capture takes over.
  * Automatic names keep separate headers/sections from sharing an identity.
  * Only text participates: links, CTA groups and form controls remain live
  * because native hit-testing excludes named transition participants.
@@ -38,7 +40,10 @@ export function ArrivalLayers({ children }: { children: ReactNode }) {
         update={layers[Math.min(index, layers.length - 1)]}
         default="none"
       >
-        {child}
+        {cloneElement(
+          child as ReactElement<{ 'data-caldera-layer'?: number }>,
+          { 'data-caldera-layer': Math.min(index, layers.length - 1) },
+        )}
       </ViewTransition>
     ),
   );

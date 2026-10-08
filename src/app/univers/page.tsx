@@ -37,7 +37,7 @@ export default function UniversePage() {
           exit={LANDSCAPE_REVEAL}
           default="none"
         >
-          <div className={styles.landscape}>
+          <div className={styles.landscape} data-caldera-landscape>
             {hero && (
               <Image
                 src={hero.src}

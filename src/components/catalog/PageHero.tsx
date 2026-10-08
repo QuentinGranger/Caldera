@@ -131,7 +131,11 @@ export function PageHero({
           update={LANDSCAPE_REVEAL}
           default="none"
         >
-          <div className={styles.view} aria-hidden="true">
+          <div
+            className={styles.view}
+            aria-hidden="true"
+            data-caldera-landscape
+          >
             <Image
               src={view.src}
               alt=""
