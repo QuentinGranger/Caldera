@@ -7,12 +7,15 @@ Le serveur **Les Terres de Caldera** possède un salon privé
 dans le `.env` local, hors Git. Un message de test envoyé par le
 backend a été confirmé dans ce salon le 7 octobre 2026.
 
-L'intégration utilise quatre salons publics dédiés : `#annonces-caldera`,
-`#sorties-pokemon`, `#restocks`, `#campagnes`. Chaque webhook est conservé dans
+L'intégration utilise quatre salons publics dédiés : `#annonces`,
+`#nouveautés`, `#restocks`, `#offres`. Chaque webhook est conservé dans
 les `.env` hors Git et les variables serveur chiffrées Vercel. Le salon privé
 reste réservé aux essais techniques.
 
-`DISCORD_PUBLICATIONS_ENABLED` vaut `false` par défaut dans le dépôt.
+**État vérifié le 8 octobre 2026 : `DISCORD_PUBLICATIONS_ENABLED=false`
+en production**, après redéploiement et contrôle du worker protégé.
+La dernière demande du propriétaire suspend l'activation autorisée auparavant.
+`DISCORD_PUBLICATIONS_ENABLED` vaut également `false` dans les `.env` locaux.
 L'activation en production nécessite les quatre webhooks et `STORE_OPEN=1`.
 Les mécanismes opérationnels et le contrôle préalable Stripe sont décrits ci-dessous.
 
@@ -33,9 +36,13 @@ physique faisant passer un produit épuisé à un stock achetable. Les annonces 
 campagnes sont prévisualisées puis explicitement validées dans `/admin/discord`.
 La publication d'une newsletter ne publie pas automatiquement sur Discord.
 
-`npm run test:discord` est une commande volontaire en terminal, utilisant le
-webhook Annonces configuré dans son environnement ; elle publie un message
-technique et ne doit pas être exécutée automatiquement en production.
+`npm run test:discord` est une commande volontaire en terminal utilisant
+uniquement `DISCORD_WEBHOOK_TEST`. Elle vérifie que le webhook appartient à
+`DISCORD_GUILD_ID` et `DISCORD_TEST_CHANNEL_ID`, puis envoie un seul message
+technique. Une configuration absente ou incohérente arrête le test ; aucun repli
+vers un salon public n'est permis. L'autorisation du transport est temporaire,
+limitée à ce processus CLI, puis restaurée ; les variables locales et de
+production restent inchangées. Ne pas planifier cette commande en production.
 
 ## Comptes et rôle lié
 
@@ -123,7 +130,7 @@ seule que l’instance Vercel utilise cette branche.
 
 ## Publications automatiques et ouverture de la boutique
 
-Le propriétaire a autorisé l’activation des publications et l’ouverture du
+Le propriétaire avait autorisé l’activation des publications et l’ouverture du
 catalogue et du checkout. `STORE_OPEN=1` est le seul interrupteur serveur du
 rideau ; aucun cookie ne le contourne. Les contrôles de paiement existants
 continuent d’exiger Stripe live, une clé publique live et le secret webhook.
@@ -172,6 +179,57 @@ Le cycle de liaison a aussi été validé sur le site de production : la ligne e
 `roleGrantedAt` ont été constatés dans `caldera-eu / production`, et le rôle
 vérifié dans l’API Discord. Cette observation confirme la base réellement
 utilisée par Vercel, dont la chaîne de connexion reste masquée.
+
+## Structure du serveur validée le 8 octobre 2026
+
+| Ordre | Catégorie      | Salons                                                    |
+| ----- | -------------- | --------------------------------------------------------- |
+| 1     | COMMENCER ICI  | bienvenue, règles, annonces, rôles                        |
+| 2     | CALDERA        | nouveautés, restocks, offres, actualités-tcg, suggestions |
+| 3     | COMMUNAUTÉ     | général, pokémon-tcg, vos-pulls, deckbuilding, collection |
+| 4     | AIDE           | aide-caldera, faq                                         |
+| 5     | VOCAUX         | Général                                                   |
+| 6     | STAFF (privée) | staff, logs, discord-tech, test-integration               |
+
+Les salons COMMENCER ICI, les quatre publications, actualités-tcg et faq sont
+en lecture seule pour les membres standards et liés. Les suggestions, l'aide
+et la communauté permettent les discussions ; les images sont autorisées,
+notamment dans vos-pulls. STAFF et ses quatre salons refusent Voir le salon à
+`@everyone` et l'autorisent au rôle Staff. Ces droits ont été contrôlés par
+l'API Discord et l'aperçu de rôle `@everyone`, sans utiliser le compte d'un
+tiers. La liste des salons a aussi été inspectée à une largeur de 390 px ;
+ce contrôle n'est pas un test de l'application Discord sur téléphone physique.
+
+Staff possède uniquement Gérer les messages et Exclure temporairement des
+membres au niveau serveur, plus les accès et publications par salon. Il n'est
+attribué à aucun membre. La hiérarchie est Staff > bot > Compte Caldera lié :
+le bot ne peut pas attribuer le rôle Staff. `@everyone` n'a ni administration,
+gestion des rôles, gestion des salons, gestion des webhooks, mentions collectives
+ni publications d'applications externes.
+
+| Événement      | Variable serveur                         | Salon            |
+| -------------- | ---------------------------------------- | ---------------- |
+| `announcement` | `DISCORD_WEBHOOK_ANNOUNCEMENTS`          | annonces         |
+| `release`      | `DISCORD_WEBHOOK_RELEASES`               | nouveautés       |
+| `restock`      | `DISCORD_WEBHOOK_RESTOCKS`               | restocks         |
+| `campaign`     | `DISCORD_WEBHOOK_CAMPAIGNS`              | offres           |
+| Test manuel    | `DISCORD_WEBHOOK_TEST` (local seulement) | test-integration |
+
+Les quatre webhooks publics ont été réutilisés sans rotation ni changement
+d'identifiant. Le webhook privé Caldera Test est conservé et un nouvel envoi
+par le transport backend a été confirmé après son déplacement dans STAFF.
+Les URL restent hors Git ; aucune variable Discord n'est `NEXT_PUBLIC_*`.
+Les textes d'accueil, règles, rôles, FAQ et aide sont publiés. Aucun fait
+commercial, produit, stock, prix ou campagne n'a été inventé.
+
+Le support privé futur suivra demande → ticket individuel → Staff, avec accès
+limité au demandeur et au Staff, fermeture et conservation définies. Aucun
+ticket ou transfert de données client vers Discord n'est actif. Les demandes
+personnelles passent actuellement par le formulaire de contact du site.
+
+Prochaine étape : revoir les déclencheurs métier déjà préparés, leur contenu,
+les horaires et les brouillons en attente avant une activation explicitement
+autorisée. Les produits de démonstration restent exclus des sorties/restocks.
 
 ## Catalogue d’exemple demandé par le propriétaire
 
