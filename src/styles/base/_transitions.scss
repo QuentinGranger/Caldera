@@ -1,0 +1,669 @@
+@use 'sass:list';
+@use '../abstracts/variables' as v;
+
+// « Le Souffle de Caldera » : the page transitions.
+//
+// src/lib/transitions chooses one journey per navigation and gives it to
+// React as a transition type, `caldera-<journey>`. This sheet choreographs
+// each journey: the page leaves and arrives (the document root), a veil
+// passes (volcanic rock, or the mist of the world), shared elements travel
+// (product image, landscape, chronicle number), the new page rises in
+// layers. Transform, opacity and light filters only; never above 0.7 s.
+// Without View Transitions support, pages simply change, as before.
+
+// --- Motion tokens ---------------------------------------------------------
+
+:root {
+  --motion-instant: 120ms;
+  --motion-fast: 240ms;
+  --motion-page: 420ms;
+  --motion-cinematic: 620ms;
+  --ease-caldera: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-caldera-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-caldera-exit: cubic-bezier(0.4, 0, 0.7, 0.4);
+  // Every travel distance is multiplied by it: shorter on phones.
+  --motion-depth: 1;
+
+  @media (max-width: 47.99rem) {
+    --motion-fast: 200ms;
+    --motion-page: 340ms;
+    --motion-cinematic: 500ms;
+    --motion-depth: 0.6;
+  }
+}
+
+// Volcanic rock rising from below, darker at the edges: never a flat black.
+$rock:
+  radial-gradient(
+    120% 62% at 50% 108%,
+    rgb(3 20 14 / 96%) 0%,
+    rgb(5 28 20 / 78%) 34%,
+    rgb(7 36 25 / 0%) 70%
+  ),
+  radial-gradient(80% 50% at 10% 14%, rgb(3 20 14 / 58%), transparent 70%),
+  radial-gradient(90% 55% at 90% 20%, rgb(3 20 14 / 52%), transparent 70%),
+  radial-gradient(160% 120% at 50% 48%, transparent 38%, rgb(3 20 14 / 72%));
+// The embers of the caldera, low behind the rock.
+$embers:
+  radial-gradient(60% 34% at 50% 98%, rgb(224 118 63 / 26%), transparent 72%),
+  radial-gradient(36% 26% at 84% 90%, rgb(207 78 36 / 16%), transparent 70%);
+// The mist of the world: a bank, then finer wisps drifting over it.
+$mist-bank:
+  radial-gradient(55% 40% at 26% 64%, rgb(222 232 224 / 42%), transparent 70%),
+  radial-gradient(60% 44% at 76% 38%, rgb(196 210 199 / 34%), transparent 72%),
+  radial-gradient(150% 110% at 50% 50%, transparent 45%, rgb(3 20 14 / 55%));
+$mist-wisps:
+  radial-gradient(38% 22% at 62% 72%, rgb(240 244 236 / 30%), transparent 70%),
+  radial-gradient(44% 26% at 16% 32%, rgb(214 226 216 / 24%), transparent 70%),
+  radial-gradient(34% 20% at 88% 58%, rgb(226 234 226 / 22%), transparent 70%);
+// Reading: the edges of an old page, barely.
+$parchment: radial-gradient(
+  150% 110% at 50% 42%,
+  rgb(246 241 228 / 0%) 46%,
+  rgb(226 218 198 / 72%)
+);
+
+// A journey: the rules of the given ones. The transition type starts them;
+// data-caldera-arrival (the last navigation, set by TransitionStage before
+// the transition is drawn) settles the case where React merges the types
+// of two quick navigations: only the journey that lands plays.
+@mixin journey($names...) {
+  $selectors: ();
+  @each $name in $names {
+    $selectors: list.append(
+      $selectors,
+      ':root:active-view-transition-type(caldera-#{$name})[data-caldera-arrival="#{$name}"]',
+      comma
+    );
+  }
+  #{$selectors} {
+    @content;
+  }
+}
+
+$world:
+  enter-world, descend, ascend, chapter-forward, chapter-back, leave-world;
+
+// Leaving and arriving: the movement takes the whole duration, the fade
+// is quicker, so two pages are never legible on top of each other.
+@mixin leave($duration, $delay: 0ms) {
+  animation:
+    caldera-move-out #{$duration} var(--ease-caldera-exit) #{$delay} both,
+    caldera-fade-out calc(#{$duration} * 0.7) ease-out #{$delay} both;
+}
+@mixin arrive($duration, $delay: 0ms, $ease: var(--ease-caldera)) {
+  animation:
+    caldera-move-in #{$duration} #{$ease} #{$delay} both,
+    caldera-fade-in calc(#{$duration} * 0.6) ease-out #{$delay} both;
+}
+
+// --- Stage -------------------------------------------------------------------
+
+// The veil (TransitionStage): empty and transparent on the page; during a
+// transition its two snapshots carry the rock or the mist.
+.caldera-veil {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+// The live page stays clickable while a transition plays.
+::view-transition {
+  pointer-events: none;
+}
+
+// Any other transition (an `instant` page, filters, a refresh): React may
+// still open one, with nothing to show. It ends at once.
+$journeys: 'caldera-souffle, caldera-shop, caldera-archive, caldera-product, caldera-product-return, caldera-enter-world, caldera-descend, caldera-ascend, caldera-chapter-forward, caldera-chapter-back, caldera-leave-world';
+:root:active-view-transition:not(:active-view-transition-type(#{$journeys})) {
+  &::view-transition-group(*),
+  &::view-transition-old(*),
+  &::view-transition-new(*) {
+    animation: none;
+  }
+}
+
+// The header is the fixed point of every journey: it never moves.
+::view-transition-group(caldera-header) {
+  z-index: 5;
+  animation: none;
+}
+::view-transition-old(caldera-header) {
+  display: none;
+}
+::view-transition-new(caldera-header) {
+  animation: none;
+}
+
+// Layers: page (root) < landscape < veil < number, product < header. React
+// names a shared element only when it is on screen: none flies in from a
+// scrolled-away hero.
+::view-transition-group(caldera-world-hero) {
+  z-index: 1;
+  overflow: clip;
+  animation-duration: var(--motion-page);
+  animation-timing-function: var(--ease-caldera);
+}
+::view-transition-old(caldera-world-hero),
+::view-transition-new(caldera-world-hero) {
+  height: 100%;
+  object-fit: cover;
+}
+::view-transition-group(caldera-veil) {
+  z-index: 2;
+}
+::view-transition-old(caldera-veil),
+::view-transition-new(caldera-veil) {
+  // Room to drift without ever showing an edge.
+  inset-block-start: -14%;
+  block-size: 128%;
+  mix-blend-mode: normal;
+}
+::view-transition-group(caldera-chronicle-number) {
+  z-index: 3;
+  overflow: clip;
+  animation-duration: 260ms;
+  animation-timing-function: var(--ease-caldera);
+}
+::view-transition-group(.caldera-product) {
+  z-index: 3;
+}
+
+// --- Choreography ----------------------------------------------------------
+
+@keyframes caldera-move-out {
+  to {
+    filter: var(--leave-filter, none);
+    transform: translate(
+        calc(var(--leave-x, 0px) * var(--motion-depth)),
+        calc(var(--leave-y, 0px) * var(--motion-depth))
+      )
+      scale(var(--leave-scale, 1));
+  }
+}
+@keyframes caldera-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes caldera-move-in {
+  from {
+    filter: var(--arrive-filter, none);
+    transform: translate(
+        calc(var(--arrive-x, 0px) * var(--motion-depth)),
+        calc(var(--arrive-y, 0px) * var(--motion-depth))
+      )
+      scale(var(--arrive-scale, 1));
+  }
+}
+@keyframes caldera-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes caldera-veil {
+  from {
+    opacity: var(--veil-start, 0);
+    transform: var(--veil-from, none);
+  }
+  42% {
+    opacity: var(--veil-peak, 1);
+  }
+  to {
+    opacity: 0;
+    transform: var(--veil-to, none);
+  }
+}
+@keyframes caldera-soften {
+  35% {
+    filter: blur(2px);
+  }
+}
+@keyframes caldera-layer-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--layer-y, 10px) * var(--motion-depth)));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  // Souffle: the page breathes out, the rock passes, the new page rises.
+  @include journey(souffle) {
+    &::view-transition-group(root) {
+      background: v.$color-night-soft;
+    }
+    &::view-transition-old(root) {
+      --leave-scale: 0.985;
+      --leave-y: -8px;
+      @include leave(var(--motion-fast));
+    }
+    &::view-transition-new(root) {
+      --arrive-scale: 1.025;
+      @include arrive(calc(var(--motion-page) + 60ms), 140ms);
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-from: translateY(12%);
+      --veil-to: translateY(-10%);
+      background: $rock;
+      animation: caldera-veil var(--motion-cinematic) var(--ease-caldera) both;
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-from: translateY(6%);
+      --veil-to: translateY(-4%);
+      --veil-peak: 0.9;
+      background: $embers;
+      animation: caldera-veil calc(var(--motion-cinematic) - 60ms)
+        var(--ease-caldera) 60ms both;
+    }
+  }
+
+  // The shop: quick and precise, no veil.
+  @include journey(shop) {
+    &::view-transition-group(root) {
+      background: v.$color-background;
+    }
+    &::view-transition-old(root) {
+      --leave-scale: 0.995;
+      --leave-y: -4px;
+      @include leave(calc(var(--motion-fast) - 60ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-y: 8px;
+      @include arrive(calc(var(--motion-page) - 100ms), 60ms);
+    }
+  }
+
+  // Reading: an archive page turns, sober.
+  @include journey(archive) {
+    &::view-transition-group(root) {
+      background: v.$color-background;
+    }
+    &::view-transition-old(root) {
+      --leave-y: -6px;
+      @include leave(calc(var(--motion-fast) - 40ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-y: 10px;
+      @include arrive(calc(var(--motion-page) - 100ms), 80ms);
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-peak: 0.8;
+      background: $parchment;
+      animation: caldera-veil calc(var(--motion-page) - 20ms)
+        var(--ease-caldera) both;
+    }
+  }
+
+  // A product: its image travels, the collection around it loses contrast.
+  @include journey(product) {
+    &::view-transition-group(root) {
+      background: v.$color-background;
+    }
+    &::view-transition-old(root) {
+      --leave-filter: contrast(0.82) saturate(0.8) brightness(0.97);
+      @include leave(calc(var(--motion-fast) + 40ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-y: 10px;
+      @include arrive(var(--motion-page), 120ms);
+    }
+  }
+
+  // Back to the collection: the image goes home, the shelves sharpen again.
+  @include journey(product-return) {
+    &::view-transition-group(root) {
+      background: v.$color-background;
+    }
+    &::view-transition-old(root) {
+      --leave-scale: 0.99;
+      @include leave(calc(var(--motion-fast) - 20ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-filter: contrast(0.85) saturate(0.85);
+      --arrive-y: -6px;
+      @include arrive(calc(var(--motion-page) - 20ms), 100ms);
+    }
+  }
+
+  @include journey(product, product-return) {
+    &::view-transition-group(.caldera-product) {
+      animation-duration: calc(var(--motion-page) + 80ms);
+      animation-timing-function: var(--ease-caldera);
+    }
+  }
+
+  // The world: night underneath, mist passing over the landscape.
+  @include journey($world...) {
+    &::view-transition-group(root) {
+      background: v.$color-night;
+    }
+    &::view-transition-old(caldera-veil) {
+      background: $mist-bank;
+      animation: caldera-veil var(--motion-cinematic) var(--ease-caldera) both;
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-peak: 0.85;
+      background: $mist-wisps;
+      animation: caldera-veil calc(var(--motion-cinematic) - 40ms)
+        var(--ease-caldera) 40ms both;
+    }
+  }
+
+  // Entering the world: the camera walks forward into the landscape.
+  @include journey(enter-world) {
+    &::view-transition-group(caldera-world-hero) {
+      animation-duration: calc(var(--motion-cinematic) - 60ms);
+    }
+    &::view-transition-old(root) {
+      --leave-scale: 1.06;
+      @include leave(calc(var(--motion-fast) + 100ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-scale: 1.045;
+      @include arrive(
+        calc(var(--motion-cinematic) - 160ms),
+        200ms,
+        var(--ease-caldera-enter)
+      );
+    }
+    &::view-transition-old(caldera-world-hero) {
+      --leave-scale: 1.1;
+      @include leave(calc(var(--motion-fast) + 140ms));
+    }
+    &::view-transition-new(caldera-world-hero) {
+      --arrive-scale: 1.06;
+      @include arrive(
+        calc(var(--motion-cinematic) - 140ms),
+        140ms,
+        var(--ease-caldera-enter)
+      );
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-from: scale(1.14);
+      --veil-to: scale(1);
+      --veil-peak: 0.95;
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-from: translateX(-4%) scale(1.08);
+      --veil-to: translateX(4%);
+    }
+  }
+
+  // Leaving it, the inverse: the camera pulls back, the mist thins out and
+  // the shop comes back sharp.
+  @include journey(leave-world) {
+    &::view-transition-old(root) {
+      --leave-scale: 0.95;
+      @include leave(calc(var(--motion-fast) + 60ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-scale: 1.03;
+      @include arrive(var(--motion-page), 140ms);
+    }
+    &::view-transition-old(caldera-world-hero) {
+      --leave-scale: 0.92;
+      @include leave(calc(var(--motion-fast) + 60ms));
+    }
+    &::view-transition-new(caldera-world-hero) {
+      --arrive-scale: 1.04;
+      @include arrive(var(--motion-page), 120ms);
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-start: 0.75;
+      --veil-peak: 0.5;
+      --veil-from: scale(1);
+      --veil-to: scale(1.16);
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-start: 0.6;
+      --veil-peak: 0.4;
+      --veil-to: scale(1.1);
+    }
+  }
+
+  // Down into a chronicle, and back up to the universe.
+  @include journey(descend) {
+    &::view-transition-old(root) {
+      --leave-y: -3%;
+      --leave-scale: 0.99;
+      @include leave(calc(var(--motion-fast) + 60ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-y: 4%;
+      @include arrive(calc(var(--motion-page) + 20ms), 160ms);
+    }
+    &::view-transition-old(caldera-world-hero) {
+      --leave-y: -4%;
+      @include leave(calc(var(--motion-fast) + 100ms));
+    }
+    &::view-transition-new(caldera-world-hero) {
+      --arrive-y: 4%;
+      --arrive-scale: 1.03;
+      @include arrive(var(--motion-page), 120ms);
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-from: translateY(14%);
+      --veil-to: translateY(-10%);
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-from: translateY(20%);
+      --veil-to: translateY(-14%);
+    }
+  }
+  @include journey(ascend) {
+    &::view-transition-old(root) {
+      --leave-y: 3%;
+      --leave-scale: 0.99;
+      @include leave(calc(var(--motion-fast) + 60ms));
+    }
+    &::view-transition-new(root) {
+      --arrive-y: -4%;
+      @include arrive(calc(var(--motion-page) + 20ms), 160ms);
+    }
+    &::view-transition-old(caldera-world-hero) {
+      --leave-y: 4%;
+      @include leave(calc(var(--motion-fast) + 100ms));
+    }
+    &::view-transition-new(caldera-world-hero) {
+      --arrive-y: -4%;
+      --arrive-scale: 1.03;
+      @include arrive(var(--motion-page), 120ms);
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-from: translateY(-14%);
+      --veil-to: translateY(10%);
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-from: translateY(-20%);
+      --veil-to: translateY(14%);
+    }
+  }
+
+  // From one chronicle to the next: a short travel along the road, 4 % of
+  // the width, reversed on the way back. The number turns like a counter.
+  @include journey(chapter-forward, chapter-back) {
+    &::view-transition-old(root) {
+      --leave-scale: 0.995;
+      @include leave(calc(var(--motion-fast) + 80ms));
+    }
+    &::view-transition-new(root) {
+      @include arrive(var(--motion-page), 100ms);
+    }
+    &::view-transition-old(caldera-world-hero) {
+      @include leave(calc(var(--motion-fast) + 80ms));
+    }
+    &::view-transition-new(caldera-world-hero) {
+      @include arrive(var(--motion-page), 80ms);
+    }
+    &::view-transition-old(caldera-chronicle-number) {
+      @include leave(200ms);
+    }
+    &::view-transition-new(caldera-chronicle-number) {
+      @include arrive(260ms, 40ms);
+    }
+  }
+  @include journey(chapter-forward) {
+    &::view-transition-old(root) {
+      --leave-x: -4%;
+    }
+    &::view-transition-new(root) {
+      --arrive-x: 4%;
+    }
+    &::view-transition-old(caldera-world-hero) {
+      --leave-x: -5%;
+    }
+    &::view-transition-new(caldera-world-hero) {
+      --arrive-x: 5%;
+    }
+    &::view-transition-old(caldera-chronicle-number) {
+      --leave-y: -90%;
+    }
+    &::view-transition-new(caldera-chronicle-number) {
+      --arrive-y: 90%;
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-from: translateX(10%);
+      --veil-to: translateX(-10%);
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-from: translateX(16%);
+      --veil-to: translateX(-14%);
+    }
+  }
+  @include journey(chapter-back) {
+    &::view-transition-old(root) {
+      --leave-x: 4%;
+    }
+    &::view-transition-new(root) {
+      --arrive-x: -4%;
+    }
+    &::view-transition-old(caldera-world-hero) {
+      --leave-x: 5%;
+    }
+    &::view-transition-new(caldera-world-hero) {
+      --arrive-x: -5%;
+    }
+    &::view-transition-old(caldera-chronicle-number) {
+      --leave-y: 90%;
+    }
+    &::view-transition-new(caldera-chronicle-number) {
+      --arrive-y: -90%;
+    }
+    &::view-transition-old(caldera-veil) {
+      --veil-from: translateX(-10%);
+      --veil-to: translateX(10%);
+    }
+    &::view-transition-new(caldera-veil) {
+      --veil-from: translateX(-16%);
+      --veil-to: translateX(14%);
+    }
+  }
+
+  // Filters cost little on a large screen; phones keep transform and
+  // opacity alone. Blur only on desktops.
+  @media (min-width: 48rem) {
+    @include journey(souffle) {
+      &::view-transition-old(root) {
+        --leave-filter: contrast(0.9) brightness(0.86);
+      }
+    }
+    @include journey(archive) {
+      &::view-transition-old(root) {
+        --leave-filter: grayscale(0.3) sepia(0.12);
+      }
+    }
+    @include journey(enter-world) {
+      &::view-transition-old(root) {
+        --leave-filter: brightness(0.8);
+      }
+    }
+    @include journey(product, product-return) {
+      &::view-transition-image-pair(.caldera-product) {
+        animation: caldera-soften calc(var(--motion-page) + 80ms) linear both;
+      }
+    }
+  }
+  @media (min-width: 64rem) and (hover: hover) {
+    @include journey(souffle) {
+      &::view-transition-old(root) {
+        --leave-filter: contrast(0.9) brightness(0.86) blur(1.5px);
+      }
+    }
+    @include journey(enter-world) {
+      &::view-transition-old(root) {
+        --leave-filter: brightness(0.8) blur(2px);
+      }
+    }
+  }
+
+  // The new page rises in layers: hero, eyebrow, title, then the rest.
+  // Only after a client navigation (html[data-caldera-arrival]): a first
+  // visit renders at once. Transform and opacity: the page is usable now.
+  html[data-caldera-arrival]:not([data-caldera-arrival='instant']) {
+    [data-arrive='hero'],
+    [data-arrive='layers'] > *,
+    [data-arrive='sequence'] > * {
+      animation: caldera-layer-in var(--motion-page) var(--ease-caldera) both;
+    }
+    [data-arrive='hero'] {
+      --layer-y: 14px;
+      animation-delay: 60ms;
+    }
+    [data-arrive='layers'] > * {
+      animation-delay: 210ms;
+    }
+    [data-arrive='layers'] > :nth-child(1) {
+      animation-delay: 110ms;
+    }
+    [data-arrive='layers'] > :nth-child(2) {
+      animation-delay: 150ms;
+    }
+    [data-arrive='layers'] > :nth-child(3) {
+      animation-delay: 180ms;
+    }
+    // A product: category, name, then price, call to action, details.
+    [data-arrive='sequence'] > * {
+      animation-delay: 250ms;
+    }
+    [data-arrive='sequence'] > :nth-child(1) {
+      animation-delay: 60ms;
+    }
+    [data-arrive='sequence'] > :nth-child(2) {
+      animation-delay: 100ms;
+    }
+    [data-arrive='sequence'] > :nth-child(3) {
+      animation-delay: 140ms;
+    }
+    [data-arrive='sequence'] > :nth-child(4) {
+      animation-delay: 180ms;
+    }
+    [data-arrive='sequence'] > :nth-child(5) {
+      animation-delay: 215ms;
+    }
+    :is([data-arrive='layers'], [data-arrive='sequence']) > h1 {
+      --layer-y: 18px;
+    }
+  }
+  // The shop and reading: shorter, 10 px at most.
+  html[data-caldera-arrival]:is(
+      [data-caldera-arrival='shop'],
+      [data-caldera-arrival='archive']
+    ) {
+    :is([data-arrive='layers'], [data-arrive='sequence']) > :is(h1, *) {
+      --layer-y: 10px;
+      animation-duration: calc(var(--motion-page) - 80ms);
+    }
+  }
+}
+
+// Reduced motion: no travel at all, a short crossfade.
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*) {
+    animation-name: none;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 160ms;
+  }
+}

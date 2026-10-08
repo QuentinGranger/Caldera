@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { connection } from 'next/server';
-import type { ReactNode } from 'react';
+import { ViewTransition, type ReactNode } from 'react';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -16,6 +16,12 @@ import {
   type UniverseChapterSlug,
 } from '@/data/universe';
 import { articleNode, graph } from '@/lib/seo/jsonld';
+import {
+  CHRONICLE_NUMBER,
+  CHRONICLE_NUMBER_NAME,
+  WORLD_HERO,
+  WORLD_HERO_NAME,
+} from '@/lib/transitions/classes';
 import { getUniverseShopLinks } from './shopLinks';
 import styles from './UniverseChapter.module.scss';
 
@@ -47,36 +53,52 @@ export async function UniverseChapterShell({
 
   return (
     <main id="contenu" className={styles.main}>
-      <section className={styles.hero} aria-labelledby="chapter-title">
-        {hero && (
-          <Image
-            src={hero.src}
-            alt={hero.alt}
-            fill
-            preload
-            sizes="100vw"
-            className={styles.heroImage}
-          />
-        )}
-        <div className={styles.heroShade} aria-hidden="true" />
-        <Container className={styles.heroInner}>
-          <div className={styles.heroBreadcrumb}>
-            <Breadcrumb
-              items={[
-                { label: 'Accueil', href: '/' },
-                { label: 'Univers', href: universeIndex.path },
-                { label: chapter.title },
-              ]}
-              currentPath={path}
+      {/* The landscape and its number travel from one chronicle to the
+          next (src/styles/base/_transitions.scss). */}
+      <ViewTransition
+        name={WORLD_HERO_NAME}
+        share={WORLD_HERO}
+        update={WORLD_HERO}
+        default="none"
+      >
+        <section className={styles.hero} aria-labelledby="chapter-title">
+          {hero && (
+            <Image
+              src={hero.src}
+              alt={hero.alt}
+              fill
+              preload
+              sizes="100vw"
+              className={styles.heroImage}
             />
-          </div>
-          <p className={styles.chapterNumber}>
-            CHRONIQUE {chapter.number} · {kicker}
-          </p>
-          <h1 id="chapter-title">{title}</h1>
-          <p className={styles.heroLead}>{lead}</p>
-        </Container>
-      </section>
+          )}
+          <div className={styles.heroShade} aria-hidden="true" />
+          <Container className={styles.heroInner} data-arrive="layers">
+            <div className={styles.heroBreadcrumb}>
+              <Breadcrumb
+                items={[
+                  { label: 'Accueil', href: '/' },
+                  { label: 'Univers', href: universeIndex.path },
+                  { label: chapter.title },
+                ]}
+                currentPath={path}
+              />
+            </div>
+            <ViewTransition
+              name={CHRONICLE_NUMBER_NAME}
+              share={CHRONICLE_NUMBER}
+              update={CHRONICLE_NUMBER}
+              default="none"
+            >
+              <p className={styles.chapterNumber}>
+                CHRONIQUE {chapter.number} · {kicker}
+              </p>
+            </ViewTransition>
+            <h1 id="chapter-title">{title}</h1>
+            <p className={styles.heroLead}>{lead}</p>
+          </Container>
+        </section>
+      </ViewTransition>
 
       <section className={styles.reading}>
         <Container className={styles.readingGrid}>

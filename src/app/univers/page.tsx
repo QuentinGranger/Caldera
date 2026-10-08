@@ -12,7 +12,9 @@ import {
   universeImage,
   universeIndex,
 } from '@/data/universe';
+import { ViewTransition } from 'react';
 import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
+import { WORLD_HERO, WORLD_HERO_NAME } from '@/lib/transitions/classes';
 import styles from './page.module.scss';
 
 export const metadata = universeIndexMetadata();
@@ -21,45 +23,48 @@ export default function UniversePage() {
   const hero = universeImage(universeIndex.hero.src, universeIndex.hero.alt);
   return (
     <main id="contenu" className={styles.main}>
-      <section className={styles.hero} aria-labelledby="universe-title">
-        {hero && (
-          <Image
-            src={hero.src}
-            alt={hero.alt}
-            fill
-            preload
-            sizes="100vw"
-            className={styles.heroImage}
-          />
-        )}
-        <div className={styles.heroShade} aria-hidden="true" />
-        <Container className={styles.heroInner}>
-          <div className={styles.heroBreadcrumb}>
-            <Breadcrumb
-              items={[{ label: 'Accueil', href: '/' }, { label: 'Univers' }]}
-              currentPath={universeIndex.path}
+      {/* Its landscape opens onto each chronicle's. */}
+      <ViewTransition name={WORLD_HERO_NAME} share={WORLD_HERO} default="none">
+        <section className={styles.hero} aria-labelledby="universe-title">
+          {hero && (
+            <Image
+              src={hero.src}
+              alt={hero.alt}
+              fill
+              preload
+              sizes="100vw"
+              className={styles.heroImage}
             />
-          </div>
-          <p className={styles.eyebrow}>LES TERRES DE CALDERA</p>
-          <h1 id="universe-title">
-            Là où la terre
-            <br />
-            s’est <em>ouverte.</em>
-          </h1>
-          <p className={styles.heroLead}>
-            Un ancien sommet s’est effondré. À sa place est né un monde de
-            falaises, de brumes, de forêts, de terres volcaniques et de routes
-            que personne n’a encore fini de tracer.
-          </p>
-          <Link
-            className={styles.primaryCta}
-            href={universeChapterPath('origines')}
-          >
-            Commencer par les origines
-            <ArrowRight size={17} aria-hidden="true" />
-          </Link>
-        </Container>
-      </section>
+          )}
+          <div className={styles.heroShade} aria-hidden="true" />
+          <Container className={styles.heroInner} data-arrive="layers">
+            <div className={styles.heroBreadcrumb}>
+              <Breadcrumb
+                items={[{ label: 'Accueil', href: '/' }, { label: 'Univers' }]}
+                currentPath={universeIndex.path}
+              />
+            </div>
+            <p className={styles.eyebrow}>LES TERRES DE CALDERA</p>
+            <h1 id="universe-title">
+              Là où la terre
+              <br />
+              s’est <em>ouverte.</em>
+            </h1>
+            <p className={styles.heroLead}>
+              Un ancien sommet s’est effondré. À sa place est né un monde de
+              falaises, de brumes, de forêts, de terres volcaniques et de routes
+              que personne n’a encore fini de tracer.
+            </p>
+            <Link
+              className={styles.primaryCta}
+              href={universeChapterPath('origines')}
+            >
+              Commencer par les origines
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          </Container>
+        </section>
+      </ViewTransition>
 
       <section className={styles.intro}>
         <Container className={styles.introGrid}>

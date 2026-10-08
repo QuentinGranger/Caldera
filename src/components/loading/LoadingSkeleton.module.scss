@@ -426,6 +426,15 @@ $hairline: rgb(23 62 50 / 14%);
   border: 1px solid v.$color-border;
   border-radius: 0;
 }
+// The product's image, already known: drawn as the gallery will draw it.
+.galleryFilled {
+  background: v.$color-surface;
+  animation: none;
+}
+.galleryImage {
+  object-fit: contain;
+  padding: clamp(1.2rem, 4vw, 3rem);
+}
 
 .thumbnails {
   display: flex;

@@ -1,15 +1,22 @@
 'use client';
 import Image from 'next/image';
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, ViewTransition } from 'react';
 import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react';
+import {
+  PRODUCT_MORPH,
+  productTransitionName,
+} from '@/lib/transitions/classes';
 import styles from './ProductGallery.module.scss';
 type GalleryImage = { url: string; alt: string };
 export function ProductGallery({
   images,
   name,
+  slug,
 }: {
   images: GalleryImage[];
   name: string;
+  /** The product: its card's image travels into the main image. */
+  slug: string;
 }) {
   const [index, setIndex] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null),
@@ -30,13 +37,19 @@ export function ProductGallery({
         aria-controls={id}
         onClick={() => dialog.current?.showModal()}
       >
-        <Image
-          src={active.url}
-          alt={active.alt}
-          fill
-          sizes="(min-width: 1440px) 680px, (min-width: 1200px) 50vw, (min-width: 768px) 80vw, 100vw"
-          preload={index === 0}
-        />
+        <ViewTransition
+          name={productTransitionName(slug)}
+          share={PRODUCT_MORPH}
+          default="none"
+        >
+          <Image
+            src={active.url}
+            alt={active.alt}
+            fill
+            sizes="(min-width: 1440px) 680px, (min-width: 1200px) 50vw, (min-width: 768px) 80vw, 100vw"
+            preload={index === 0}
+          />
+        </ViewTransition>
         <span className={styles.zoom}>
           <Expand size={16} aria-hidden="true" />
           Agrandir

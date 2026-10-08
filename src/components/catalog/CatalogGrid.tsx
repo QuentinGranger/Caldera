@@ -35,7 +35,7 @@ export function CatalogGrid({
               <div className={styles.interludeSlot}>{interlude}</div>
             )}
             <div className={styles.item}>
-              <ProductCard product={product} layout={card} />
+              <ProductCard product={product} layout={card} returnTarget />
             </div>
           </Fragment>
         ))}

@@ -51,7 +51,7 @@ async function WishlistContent() {
         ) : products.length ? (
           <div className={styles.grid}>
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} returnTarget />
             ))}
           </div>
         ) : (

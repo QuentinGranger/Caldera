@@ -10,6 +10,7 @@ import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
 import { SpeedInsights } from '@/components/monitoring/SpeedInsights';
+import { TransitionStage } from '@/components/transitions/TransitionStage';
 import { rootMetadata } from '@/components/layout/siteMetadata';
 import { WishlistProvider } from '@/components/wishlist/WishlistProvider';
 import { getWishlistSnapshot } from '@/lib/wishlist/data';
@@ -40,7 +41,13 @@ export default async function RootLayout({
     getWishlistSnapshot(),
   ]);
   return (
-    <html lang="fr" className={`${headingFont.variable} ${bodyFont.variable}`}>
+    // data-scroll-behavior: smooth scrolling stays for anchors, but Next.js
+    // jumps to the top of a new page at once, never racing its transition.
+    <html
+      lang="fr"
+      className={`${headingFont.variable} ${bodyFont.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <body>
         <a className="skip-link" href="#contenu">
           Aller au contenu
@@ -58,6 +65,7 @@ export default async function RootLayout({
             </StorefrontOnly>
           </WishlistProvider>
         </CartProvider>
+        <TransitionStage />
       </body>
     </html>
   );

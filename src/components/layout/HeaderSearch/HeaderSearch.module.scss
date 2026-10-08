@@ -19,6 +19,33 @@
     cursor: pointer;
   }
 }
+// A micro-transition: the search rises a little as it opens.
+@media (prefers-reduced-motion: no-preference) {
+  .dialog,
+  .dialog::backdrop {
+    transition:
+      opacity var(--motion-fast) var(--ease-caldera),
+      translate var(--motion-fast) var(--ease-caldera),
+      overlay var(--motion-fast) allow-discrete,
+      display var(--motion-fast) allow-discrete;
+  }
+  .dialog:not([open]) {
+    opacity: 0;
+    translate: 0 -0.5rem;
+  }
+  .dialog:not([open])::backdrop {
+    opacity: 0;
+  }
+  @starting-style {
+    .dialog[open] {
+      opacity: 0;
+      translate: 0 -0.5rem;
+    }
+    .dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
 .heading {
   display: flex;
   align-items: center;

@@ -23,7 +23,7 @@ export function EditorialHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-arrive="layers">
       <p className={styles.eyebrow}>{eyebrow}</p>
       <h1>{title}</h1>
       {lead && <p className={styles.lead}>{lead}</p>}

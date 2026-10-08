@@ -92,7 +92,7 @@ export function PageHero({
       )}
       <div className={styles.inner}>
         <Breadcrumb items={breadcrumb} currentPath={path} />
-        <div className={styles.content}>
+        <div className={styles.content} data-arrive="layers">
           <p className={styles.eyebrow}>
             <span aria-hidden="true" />
             {eyebrow}
@@ -118,7 +118,11 @@ export function PageHero({
             </Button>
           )}
         </div>
-        <div className={styles.view} aria-hidden="true">
+        <div
+          className={styles.view}
+          aria-hidden="true"
+          data-arrive={framed ? 'hero' : undefined}
+        >
           <Image
             src={view.src}
             alt=""

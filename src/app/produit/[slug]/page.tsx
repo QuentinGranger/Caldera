@@ -69,8 +69,9 @@ async function ProductContent({
             key={product.id}
             images={images}
             name={product.name}
+            slug={product.slug}
           />
-          <div className={styles.info}>
+          <div className={styles.info} data-arrive="sequence">
             <p className={styles.eyebrow}>
               {productTypeLabels[product.productType]}
             </p>
@@ -166,7 +167,7 @@ export default async function ProductPage({ params }: Props) {
   // remain exact. The heavier product view can then reveal progressively.
   const route = await resolve(params);
   return (
-    <Suspense fallback={<ProductPageSkeleton />}>
+    <Suspense fallback={<ProductPageSkeleton product={route.product} />}>
       <ProductContent route={route} />
     </Suspense>
   );

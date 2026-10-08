@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
+import { SharedProductImage } from '@/components/transitions/SharedProductImage';
 import { ProductCardQuickAdd } from './ProductCardQuickAdd';
 import { ProductFavorite } from './ProductFavorite';
 import { languageLabels } from '@/lib/catalog/params';
@@ -18,6 +18,7 @@ export function ProductCard({
   tone = 'day',
   sizes = GRID_SIZES,
   layout = 'default',
+  returnTarget = false,
 }: {
   product: CatalogProduct;
   compact?: boolean;
@@ -31,6 +32,11 @@ export function ProductCard({
    * the availability. Same card, same height.
    */
   layout?: 'default' | 'edition';
+  /**
+   * The main listing: back from the product page, its image returns into
+   * this card (src/components/transitions/SharedProductImage.tsx).
+   */
+  returnTarget?: boolean;
 }) {
   const edition = layout === 'edition';
   const inStock =
@@ -38,6 +44,7 @@ export function ProductCard({
   return (
     <article
       className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''}`}
+      data-product-card=""
     >
       <div className={styles.visual}>
         <div className={styles.badge}>
@@ -52,10 +59,11 @@ export function ProductCard({
           href={`/produit/${product.slug}`}
           aria-label={viewProductLabel(product.name)}
         >
-          <Image
+          <SharedProductImage
+            slug={product.slug}
+            returnTarget={returnTarget}
             src={product.image}
             alt={product.imageAlt}
-            fill
             sizes={compact ? '(min-width: 768px) 160px, 120px' : sizes}
           />
         </Link>

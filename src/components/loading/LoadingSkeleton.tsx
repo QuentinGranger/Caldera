@@ -1,4 +1,10 @@
+import Image from 'next/image';
+import { ViewTransition } from 'react';
 import { Container } from '@/components/ui/Container/Container';
+import {
+  PRODUCT_MORPH,
+  productTransitionName,
+} from '@/lib/transitions/classes';
 import styles from './LoadingSkeleton.module.scss';
 
 function Block({
@@ -87,11 +93,7 @@ export function CatalogGridSkeleton({
   );
 }
 
-export function CatalogPageSkeleton({
-  framed = false,
-}: {
-  framed?: boolean;
-}) {
+export function CatalogPageSkeleton({ framed = false }: { framed?: boolean }) {
   return (
     <main
       id="contenu"
@@ -178,7 +180,15 @@ export function ExtensionsPageSkeleton() {
   );
 }
 
-export function ProductPageSkeleton() {
+export function ProductPageSkeleton({
+  product,
+}: {
+  /**
+   * Already known while the rest loads: its image shows at once, where the
+   * gallery will be, and receives the card's image on the way in.
+   */
+  product?: { slug: string; image: string; imageAlt: string };
+} = {}) {
   return (
     <main
       id="contenu"
@@ -191,7 +201,28 @@ export function ProductPageSkeleton() {
         <Block className={styles.productBreadcrumb} />
         <div className={styles.productHero} aria-hidden="true">
           <div>
-            <Block className={styles.gallery} />
+            {product ? (
+              <div
+                className={`${styles.block} ${styles.gallery} ${styles.galleryFilled}`}
+              >
+                <ViewTransition
+                  name={productTransitionName(product.slug)}
+                  share={PRODUCT_MORPH}
+                  default="none"
+                >
+                  <Image
+                    src={product.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1440px) 680px, (min-width: 1200px) 50vw, (min-width: 768px) 80vw, 100vw"
+                    preload
+                    className={styles.galleryImage}
+                  />
+                </ViewTransition>
+              </div>
+            ) : (
+              <Block className={styles.gallery} />
+            )}
             <div className={styles.thumbnails}>
               {Array.from({ length: 3 }, (_, index) => (
                 <Block className={styles.thumbnail} key={index} />
@@ -233,7 +264,6 @@ export function ProductPageSkeleton() {
     </main>
   );
 }
-
 
 export function CalendarPageSkeleton() {
   return (
@@ -281,9 +311,7 @@ export function WishlistPageSkeleton() {
           <Block className={styles.simpleEyebrow} />
           <Block className={styles.wishlistTitle} />
           <Block className={styles.simpleLead} />
-          <Block
-            className={`${styles.simpleLead} ${styles.heroLeadShort}`}
-          />
+          <Block className={`${styles.simpleLead} ${styles.heroLeadShort}`} />
         </header>
         <div className={styles.grid} aria-hidden="true">
           {Array.from({ length: 8 }, (_, index) => (
@@ -294,7 +322,6 @@ export function WishlistPageSkeleton() {
     </main>
   );
 }
-
 
 export function CheckoutPageSkeleton() {
   return (
@@ -324,9 +351,7 @@ export function CheckoutPageSkeleton() {
                   <Block className={styles.checkoutInput} />
                 </div>
               ))}
-              <div
-                className={`${styles.checkoutField} ${styles.checkoutWide}`}
-              >
+              <div className={`${styles.checkoutField} ${styles.checkoutWide}`}>
                 <Block className={styles.checkoutFieldLabel} />
                 <Block className={styles.checkoutInput} />
               </div>
