@@ -4,7 +4,6 @@ import { ProductCard } from '@/components/product/ProductCard/ProductCard';
 import type { CatalogProduct } from '@/types/product';
 import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './Showcase.module.scss';
-import { CardStory } from '../CardStory/CardStory';
 
 /**
  * The team's selection, shown like pieces in a cabinet: lit, few, with
@@ -21,7 +20,6 @@ export function Showcase({
   if (!products.length) return null;
   return (
     <>
-      <CardStory />
       <section
         id="selection"
         className={styles.section}

@@ -1,16 +1,3 @@
-@use '../styles/abstracts/variables' as v;
 .main {
   min-width: 0;
-}
-// Dawn: the night of the territories fades into the parchment of the shop,
-// whichever section comes next.
-.dawn {
-  height: clamp(6rem, 12vw, 10rem);
-  background: linear-gradient(
-    180deg,
-    v.$color-night 0%,
-    #25322a 30%,
-    #a89f86 70%,
-    v.$color-background 100%
-  );
 }
