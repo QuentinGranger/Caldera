@@ -34,7 +34,7 @@ export function ProductRail({
       <div className={styles.inner}>
         {latest.length > 0 && (
           <>
-            <header className={styles.head} data-reveal="">
+            <header className={styles.head}>
               <div>
                 <p className={styles.eyebrow}>Derniers produits publiés</p>
                 <h2 id="new-title">Nouveautés</h2>

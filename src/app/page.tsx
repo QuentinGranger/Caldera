@@ -1,3 +1,5 @@
+import { Origins } from '@/components/home/Origins/Origins';
+import { ScrollScenes } from '@/components/home/ScrollScenes';
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { Hero } from '@/components/home/Hero/Hero';
@@ -36,8 +38,8 @@ export async function generateMetadata(): Promise<Metadata> {
     index: true,
   });
 }
-// The page as a journey: enter the landscape, see what is sold, explore the
-// territories, then daylight for the products, the promises and the reading,
+// The page as a journey: enter the landscape, explore its
+// territories, discover what is sold, then daylight for the products, the promises and the reading,
 // and dusk for the last call. A section without data is simply absent; the
 // products are those of the licence sold (shopProductWhere).
 export default async function HomePage() {
@@ -58,13 +60,10 @@ export default async function HomePage() {
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <JsonLd data={graph(organizationNode(), websiteNode())} />
-      <Hero
-        links={home.links}
-        next={home.families.length ? '#familles' : '#territoires'}
-      />
+      <Hero links={home.links} next="#territoires" />
+      <Territories />
       <Families families={home.families} />
       <Showcase products={selected} catalogue={home.links.catalogue} />
-      <Territories />
       <div className={styles.dawn} aria-hidden="true" />
       <Collections collections={home.collections} />
       <ProductRail
@@ -76,7 +75,9 @@ export default async function HomePage() {
       />
       <Assurances />
       <Journal journal={home.journal} />
+      <Origins />
       <FinalCall catalogue={home.links.catalogue} />
+      <ScrollScenes />
     </main>
   );
 }

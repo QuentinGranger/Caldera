@@ -23,7 +23,11 @@ let currentPath: string | null = null;
 let lastClick: { path: string; transition: string | null; at: number } | null =
   null;
 /** The journey of the navigation under way, for the page it leads to. */
-let pendingArrival: { path: string; name: TransitionName | null } | null = null;
+let pendingArrival: {
+  path: string;
+  name: TransitionName | null;
+  at: number;
+} | null = null;
 
 /*
  * Only the selected product image is captured. Never name the HTML,
@@ -49,13 +53,16 @@ export function resetPresentation() {
   delete document.documentElement.dataset.calderaArrival;
   delete document.documentElement.dataset.calderaMotion;
   document.documentElement.style.removeProperty('--caldera-chrome-bottom');
+  document.documentElement.style.removeProperty('--caldera-veil-start');
+  document.documentElement.style.removeProperty('--caldera-journey-budget');
 }
 
 function stage(on: boolean) {
   resetPresentation();
   if (!on) return;
-  // A navigation that never lands releases the stage all the same.
-  stageTimer = setTimeout(resetPresentation, 10_000);
+  document.documentElement.dataset.calderaMotion = 'departing';
+  // A slow/failed route never leaves an opaque curtain over the current page.
+  stageTimer = setTimeout(resetPresentation, 900);
 }
 
 const decode = (path: string) => {
@@ -95,7 +102,7 @@ export function beginNavigation(url: string, navigation: string) {
     ) {
       setActiveCard(null);
       setReturnSlug(null);
-      pendingArrival = { path: target.pathname, name: null };
+      pendingArrival = { path: target.pathname, name: null, at: Date.now() };
       return stage(false);
     }
     const click =
@@ -118,7 +125,7 @@ export function beginNavigation(url: string, navigation: string) {
         ? productSlug(from)
         : null,
     );
-    pendingArrival = { path: target.pathname, name: journey };
+    pendingArrival = { path: target.pathname, name: journey, at: Date.now() };
     stage(journey !== null && journey !== 'instant');
     // Native snapshots are reserved for the shared product image. A browser
     // callback is not evidence that a decorative capture painted anything.
@@ -149,6 +156,7 @@ export function takeArrival(pathname: string) {
  * type. No native callback can prematurely suppress or remove the entrance. */
 export function presentArrival(pathname: string) {
   notePath(pathname);
+  const departedAt = pendingArrival?.at;
   const arrival = takeArrival(pathname);
   if (arrival === undefined) return;
   if (
@@ -157,16 +165,26 @@ export function presentArrival(pathname: string) {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
     return resetPresentation();
+  const elapsed = Math.max(0, Date.now() - (departedAt ?? Date.now()));
+  const budget = Math.max(0, 900 - elapsed);
+  if (!budget) return resetPresentation();
   const root = document.documentElement;
+  root.style.setProperty('--caldera-journey-budget', `${budget}ms`);
+  // Continue the same upward movement even if the cached route lands quickly.
+  const remaining = Math.max(
+    0,
+    1 - (Date.now() - (departedAt ?? Date.now())) / 220,
+  );
+  root.style.setProperty('--caldera-veil-start', `${remaining * 100}%`);
   root.dataset.calderaArrival = arrival;
   root.dataset.calderaMotion = 'live';
   clearTimeout(stageTimer);
-  // All timelines finish within 1.9 s, including text delays.
+  // Departure and arrival share one 900 ms budget, even on a slow route.
   stageTimer = setTimeout(() => {
     resetPresentation();
     setActiveCard(null);
     setReturnSlug(null);
-  }, 2200);
+  }, budget);
 }
 
 /** Remembers the link that starts a navigation, before React handles it. */

@@ -217,9 +217,9 @@ test('Transitions : la feuille de mouvement tient ses promesses', async () => {
     '--ease-caldera-exit',
   ])
     assert.ok(css.includes(token), token);
-  // The requested slower cut stays bounded at 1.9 s; controls never wait.
+  // Every decorative cut stays below one second; controls never wait.
   for (const [, value] of css.matchAll(/(\d+)ms/g))
-    assert.ok(Number(value) <= 1900, `${value}ms`);
+    assert.ok(Number(value) <= 900, `${value}ms`);
   // The live page stays clickable, reduced motion has its own version.
   assert.match(css, /::view-transition\s*\{\s*pointer-events:\s*none/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);

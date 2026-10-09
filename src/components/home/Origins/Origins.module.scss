@@ -1,0 +1,88 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+
+.section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  display: flex;
+  align-items: center;
+  min-height: 95svh;
+  padding-block: clamp(8rem, 20vw, 14rem) 6rem;
+  background: v.$color-night;
+  color: v.$color-text-on-dark;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(
+        180deg,
+        v.$color-background,
+        transparent 26%,
+        transparent 65%,
+        v.$color-night
+      ),
+      linear-gradient(90deg, rgb(3 20 14 / 82%), rgb(3 20 14 / 20%)),
+      linear-gradient(0deg, rgb(3 20 14 / 45%), rgb(3 20 14 / 20%));
+  }
+}
+.media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  img {
+    object-fit: cover;
+    object-position: 65% center;
+  }
+}
+.inner {
+  @include m.container;
+  h2 {
+    margin-block: 1.5rem;
+    font-size: clamp(2.8rem, 5.5vw, 6rem);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    em {
+      color: v.$color-gold-light;
+    }
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold-light;
+}
+.lead {
+  max-width: 32rem;
+  color: #e6ebdf;
+  font-size: v.$text-lead;
+}
+.link {
+  @include m.underline-link(v.$color-gold-light);
+  margin-top: 2rem;
+}
+.rule {
+  display: block;
+  width: 4rem;
+  height: 1px;
+  margin-block: 4rem 1.5rem;
+  background: v.$color-gold;
+  transform-origin: left;
+}
+.welcome {
+  color: v.$color-muted-on-night;
+  font-size: v.$text-small;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .section[data-scene-ready] {
+    .media img {
+      transform: scale(calc(1.06 - var(--scene-progress, 0) * 0.05))
+        translateY(calc(var(--scene-progress, 0) * 1%));
+    }
+    .rule {
+      transform: scaleX(calc(0.3 + var(--scene-progress, 0) * 0.7));
+    }
+  }
+}

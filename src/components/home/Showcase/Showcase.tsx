@@ -25,7 +25,7 @@ export function Showcase({
       aria-labelledby="selection-title"
     >
       <div className={styles.inner}>
-        <div className={styles.story} data-reveal="">
+        <div className={styles.story}>
           <p className={styles.eyebrow}>Le regard du collectionneur</p>
           <h2 id="selection-title">
             Les trésors <em>de Caldera.</em>
@@ -45,7 +45,7 @@ export function Showcase({
         </div>
         <ul className={styles.pieces} data-count={products.length}>
           {products.map((product) => (
-            <li key={product.id} data-reveal="">
+            <li key={product.id}>
               <ProductCard product={product} tone="night" />
             </li>
           ))}

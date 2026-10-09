@@ -14,6 +14,7 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
   return (
     <section
       id="newsletter"
+      data-scroll-scene="outro"
       className={styles.section}
       aria-labelledby="newsletter-title"
     >
@@ -21,7 +22,7 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
         <Image src="/assets/images/RouteCinq.png" alt="" fill sizes="100vw" />
       </div>
       <div className={styles.inner}>
-        <div className={styles.copy} data-reveal="">
+        <div className={styles.copy}>
           <p className={styles.eyebrow}>La lettre de Caldera</p>
           <h2 id="newsletter-title">
             Les sorties Pokémon, <em>sans avoir à les guetter.</em>
@@ -44,7 +45,7 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
             <DiscordInviteLink className={styles.catalogue} />
           </div>
         </div>
-        <div className={styles.form} data-reveal="">
+        <div className={styles.form}>
           <NewsletterForm />
         </div>
       </div>

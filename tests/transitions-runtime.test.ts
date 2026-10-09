@@ -19,6 +19,6 @@ test('Transitions : browser runtime with client React', async () => {
     ],
     { env },
   );
-  assert.match(stdout, /# tests 6\b/);
+  assert.match(stdout, /# tests 7\b/);
   assert.match(stdout, /# fail 0\b/);
 });

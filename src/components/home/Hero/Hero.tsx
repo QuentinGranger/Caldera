@@ -31,60 +31,81 @@ export function Hero({
       className={styles.hero}
       aria-labelledby="hero-title"
       data-home-hero=""
+      data-scroll-scene="hero"
     >
-      <ViewTransition
-        name={WORLD_HERO_NAME}
-        share={WORLD_HERO}
-        enter={LANDSCAPE_REVEAL}
-        exit={LANDSCAPE_REVEAL}
-        default="none"
-      >
-        <div className={styles.landscape} data-caldera-landscape>
-          <div className={styles.media} aria-hidden="true">
-            <Image
-              className={styles.image}
-              src="/assets/images/editorial/hero-banner.png"
-              alt=""
-              fill
-              sizes="100vw"
-              preload
-            />
-            <span className={styles.mist} />
-          </div>
-        </div>
-      </ViewTransition>
-      <div className={styles.inner}>
-        <div className={styles.content}>
-          <ArrivalLayers>
-            <p className={styles.eyebrow}>
-              <span aria-hidden="true" />
-              Boutique spécialisée {'Pokémon\u00a0TCG'}
-            </p>
-            <h1 id="hero-title">
-              Entrez dans l’univers <em>de Caldera</em>
-            </h1>
-            <p className={styles.lead}>{HOME_PROMISE}</p>
-            <div className={styles.actions}>
-              {/* Nothing online yet: the invitation to hear of the opening. */}
-              {links.catalogue ? (
-                <Button href={links.catalogue} variant="gold">
-                  {ALL_PRODUCTS_LABEL} <ArrowRight aria-hidden="true" />
-                </Button>
-              ) : (
-                <Button href="#newsletter" variant="gold">
-                  Être prévenu de l’ouverture <ArrowRight aria-hidden="true" />
-                </Button>
-              )}
-              <Link href="/univers" className={styles.secondary}>
-                Découvrir l’univers <ArrowRight size={16} aria-hidden="true" />
-              </Link>
+      <div className={styles.stage}>
+        <ViewTransition
+          name={WORLD_HERO_NAME}
+          share={WORLD_HERO}
+          enter={LANDSCAPE_REVEAL}
+          exit={LANDSCAPE_REVEAL}
+          default="none"
+        >
+          <div className={styles.landscape} data-caldera-landscape>
+            <div className={styles.media} aria-hidden="true">
+              <Image
+                className={styles.image}
+                src="/assets/images/editorial/hero-banner.png"
+                alt=""
+                fill
+                sizes="(max-width: 47.99rem) 180vh, 100vw"
+                preload
+              />
+              <span className={styles.mist} />
             </div>
-          </ArrivalLayers>
+          </div>
+        </ViewTransition>
+        <div className={styles.inner}>
+          <div className={styles.content}>
+            <ArrivalLayers>
+              <p className={styles.eyebrow}>
+                <span aria-hidden="true" />
+                Boutique spécialisée {'Pokémon\u00a0TCG'}
+              </p>
+              <h1 id="hero-title">
+                Entrez dans l’univers <em>de Caldera</em>
+              </h1>
+              <p className={styles.lead}>{HOME_PROMISE}</p>
+              <div className={styles.actions}>
+                {/* Nothing online yet: the invitation to hear of the opening. */}
+                {links.catalogue ? (
+                  <Button href={links.catalogue} variant="gold">
+                    {ALL_PRODUCTS_LABEL} <ArrowRight aria-hidden="true" />
+                  </Button>
+                ) : (
+                  <Button href="#newsletter" variant="gold">
+                    Être prévenu de l’ouverture{' '}
+                    <ArrowRight aria-hidden="true" />
+                  </Button>
+                )}
+                <Link href="/univers" className={styles.secondary}>
+                  Découvrir l’univers{' '}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </ArrivalLayers>
+          </div>
+          <a className={styles.cue} href={next}>
+            <span>Défiler</span>
+            <ArrowDown size={16} aria-hidden="true" />
+          </a>
         </div>
-        <a className={styles.cue} href={next}>
-          <span>Défiler</span>
-          <ArrowDown size={16} aria-hidden="true" />
-        </a>
+        <div className={styles.reflection}>
+          <p className={styles.eyebrow}>Les Terres de Caldera</p>
+          <h2>
+            Un univers pour
+            <span className={styles.words}>
+              {['collectionner.', 'jouer.', 'découvrir.', 'transmettre.'].map(
+                (word) => (
+                  <span key={word}>{word}</span>
+                ),
+              )}
+            </span>
+          </h2>
+          <p className={styles.reflectionNote}>
+            Une carte. Une histoire. La vôtre.
+          </p>
+        </div>
       </div>
     </section>
   );
