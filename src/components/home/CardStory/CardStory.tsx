@@ -8,16 +8,16 @@ import styles from './CardStory.module.scss';
 
 const chapters = [
   {
-    title: 'L’envie de découvrir.',
-    text: 'Un univers tient parfois dans le creux de la main. Le plaisir commence avant même la première ouverture.',
+    title: 'La Moonbreon.',
+    text: 'Noctali VMAX 215/203 — Évolution Céleste. Une composition nocturne immédiatement reconnaissable.',
   },
   {
-    title: 'Le goût du détail.',
-    text: 'Une illustration qui retient le regard. Une collection qui prend forme, pièce après pièce.',
+    title: 'Le dos d’une passion.',
+    text: 'Le bleu, la Poké Ball, le logo Pokémon. Un dos familier qui accompagne des générations de collections.',
   },
   {
-    title: 'À vous la suite.',
-    text: 'Ouvrir, jouer, collectionner. Découvrez les produits Pokémon sélectionnés par Caldera.',
+    title: 'Trois cartes, trois univers.',
+    text: 'Giratina V 186/196 — Origine Perdue, par Shinji Kanda. Rayquaza Gold Star 107/107 — EX Deoxys, par Masakazu Fukuda.',
   },
 ];
 
@@ -139,11 +139,28 @@ export function CardStory() {
         <canvas ref={canvas} className={styles.canvas} aria-hidden="true" />
         <div className={styles.fallback} aria-hidden="true">
           <Image
-            src="/assets/images/experience/caldera-card-front.webp"
+            className={styles.fallbackLeft}
+            src="/assets/images/experience/giratina-v-186-196.webp"
             alt=""
-            width={768}
-            height={1152}
-            sizes="(min-width: 768px) 420px, 65vw"
+            width={600}
+            height={825}
+            sizes="(min-width: 768px) 360px, 50vw"
+          />
+          <Image
+            className={styles.fallbackRight}
+            src="/assets/images/experience/rayquaza-gold-star-107-107.webp"
+            alt=""
+            width={600}
+            height={825}
+            sizes="(min-width: 768px) 360px, 50vw"
+          />
+          <Image
+            className={styles.fallbackMain}
+            src="/assets/images/experience/noctali-vmax-215-203.webp"
+            alt=""
+            width={600}
+            height={825}
+            sizes="(min-width: 768px) 360px, 50vw"
           />
         </div>
         <div className={styles.content}>
@@ -171,7 +188,7 @@ export function CardStory() {
           </Link>
         </div>
         <div className={styles.footer}>
-          <span>Illustration de l’univers Caldera</span>
+          <span>Cartes emblématiques du JCC Pokémon</span>
           <span className={styles.cue}>
             Faites défiler pour explorer{' '}
             <ArrowDown size={14} aria-hidden="true" />
