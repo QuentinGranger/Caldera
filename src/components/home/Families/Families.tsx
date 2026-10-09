@@ -35,6 +35,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
         className={styles.landscape}
         aria-hidden="true"
         data-journey-landscape
+        data-depth-landscape
       >
         <Image
           src="/assets/images/editorial/hero-banner.png"
@@ -57,7 +58,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
           {families.map((family, index) => (
             <li key={family.id} data-journey-item="product">
               <Link href={family.href} className={styles.card}>
-                <span className={styles.stage}>
+                <span className={styles.stage} data-depth-stage="family">
                   <Image
                     src={family.imageUrl}
                     alt=""

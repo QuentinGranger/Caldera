@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { chapterFlow } from '../motion/journey';
+import { depthPoint } from '../motion/depth';
+import { cardSheen } from './card-sheen';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import {
   cardStoryPose,
@@ -144,6 +146,7 @@ export async function mountCardStory(
     const positions = faceGeometry.getAttribute('position');
     for (let i = 0; i < uv.count; i++)
       uv.setXY(i, positions.getX(i) / 2.4 + 0.5, positions.getY(i) / 3.3 + 0.5);
+    const sheen = own(cardSheen());
     const card = (art: HTMLImageElement) => {
       const group = new THREE.Group();
       group.add(new THREE.Mesh(bodyGeometry, edge));
@@ -152,7 +155,9 @@ export async function mountCardStory(
       const b = new THREE.Mesh(faceGeometry, reverse);
       b.position.z = -0.043;
       b.rotation.y = Math.PI;
-      group.add(a, b);
+      const reflection = new THREE.Mesh(faceGeometry, sheen);
+      reflection.position.z = 0.045;
+      group.add(a, b, reflection);
       return group;
     };
     const assembly = new THREE.Group();
@@ -177,6 +182,9 @@ export async function mountCardStory(
       width = 0,
       height = 0;
     let chapterIndex = -1;
+    const pointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    let point: { x: number; y: number } | undefined;
+    const aim = new THREE.Vector2();
     const draw = () => {
       frame = 0;
       if (disposed || !active || document.hidden) return;
@@ -194,6 +202,14 @@ export async function mountCardStory(
       const pose = cardStoryPose(progress);
       const handoff = chapterFlow(rect.top, rect.height, height);
       const compact = width < 1024;
+      const target =
+        point && pointer.matches && !compact
+          ? depthPoint(point.x - stage.left, point.y - stage.top, width, height)
+          : { x: 0, y: 0 };
+      aim.x += (target.x - aim.x) * 0.16;
+      aim.y += (target.y - aim.y) * 0.16;
+      sheen.uniforms.uTravel!.value = progress;
+      sheen.uniforms.uAim!.value.copy(aim);
       const scale =
         pose.scale * (compact ? Math.min(0.55, (width / height) * 0.84) : 1);
       assembly.scale.setScalar(
@@ -210,8 +226,8 @@ export async function mountCardStory(
         pose.z,
       );
       assembly.rotation.set(
-        pose.rx,
-        pose.ry - (1 - handoff.arrival) * 0.55,
+        pose.rx - aim.y * 0.08,
+        pose.ry - (1 - handoff.arrival) * 0.55 + aim.x * 0.15,
         pose.rz,
       );
       for (const [mesh, direction] of [
@@ -235,6 +251,8 @@ export async function mountCardStory(
         root.dataset.cardState = 'fallback';
         return;
       }
+      if (Math.abs(aim.x - target.x) + Math.abs(aim.y - target.y) > 0.001)
+        schedule();
       root.style.setProperty('--card-progress', progress.toFixed(4));
       if (chapterIndex !== pose.chapter) {
         chapterIndex = pose.chapter;
@@ -249,6 +267,19 @@ export async function mountCardStory(
       if (!disposed && active && !document.hidden && !frame)
         frame = requestAnimationFrame(draw);
     };
+    const move = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' || !pointer.matches) return;
+      point = { x: event.clientX, y: event.clientY };
+      schedule();
+    };
+    const leave = () => {
+      point = undefined;
+      schedule();
+    };
+    root.addEventListener('pointermove', move, { passive: true });
+    root.addEventListener('pointerleave', leave);
+    window.addEventListener('blur', leave);
+    pointer.addEventListener('change', leave);
     const observer = new IntersectionObserver(([entry]) => {
       active = Boolean(entry?.isIntersecting);
       if (!active && frame) {
@@ -270,6 +301,10 @@ export async function mountCardStory(
     window.addEventListener('resize', schedule, { passive: true });
     document.addEventListener('visibilitychange', schedule);
     disposeListeners = () => {
+      root.removeEventListener('pointermove', move);
+      root.removeEventListener('pointerleave', leave);
+      window.removeEventListener('blur', leave);
+      pointer.removeEventListener('change', leave);
       observer.disconnect();
       resize.disconnect();
       if (frame) cancelAnimationFrame(frame);

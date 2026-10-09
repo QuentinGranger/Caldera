@@ -26,3 +26,11 @@ Les contenus sont visibles par défaut, sans opacité masquant les produits. San
 - Contrôles CI : build de production, tests unitaires/PostgreSQL, tests HTTP et audit SEO.
 
 Les contrôles responsive ne constituent pas un test sur téléphone physique (dispense donnée par l’utilisateur).
+
+## Profondeur et lumière
+
+`observeHomeDepth` ajoute une perspective sur les images des familles et des produits mis en avant : légère orientation au pointeur, mouvement vertical au scroll, lumière chaude et sol elliptique. Les cadres, textes et boutons restent stables. Le Hero, les familles, les origines et la communauté disposent aussi d’un léger décalage du paysage ; les brumes du Hero forment un plan distinct.
+
+La scène Three.js reçoit une surface de reflet indépendante de l’illustration imprimée. Son balayage suit le scroll et son orientation suit le pointeur, avec amortissement et arrêt du rendu une fois la position atteinte. Aucun nouvel asset, bibliothèque ou contexte WebGL. Les pointeurs tactiles ne déclenchent pas l’inclinaison, les petits écrans utilisent une amplitude réduite et le mode de mouvement réduit retire l’observateur et ses styles.
+
+Vérifications supplémentaires : bornage des coordonnées, regroupement des événements, absence de boucle au repos, éléments hors champ ignorés, toucher ignoré, bascule dynamique de mouvement réduit et nettoyage complet. Rendu Chromium avec shader compilé sans erreur ; responsive 390 et 320 px sans débordement horizontal ; contrôle visuel Safari et Firefox.

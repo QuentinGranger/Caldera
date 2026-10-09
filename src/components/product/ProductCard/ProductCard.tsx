@@ -47,7 +47,10 @@ export function ProductCard({
       className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''} ${layout === 'spotlight' ? styles.spotlight : ''}`}
       data-product-card=""
     >
-      <div className={styles.visual}>
+      <div
+        className={styles.visual}
+        data-depth-stage={layout === 'spotlight' ? 'product' : undefined}
+      >
         <div className={styles.badge}>
           {product.badge && <ProductBadge kind={product.badge} />}
         </div>
