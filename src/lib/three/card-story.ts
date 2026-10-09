@@ -146,9 +146,10 @@ export async function mountCardStory(
     const face = own(
       new THREE.MeshPhysicalMaterial({
         map: front,
-        metalness: 0.12,
-        roughness: 0.35,
-        clearcoat: 0.35,
+        metalness: 0.02,
+        roughness: 0.6,
+        envMapIntensity: 0.4,
+        clearcoat: 0.12,
         clearcoatRoughness: 0.4,
       }),
     );
