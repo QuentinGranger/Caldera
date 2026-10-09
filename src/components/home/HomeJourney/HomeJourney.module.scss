@@ -1,0 +1,212 @@
+@use '../../../styles/abstracts/variables' as v;
+
+.chapter {
+  position: relative;
+  min-width: 0;
+}
+.camera {
+  background: var(--chapter-ground);
+  // Perspective can project the bottom corners of tall sections past the viewport.
+  // Clip only the horizontal projection; pinned scenes keep their sticky ancestors.
+  &[data-home-camera='free'] {
+    overflow-x: clip;
+  }
+}
+.body {
+  position: relative;
+  transform-origin: 50% 0;
+}
+// A real scroll passage: scenery changes continuously, never covers a CTA.
+.passage {
+  position: relative;
+  height: clamp(15rem, 43svh, 27rem);
+  overflow: hidden;
+  overflow: clip;
+  isolation: isolate;
+  pointer-events: none;
+  color: var(--passage-ink);
+  background: linear-gradient(180deg, var(--passage-from), var(--passage-to));
+  --passage-turn: -20deg;
+  --passage-tilt: 35deg;
+  --passage-roll: -15deg;
+  --passage-scale: 0.8;
+  --passage-travel: -4vw;
+  --passage-glow: 0.3;
+  --passage-caption: 1;
+  --passage-thread: 1;
+}
+.light {
+  position: absolute;
+  inset: -30% -20%;
+  background: radial-gradient(ellipse at 50% 50%, #e8c26130, transparent 55%);
+  opacity: var(--passage-glow);
+  transform: translateX(var(--passage-travel));
+}
+.horizon {
+  position: absolute;
+  width: 140%;
+  height: 80%;
+  left: -20%;
+  top: 10%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.16;
+  transform: perspective(900px) rotateX(68deg) rotateZ(var(--passage-roll));
+}
+.object {
+  position: absolute;
+  width: clamp(9rem, 22vw, 18rem);
+  aspect-ratio: 1;
+  top: 43%;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) translateX(var(--passage-travel))
+    perspective(1000px) rotateX(var(--passage-tilt))
+    rotateY(var(--passage-turn)) rotateZ(var(--passage-roll))
+    scale(var(--passage-scale));
+}
+.plane {
+  position: absolute;
+  inset: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #e8c26108, transparent 70%);
+  box-shadow:
+    inset 0 0 0 5px #e8c26108,
+    0 0 22px #e8c2610c;
+  &:nth-child(2) {
+    inset: 14%;
+    transform: translateZ(24px) rotateX(55deg);
+  }
+  &:nth-child(3) {
+    inset: 28%;
+    transform: translateZ(48px) rotateY(-45deg);
+  }
+}
+.needle {
+  position: absolute;
+  inset: 24% 49%;
+  background: linear-gradient(currentColor, transparent);
+  transform: translateZ(50px) rotate(45deg);
+}
+[data-motif='cards'] {
+  .object {
+    aspect-ratio: 0.727;
+    width: clamp(6rem, 14vw, 10rem);
+  }
+  .plane {
+    border-radius: 0.7rem;
+    background: linear-gradient(145deg, #e8c26116, #e8c26102);
+    &:nth-child(2) {
+      inset: 0;
+      transform: translate3d(-28%, 5%, -28px) rotate(-16deg);
+    }
+    &:nth-child(3) {
+      inset: 0;
+      transform: translate3d(28%, 5%, -56px) rotate(16deg);
+    }
+  }
+  .needle {
+    display: none;
+  }
+}
+[data-motif='pages'] {
+  .object {
+    aspect-ratio: 1.4;
+  }
+  .plane {
+    border-radius: 1px 16% 2px 1px;
+    transform-origin: left;
+    &:nth-child(2) {
+      inset: 0;
+      transform: rotateY(-32deg) translateZ(20px);
+    }
+    &:nth-child(3) {
+      inset: 0;
+      transform: rotateY(-65deg) translateZ(40px);
+    }
+  }
+  .needle {
+    display: none;
+  }
+}
+[data-motif='compass'] .plane {
+  &:nth-child(2) {
+    inset: 20%;
+    border-radius: 0;
+    transform: translateZ(24px) rotate(45deg);
+  }
+  &:nth-child(3) {
+    inset: 20%;
+    border-radius: 0;
+    transform: translateZ(48px);
+  }
+}
+.caption {
+  position: absolute;
+  inset: auto 6vw 12%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  opacity: var(--passage-caption);
+  transform: translateY(calc((1 - var(--passage-caption)) * 1rem));
+  span:first-child {
+    font: 0.65rem v.$font-body;
+    letter-spacing: 0.16em;
+  }
+  span:last-child {
+    font-family: v.$font-heading;
+    font-size: clamp(1.3rem, 2.5vw, 2.3rem);
+    font-style: italic;
+  }
+}
+.thread {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 8%;
+  width: 1px;
+  background: currentColor;
+  opacity: 0.35;
+  transform-origin: top;
+  transform: scaleY(var(--passage-thread));
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-home-journey-ready] .camera[data-home-camera='free'] {
+    perspective: 1400px;
+    .body {
+      opacity: var(--chapter-opacity, 1);
+      transform: translate3d(0, var(--chapter-lift, 0px), 0)
+        rotateX(var(--chapter-tilt, 0deg)) scale(var(--chapter-scale, 1));
+    }
+    &:focus-within .body {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+@media (max-width: 47.99rem) {
+  .passage {
+    height: clamp(12rem, 32svh, 19rem);
+  }
+  .caption {
+    gap: 0.7rem;
+  }
+}
+// The chapter remains a short, coherent colour join without motion or scripting.
+@media (prefers-reduced-motion: reduce) {
+  .passage {
+    height: 8rem;
+  }
+  .object,
+  .horizon,
+  .light {
+    display: none;
+  }
+  .caption {
+    inset-block: 0;
+    transform: none;
+    opacity: 1;
+  }
+}

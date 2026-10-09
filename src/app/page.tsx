@@ -1,3 +1,8 @@
+import {
+  HomeJourney,
+  type HomeChapter,
+} from '@/components/home/HomeJourney/HomeJourney';
+import { CardStory } from '@/components/home/CardStory/CardStory';
 import { Origins } from '@/components/home/Origins/Origins';
 import { ScrollScenes } from '@/components/home/ScrollScenes';
 import type { Metadata } from 'next';
@@ -67,26 +72,126 @@ export default async function HomePage() {
         : home.collections.length
           ? '#collections'
           : '#territoires';
+  const night = '#03140e',
+    forest = '#072419',
+    paper = '#f6f1e4',
+    sand = '#ebe5d7';
+  const chapters: HomeChapter[] = [
+    {
+      key: 'hero',
+      content: <Hero links={home.links} next={firstSection} />,
+      passage: '',
+      motif: 'orbit',
+      start: night,
+      end: night,
+      pinned: true,
+    },
+  ];
+  if (home.families.length)
+    chapters.push({
+      key: 'families',
+      content: <Families families={home.families} />,
+      passage: 'L’envie prend forme.',
+      motif: 'orbit',
+      start: night,
+      end: forest,
+    });
+  if (selected.length)
+    chapters.push(
+      {
+        key: 'card',
+        content: <CardStory />,
+        passage: 'Une carte. Tout un univers.',
+        motif: 'cards',
+        start: night,
+        end: night,
+        pinned: true,
+      },
+      {
+        key: 'selection',
+        content: (
+          <Showcase products={selected} catalogue={home.links.catalogue} />
+        ),
+        passage: 'La collection se dessine.',
+        motif: 'cards',
+        start: forest,
+        end: forest,
+      },
+    );
+  if (latest.length || restocked.length)
+    chapters.push({
+      key: 'new',
+      content: (
+        <ProductRail
+          latest={latest}
+          restocked={restocked.slice(0, 3)}
+          newLink={home.links.nouveautes}
+          stockLink={home.links['en-stock']}
+          demo={isDemoCatalogue([...selected, ...latest, ...restocked])}
+        />
+      ),
+      passage: 'La prochaine découverte.',
+      motif: 'orbit',
+      start: paper,
+      end: paper,
+    });
+  if (home.collections.length)
+    chapters.push({
+      key: 'collections',
+      content: <Collections collections={home.collections} />,
+      passage: 'Un nouveau chapitre.',
+      motif: 'cards',
+      start: paper,
+      end: paper,
+    });
+  chapters.push({
+    key: 'assurances',
+    content: <Assurances />,
+    passage: 'Le plaisir, en confiance.',
+    motif: 'orbit',
+    start: sand,
+    end: sand,
+  });
+  if (home.journal)
+    chapters.push({
+      key: 'journal',
+      content: <Journal journal={home.journal} />,
+      passage: 'Pour aller plus loin.',
+      motif: 'pages',
+      start: paper,
+      end: paper,
+    });
+  chapters.push(
+    {
+      key: 'origins',
+      content: <Origins />,
+      passage: 'Derrière les cartes, un monde.',
+      motif: 'pages',
+      start: paper,
+      end: night,
+    },
+    {
+      key: 'territories',
+      content: <Territories />,
+      passage: 'Tracez votre chemin.',
+      motif: 'compass',
+      start: night,
+      end: night,
+      pinned: true,
+    },
+    {
+      key: 'community',
+      content: <FinalCall catalogue={home.links.catalogue} />,
+      passage: 'L’aventure continue.',
+      motif: 'compass',
+      start: night,
+      end: night,
+    },
+  );
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <JsonLd data={graph(organizationNode(), websiteNode())} />
-      <Hero links={home.links} next={firstSection} />
-      <Families families={home.families} />
-      <Showcase products={selected} catalogue={home.links.catalogue} />
-      <div className={styles.dawn} aria-hidden="true" />
-      <ProductRail
-        latest={latest}
-        restocked={restocked.slice(0, 3)}
-        newLink={home.links.nouveautes}
-        stockLink={home.links['en-stock']}
-        demo={isDemoCatalogue([...selected, ...latest, ...restocked])}
-      />
-      <Collections collections={home.collections} />
-      <Assurances />
-      <Journal journal={home.journal} />
-      <Origins />
-      <Territories />
-      <FinalCall catalogue={home.links.catalogue} />
+      <HomeJourney chapters={chapters} />
       <ScrollScenes />
     </main>
   );
