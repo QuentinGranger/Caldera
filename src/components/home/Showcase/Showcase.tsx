@@ -46,7 +46,7 @@ export function Showcase({
         <ul className={styles.pieces} data-count={products.length}>
           {products.map((product) => (
             <li key={product.id}>
-              <ProductCard product={product} />
+              <ProductCard product={product} tone="night" />
             </li>
           ))}
         </ul>
