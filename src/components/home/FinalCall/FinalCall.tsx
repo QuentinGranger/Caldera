@@ -18,7 +18,12 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
       className={styles.section}
       aria-labelledby="newsletter-title"
     >
-      <div className={styles.media} aria-hidden="true" data-journey-landscape>
+      <div
+        className={styles.media}
+        aria-hidden="true"
+        data-journey-landscape
+        data-depth-landscape
+      >
         <Image src="/assets/images/RouteCinq.png" alt="" fill sizes="100vw" />
       </div>
       <div className={styles.inner}>

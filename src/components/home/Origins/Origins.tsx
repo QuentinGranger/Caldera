@@ -10,7 +10,12 @@ export function Origins() {
       aria-labelledby="origins-title"
       data-scroll-scene="origins"
     >
-      <div className={styles.media} aria-hidden="true" data-journey-landscape>
+      <div
+        className={styles.media}
+        aria-hidden="true"
+        data-journey-landscape
+        data-depth-landscape
+      >
         <Image
           src="/assets/images/PremiersExplorateurs.png"
           alt=""
