@@ -48,7 +48,7 @@ export function ProductRail({
             </header>
             <ul className={styles.rail}>
               {latest.map((product) => (
-                <li key={product.id}>
+                <li key={product.id} data-journey-item="product">
                   {/* A swiped row on phones: wider cards than the grid. */}
                   <ProductCard
                     product={product}
@@ -72,7 +72,7 @@ export function ProductRail({
             </div>
             <ul className={styles.compact}>
               {restocked.map((product) => (
-                <li key={product.id}>
+                <li key={product.id} data-journey-item="product">
                   <ProductCard product={product} compact />
                 </li>
               ))}

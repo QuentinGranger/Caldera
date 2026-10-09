@@ -33,7 +33,7 @@ export function Collections({
         </header>
         <ol className={styles.list}>
           {collections.map((collection) => (
-            <li key={collection.slug}>
+            <li key={collection.slug} data-journey-item="product">
               <Link
                 href={collection.href}
                 id={`extension-${collection.slug}`}

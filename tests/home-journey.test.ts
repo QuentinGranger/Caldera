@@ -1,47 +1,54 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { chapterCamera, passagePose } from '../src/lib/motion/journey';
+import { chapterFlow, itemReveal } from '../src/lib/motion/journey';
 
-test('passages stay bounded during fast scrolling and invalid geometry', () => {
+test('real visuals settle before reaching the upper reading area', () => {
   for (const viewport of [320, 720, 844, 1200]) {
-    for (const top of [-100_000, -400, 0, 200, viewport, 100_000, NaN]) {
-      const pose = passagePose(top, 310, viewport);
-      assert.ok(Object.values(pose).every(Number.isFinite));
-      assert.ok(pose.scale >= 0.55 && pose.scale <= 1.2);
-      assert.ok(pose.turn >= -70 && pose.turn <= 70);
-      assert.ok(pose.caption >= 0 && pose.caption <= 1);
-      assert.ok(pose.thread >= 0 && pose.thread <= 1);
+    assert.equal(itemReveal(viewport, viewport), 0);
+    assert.equal(itemReveal(viewport * 0.25, viewport), 1);
+    assert.equal(itemReveal(0, viewport), 1);
+    for (const top of [-100_000, 0, 100_000, NaN]) {
+      const reveal = itemReveal(top, viewport);
+      assert.ok(Number.isFinite(reveal) && reveal >= 0 && reveal <= 1);
     }
   }
 });
 
-test('the same scroll position restores exactly the same scene when reversing', () => {
+test('content handoffs are reversible and continuous without extra scroll distance', () => {
   const positions = [850, 600, 400, 200, 0, -200, -400];
-  const forward = positions.map((top) => passagePose(top, 310, 844));
+  const forward = positions.map((top) => chapterFlow(top, 1500, 844));
   const backward = [...positions]
     .reverse()
-    .map((top) => passagePose(top, 310, 844));
+    .map((top) => chapterFlow(top, 1500, 844));
   assert.deepEqual(backward.reverse(), forward);
-});
-
-test('passages have no jump at entry, midpoint or exit', () => {
-  for (let top = -320; top <= 730; top++) {
-    const before = passagePose(top, 310, 720);
-    const after = passagePose(top + 1, 310, 720);
+  for (let top = -1600; top < 850; top++) {
+    const before = chapterFlow(top, 1500, 844);
+    const after = chapterFlow(top + 1, 1500, 844);
     for (const key of Object.keys(before) as (keyof typeof before)[])
-      assert.ok(Math.abs(after[key] - before[key]) < 0.25, `${key} at ${top}`);
+      assert.ok(Math.abs(after[key] - before[key]) < 0.003);
+    assert.ok(
+      Math.abs(itemReveal(top, 844) - itemReveal(top + 1, 844)) < 0.003,
+    );
   }
 });
 
-test('the camera settles to normal size and full opacity while content is read', () => {
-  for (const viewport of [320, 720, 844, 1200]) {
-    const pose = chapterCamera(0, viewport * 2, viewport);
-    assert.deepEqual(pose, { lift: 0, tilt: 0, scale: 1, opacity: 1 });
-    for (const top of [-100_000, 0, 100_000, NaN]) {
-      const moving = chapterCamera(top, top + viewport * 2, viewport);
-      assert.ok(Object.values(moving).every(Number.isFinite));
-      assert.ok(moving.opacity >= 0.55 && moving.opacity <= 1);
-      assert.ok(moving.scale >= 0.915 && moving.scale <= 1);
+test('the 3D card handoff preserves the original pose throughout its pinned chapter', () => {
+  for (const viewport of [720, 844, 1200]) {
+    for (let top = 0; top >= -viewport * 2; top -= 10) {
+      const flow = chapterFlow(top, viewport * 3, viewport);
+      assert.equal(flow.arrival, 1);
+      assert.equal(flow.departure, 0);
     }
+    assert.equal(chapterFlow(viewport, viewport * 3, viewport).arrival, 0);
+    assert.equal(
+      chapterFlow(-viewport * 3, viewport * 3, viewport).departure,
+      1,
+    );
   }
+  for (const value of [NaN, Infinity, 0, -1])
+    assert.deepEqual(chapterFlow(0, value, 844), {
+      progress: 0,
+      arrival: 1,
+      departure: 0,
+    });
 });

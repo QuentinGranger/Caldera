@@ -5,39 +5,32 @@ const smooth = (value: number) => {
   return p * p * (3 - 2 * p);
 };
 
-/** Geometry is measured on the untransformed wrapper, never on the moving content. */
-export function passagePose(top: number, height: number, viewport: number) {
-  const p = clamp((viewport - top) / Math.max(1, viewport + height));
-  const travel = smooth(p);
-  const presence = Math.sin(Math.PI * p);
-  return {
-    turn: -70 + 140 * travel,
-    tilt: 65 - 95 * travel,
-    roll: -35 + 70 * travel,
-    scale: 0.55 + presence * 0.65,
-    travel: -18 + 36 * travel,
-    glow: presence * 0.95,
-    caption: smooth((presence - 0.2) / 0.65),
-    thread: smooth((p - 0.3) / 0.45),
-  };
+/** Content has settled before it reaches the upper reading area. */
+export function itemReveal(top: number, viewport: number) {
+  return smooth((viewport * 0.95 - top) / Math.max(1, viewport * 0.7));
 }
-export function chapterCamera(top: number, bottom: number, viewport: number) {
-  const enter = smooth((viewport - top) / Math.max(1, viewport * 0.8));
-  const exit = smooth((viewport * 0.4 - bottom) / Math.max(1, viewport * 0.4));
+
+export function chapterFlow(top: number, height: number, viewport: number) {
+  if (
+    ![top, height, viewport].every(Number.isFinite) ||
+    height <= 0 ||
+    viewport <= 0
+  )
+    return { progress: 0, arrival: 1, departure: 0 };
   return {
-    lift: (1 - enter) * 72 - exit * 24,
-    tilt: (1 - enter) * 4,
-    scale: 0.94 + enter * 0.06 - exit * 0.025,
-    opacity: 0.55 + enter * 0.45,
+    progress: smooth((viewport - top) / (viewport + height)),
+    arrival: smooth((viewport - top) / viewport),
+    departure: smooth((viewport - top - height) / viewport),
   };
 }
 
+/** Demand-driven motion on real visuals. Text, layout and native scroll stay stable. */
 export function observeHomeJourney() {
   const chapters = Array.from(
     document.querySelectorAll<HTMLElement>('[data-home-chapter]'),
   );
-  const passages = Array.from(
-    document.querySelectorAll<HTMLElement>('[data-home-passage]'),
+  const items = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-journey-item]'),
   );
   if (!chapters.length || !('IntersectionObserver' in window)) return;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -46,8 +39,8 @@ export function observeHomeJourney() {
     dispose();
     if (reduced.matches) return;
     const active = new Set<HTMLElement>();
-    // Next Link measures a fragment destination before updating :target. Settle
-    // its camera in capture phase so the native/router scroll uses stable geometry.
+    // Next Link measures fragments before updating :target. Settle the relevant
+    // visuals before its measurement, without intercepting the native navigation.
     const settleAnchor = (hash: string) => {
       chapters.forEach((node) =>
         node
@@ -61,49 +54,37 @@ export function observeHomeJourney() {
           ?.closest<HTMLElement>('[data-home-camera]')
           ?.setAttribute('data-home-anchor', '');
       } catch {
-        // A malformed fragment must never interrupt navigation.
+        /* Malformed fragments must not interrupt navigation. */
       }
     };
     const onAnchorClick = (event: MouseEvent) => {
-      const link = (event.target as Element | null)?.closest?.('a[href]');
-      const href = link?.getAttribute('href');
+      const href = (event.target as Element | null)
+        ?.closest?.('a[href]')
+        ?.getAttribute('href');
       if (href?.startsWith('#')) settleAnchor(href);
     };
     const onHashChange = () => settleAnchor(location.hash);
     settleAnchor(location.hash);
-    document.addEventListener('click', onAnchorClick, true);
-    window.addEventListener('hashchange', onHashChange);
     let frame = 0;
     const paint = () => {
       frame = 0;
+      // Stable wrappers only; batch all geometry reads before all style writes.
       const measures = [...active].map((node) => ({
         node,
-        rect: (node.hasAttribute('data-home-passage')
-          ? node
-          : (node.querySelector<HTMLElement>('[data-home-camera]') ?? node)
-        ).getBoundingClientRect(),
+        rect: node.getBoundingClientRect(),
       }));
       for (const { node, rect } of measures) {
-        if (node.hasAttribute('data-home-passage')) {
-          const pose = passagePose(rect.top, rect.height, innerHeight);
-          for (const [key, value] of Object.entries(pose)) {
-            const unit = ['turn', 'tilt', 'roll'].includes(key)
-              ? 'deg'
-              : key === 'travel'
-                ? 'vw'
-                : '';
-            node.style.setProperty(
-              `--passage-${key}`,
-              `${value.toFixed(4)}${unit}`,
-            );
-          }
+        if (node.hasAttribute('data-journey-item')) {
+          node.style.setProperty(
+            '--item-reveal',
+            itemReveal(rect.top, innerHeight).toFixed(4),
+          );
         } else {
-          const pose = chapterCamera(rect.top, rect.bottom, innerHeight);
-          for (const [key, value] of Object.entries(pose))
-            node.style.setProperty(
-              `--chapter-${key}`,
-              `${value.toFixed(4)}${key === 'lift' ? 'px' : key === 'tilt' ? 'deg' : ''}`,
-            );
+          const flow = chapterFlow(rect.top, rect.height, innerHeight);
+          node.style.setProperty(
+            '--journey-progress',
+            flow.progress.toFixed(4),
+          );
         }
       }
     };
@@ -121,7 +102,7 @@ export function observeHomeJourney() {
       },
       { rootMargin: '180px 0px' },
     );
-    const nodes = [...chapters, ...passages];
+    const nodes = [...chapters, ...items];
     nodes.forEach((node) => {
       active.add(node);
       observer.observe(node);
@@ -134,6 +115,8 @@ export function observeHomeJourney() {
         ? undefined
         : new ResizeObserver(schedule);
     nodes.forEach((node) => resize?.observe(node));
+    document.addEventListener('click', onAnchorClick, true);
+    window.addEventListener('hashchange', onHashChange);
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule, { passive: true });
     document.addEventListener('visibilitychange', schedule);
@@ -141,32 +124,19 @@ export function observeHomeJourney() {
       cancelAnimationFrame(frame);
       observer.disconnect();
       resize?.disconnect();
+      document.removeEventListener('click', onAnchorClick, true);
+      window.removeEventListener('hashchange', onHashChange);
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
       document.removeEventListener('visibilitychange', schedule);
-      document.removeEventListener('click', onAnchorClick, true);
-      window.removeEventListener('hashchange', onHashChange);
       chapters.forEach((node) => {
         node
           .querySelector('[data-home-anchor]')
           ?.removeAttribute('data-home-anchor');
         delete node.dataset.homeJourneyReady;
-        ['lift', 'tilt', 'scale', 'opacity'].forEach((key) =>
-          node.style.removeProperty(`--chapter-${key}`),
-        );
+        node.style.removeProperty('--journey-progress');
       });
-      passages.forEach((node) =>
-        [
-          'turn',
-          'tilt',
-          'roll',
-          'scale',
-          'travel',
-          'glow',
-          'caption',
-          'thread',
-        ].forEach((key) => node.style.removeProperty(`--passage-${key}`)),
-      );
+      items.forEach((node) => node.style.removeProperty('--item-reveal'));
     };
   };
   configure();

@@ -56,7 +56,7 @@ export function Showcase({
             data-count={products.length}
           >
             {products.map((product) => (
-              <li key={product.id}>
+              <li key={product.id} data-journey-item="product">
                 <ProductCard
                   product={product}
                   tone="night"

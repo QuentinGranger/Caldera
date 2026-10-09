@@ -1,27 +1,28 @@
 # Raccords de la home au scroll
 
-## Parcours
+## Principe
 
-Chaque section effectivement affichée reçoit un raccord avec la précédente. Le catalogue vide ou partiel ne crée pas de chapitre vide. L’ordre commercial, les textes, les cartes Pokémon et les destinations des boutons sont conservés.
+Les vrais contenus portent les transitions. Aucun écran intermédiaire, titre ajouté, objet abstrait ni hauteur de scroll supplémentaire. L’ordre commercial, les textes existants, les trois cartes Pokémon et les destinations des boutons sont conservés. Les sections conditionnelles absentes ne laissent aucun raccord vide.
 
-Le décor passe progressivement de la couleur finale du chapitre précédent à celle du suivant. Des objets en perspective évoquent le chapitre à venir : orbites pour la découverte, éventail de cartes pour les produits et extensions, pages pour les lectures, boussole pour les territoires et la communauté. Un court intertitre et un fil central accompagnent le passage.
+Le paysage du Hero se prolonge en arrière-plan des familles. Les panneaux des familles, les produits et les extensions entrent en perspective avant de se stabiliser dans la zone de lecture. Les guides s’ouvrent comme des pages. Les paysages des origines et de la communauté changent doucement de cadrage. Les couleurs se rejoignent dans les espacements existants.
 
 ## Mouvement
 
-`HomeJourney` est rendu côté serveur. `observeHomeJourney` synchronise rotation, profondeur, déplacement, lumière et apparition avec la géométrie du scroll natif. Le mouvement est réversible et ne dépend pas du temps passé sur la page. Les sections libres entrent avec une légère perspective, puis retrouvent leur taille et leur opacité normales pendant la lecture. Les scènes déjà épinglées (Hero, cartes Three.js, territoires) ne sont pas transformées par ce système.
+`HomeJourney` reste rendu côté serveur. `observeHomeJourney` mesure les enveloppes stables des chapitres et des éléments, puis anime leurs enfants. Les titres principaux et la géométrie du document ne sont jamais transformés. L’animation est réversible et dépend de la position de scroll, sans détour imposé ni interception du défilement natif.
 
-Les mesures sont lues sur les enveloppes non transformées, avant les écritures CSS. IntersectionObserver limite les calculs aux chapitres proches du viewport ; requestAnimationFrame regroupe les événements. Aucune boucle permanente, nouvelle texture, bibliothèque ni contexte WebGL n’est ajouté. La projection horizontale des sections longues est contenue sans changer les ancêtres sticky.
+La scène Three.js existante arrive progressivement depuis les familles et se retire vers la sélection. Ses poses pendant le chapitre épinglé restent identiques. Aucune bibliothèque, texture ou contexte WebGL supplémentaire.
+
+Les lectures de géométrie précèdent les écritures CSS. IntersectionObserver limite les mises à jour aux éléments proches du viewport ; requestAnimationFrame regroupe les événements. Les observateurs et événements sont nettoyés à la sortie et lors d’un changement de préférence d’animation.
 
 ## Accessibilité et dégradation
 
-Les raccords sont décoratifs (`aria-hidden`, sans interaction). Les contenus et liens restent dans l’ordre HTML. Le focus clavier remet immédiatement le contenu concerné à son état normal. `prefers-reduced-motion` désactive les transformations et réduit les raccords à huit rems ; le changement de préférence est pris en compte sans rechargement. Sans JavaScript ou IntersectionObserver, les sections sont lisibles et les raccords statiques. Les passages sont plus courts sur petit écran.
+Les contenus sont visibles par défaut, sans opacité masquant les produits. Sans JavaScript, IntersectionObserver ou avec `prefers-reduced-motion`, le parcours reste statique et complet. Les titres, liens et boutons conservent leur ordre HTML. Le focus clavier et les ancres rétablissent la géométrie normale des éléments concernés. Les transformations sont réduites sur petit écran et la projection horizontale est contenue sans modifier les ancêtres des scènes sticky.
 
-## Vérification
+## Vérifications
 
-- Types, ESLint et formatage.
-- Tests de continuité, limites, retour en arrière et caméra au repos, plus les tests existants du parcours et des scènes.
-- Défilement local Chromium desktop, raccord sombre/clair et scène de cartes.
-- Chrome responsive à 390 × 844 et 320 × 740 : largeur de document égale au viewport, sélection accessible au clavier.
-- CI : tests unitaires/PostgreSQL, build de production, tests HTTP et audit SEO.
+- Types et ESLint ; compilation réelle de la page locale.
+- Tests de continuité, limites, réversibilité, stabilité pendant le chapitre Three.js épinglé ; tests existants du parcours et des scènes.
+- Contrôle visuel des raccords et des contenus réels dans le navigateur ; largeurs responsive et ancres clavier.
+- Contrôles CI : build de production, tests unitaires/PostgreSQL, tests HTTP et audit SEO.
 
-Aucun test sur téléphone physique pour cette modification (dispense donnée par l’utilisateur). Le CSS de réduction des animations constitue un fallback statique ; ne pas confondre les contrôles responsive avec un essai sur appareil physique.
+Les contrôles responsive ne constituent pas un test sur téléphone physique (dispense donnée par l’utilisateur).

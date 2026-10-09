@@ -41,7 +41,7 @@ export function Journal({ journal }: { journal: HomeJournal | null }) {
         </header>
         <ol className={styles.list}>
           {journal.entries.map((entry) => (
-            <li key={entry.href}>
+            <li key={entry.href} data-journey-item="page">
               <Link href={entry.href} className={styles.entry}>
                 <span className={styles.meta}>
                   {KIND_LABELS[entry.kind]}
