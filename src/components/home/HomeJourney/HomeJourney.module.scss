@@ -180,7 +180,9 @@
       transform: translate3d(0, var(--chapter-lift, 0px), 0)
         rotateX(var(--chapter-tilt, 0deg)) scale(var(--chapter-scale, 1));
     }
-    &:focus-within .body {
+    &:focus-within .body,
+    &[data-home-anchor] .body,
+    &:has(:target) .body {
       opacity: 1;
       transform: none;
     }

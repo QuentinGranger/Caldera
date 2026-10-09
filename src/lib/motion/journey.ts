@@ -46,6 +46,33 @@ export function observeHomeJourney() {
     dispose();
     if (reduced.matches) return;
     const active = new Set<HTMLElement>();
+    // Next Link measures a fragment destination before updating :target. Settle
+    // its camera in capture phase so the native/router scroll uses stable geometry.
+    const settleAnchor = (hash: string) => {
+      chapters.forEach((node) =>
+        node
+          .querySelector('[data-home-anchor]')
+          ?.removeAttribute('data-home-anchor'),
+      );
+      if (!hash.startsWith('#')) return;
+      try {
+        document
+          .getElementById(decodeURIComponent(hash.slice(1)))
+          ?.closest<HTMLElement>('[data-home-camera]')
+          ?.setAttribute('data-home-anchor', '');
+      } catch {
+        // A malformed fragment must never interrupt navigation.
+      }
+    };
+    const onAnchorClick = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.('a[href]');
+      const href = link?.getAttribute('href');
+      if (href?.startsWith('#')) settleAnchor(href);
+    };
+    const onHashChange = () => settleAnchor(location.hash);
+    settleAnchor(location.hash);
+    document.addEventListener('click', onAnchorClick, true);
+    window.addEventListener('hashchange', onHashChange);
     let frame = 0;
     const paint = () => {
       frame = 0;
@@ -117,7 +144,12 @@ export function observeHomeJourney() {
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
       document.removeEventListener('visibilitychange', schedule);
+      document.removeEventListener('click', onAnchorClick, true);
+      window.removeEventListener('hashchange', onHashChange);
       chapters.forEach((node) => {
+        node
+          .querySelector('[data-home-anchor]')
+          ?.removeAttribute('data-home-anchor');
         delete node.dataset.homeJourneyReady;
         ['lift', 'tilt', 'scale', 'opacity'].forEach((key) =>
           node.style.removeProperty(`--chapter-${key}`),
