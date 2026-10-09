@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { ArrowDown } from 'lucide-react';
 import styles from './CardStory.module.scss';
@@ -165,9 +166,9 @@ export function CardStory() {
               </div>
             ))}
           </div>
-          <a className={styles.skip} href="#selection-produits">
+          <Link className={styles.skip} href="#selection-produits">
             Voir la sélection <ArrowDown size={16} aria-hidden="true" />
-          </a>
+          </Link>
         </div>
         <div className={styles.footer}>
           <span>Illustration de l’univers Caldera</span>
