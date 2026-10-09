@@ -31,6 +31,18 @@ export function Families({ families }: { families: HomeFamily[] }) {
       className={styles.section}
       aria-labelledby="families-title"
     >
+      <div
+        className={styles.landscape}
+        aria-hidden="true"
+        data-journey-landscape
+      >
+        <Image
+          src="/assets/images/editorial/hero-banner.png"
+          alt=""
+          fill
+          sizes="100vw"
+        />
+      </div>
       <div className={styles.inner}>
         <header className={styles.head}>
           <p className={styles.eyebrow}>Le Pokémon TCG à Caldera</p>
@@ -43,7 +55,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
         </header>
         <ul className={styles.grid} data-count={Math.min(families.length, 4)}>
           {families.map((family, index) => (
-            <li key={family.id}>
+            <li key={family.id} data-journey-item="product">
               <Link href={family.href} className={styles.card}>
                 <span className={styles.stage}>
                   <Image

@@ -3,6 +3,8 @@
 // Still the night of the hero: no edge between the two, only depth.
 .section {
   position: relative;
+  isolation: isolate;
+  overflow: clip;
   padding-block: clamp(3rem, 7vw, 6.5rem) clamp(4rem, 9vw, 8rem);
   background:
     radial-gradient(
@@ -12,6 +14,24 @@
     ),
     linear-gradient(180deg, v.$color-night 0%, v.$color-night-soft 100%);
   color: v.$color-text-on-dark;
+}
+.landscape {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  opacity: 0.28;
+  -webkit-mask-image: linear-gradient(
+    transparent,
+    #000 18%,
+    #000 50%,
+    transparent 95%
+  );
+  mask-image: linear-gradient(transparent, #000 18%, #000 50%, transparent 95%);
+  img {
+    object-fit: cover;
+    object-position: 60% center;
+  }
 }
 .inner {
   @include m.container;

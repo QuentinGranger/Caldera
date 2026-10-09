@@ -80,8 +80,6 @@ export default async function HomePage() {
     {
       key: 'hero',
       content: <Hero links={home.links} next={firstSection} />,
-      passage: '',
-      motif: 'orbit',
       start: night,
       end: night,
       pinned: true,
@@ -91,8 +89,6 @@ export default async function HomePage() {
     chapters.push({
       key: 'families',
       content: <Families families={home.families} />,
-      passage: 'L’envie prend forme.',
-      motif: 'orbit',
       start: night,
       end: forest,
     });
@@ -101,8 +97,6 @@ export default async function HomePage() {
       {
         key: 'card',
         content: <CardStory />,
-        passage: 'Une carte. Tout un univers.',
-        motif: 'cards',
         start: night,
         end: night,
         pinned: true,
@@ -112,8 +106,6 @@ export default async function HomePage() {
         content: (
           <Showcase products={selected} catalogue={home.links.catalogue} />
         ),
-        passage: 'La collection se dessine.',
-        motif: 'cards',
         start: forest,
         end: forest,
       },
@@ -130,8 +122,6 @@ export default async function HomePage() {
           demo={isDemoCatalogue([...selected, ...latest, ...restocked])}
         />
       ),
-      passage: 'La prochaine découverte.',
-      motif: 'orbit',
       start: paper,
       end: paper,
     });
@@ -139,16 +129,12 @@ export default async function HomePage() {
     chapters.push({
       key: 'collections',
       content: <Collections collections={home.collections} />,
-      passage: 'Un nouveau chapitre.',
-      motif: 'cards',
       start: paper,
       end: paper,
     });
   chapters.push({
     key: 'assurances',
     content: <Assurances />,
-    passage: 'Le plaisir, en confiance.',
-    motif: 'orbit',
     start: sand,
     end: sand,
   });
@@ -156,8 +142,6 @@ export default async function HomePage() {
     chapters.push({
       key: 'journal',
       content: <Journal journal={home.journal} />,
-      passage: 'Pour aller plus loin.',
-      motif: 'pages',
       start: paper,
       end: paper,
     });
@@ -165,16 +149,12 @@ export default async function HomePage() {
     {
       key: 'origins',
       content: <Origins />,
-      passage: 'Derrière les cartes, un monde.',
-      motif: 'pages',
       start: paper,
       end: night,
     },
     {
       key: 'territories',
       content: <Territories />,
-      passage: 'Tracez votre chemin.',
-      motif: 'compass',
       start: night,
       end: night,
       pinned: true,
@@ -182,8 +162,6 @@ export default async function HomePage() {
     {
       key: 'community',
       content: <FinalCall catalogue={home.links.catalogue} />,
-      passage: 'L’aventure continue.',
-      motif: 'compass',
       start: night,
       end: night,
     },

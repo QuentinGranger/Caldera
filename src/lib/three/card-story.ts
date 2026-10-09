@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { chapterFlow } from '../motion/journey';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import {
   cardStoryPose,
@@ -191,16 +192,28 @@ export async function mountCardStory(
       const rect = root.getBoundingClientRect();
       const progress = cardStoryProgress(rect.top, rect.height, height);
       const pose = cardStoryPose(progress);
+      const handoff = chapterFlow(rect.top, rect.height, height);
       const compact = width < 1024;
       const scale =
         pose.scale * (compact ? Math.min(0.55, (width / height) * 0.84) : 1);
-      assembly.scale.setScalar(scale);
+      assembly.scale.setScalar(
+        scale *
+          (0.65 + handoff.arrival * 0.35) *
+          (1 - handoff.departure * 0.28),
+      );
       assembly.position.set(
         (compact ? 0 : camera.aspect * 1.3) + pose.x,
-        (compact ? 1.15 : 0) + pose.y,
+        (compact ? 1.15 : 0) +
+          pose.y -
+          (1 - handoff.arrival) -
+          handoff.departure * 0.7,
         pose.z,
       );
-      assembly.rotation.set(pose.rx, pose.ry, pose.rz);
+      assembly.rotation.set(
+        pose.rx,
+        pose.ry - (1 - handoff.arrival) * 0.55,
+        pose.rz,
+      );
       for (const [mesh, direction] of [
         [left, -1],
         [right, 1],

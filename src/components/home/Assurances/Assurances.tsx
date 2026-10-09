@@ -51,7 +51,7 @@ export function Assurances() {
         </header>
         <ol className={styles.list}>
           {promises.map((promise, index) => (
-            <li key={promise.title}>
+            <li key={promise.title} data-journey-item="promise">
               <span className={styles.number} aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
               </span>
