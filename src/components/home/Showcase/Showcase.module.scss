@@ -1,12 +1,18 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
-// An editorial selection in the shop: the story on one side, lit products on
+// A cabinet of pieces in the night: the story on one side, lit products on
 // the other, staggered so the eye moves from one to the next.
 .section {
   position: relative;
   padding-block: clamp(4rem, 9vw, 8rem);
-  background: v.$color-background-secondary;
-  color: v.$color-text;
+  background:
+    radial-gradient(
+      ellipse 50% 60% at 75% 50%,
+      rgb(232 194 97 / 7%),
+      transparent 70%
+    ),
+    v.$color-night-soft;
+  color: v.$color-text-on-dark;
 }
 .inner {
   @include m.container;
@@ -27,29 +33,29 @@
     letter-spacing: -0.02em;
     em {
       display: block;
-      color: v.$color-green-secondary;
+      color: v.$color-gold-light;
       font-weight: 400;
     }
   }
   p:not(.eyebrow, .lead) {
-    color: v.$color-text-muted;
+    color: v.$color-muted-on-night;
   }
 }
 .eyebrow {
   @include m.eyebrow;
-  color: v.$color-green-secondary;
+  color: v.$color-gold;
 }
 .lead {
-  color: v.$color-text;
+  color: v.$color-text-on-dark;
   font-family: v.$font-heading;
   font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.75rem);
   line-height: 1.35;
 }
 .link {
-  @include m.underline-link(v.$color-green-secondary);
+  @include m.underline-link(v.$color-gold-light);
   justify-self: start;
   margin-top: 0.5rem;
-  color: v.$color-text;
+  color: v.$color-text-on-dark;
 }
 .pieces {
   display: grid;
