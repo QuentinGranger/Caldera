@@ -93,9 +93,13 @@ export function CatalogResults({
   emptyState,
   interlude,
   widest,
+  world = false,
+  heading,
 }: {
   load: CatalogLoad;
   path: string;
+  world?: boolean;
+  heading?: string;
   nav?: ReactNode;
   browse?: 'set';
   above?: ReactNode;
@@ -115,8 +119,11 @@ export function CatalogResults({
       id="catalogue-resultats"
       aria-labelledby="catalogue-produits"
     >
-      <h2 id="catalogue-produits" className={styles.srOnly}>
-        Produits
+      <h2
+        id="catalogue-produits"
+        className={heading ? styles.worldTitle : styles.srOnly}
+      >
+        {heading ?? 'Produits'}
       </h2>
       {quickNav}
       {!total && !load.hasRefinements ? (
@@ -164,6 +171,7 @@ export function CatalogResults({
           {result.products.length ? (
             <CatalogGrid
               products={result.products}
+              world={world}
               card={card}
               interlude={load.hasRefinements ? undefined : interlude}
             />

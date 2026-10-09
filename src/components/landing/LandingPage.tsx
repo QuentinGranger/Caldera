@@ -30,6 +30,7 @@ import {
   EXTENSIONS_PATH,
   type LandingView,
 } from './landingData';
+import { PokemonHero } from './PokemonHero';
 import { LandingFaq } from './LandingFaq';
 import { LandingGuides } from './LandingGuides';
 
@@ -72,6 +73,7 @@ export function LandingPage({
   /** The latest products, for an aisle that shows them (copy.latest). */
   latest?: readonly CatalogProduct[];
 }) {
+  const immersive = view.path === '/pokemon/scelles';
   const firstPage = load.page === 1;
   const faq = firstPage ? view.faq : [];
   const game = view.game;
@@ -90,37 +92,52 @@ export function LandingPage({
     : [];
   return (
     <CatalogShell
+      world={immersive ? 'sealed' : undefined}
+      motionKey={`${view.path}?${load.query}`}
       hero={
-        <PageHero
-          breadcrumb={view.breadcrumb}
-          path={view.path}
-          eyebrow={copy?.eyebrow ?? view.eyebrow}
-          up={up ?? undefined}
-          title={view.heading}
-          lead={
-            copy?.lead ??
-            view.description ??
-            `${view.heading}, au comptoir de Caldera.`
-          }
-          view={{
-            src: VIEWS.forest,
-            frame: 'window',
-            focus: copy?.focus ?? '50% 45%',
-            mobileFocus: copy?.mobileFocus,
-            mobileZoom: copy?.mobileZoom,
-            desktopHeight: copy?.desktopHeight,
-          }}
-          action={
-            load.total > 0
-              ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
-              : undefined
-          }
-        >
-          {view.logo && <HeroLogo src={view.logo.url} alt={view.logo.alt} />}
-          {view.symbol && (
-            <HeroSymbol src={view.symbol.url} alt={view.symbol.alt} />
-          )}
-        </PageHero>
+        immersive ? (
+          <PokemonHero
+            kind="sealed"
+            title={view.heading}
+            eyebrow={copy?.eyebrow ?? view.eyebrow}
+            lead={copy?.lead ?? view.description ?? view.heading}
+            breadcrumb={view.breadcrumb}
+            path={view.path}
+            product={load.result.products[0]}
+            hasProducts={load.total > 0}
+          />
+        ) : (
+          <PageHero
+            breadcrumb={view.breadcrumb}
+            path={view.path}
+            eyebrow={copy?.eyebrow ?? view.eyebrow}
+            up={up ?? undefined}
+            title={view.heading}
+            lead={
+              copy?.lead ??
+              view.description ??
+              `${view.heading}, au comptoir de Caldera.`
+            }
+            view={{
+              src: VIEWS.forest,
+              frame: 'window',
+              focus: copy?.focus ?? '50% 45%',
+              mobileFocus: copy?.mobileFocus,
+              mobileZoom: copy?.mobileZoom,
+              desktopHeight: copy?.desktopHeight,
+            }}
+            action={
+              load.total > 0
+                ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
+                : undefined
+            }
+          >
+            {view.logo && <HeroLogo src={view.logo.url} alt={view.logo.alt} />}
+            {view.symbol && (
+              <HeroSymbol src={view.symbol.url} alt={view.symbol.alt} />
+            )}
+          </PageHero>
+        )
       }
       jsonLd={graph(
         collectionPageNode({
@@ -133,6 +150,8 @@ export function LandingPage({
       )}
     >
       <CatalogResults
+        world={immersive}
+        heading={immersive ? 'Les produits scellés.' : undefined}
         load={load}
         path={view.path}
         nav={

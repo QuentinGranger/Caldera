@@ -4,6 +4,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/ui/Container/Container';
 import type { JsonLdGraph } from '@/lib/seo/jsonld';
 import styles from './Catalog.module.scss';
+import { PokemonMotion } from '@/components/landing/PokemonMotion';
 
 const NEWSLETTER =
   'Recevez les prochains réassorts, sorties et sélections sans avoir à surveiller le catalogue.';
@@ -18,7 +19,11 @@ export function CatalogShell({
   children,
   newsletter = NEWSLETTER,
   jsonLd,
+  world,
+  motionKey = '',
 }: {
+  world?: 'pokemon' | 'sealed';
+  motionKey?: string;
   hero: ReactNode;
   children: ReactNode;
   /** The newsletter's line, when the page has a better one. */
@@ -29,7 +34,8 @@ export function CatalogShell({
     <main
       id="contenu"
       tabIndex={-1}
-      className={`${styles.main} ${styles.immersive}`}
+      className={`${styles.main} ${styles.immersive} ${world ? styles.world : ''}`}
+      data-pokemon-world={world}
     >
       {hero}
       <Container>
@@ -41,6 +47,7 @@ export function CatalogShell({
           {newsletter}
         </NewsletterCta>
       </Container>
+      {world && <PokemonMotion revision={motionKey} />}
       <JsonLd data={jsonLd} />
     </main>
   );

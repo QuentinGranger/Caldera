@@ -15,6 +15,7 @@ import { GUIDES_PATH } from '@/components/editorial/editorial';
 import { isShopGame } from '@/lib/catalog/shopGame';
 import { collectionPageNode, faqPageNode, graph } from '@/lib/seo/jsonld';
 import type { SeoLink, SeoLinkGroup } from '@/lib/seo/types';
+import { PokemonHero } from './PokemonHero';
 import { HubReleases } from './HubReleases';
 import type { LandingView } from './landingData';
 import { LandingFaq } from './LandingFaq';
@@ -47,24 +48,38 @@ export function GameHubPage({
   const shop = isShopGame([game.slug]);
   return (
     <CatalogShell
+      world={view.path === '/pokemon' ? 'pokemon' : undefined}
+      motionKey={`${view.path}?${load.query}`}
       hero={
-        <PageHero
-          breadcrumb={view.breadcrumb}
-          path={view.path}
-          eyebrow={view.eyebrow}
-          title={view.heading}
-          lead={
-            shop
-              ? `Cartes, boosters, displays et coffrets ${game.name} sélectionnés pour jouer, collectionner et ouvrir.`
-              : (view.description ?? `Les produits ${game.name} de Caldera.`)
-          }
-          view={{ src: VIEWS.forest, frame: 'arch', focus: '50% 40%' }}
-          action={
-            load.total > 0
-              ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
-              : undefined
-          }
-        />
+        view.path === '/pokemon' ? (
+          <PokemonHero
+            kind="pokemon"
+            title={view.heading}
+            eyebrow={view.eyebrow}
+            lead="Cartes, boosters, displays et coffrets Pokémon sélectionnés pour jouer, collectionner et ouvrir."
+            breadcrumb={view.breadcrumb}
+            path={view.path}
+            hasProducts={load.total > 0}
+          />
+        ) : (
+          <PageHero
+            breadcrumb={view.breadcrumb}
+            path={view.path}
+            eyebrow={view.eyebrow}
+            title={view.heading}
+            lead={
+              shop
+                ? `Cartes, boosters, displays et coffrets ${game.name} sélectionnés pour jouer, collectionner et ouvrir.`
+                : (view.description ?? `Les produits ${game.name} de Caldera.`)
+            }
+            view={{ src: VIEWS.forest, frame: 'arch', focus: '50% 40%' }}
+            action={
+              load.total > 0
+                ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
+                : undefined
+            }
+          />
+        )
       }
       newsletter={
         shop
@@ -82,6 +97,8 @@ export function GameHubPage({
       )}
     >
       <CatalogResults
+        world={view.path === '/pokemon'}
+        heading={view.path === '/pokemon' ? 'La sélection Pokémon.' : undefined}
         load={load}
         path={view.path}
         nav={

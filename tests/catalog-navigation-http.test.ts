@@ -308,12 +308,22 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   for (const path of pages) {
     const { html } = await page(path);
     assert.equal(h1Count(html), 1, path);
-    // The same hero, the way to the products, no figures told in prose.
-    assert.match(
-      html,
-      /<section[^>]+data-frame="(backdrop|arch|window)"/,
-      path,
-    );
+    // A server-rendered entrance, the way to products, no figures in prose.
+    if (path === '/pokemon' || path === '/pokemon/scelles') {
+      assert.match(
+        html,
+        /<main[^>]+data-pokemon-world="(pokemon|sealed)"/,
+        path,
+      );
+      assert.match(html, /<section[^>]+data-kind="(pokemon|sealed)"/, path);
+      assert.ok(html.includes('aria-labelledby="page-title"'), path);
+    } else {
+      assert.match(
+        html,
+        /<section[^>]+data-frame="(backdrop|arch|window)"/,
+        path,
+      );
+    }
     assert.ok(html.includes('href="#catalogue-resultats"'), path);
     assert.doesNotMatch(
       strip(html),
