@@ -19,9 +19,12 @@ export function ProductCard({
   sizes = GRID_SIZES,
   layout = 'default',
   returnTarget = false,
+  depth = layout === 'spotlight',
 }: {
   product: CatalogProduct;
   compact?: boolean;
+  /** Decorative image depth on the immersive shop pages. */
+  depth?: boolean;
   /** `night`: on the dark sections of the home page. */
   tone?: 'day' | 'night';
   /** Width of the card where it is shown; the listing grid by default. */
@@ -49,7 +52,7 @@ export function ProductCard({
     >
       <div
         className={styles.visual}
-        data-depth-stage={layout === 'spotlight' ? 'product' : undefined}
+        data-depth-stage={depth ? 'product' : undefined}
       >
         <div className={styles.badge}>
           {product.badge && <ProductBadge kind={product.badge} />}

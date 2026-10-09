@@ -117,3 +117,34 @@ $hairline: rgb(23 62 50 / 14%);
     }
   }
 }
+
+:global([data-pokemon-world]) {
+  .lead {
+    color: #bdcbbd;
+    font-size: 1rem;
+  }
+  .groups {
+    background: #102c21;
+    box-shadow: inset 0 0 0 1px #e8c26126;
+  }
+  .group {
+    h3 {
+      color: #f4d985;
+    }
+    a {
+      color: #f4f0e4;
+      background: #193c2d;
+      border-color: #e8c26130;
+      svg {
+        color: #f4d985;
+      }
+      &:hover {
+        background: #214c3a;
+        border-color: #e8c261;
+      }
+    }
+  }
+  .about summary {
+    color: #f4d985;
+  }
+}

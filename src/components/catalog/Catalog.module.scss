@@ -987,7 +987,6 @@ $hairline: rgb(23 62 50 / 14%);
   white-space: nowrap;
 }
 
-
 .errorActions {
   align-items: center;
 }
@@ -1006,5 +1005,189 @@ $hairline: rgb(23 62 50 / 14%);
 
   &:hover {
     color: v.$color-green-secondary;
+  }
+}
+
+// The two Pokémon entrances share the home's forest, gold and lit product stages.
+// No transformed ancestor around the sticky toolbar or the filters dialog.
+.world {
+  color: #f4f0e4;
+  background:
+    radial-gradient(ellipse 75% 35% at 90% 15%, #153b2b75, transparent), #071a12;
+  padding-bottom: clamp(4rem, 8vw, 7rem);
+  .explorer {
+    margin-top: clamp(2rem, 5vw, 4rem);
+  }
+  .quickNav a {
+    background: #102c21;
+    border-color: #e8c26130;
+    color: #e5ebdf;
+    &:hover {
+      border-color: #e8c261;
+    }
+    &[aria-current] {
+      background: #e8c261;
+      border-color: #e8c261;
+      color: #071a12;
+      .quickCount {
+        color: #24442f;
+      }
+    }
+  }
+  .quickCount,
+  .resultCount,
+  .range {
+    color: #b9c8b8;
+  }
+  .toolbar {
+    border-image: linear-gradient(
+        180deg,
+        #071a12 calc(100% - 1px),
+        #e8c26130 calc(100% - 1px)
+      )
+      fill 0 / 0 / 0 100vmax;
+    padding-block: 1rem;
+  }
+  .total {
+    color: #f4f0e4;
+  }
+  .search,
+  .searchToggle,
+  .sort label,
+  .sort select {
+    background-color: #102c21;
+    border-color: #e8c26140;
+    color: #f4f0e4;
+  }
+  .search {
+    input {
+      color: #f4f0e4;
+      &::placeholder {
+        color: #b9c8b8;
+      }
+    }
+    > svg {
+      color: #b9c8b8;
+    }
+    button {
+      color: #f4d985;
+    }
+    &:focus-within {
+      border-color: #e8c261;
+    }
+  }
+  .sort select {
+    background-image: none;
+  }
+  .filtersTrigger {
+    background: #e8c261;
+    color: #071a12;
+    border-color: #e8c261;
+    &:hover {
+      background: #f4d985;
+    }
+  }
+  .active a {
+    background: #102c21;
+    border-color: #e8c26140;
+    color: #f4f0e4;
+  }
+  .step {
+    border-color: #e8c26140;
+  }
+  .pages ol a[aria-current='page'] {
+    background: #e8c261;
+    color: #071a12;
+  }
+  .empty {
+    color: #173e32;
+  }
+  .interlude {
+    min-height: clamp(22rem, 42vw, 33rem);
+    border: 1px solid #e8c26125;
+    border-radius: 1.5rem;
+  }
+  .interludeText {
+    padding: clamp(2rem, 5vw, 4rem);
+    max-width: 40rem;
+    h3 {
+      font-size: clamp(2.3rem, 4.2vw, 4rem);
+    }
+  }
+  .grid {
+    gap: 2.5rem 1.5rem;
+  }
+  .item {
+    animation: none;
+  }
+  [data-depth-stage='product'] {
+    border: 1px solid #e8c26125;
+    border-radius: 1.25rem;
+  }
+  :focus-visible {
+    outline-color: #f4d985;
+  }
+  .drawer :focus-visible {
+    outline-color: #0b6650;
+  }
+}
+.worldTitle {
+  max-width: 50rem;
+  margin-bottom: 1.8rem;
+  font: 500 clamp(2.5rem, 4.5vw, 4.5rem)/1.05 v.$font-heading;
+  letter-spacing: -0.025em;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .world [data-depth-stage='product'][data-depth-ready] {
+    perspective: 1100px;
+    > a {
+      perspective: 1100px;
+    }
+    &::before {
+      content: '';
+      position: absolute;
+      inset: auto 15% 5%;
+      height: 13%;
+      border: 1px solid #e8c26135;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, #e8c26120, transparent 70%);
+      pointer-events: none;
+    }
+    &::after {
+      opacity: 0.65;
+      background: radial-gradient(
+        ellipse at calc(50% + var(--depth-x, 0) * 30%)
+          calc(35% + var(--depth-y, 0) * 20%),
+        #f4d98526,
+        transparent 65%
+      );
+    }
+    img {
+      transform: translate3d(
+          calc(var(--depth-x, 0) * 8px),
+          calc(var(--depth-scroll, 0) * -10px),
+          12px
+        )
+        rotateX(calc(var(--depth-y, 0) * -5deg))
+        rotateY(calc(var(--depth-x, 0) * 10deg))
+        rotateZ(calc(var(--depth-scroll, 0) * 3deg));
+      transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    &:focus-within img {
+      transform: none;
+    }
+  }
+}
+@media (max-width: 47.99rem) {
+  .world .grid {
+    gap: 2rem 0.85rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .world [data-depth-stage='product'][data-depth-ready] img {
+      transform: translateY(calc(var(--depth-scroll, 0) * -6px));
+    }
+    .world [data-depth-stage='product'][data-depth-ready]:focus-within img {
+      transform: none;
+    }
   }
 }

@@ -200,3 +200,39 @@ $hairline: rgb(23 62 50 / 14%);
   font-size: 0.9rem;
   line-height: 1.6;
 }
+
+:global([data-pokemon-world]) {
+  .card {
+    border: 1px solid #e8c26126;
+    border-radius: 1.25rem;
+    background: linear-gradient(145deg, #193c2d, #10261c);
+    box-shadow: none;
+    color: #f4f0e4;
+    h3 {
+      color: #f4f0e4;
+    }
+    &:has(a:focus-visible) {
+      outline-color: #e8c261;
+    }
+  }
+  .label,
+  .cta,
+  .footer svg {
+    color: #f4d985;
+  }
+  .featured .label {
+    color: #10261c;
+  }
+  .meta {
+    color: #bdc6b8;
+  }
+  .footer {
+    color: #f4f0e4;
+    border-color: #e8c26126;
+  }
+  .emptyState {
+    color: #bdc6b8;
+    background: #ffffff05;
+    border-color: #e8c26140;
+  }
+}

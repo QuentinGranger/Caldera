@@ -13,9 +13,9 @@ export function depthPoint(
 }
 
 /** Real imagery only. Native scroll, touch gestures and content geometry are untouched. */
-export function observeHomeDepth() {
+export function observeHomeDepth(root: ParentNode = document) {
   const nodes = Array.from(
-    document.querySelectorAll<HTMLElement>(
+    root.querySelectorAll<HTMLElement>(
       '[data-depth-stage], [data-depth-landscape]',
     ),
   );

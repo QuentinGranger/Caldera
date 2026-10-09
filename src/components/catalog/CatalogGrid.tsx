@@ -16,8 +16,10 @@ export function CatalogGrid({
   products,
   interlude,
   card,
+  world = false,
 }: {
   products: CatalogProduct[];
+  world?: boolean;
   interlude?: ReactNode;
   /** The cards' layout (`edition`: set and language first). */
   card?: 'edition';
@@ -35,7 +37,13 @@ export function CatalogGrid({
               <div className={styles.interludeSlot}>{interlude}</div>
             )}
             <div className={styles.item}>
-              <ProductCard product={product} layout={card} returnTarget />
+              <ProductCard
+                product={product}
+                layout={card}
+                tone={world ? 'night' : 'day'}
+                depth={world}
+                returnTarget
+              />
             </div>
           </Fragment>
         ))}

@@ -53,3 +53,18 @@
   @include m.eyebrow;
   color: v.$color-gold;
 }
+
+:global([data-pokemon-world]) .cta {
+  padding: clamp(1.8rem, 5vw, 4rem);
+  border-radius: 1.5rem;
+  border-color: #e8c26130;
+  background:
+    radial-gradient(ellipse at 100% 50%, #e8c26118, transparent 65%), #102c21;
+  h2 {
+    max-width: 42rem;
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+  }
+  div > p:last-child {
+    font-size: 0.9rem;
+  }
+}
