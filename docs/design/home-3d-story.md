@@ -9,7 +9,7 @@ Entre les familles et les produits sélectionnés, `#experience` présente une *
 - HTML, textes, illustration et lien rendus par le serveur.
 - Hauteur réservée à l’hydratation pour les écrans compatibles ; moteur importé uniquement à moins de 700 px du chapitre.
 - Rendu à la demande, interrompu hors écran et dans un onglet masqué. DPR plafonné à 1,6, ressources partagées entre les trois cartes.
-- Textures, géométries, matériaux, environnement, renderer, contexte et observateurs libérés au démontage ; chargement tardif annulé avant allocation GPU.
+- Textures, géométries, matériaux, environnement, renderer et observateurs libérés au démontage ; chargement tardif annulé avant allocation GPU.
 - `prefers-reduced-motion`, écran inférieur à 360 px ou moins de 600 px de haut, absence d’observateurs, WebGL indisponible ou perte de contexte : illustration statique et trois textes en flux normal. Aucun CTA dépend du canvas.
 - Pas de bibliothèque d’animation, de modèle distant, de tracking ni de nouvelle API serveur.
 
@@ -23,4 +23,4 @@ Prompt final :
 
 ## Vérifications
 
-Tests de géométrie du scroll, poses continues et réversibles, orientation recto/verso, zoom, déploiement. Contrôles visuels Chromium (1280 × 720, 390 × 844, 320 × 740), Safari et Firefox desktop. Les téléphones physiques n’ont pas été testés, conformément à la demande. Types, lint et CI complète du dépôt complètent ces contrôles.
+Tests de géométrie du scroll, poses continues et réversibles, orientation recto/verso, zoom, déploiement. Contrôles visuels Chromium (1280 × 720, 390 × 844, 320 × 740), Safari et Firefox desktop. Le redimensionnement aller-retour entre les versions 3D et statique est également contrôlé. Les téléphones physiques n’ont pas été testés, conformément à la demande. Types, lint et CI complète du dépôt complètent ces contrôles.

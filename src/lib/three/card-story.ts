@@ -95,7 +95,6 @@ export async function mountCardStory(
     }
     for (const resource of resources.reverse()) resource.dispose();
     renderer?.dispose();
-    renderer?.forceContextLoss();
   };
   try {
     renderer = new THREE.WebGLRenderer({
