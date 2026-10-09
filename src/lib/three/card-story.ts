@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { cardStoryPose, cardStoryProgress } from './card-story-motion';
+import {
+  cardStoryPose,
+  cardStoryProgress,
+  cardFanPose,
+} from './card-story-motion';
 
 function image(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -236,18 +240,15 @@ export async function mountCardStory(
         (compact ? 1.15 : 0) + pose.y,
         pose.z,
       );
-      main.rotation.set(pose.rx, pose.ry, pose.rz);
+      assembly.rotation.set(pose.rx, pose.ry, pose.rz);
       for (const [mesh, direction] of [
         [left, -1],
         [right, 1],
       ] as const) {
         mesh.visible = pose.fan > 0.001;
-        mesh.position.set(direction * 0.95 * pose.fan, -0.12 * pose.fan, -0.25);
-        mesh.rotation.set(
-          pose.rx,
-          pose.ry + direction * 0.18 * pose.fan,
-          pose.rz - direction * 0.3 * pose.fan,
-        );
+        const offset = cardFanPose(pose.fan, direction);
+        mesh.position.set(offset.x, offset.y, offset.z);
+        mesh.rotation.set(0, offset.ry, offset.rz);
       }
       halo.position.x = assembly.position.x;
       halo.position.y = compact ? 1.15 : 0;
