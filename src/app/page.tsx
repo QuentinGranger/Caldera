@@ -38,9 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
     index: true,
   });
 }
-// The page as a journey: enter the landscape, discover the Pokémon families,
-// explore the territories, then daylight for the products, the promises and the reading,
-// and dusk for the last call. A section without data is simply absent; the
+// Commercial journey: discover the families and available products first,
+// then reassurance, reading and the brand universe before the last call.
+// A section without data is simply absent; the
 // products are those of the licence sold (shopProductWhere).
 export default async function HomePage() {
   await connection();
@@ -51,24 +51,28 @@ export default async function HomePage() {
       getFeaturedProducts(2, shopProductWhere),
       getRestockedProducts(4, shopProductWhere),
     ]);
-  // In reading order: a product appears once, where it is met first.
+  // Reserve the team's selection, then distribute the remaining products
+  // between new arrivals and restocks without repeating a card.
   const [selected, latest, restocked] = distinctSections([
     featuredProducts,
     newProducts,
     restockProducts,
   ]);
+  const firstSection = home.families.length
+    ? '#familles'
+    : latest.length || restocked.length
+      ? '#nouveautes'
+      : selected.length
+        ? '#selection'
+        : home.collections.length
+          ? '#collections'
+          : '#territoires';
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <JsonLd data={graph(organizationNode(), websiteNode())} />
-      <Hero
-        links={home.links}
-        next={home.families.length ? '#familles' : '#territoires'}
-      />
+      <Hero links={home.links} next={firstSection} />
       <Families families={home.families} />
-      <Territories />
-      <Showcase products={selected} catalogue={home.links.catalogue} />
       <div className={styles.dawn} aria-hidden="true" />
-      <Collections collections={home.collections} />
       <ProductRail
         latest={latest}
         restocked={restocked.slice(0, 3)}
@@ -76,8 +80,12 @@ export default async function HomePage() {
         stockLink={home.links['en-stock']}
         demo={isDemoCatalogue([...selected, ...latest, ...restocked])}
       />
+      <Showcase products={selected} catalogue={home.links.catalogue} />
+      <Collections collections={home.collections} />
       <Assurances />
       <Journal journal={home.journal} />
+      <div className={styles.dusk} aria-hidden="true" />
+      <Territories />
       <Origins />
       <FinalCall catalogue={home.links.catalogue} />
       <ScrollScenes />
