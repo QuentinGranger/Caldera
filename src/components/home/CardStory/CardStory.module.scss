@@ -42,16 +42,32 @@
 }
 .fallback {
   position: relative;
-  width: min(65vw, 22rem);
+  width: min(50vw, 20rem);
   margin: 0 auto 3rem;
   transform: perspective(900px) rotateY(-16deg) rotateZ(5deg);
   img {
     width: 100%;
     height: auto;
-    border: 4px solid v.$color-gold;
-    border-radius: 1rem;
+    border-radius: 0.7rem;
     box-shadow: 0 35px 75px #0008;
   }
+}
+.fallbackMain {
+  position: relative;
+  z-index: 1;
+}
+.fallbackLeft,
+.fallbackRight {
+  position: absolute;
+  top: 5%;
+}
+.fallbackLeft {
+  left: -26%;
+  transform: rotate(-14deg);
+}
+.fallbackRight {
+  right: -26%;
+  transform: rotate(14deg);
 }
 .content {
   position: relative;
@@ -127,7 +143,7 @@
 @media (min-width: 64rem) {
   .fallback {
     float: right;
-    width: 34%;
+    width: 26%;
     margin: 2rem 5% 0;
   }
 }
@@ -154,7 +170,7 @@
       position: absolute;
       top: 50%;
       right: 8%;
-      width: 32%;
+      width: 26%;
       margin: 0;
       transform: translateY(-50%) perspective(900px) rotateY(-16deg)
         rotateZ(5deg);
@@ -217,15 +233,14 @@
         padding: 0 6vw 5rem;
       }
       .fallback {
-        width: auto;
-        height: 32%;
+        width: min(45vw, 22vh);
         top: 8%;
         right: 50%;
         transform: translateX(50%) perspective(900px) rotateY(-16deg)
           rotateZ(5deg);
         img {
-          width: auto;
-          height: 100%;
+          width: 100%;
+          height: auto;
         }
       }
       .content {

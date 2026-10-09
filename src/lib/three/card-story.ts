@@ -29,49 +29,17 @@ function rounded(width: number, height: number, radius: number) {
   shape.quadraticCurveTo(x, y, x + radius, y);
   return shape;
 }
-function backArtwork(logo: HTMLImageElement) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 768;
-  canvas.height = 1152;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas unavailable');
-  ctx.fillStyle = '#06281e';
-  ctx.fillRect(0, 0, 768, 1152);
-  ctx.strokeStyle = '#e8c261';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(28, 28, 712, 1096);
-  ctx.strokeRect(40, 40, 688, 1072);
-  ctx.save();
-  ctx.translate(384, 530);
-  for (let i = 0; i < 16; i++) {
-    ctx.rotate(Math.PI / 8);
-    ctx.beginPath();
-    ctx.moveTo(0, -330);
-    ctx.lineTo(110, 0);
-    ctx.lineTo(0, 330);
-    ctx.globalAlpha = 0.11;
-    ctx.stroke();
-  }
-  ctx.restore();
-  const w = 600,
-    h = (w * logo.height) / logo.width;
-  ctx.drawImage(logo, (768 - w) / 2, 530 - h / 2, w, h);
-  ctx.fillStyle = '#e8c261';
-  ctx.font = '20px Georgia';
-  ctx.textAlign = 'center';
-  ctx.fillText('CARTES · COLLECTION · AVENTURE', 384, 940);
-  return canvas;
-}
-
 /** Lazy, demand-rendered WebGL enhancement. Static HTML is the failure mode. */
 export async function mountCardStory(
   root: HTMLElement,
   canvas: HTMLCanvasElement,
   signal?: AbortSignal,
 ) {
-  const [art, logo] = await Promise.all([
-    image('/assets/images/experience/caldera-card-front.webp'),
-    image('/assets/brand/logo-header-no-bg.png'),
+  const [noctali, giratina, rayquaza, backArt] = await Promise.all([
+    image('/assets/images/experience/noctali-vmax-215-203.webp'),
+    image('/assets/images/experience/giratina-v-186-196.webp'),
+    image('/assets/images/experience/rayquaza-gold-star-107-107.webp'),
+    image('/assets/images/experience/pokemon-card-back.webp'),
   ]);
   if (signal?.aborted) return () => {};
   const resources: { dispose(): void }[] = [];
@@ -127,15 +95,14 @@ export async function mountCardStory(
     const rim = new THREE.DirectionalLight(0x86ffd0, 3);
     rim.position.set(5, -2, -3);
     scene.add(rim);
-    const front = own(new THREE.Texture(art));
-    front.colorSpace = THREE.SRGBColorSpace;
-    front.needsUpdate = true;
-    const back = own(new THREE.CanvasTexture(backArtwork(logo)));
-    back.colorSpace = THREE.SRGBColorSpace;
-    front.anisotropy = back.anisotropy = Math.min(
-      4,
-      renderer.capabilities.getMaxAnisotropy(),
-    );
+    const texture = (art: HTMLImageElement) => {
+      const map = own(new THREE.Texture(art));
+      map.colorSpace = THREE.SRGBColorSpace;
+      map.needsUpdate = true;
+      map.anisotropy = Math.min(4, renderer!.capabilities.getMaxAnisotropy());
+      return map;
+    };
+    const back = texture(backArt);
     const edge = own(
       new THREE.MeshStandardMaterial({
         color: 0xe8c261,
@@ -143,26 +110,22 @@ export async function mountCardStory(
         roughness: 0.25,
       }),
     );
-    const face = own(
-      new THREE.MeshPhysicalMaterial({
-        map: front,
-        metalness: 0.02,
-        roughness: 0.6,
-        envMapIntensity: 0.4,
-        clearcoat: 0.12,
-        clearcoatRoughness: 0.4,
-      }),
-    );
+    const face = (art: HTMLImageElement) =>
+      own(
+        // Keep the original printed colours; the scene lights act on the bevel.
+        new THREE.MeshBasicMaterial({
+          map: texture(art),
+          toneMapped: false,
+        }),
+      );
     const reverse = own(
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshBasicMaterial({
         map: back,
-        metalness: 0.25,
-        roughness: 0.4,
-        clearcoat: 0.7,
+        toneMapped: false,
       }),
     );
     const bodyGeometry = own(
-      new THREE.ExtrudeGeometry(rounded(2.4, 3.6, 0.14), {
+      new THREE.ExtrudeGeometry(rounded(2.4, 3.3, 0.14), {
         depth: 0.045,
         bevelEnabled: true,
         bevelThickness: 0.018,
@@ -174,20 +137,16 @@ export async function mountCardStory(
     );
     bodyGeometry.translate(0, 0, -0.0225);
     const faceGeometry = own(
-      new THREE.ShapeGeometry(rounded(2.29, 3.49, 0.11), 8),
+      new THREE.ShapeGeometry(rounded(2.4, 3.3, 0.14), 8),
     );
     const uv = faceGeometry.getAttribute('uv');
     const positions = faceGeometry.getAttribute('position');
     for (let i = 0; i < uv.count; i++)
-      uv.setXY(
-        i,
-        positions.getX(i) / 2.29 + 0.5,
-        positions.getY(i) / 3.49 + 0.5,
-      );
-    const card = () => {
+      uv.setXY(i, positions.getX(i) / 2.4 + 0.5, positions.getY(i) / 3.3 + 0.5);
+    const card = (art: HTMLImageElement) => {
       const group = new THREE.Group();
       group.add(new THREE.Mesh(bodyGeometry, edge));
-      const a = new THREE.Mesh(faceGeometry, face);
+      const a = new THREE.Mesh(faceGeometry, face(art));
       a.position.z = 0.043;
       const b = new THREE.Mesh(faceGeometry, reverse);
       b.position.z = -0.043;
@@ -196,9 +155,9 @@ export async function mountCardStory(
       return group;
     };
     const assembly = new THREE.Group();
-    const main = card(),
-      left = card(),
-      right = card();
+    const main = card(noctali),
+      left = card(giratina),
+      right = card(rayquaza);
     assembly.add(left, right, main);
     scene.add(assembly);
     const haloGeometry = own(new THREE.TorusGeometry(2.55, 0.009, 6, 100));
