@@ -79,3 +79,15 @@ export function cardStoryProgress(
 ) {
   return clamp(-top / Math.max(1, height - viewport));
 }
+
+/** Fan offsets are local to the rotating assembly, preserving the gap between surfaces. */
+export function cardFanPose(fan: number, direction: -1 | 1) {
+  const spread = clamp(fan);
+  return {
+    x: direction * 0.95 * spread,
+    y: -0.12 * spread,
+    z: -0.5,
+    ry: direction * 0.18 * spread,
+    rz: -direction * 0.3 * spread,
+  };
+}

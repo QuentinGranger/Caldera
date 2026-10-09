@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { Euler, Vector3 } from 'three';
 import {
+  cardFanPose,
   cardStoryPose,
   cardStoryProgress,
 } from '../src/lib/three/card-story-motion';
@@ -42,4 +44,23 @@ test('3D story: front, macro, back and fan are distinct; poses stay continuous a
   assert.deepEqual(cardStoryPose(NaN), cardStoryPose(0));
   assert.deepEqual(cardStoryPose(-1), cardStoryPose(0));
   assert.deepEqual(cardStoryPose(2), cardStoryPose(1));
+});
+
+test('3D fan: side surfaces stay behind the centre card without intersecting during the shared rotation', () => {
+  for (let i = 0; i <= 100; i++) {
+    for (const direction of [-1, 1] as const) {
+      const offset = cardFanPose(i / 100, direction);
+      const rotation = new Euler(0, offset.ry, offset.rz);
+      // Conservative bounds include the bevel and both faces of the physical card.
+      for (const x of [-1.22, 1.22])
+        for (const y of [-1.82, 1.82])
+          for (const z of [-0.05, 0.05]) {
+            const corner = new Vector3(x, y, z).applyEuler(rotation);
+            assert.ok(
+              corner.z + offset.z < -0.06,
+              'side card crosses the centre card plane',
+            );
+          }
+    }
+  }
 });
