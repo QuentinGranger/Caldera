@@ -1,8 +1,6 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
-// A first screen that is a place: the header floats over the landscape, the
-// promise sits low where the image is darkest, and the page flows into the
-// night of the next sections instead of stopping at a banner edge.
+// A monumental, centred opening over the Caldera landscape.
 .hero {
   position: relative;
   isolation: isolate;
@@ -39,7 +37,12 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgb(3 20 14 / 70%) 0%, transparent 22%),
+    linear-gradient(
+      180deg,
+      rgb(3 20 14 / 84%) 0%,
+      rgb(3 20 14 / 32%) 45%,
+      transparent 75%
+    ),
     linear-gradient(
       0deg,
       v.$color-night 0%,
@@ -48,9 +51,9 @@
     ),
     linear-gradient(
       90deg,
-      rgb(3 20 14 / 78%) 0%,
-      rgb(3 20 14 / 30%) 55%,
-      transparent 80%
+      rgb(3 20 14 / 28%) 0%,
+      rgb(3 20 14 / 20%) 55%,
+      rgb(3 20 14 / 28%) 100%
     );
 }
 .mist {
@@ -72,21 +75,23 @@
 .inner {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   @include m.container;
   min-height: max(36rem, calc(100svh - 2rem));
   padding-top: calc(var(--header-height) + 3rem);
-  padding-bottom: clamp(2rem, 5vh, 3.5rem);
+  padding-bottom: clamp(3rem, 7vh, 5rem);
 }
 .content {
-  max-width: 52rem;
+  max-width: 72rem;
+  margin-inline: auto;
+  text-align: center;
   h1 {
     margin-block: 1.25rem 1.5rem;
-    // « Entrez dans l’univers » holds on one line from tablets up.
-    font-size: clamp(2.9rem, 1.4rem + 5.2vw, 6.2rem);
+    // Short lines leave the landscape room to breathe.
+    font-size: clamp(3.4rem, 11vw, 9.5rem);
     font-weight: 500;
-    line-height: 0.98;
-    letter-spacing: -0.035em;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
     text-shadow: 0 2px 30px rgb(3 20 14 / 45%);
     em {
       display: block;
@@ -100,6 +105,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  justify-content: center;
   color: v.$color-gold-light;
   // The rule only where the specialty still holds on one line with it.
   span {
@@ -114,7 +120,8 @@
 }
 // The promise that says what Caldera sells: read right after the title.
 .lead {
-  max-width: 36rem;
+  max-width: 34rem;
+  margin-inline: auto;
   color: #eef1e8;
   font-size: clamp(1.08rem, 0.98rem + 0.45vw, 1.32rem);
   line-height: 1.6;
@@ -124,7 +131,12 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem 2rem;
-  margin-top: 2.25rem;
+  justify-content: center;
+  margin-top: 2rem;
+  > a:first-child {
+    border-radius: v.$radius-pill;
+    padding-inline: 1.6rem;
+  }
 }
 .secondary {
   @include m.underline-link;
@@ -134,7 +146,7 @@
   display: none;
   @include m.from(v.$breakpoint-tablet) {
     display: inline-flex;
-    align-self: flex-end;
+    align-self: center;
     align-items: center;
     gap: 0.75rem;
     margin-top: 2rem;
@@ -159,7 +171,8 @@
 }
 .reflection {
   @include m.container;
-  padding-block: 2rem 5rem;
+  padding-block: 3rem 6rem;
+  text-align: center;
   h2 {
     margin-top: 1rem;
     font-size: clamp(2.6rem, 5.5vw, 6rem);
@@ -172,6 +185,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0 0.3em;
+  justify-content: center;
   color: v.$color-gold-light;
   font-style: italic;
 }
@@ -182,7 +196,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero[data-scene-ready] .image {
-    transform: scale(calc(1.01 + var(--scene-progress, 0) * 0.05));
+    transform: scale(calc(1.01 + var(--scene-progress, 0) * 0.12));
   }
   @media (min-width: 64rem) and (min-height: 42rem) {
     .hero[data-scene-ready] {
@@ -223,11 +237,22 @@
       .cue {
         opacity: calc(1 - var(--story-blend, 0));
       }
+      &[data-hero-past] {
+        .content,
+        .cue {
+          pointer-events: none;
+        }
+      }
       // A keyboard user can always see the CTA they focus.
       &:focus-within {
         .content {
           opacity: 1;
           transform: none;
+          pointer-events: auto;
+        }
+        .cue {
+          opacity: 1;
+          pointer-events: auto;
         }
         .reflection {
           opacity: 0;

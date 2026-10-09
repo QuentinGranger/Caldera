@@ -303,3 +303,60 @@
   font-size: 0.82rem;
   line-height: 1.4;
 }
+
+// Scoped to the home selection; listing and quick-add behavior stay shared.
+.spotlight {
+  .visual {
+    aspect-ratio: 1.1;
+    border: 1px solid rgb(244 217 133 / 12%);
+    border-radius: 1.5rem;
+    background:
+      radial-gradient(
+        ellipse 65% 65% at 50% 45%,
+        rgb(232 194 97 / 17%),
+        transparent 75%
+      ),
+      linear-gradient(145deg, #0d3023, #03140e);
+    img {
+      padding: 10% 13%;
+      transform: translateY(var(--spotlight-lift, 0px));
+    }
+  }
+  .content {
+    padding: 1.5rem 0.5rem 0;
+    h3 {
+      display: block;
+      min-height: 0;
+      overflow: visible;
+      font-family: v.$font-heading;
+      font-size: clamp(1.75rem, 2.8vw, 2.6rem);
+      font-weight: 500;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
+  }
+  .category {
+    margin-bottom: 0.6rem;
+    white-space: normal;
+  }
+  .bottom {
+    padding-top: 1.25rem;
+  }
+  .price {
+    font-size: 1.25rem;
+  }
+  .add {
+    border-radius: 50%;
+  }
+  &:hover .visual img,
+  &:focus-within .visual img {
+    transform: translateY(calc(var(--spotlight-lift, 0px) - 4px)) scale(1.035);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight .visual img,
+  .spotlight:hover .visual img,
+  .spotlight:focus-within .visual img {
+    transform: none;
+  }
+}

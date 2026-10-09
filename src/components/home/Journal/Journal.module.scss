@@ -1,8 +1,8 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
-// Reading, not shopping: a typographic list, no boxes.
+// A calm reading chapter, with room for each title.
 .section {
-  padding-block: clamp(3.5rem, 7vw, 6rem);
+  padding-block: clamp(4rem, 8vw, 8rem);
   background: v.$color-background;
   color: v.$color-text;
 }
@@ -18,8 +18,9 @@
   margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
   h2 {
     margin-top: 0.75rem;
-    font-size: v.$heading-section;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
   }
 }
 .eyebrow {
@@ -33,26 +34,21 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid v.$color-border;
+  display: grid;
+  gap: 1.25rem;
   @include m.from(v.$breakpoint-desktop) {
-    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 2.5rem;
-    border-top: 0;
-    > li {
-      border-top: 1px solid v.$color-border;
-    }
   }
 }
 .entry {
   position: relative;
   display: grid;
   gap: 0.6rem;
-  padding: 1.5rem 3rem 1.75rem 0;
-  border-bottom: 1px solid v.$color-border;
+  padding: 2rem 3.5rem 2rem 2rem;
+  border-radius: 1.25rem;
+  background: v.$color-background-secondary;
   @include m.from(v.$breakpoint-desktop) {
     height: 100%;
-    border-bottom: 0;
   }
   &:hover,
   &:focus-visible {
@@ -89,8 +85,8 @@
 }
 .arrow {
   position: absolute;
-  top: 1.5rem;
-  right: 0.25rem;
+  top: 2rem;
+  right: 1.5rem;
   color: v.$color-text-muted;
   transition:
     transform v.$duration-short v.$ease-out,

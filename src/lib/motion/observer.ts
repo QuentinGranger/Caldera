@@ -40,6 +40,9 @@ export function observeScrollScenes() {
         );
         scene.style.setProperty('--scene-progress', progress.toFixed(4));
         if (kind === 'hero') {
+          if (wide.matches && storyBlend(progress) >= 0.95)
+            scene.dataset.heroPast = '';
+          else delete scene.dataset.heroPast;
           scene.style.setProperty(
             '--story-blend',
             storyBlend(progress).toFixed(4),
@@ -128,6 +131,7 @@ export function observeScrollScenes() {
       document.removeEventListener('pointermove', onPointer);
       for (const scene of scenes) {
         delete scene.dataset.sceneReady;
+        delete scene.dataset.heroPast;
         for (const name of [
           '--scene-progress',
           '--story-blend',

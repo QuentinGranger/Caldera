@@ -27,11 +27,12 @@ export function ProductCard({
   /** Width of the card where it is shown; the listing grid by default. */
   sizes?: string;
   /**
+   * `spotlight`: a large product stage reserved for the homepage.
    * `edition`: where the edition decides (displays), the set alone above
    * the name (the family is the page's) and the languages on sale beside
    * the availability. Same card, same height.
    */
-  layout?: 'default' | 'edition';
+  layout?: 'default' | 'edition' | 'spotlight';
   /**
    * The main listing: back from the product page, its image returns into
    * this card (src/components/transitions/SharedProductImage.tsx).
@@ -43,7 +44,7 @@ export function ProductCard({
     !product.isDemonstration && product.availability === 'IN_STOCK';
   return (
     <article
-      className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''}`}
+      className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''} ${layout === 'spotlight' ? styles.spotlight : ''}`}
       data-product-card=""
     >
       <div className={styles.visual}>
