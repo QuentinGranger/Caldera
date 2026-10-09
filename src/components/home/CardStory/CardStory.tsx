@@ -8,16 +8,16 @@ import styles from './CardStory.module.scss';
 
 const chapters = [
   {
-    title: 'La Moonbreon.',
-    text: 'Noctali VMAX 215/203 — Évolution Céleste. Une composition nocturne immédiatement reconnaissable.',
+    title: 'L’envie de découvrir.',
+    text: 'Un univers tient parfois dans le creux de la main. Le plaisir commence avant même la première ouverture.',
   },
   {
-    title: 'Le dos d’une passion.',
-    text: 'Le bleu, la Poké Ball, le logo Pokémon. Un dos familier qui accompagne des générations de collections.',
+    title: 'Le goût du détail.',
+    text: 'Une illustration qui retient le regard. Une collection qui prend forme, pièce après pièce.',
   },
   {
-    title: 'Trois cartes, trois univers.',
-    text: 'Giratina V 186/196 — Origine Perdue, par Shinji Kanda. Rayquaza Gold Star 107/107 — EX Deoxys, par Masakazu Fukuda.',
+    title: 'À vous la suite.',
+    text: 'Ouvrir, jouer, collectionner. Découvrez les produits Pokémon sélectionnés par Caldera.',
   },
 ];
 
