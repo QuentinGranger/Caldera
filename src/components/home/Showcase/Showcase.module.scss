@@ -1,44 +1,53 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
-// A cabinet of pieces in the night: the story on one side, lit products on
-// the other, staggered so the eye moves from one to the next.
+
+// A full-width product chapter: the pieces get the space, the story introduces them.
 .section {
   position: relative;
-  padding-block: clamp(4rem, 9vw, 8rem);
+  padding-block: clamp(4.5rem, 10vw, 10rem);
   background:
     radial-gradient(
-      ellipse 50% 60% at 75% 50%,
+      ellipse 65% 45% at 50% 65%,
       rgb(232 194 97 / 7%),
-      transparent 70%
+      transparent 75%
     ),
     v.$color-night-soft;
   color: v.$color-text-on-dark;
 }
 .inner {
   @include m.container;
-  display: grid;
-  gap: 3rem;
-  @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    align-items: start;
-    gap: 5rem;
-  }
 }
 .story {
   display: grid;
-  gap: 1rem;
-  max-width: 30rem;
+  align-items: end;
+  gap: 2rem;
+  margin-bottom: clamp(2.5rem, 5vw, 5rem);
   h2 {
-    font-size: v.$heading-section;
-    letter-spacing: -0.02em;
+    margin-top: 1rem;
+    font-size: clamp(3rem, 6.6vw, 6.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
     em {
       display: block;
       color: v.$color-gold-light;
       font-weight: 400;
     }
   }
-  p:not(.eyebrow, .lead) {
+  @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: 1.15fr 1fr;
+    gap: 4rem;
+  }
+}
+.intro {
+  display: grid;
+  gap: 1rem;
+  max-width: 29rem;
+  p:not(.lead) {
     color: v.$color-muted-on-night;
+  }
+  @include m.from(v.$breakpoint-tablet) {
+    justify-self: end;
+    padding-bottom: 0.35rem;
   }
 }
 .eyebrow {
@@ -48,8 +57,8 @@
 .lead {
   color: v.$color-text-on-dark;
   font-family: v.$font-heading;
-  font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.75rem);
-  line-height: 1.35;
+  font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  line-height: 1.2;
 }
 .link {
   @include m.underline-link(v.$color-gold-light);
@@ -59,26 +68,22 @@
 }
 .pieces {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 2.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  &[data-count='1'] {
-    grid-template-columns: minmax(0, 24rem);
-  }
   @include m.from(v.$breakpoint-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2rem;
-    // Staggered: the second piece sits lower, like on a shelf in depth.
-    > li:nth-child(2n) {
-      margin-top: 4rem;
-    }
+  }
+  &[data-count='1'] {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 48rem;
+    margin-inline: auto;
   }
 }
-
-@media (min-width: 64rem) and (min-height: 42rem) {
-  .story {
-    position: sticky;
-    top: calc(var(--header-height) + 3rem);
+@media (prefers-reduced-motion: no-preference) and (min-width: 64rem) {
+  .section[data-scene-ready] {
+    --spotlight-lift: calc((0.5 - var(--scene-progress, 0.5)) * 3rem);
   }
 }

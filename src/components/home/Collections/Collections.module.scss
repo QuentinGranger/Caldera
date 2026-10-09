@@ -18,8 +18,9 @@
   margin-bottom: clamp(2rem, 4vw, 3.5rem);
   h2 {
     margin-top: 0.75rem;
-    font-size: v.$heading-section;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
   }
 }
 .eyebrow {
@@ -43,10 +44,10 @@
   grid-template-columns: minmax(0, 1fr) minmax(5.5rem, 0.55fr);
   align-items: center;
   gap: 1rem;
-  min-height: 15rem;
+  min-height: clamp(18rem, 32vw, 29rem);
   padding: clamp(1.5rem, 4vw, 3rem);
   overflow: hidden;
-  border-radius: v.$radius-card;
+  border-radius: 1.5rem;
   background: #e8dfc7;
   transition:
     transform v.$duration-medium v.$ease-out,
@@ -88,7 +89,7 @@
   font-family: v.$font-heading;
   font-size: clamp(1.8rem, 1.3rem + 2.6vw, 3.6rem);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.035em;
 }
 .cta {
   display: inline-flex;
@@ -107,7 +108,7 @@
   position: relative;
   aspect-ratio: 0.9;
   // The product floats on the plate without making it a poster.
-  max-height: clamp(12rem, 24vw, 20rem);
+  max-height: clamp(14rem, 28vw, 25rem);
   img {
     object-fit: contain;
     filter: drop-shadow(0 26px 24px rgb(7 28 23 / 28%));

@@ -21,8 +21,9 @@
   margin-bottom: clamp(1.75rem, 3vw, 2.75rem);
   h2 {
     margin-top: 0.75rem;
-    font-size: v.$heading-section;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
   }
 }
 .eyebrow {

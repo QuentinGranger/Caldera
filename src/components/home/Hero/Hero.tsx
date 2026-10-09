@@ -60,10 +60,10 @@ export function Hero({
             <ArrivalLayers>
               <p className={styles.eyebrow}>
                 <span aria-hidden="true" />
-                Boutique spécialisée {'Pokémon\u00a0TCG'}
+                Les Terres de Caldera · {'Pokémon\u00a0TCG'}
               </p>
               <h1 id="hero-title">
-                Entrez dans l’univers <em>de Caldera</em>
+                Une carte. <em>Tout un univers.</em>
               </h1>
               <p className={styles.lead}>{HOME_PROMISE}</p>
               <div className={styles.actions}>
@@ -93,11 +93,11 @@ export function Hero({
         <div className={styles.reflection}>
           <p className={styles.eyebrow}>Les Terres de Caldera</p>
           <h2>
-            Un univers pour
+            Un univers pour{' '}
             <span className={styles.words}>
               {['collectionner.', 'jouer.', 'découvrir.', 'transmettre.'].map(
                 (word) => (
-                  <span key={word}>{word}</span>
+                  <span key={word}>{word} </span>
                 ),
               )}
             </span>

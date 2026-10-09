@@ -1,9 +1,8 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
-// Reassurance as an editorial band: numbers instead of generic icons,
-// hairlines instead of boxes.
+// Quiet, spacious reassurance panels after the product chapters.
 .section {
-  padding-block: clamp(3.5rem, 7vw, 6rem);
+  padding-block: clamp(4rem, 8vw, 8rem);
   background: v.$color-background-secondary;
   color: v.$color-text;
 }
@@ -13,11 +12,12 @@
 .head {
   display: grid;
   gap: 0.9rem;
-  max-width: 40rem;
+  max-width: 60rem;
   margin-bottom: clamp(2.25rem, 4vw, 3.5rem);
   h2 {
-    font-size: v.$heading-section;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
     em {
       display: block;
       color: v.$color-green-secondary;
@@ -41,14 +41,15 @@
   }
   @include m.from(v.$breakpoint-desktop) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 2.5rem;
+    gap: 1.25rem;
   }
   li {
     display: grid;
     align-content: start;
     gap: 0.6rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid rgb(23 62 50 / 22%);
+    padding: 2rem 1.5rem;
+    border-radius: 1.25rem;
+    background: v.$color-surface;
   }
   h3 {
     font-size: clamp(1.35rem, 1.2rem + 0.5vw, 1.6rem);
@@ -62,7 +63,7 @@
 .number {
   color: v.$color-volcanic;
   font-family: v.$font-heading;
-  font-size: 1.1rem;
+  font-size: 2rem;
   font-style: italic;
 }
 .link {

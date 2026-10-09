@@ -141,6 +141,7 @@ test('scroll observer: static fallback, active-only geometry, coalescing and liv
     assert.equal(frames.size, 1);
     flush();
     assert.equal(hero.styles.get('--scene-progress'), '0.5000');
+    assert.equal(hero.dataset.heroPast, '');
     assert.equal(
       origins.reads,
       originsReads,
@@ -149,6 +150,7 @@ test('scroll observer: static fallback, active-only geometry, coalescing and liv
     reduced.matches = true;
     reducedListeners.forEach((fn) => fn());
     assert.equal(hero.dataset.sceneReady, undefined);
+    assert.equal(hero.dataset.heroPast, undefined);
     assert.equal(hero.styles.size, 0);
     assert.equal(listeners.size, 0);
     assert.equal(frames.size, 0);

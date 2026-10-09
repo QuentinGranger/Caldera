@@ -19,11 +19,12 @@
 .head {
   display: grid;
   gap: 1rem;
-  max-width: 44rem;
-  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  max-width: 65rem;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
   h2 {
-    font-size: v.$heading-section;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.8rem, 6.5vw, 6.3rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
     em {
       display: block;
       color: v.$color-gold-light;
@@ -79,7 +80,8 @@
   height: 100%;
   min-height: 22rem;
   overflow: hidden;
-  border-radius: v.$radius-card;
+  border: 1px solid rgb(244 217 133 / 12%);
+  border-radius: 1.5rem;
   background:
     radial-gradient(
       ellipse 70% 60% at 50% 35%,
@@ -172,4 +174,46 @@
     background v.$duration-short v.$ease-out,
     color v.$duration-short v.$ease-out,
     transform v.$duration-medium v.$ease-out;
+}
+
+// A deliberate landscape composition when the catalogue has one family.
+@media (min-width: 48rem) {
+  .grid[data-count='1'] .card {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: auto;
+    align-items: center;
+    min-height: clamp(28rem, 45vw, 38rem);
+    .stage {
+      grid-column: 2;
+      grid-row: 1;
+      height: 100%;
+      min-height: 28rem;
+    }
+    .caption {
+      grid-column: 1;
+      grid-row: 1;
+      gap: 1rem;
+      padding: 3rem clamp(2rem, 4vw, 4rem);
+    }
+    .name {
+      font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+      letter-spacing: -0.035em;
+    }
+    .description {
+      font-size: 1rem;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card .stage img,
+  .arrow {
+    transition: none;
+  }
+  .card:hover,
+  .card:focus-visible,
+  .card:hover .stage img,
+  .card:focus-visible .stage img {
+    transform: none;
+  }
 }
