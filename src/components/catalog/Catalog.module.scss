@@ -1138,7 +1138,7 @@ $hairline: rgb(23 62 50 / 14%);
   letter-spacing: -0.025em;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .world [data-depth-stage='product'][data-depth-ready] {
+  .world[data-pokemon-world] [data-depth-stage='product'][data-depth-ready] {
     perspective: 1100px;
     > a {
       perspective: 1100px;
@@ -1183,11 +1183,22 @@ $hairline: rgb(23 62 50 / 14%);
     gap: 2rem 0.85rem;
   }
   @media (prefers-reduced-motion: no-preference) {
-    .world [data-depth-stage='product'][data-depth-ready] img {
+    .world[data-pokemon-world]
+      [data-depth-stage='product'][data-depth-ready]
+      img {
       transform: translateY(calc(var(--depth-scroll, 0) * -6px));
     }
-    .world [data-depth-stage='product'][data-depth-ready]:focus-within img {
+    .world[data-pokemon-world]
+      [data-depth-stage='product'][data-depth-ready]:focus-within
+      img {
       transform: none;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world[data-pokemon-world] [data-depth-stage='product'] img {
+    transform: none;
+    transition: none;
   }
 }
