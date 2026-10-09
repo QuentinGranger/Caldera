@@ -67,6 +67,7 @@
   color: v.$color-text-on-dark;
 }
 .pieces {
+  scroll-margin-top: calc(var(--header-height, 5rem) + 1rem);
   display: grid;
   gap: 2.5rem;
   margin: 0;
