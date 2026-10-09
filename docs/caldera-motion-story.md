@@ -23,9 +23,10 @@ transition cinématique. Les images existantes et leurs cadrages sont conservés
 1. Paysage plein écran, boutique Pokémon immédiatement identifiable et CTA.
 2. Sur grand écran, courte séquence sticky : le paysage se rapproche et le titre
    cède la place à collectionner, jouer, découvrir et transmettre.
-3. Les cinq territoires partagent une scène dont le paysage évolue avec le scroll,
+3. Les familles Pokémon suivent directement le Hero, puis les cinq territoires
+   partagent une scène dont le paysage évolue avec le scroll,
    tout en restant accessibles par pointeur et clavier.
-4. Familles et sélection ramènent au commerce, puis passage progressif au papier
+4. La sélection ramène au commerce, puis passage progressif au papier
    des extensions et nouveautés. Garanties et journal forment une pause statique.
 5. Une scène « Chaque collection commence quelque part » ouvre les origines de
    Caldera ; elle rejoint la nuit de la newsletter et du footer.
