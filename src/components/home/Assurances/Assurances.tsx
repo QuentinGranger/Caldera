@@ -43,7 +43,7 @@ export function Assurances() {
   return (
     <section className={styles.section} aria-labelledby="assurances-title">
       <div className={styles.inner}>
-        <header className={styles.head} data-reveal="">
+        <header className={styles.head}>
           <p className={styles.eyebrow}>Commander à Caldera</p>
           <h2 id="assurances-title">
             Explorer librement, <em>acheter sereinement.</em>
@@ -51,7 +51,7 @@ export function Assurances() {
         </header>
         <ol className={styles.list}>
           {promises.map((promise, index) => (
-            <li key={promise.title} data-reveal="">
+            <li key={promise.title}>
               <span className={styles.number} aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
               </span>

@@ -32,7 +32,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
       aria-labelledby="families-title"
     >
       <div className={styles.inner}>
-        <header className={styles.head} data-reveal="">
+        <header className={styles.head}>
           <p className={styles.eyebrow}>Le Pokémon TCG à Caldera</p>
           <h2 id="families-title">
             Des pièces à ouvrir, <em>d’autres à garder.</em>
@@ -43,7 +43,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
         </header>
         <ul className={styles.grid} data-count={Math.min(families.length, 4)}>
           {families.map((family, index) => (
-            <li key={family.id} data-reveal="">
+            <li key={family.id}>
               <Link href={family.href} className={styles.card}>
                 <span className={styles.stage}>
                   <Image

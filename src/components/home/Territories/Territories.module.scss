@@ -1,13 +1,13 @@
 @use '../../../styles/abstracts/variables' as v;
 @use '../../../styles/abstracts/mixins' as m;
 $wide: 64rem;
-// Phones and tablets: a swipeable row of tall cards, each with its image.
+// Phones and tablets: a vertical sequence of cards, each with its image.
 // Wide screens: a single landscape behind the list, changing with the name
 // under the pointer or the focus. The first territory shows by default.
 .section {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  overflow: clip;
   padding-block: clamp(4rem, 9vw, 7rem);
   background: v.$color-night;
   color: v.$color-text-on-dark;
@@ -17,6 +17,11 @@ $wide: 64rem;
     min-height: min(100svh, 58rem);
     padding-block: 7rem 4.5rem;
     // Legibility of the list, on the left and at the bottom.
+  }
+}
+.stage {
+  width: 100%;
+  @include m.from($wide) {
     &::after {
       content: '';
       position: absolute;
@@ -67,26 +72,16 @@ $wide: 64rem;
   color: v.$color-gold;
 }
 
-// --- Phones and tablets: cards to swipe ------------------------------------
+// --- Phones and tablets: vertical reading ------------------------------------
 .list {
   display: grid;
-  grid-auto-columns: min(78%, 22rem);
-  grid-auto-flow: column;
-  gap: 1rem;
-  margin: 0 calc(-1 * #{v.$space-6});
-  padding: 0 v.$space-6 1rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-padding-inline: v.$space-6;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
   list-style: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
 }
 .item {
-  scroll-snap-align: start;
+  min-width: 0;
 }
 .link {
   position: relative;
@@ -95,7 +90,7 @@ $wide: 64rem;
   flex-direction: column;
   justify-content: flex-end;
   gap: 0.35rem;
-  min-height: 27rem;
+  min-height: clamp(21rem, 65vw, 30rem);
   padding: 1.5rem;
   overflow: hidden;
   border-radius: v.$radius-card;
@@ -257,6 +252,47 @@ $wide: 64rem;
       }
       .name {
         color: v.$color-gold-light;
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 64rem) and (min-height: 42rem) {
+  .section[data-scene-ready] {
+    display: block;
+    min-height: 210svh;
+    padding-block: 0;
+    .stage {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: flex-end;
+      min-height: 100svh;
+      padding-block: calc(var(--header-height) + 4rem) 5rem;
+      isolation: isolate;
+    }
+    .visual img {
+      transform: scale(calc(1.035 - var(--scene-progress, 0) * 0.035));
+      transition: none;
+    }
+    @for $i from 0 through 4 {
+      .list:not(:has(.link:focus-visible)) .item:nth-child(#{$i + 1}) {
+        .visual {
+          opacity: var(--scene-beat-#{$i}, 0);
+          transition: none;
+        }
+        .name {
+          color: v.$color-gold-light;
+          opacity: calc(0.75 + var(--scene-beat-#{$i}, 0) * 0.25);
+        }
+        .tagline {
+          opacity: var(--scene-beat-#{$i}, 0);
+          transform: none;
+          transition: none;
+        }
+        .link {
+          padding-left: 0.25rem;
+        }
       }
     }
   }

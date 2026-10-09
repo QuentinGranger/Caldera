@@ -25,7 +25,7 @@ export function Journal({ journal }: { journal: HomeJournal | null }) {
   return (
     <section className={styles.section} aria-labelledby="journal-title">
       <div className={styles.inner}>
-        <header className={styles.head} data-reveal="">
+        <header className={styles.head}>
           <div>
             <p className={styles.eyebrow}>Carnets de route</p>
             <h2 id="journal-title">
@@ -41,7 +41,7 @@ export function Journal({ journal }: { journal: HomeJournal | null }) {
         </header>
         <ol className={styles.list}>
           {journal.entries.map((entry) => (
-            <li key={entry.href} data-reveal="">
+            <li key={entry.href}>
               <Link href={entry.href} className={styles.entry}>
                 <span className={styles.meta}>
                   {KIND_LABELS[entry.kind]}

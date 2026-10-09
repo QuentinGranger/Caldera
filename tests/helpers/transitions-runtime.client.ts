@@ -72,6 +72,7 @@ test('real scenery is independent of native captures and remains disposable', as
     await t.test('partial API support gets the real entrance', () => {
       prepare();
       beginNavigation('/univers', 'push');
+      assert.equal(dataset.calderaMotion, 'departing');
       presentArrival('/univers');
       assert.equal(dataset.calderaArrival, 'enter-world');
       assert.equal(dataset.calderaMotion, 'live');
@@ -127,6 +128,28 @@ test('real scenery is independent of native captures and remains disposable', as
           assert.equal(dataset.calderaArrival, undefined);
           assert.equal(dataset.calderaMotion, undefined);
         }
+      },
+    );
+    await t.test(
+      'a slow route releases the departure curtain within 900 ms',
+      (t) => {
+        prepare();
+        t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+        beginNavigation('/univers', 'push');
+        assert.equal(dataset.calderaMotion, 'departing');
+        t.mock.timers.tick(901);
+        assert.equal(dataset.calderaMotion, undefined);
+        presentArrival('/univers');
+        assert.equal(dataset.calderaMotion, undefined);
+        t.mock.timers.tick(1001);
+        assert.equal(dataset.calderaMotion, undefined);
+        prepare();
+        beginNavigation('/univers', 'push');
+        t.mock.timers.tick(350);
+        presentArrival('/univers');
+        assert.equal(dataset.calderaMotion, 'live');
+        t.mock.timers.tick(551);
+        assert.equal(dataset.calderaMotion, undefined);
       },
     );
   } finally {

@@ -22,7 +22,7 @@ export function Collections({
       aria-labelledby="collections-title"
     >
       <div className={styles.inner}>
-        <header className={styles.head} data-reveal="">
+        <header className={styles.head}>
           <div>
             <p className={styles.eyebrow}>Par date de sortie</p>
             <h2 id="collections-title">Les dernières extensions</h2>
@@ -33,7 +33,7 @@ export function Collections({
         </header>
         <ol className={styles.list}>
           {collections.map((collection) => (
-            <li key={collection.slug} data-reveal="">
+            <li key={collection.slug}>
               <Link
                 href={collection.href}
                 id={`extension-${collection.slug}`}

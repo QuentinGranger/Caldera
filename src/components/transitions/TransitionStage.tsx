@@ -32,7 +32,7 @@ export function TransitionStage() {
   }, []);
   return (
     <div key={pathname} className="caldera-veil" aria-hidden="true">
-      <div className="caldera-veil__mist" />
+      <div className="caldera-veil__mineral" />
     </div>
   );
 }

@@ -105,12 +105,12 @@
   }
   &:hover,
   &:focus-visible {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     &::before {
       opacity: 1;
     }
     .stage img {
-      transform: translateY(-6px) scale(1.04);
+      transform: translateY(-3px) scale(1.03);
     }
     .arrow {
       color: v.$color-ink;

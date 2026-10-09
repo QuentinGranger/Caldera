@@ -6,7 +6,7 @@
 .hero {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  overflow: clip;
   // Under the whole header, its 1px bottom border included.
   margin-top: calc(-1 * var(--header-height) - 1px);
   background: v.$color-night;
@@ -14,7 +14,8 @@
 }
 .landscape {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
+  height: max(36rem, calc(100svh - 2rem));
   isolation: isolate;
   z-index: -1;
 }
@@ -150,65 +151,88 @@
   }
 }
 
-// Motion, only for visitors who accept it.
+.stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  overflow: clip;
+}
+.reflection {
+  @include m.container;
+  padding-block: 2rem 5rem;
+  h2 {
+    margin-top: 1rem;
+    font-size: clamp(2.6rem, 5.5vw, 6rem);
+    line-height: 1.04;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+}
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.3em;
+  color: v.$color-gold-light;
+  font-style: italic;
+}
+.reflectionNote {
+  margin-top: 1.8rem;
+  color: v.$color-muted-on-night;
+  font-size: v.$text-lead;
+}
 @media (prefers-reduced-motion: no-preference) {
-  // Ambient: the landscape breathes, the mist drifts. Barely.
-  .image {
-    animation: breathe 26s ease-in-out infinite alternate;
+  .hero[data-scene-ready] .image {
+    transform: scale(calc(1.01 + var(--scene-progress, 0) * 0.05));
   }
-  .mist {
-    animation: drift 38s ease-in-out infinite alternate;
-  }
-  .cue svg {
-    animation: nudge 2.4s v.$ease-in-out infinite;
-  }
-  // Depth: on scroll the landscape moves slower than the words.
-  @supports (animation-timeline: scroll()) {
-    .media {
-      animation: parallax-far linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
+  @media (min-width: 64rem) and (min-height: 42rem) {
+    .hero[data-scene-ready] {
+      min-height: 185svh;
+      .stage {
+        position: sticky;
+        top: 0;
+        min-height: 100svh;
+      }
+      .landscape {
+        height: 100%;
+      }
+      .inner {
+        min-height: 100svh;
+      }
+      .content {
+        opacity: calc(1 - var(--story-blend, 0));
+        transform: translateY(calc(var(--story-blend, 0) * -2rem));
+      }
+      .reflection {
+        position: absolute;
+        inset: auto 0 12svh;
+        padding-block: 0;
+        opacity: var(--story-blend, 0);
+        transform: translateY(calc((1 - var(--story-blend, 0)) * 2rem));
+        pointer-events: none;
+      }
+      .words {
+        display: block;
+        height: 1.16em;
+        overflow: clip;
+        span {
+          display: block;
+          line-height: 1.16;
+          transform: translateY(calc(var(--story-position, 0) * -100%));
+        }
+      }
+      .cue {
+        opacity: calc(1 - var(--story-blend, 0));
+      }
+      // A keyboard user can always see the CTA they focus.
+      &:focus-within {
+        .content {
+          opacity: 1;
+          transform: none;
+        }
+        .reflection {
+          opacity: 0;
+        }
+      }
     }
-    .content {
-      animation: parallax-near linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 90vh;
-    }
-  }
-}
-@keyframes breathe {
-  from {
-    transform: scale(1.02);
-  }
-  to {
-    transform: scale(1.07);
-  }
-}
-@keyframes drift {
-  from {
-    transform: translateX(-3%);
-  }
-  to {
-    transform: translateX(4%);
-  }
-}
-@keyframes nudge {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(4px);
-  }
-}
-@keyframes parallax-far {
-  to {
-    transform: translateY(14%);
-  }
-}
-@keyframes parallax-near {
-  to {
-    opacity: 0.15;
-    transform: translateY(-9vh);
   }
 }

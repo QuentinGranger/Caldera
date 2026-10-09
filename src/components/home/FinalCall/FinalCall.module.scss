@@ -2,19 +2,13 @@
 @use '../../../styles/abstracts/mixins' as m;
 // Dusk: the parchment darkens into the night (the dawn of the page in
 // reverse), then the landscape rises out of it and runs into the footer.
-$dusk: clamp(6rem, 12vw, 10rem);
+$dusk: 0rem;
 .section {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   padding-block: calc(#{$dusk} + clamp(4rem, 8vw, 6rem)) clamp(4rem, 8vw, 7rem);
-  background: linear-gradient(
-    180deg,
-    v.$color-background 0,
-    #a89f86 calc(#{$dusk} * 0.35),
-    #25322a calc(#{$dusk} * 0.75),
-    v.$color-night $dusk
-  );
+  background: v.$color-night;
   color: v.$color-text-on-dark;
   // Legibility: darker at the bottom and on the left, where the text is.
   &::before {
@@ -54,20 +48,8 @@ $dusk: clamp(6rem, 12vw, 10rem);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .media img {
-      animation: settle linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 0%;
-    }
-  }
-}
-@keyframes settle {
-  from {
-    transform: scale(1.12) translateY(-3%);
-  }
-  to {
-    transform: scale(1) translateY(3%);
+  .section[data-scene-ready] .media img {
+    transform: scale(calc(1.04 - var(--scene-progress, 0) * 0.04));
   }
 }
 .inner {
@@ -111,7 +93,7 @@ $dusk: clamp(6rem, 12vw, 10rem);
 .form {
   padding: clamp(1.5rem, 3vw, 2rem);
   border-radius: v.$radius-card;
-  background: rgb(3 20 14 / 55%);
+  background: rgb(3 20 14 / 88%);
   box-shadow: v.$shadow-night;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
