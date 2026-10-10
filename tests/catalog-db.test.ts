@@ -133,7 +133,8 @@ test('lecture : statuts, variantes, DTO public, prix minimum et listes spéciali
   assert.equal((await getProductsBySet('dev-terres-de-braise')).length, 2);
   assert.deepEqual(await getProductsByCategory('inexistant'), []);
   assert.deepEqual(await getProductsBySet('inexistant'), []);
-  assert.equal((await getRestockedProducts()).length, 3);
+  // The seed’s reassort tag is not evidence of a real restock.
+  assert.equal((await getRestockedProducts()).length, 0);
   await assert.rejects(getFeaturedProducts(0), RangeError);
 });
 test('lecture : dernières pièces, comptées comme sur la fiche produit', async () => {

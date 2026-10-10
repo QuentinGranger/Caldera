@@ -1,3 +1,4 @@
+import { SHOPPING_INTENTS, isIntentTag } from '@/lib/catalog/merchandising';
 import { ProductType } from '@/generated/prisma/client';
 import { preordersEnabled } from '@/lib/catalog/preorders';
 import { saveProductAction } from '@/lib/admin/actions';
@@ -82,7 +83,10 @@ export function ProductInformationForm({
         <Field
           label="Tags, séparés par une virgule"
           name="tags"
-          defaultValue={product?.tags.map((tag) => tag.name).join(', ')}
+          defaultValue={product?.tags
+            .filter((tag) => !isIntentTag(tag.slug))
+            .map((tag) => tag.name)
+            .join(', ')}
           maxLength={500}
         />
         <Field
@@ -99,10 +103,14 @@ export function ProductInformationForm({
         />
       </div>
       <div className={styles.checks}>
-        <Check name="featured" label="À la une" checked={product?.featured} />
+        <Check
+          name="featured"
+          label="Sélection du moment"
+          checked={product?.featured}
+        />
         <Check
           name="newArrival"
-          label="Nouveauté"
+          label="Nouveauté de la semaine"
           checked={product?.newArrival}
         />
         {preordersEnabled() ? (
@@ -115,6 +123,31 @@ export function ProductInformationForm({
           <Hidden name="preorder" value="on" />
         ) : null}
       </div>
+      <h3>Aider le client à choisir</h3>
+      <Hidden name="merchandisingConfigured" value="on" />
+      <div className={styles.checks}>
+        {SHOPPING_INTENTS.map((intent) => (
+          <Check
+            key={intent.slug}
+            name={intent.slug}
+            label={intent.title}
+            checked={product?.tags.some((tag) => tag.slug === intent.slug)}
+          />
+        ))}
+      </div>
+      <small>
+        Choisissez les parcours adaptés au contenu réel du produit. Vous pouvez
+        en cocher plusieurs ou aucun. « À garder scellé » est réservé aux
+        produits scellés et ne promet aucune plus-value.
+      </small>
+      <small>
+        La nouveauté de la semaine disparaît après 7 jours suivant la date de
+        publication. Les derniers exemplaires dépendent du stock disponible et
+        de son seuil d’alerte. Les retours en stock exigent un
+        réapprovisionnement après rupture documentée dans les 30 derniers jours
+        ; un tag « réassort » ne suffit pas. Les produits d’exemple ne créent
+        aucune urgence commerciale.
+      </small>
       {!preordersEnabled() && (
         <small>
           Les précommandes sont désactivées au lancement. Les produits déjà

@@ -1,3 +1,4 @@
+import { merchandisingPath } from '@/lib/catalog/merchandising';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard/ProductCard';
@@ -27,46 +28,41 @@ export function HomeShop({
   latest,
   restocked,
   lastPieces,
-  links,
-  demo,
 }: {
   latest: CatalogProduct[];
   restocked: CatalogProduct[];
   lastPieces: CatalogProduct[];
-  links: { nouveautes?: string; enStock?: string; catalogue?: string };
-  /** The products come from the demonstration seed. */
-  demo: boolean;
 }) {
   const shelves: Shelf[] = [
     {
       id: 'nouveautes',
-      eyebrow: 'Derniers produits publiés',
-      title: 'Nouveautés',
+      eyebrow: 'Publiées ces 7 derniers jours',
+      title: 'Nouveauté de la semaine',
       products: latest,
-      link: links.nouveautes
-        ? { href: links.nouveautes, label: 'Toutes les nouveautés' }
-        : undefined,
+      link: {
+        href: merchandisingPath('nouveaute-de-la-semaine'),
+        label: 'Voir les nouveautés de la semaine',
+      },
     },
     {
       id: 'reassorts',
       eyebrow: 'De retour sur les terres',
-      title: 'Réassorts',
+      title: 'Retour en stock',
       products: restocked,
-      link: links.enStock
-        ? { href: links.enStock, label: 'Tous les produits en stock' }
-        : undefined,
+      link: {
+        href: merchandisingPath('retour-en-stock'),
+        label: 'Voir les retours en stock',
+      },
     },
     {
       id: 'dernieres-pieces',
       eyebrow: 'Stock limité',
-      title: 'Dernières pièces',
+      title: 'Derniers exemplaires',
       products: lastPieces,
-      link: links.catalogue
-        ? {
-            href: `${links.catalogue}?availability=low-stock`,
-            label: 'Toutes les dernières pièces',
-          }
-        : undefined,
+      link: {
+        href: merchandisingPath('derniers-exemplaires'),
+        label: 'Voir les derniers exemplaires',
+      },
     },
   ].filter((shelf) => shelf.products.length > 0);
   if (!shelves.length) return null;
@@ -105,12 +101,6 @@ export function HomeShop({
           </ul>
         </section>
       ))}
-      {demo && (
-        <p className={styles.demo}>
-          Aperçu de la boutique · Produits, prix et disponibilités présentés à
-          titre de démonstration.
-        </p>
-      )}
     </div>
   );
 }

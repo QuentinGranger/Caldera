@@ -1,5 +1,6 @@
 import type { ProductLanguage, ProductType } from '@/generated/prisma/client';
 import type { LanguageCode, StatusSlug } from '@/lib/seo/types';
+import type { MerchandisingKey } from './merchandising';
 import { preordersEnabled } from './preorders';
 
 export const CATALOG_PAGE_SIZE = 12;
@@ -66,6 +67,7 @@ export const multiFilters: MultiFilter[] = [
 ];
 /** Fixed part of a listing page, set by its route (slugs are already validated). */
 export type CatalogScope = {
+  merchandising?: MerchandisingKey;
   /** Game slug. */
   game?: string;
   /** Category slug; its descendants are included. */
