@@ -152,6 +152,47 @@
   isolation: isolate;
   overflow: hidden;
   overflow: clip;
+  // The landscape dissolves into whatever comes next. Tied to the bottom of
+  // the hero, not to the landscape: its depth effect moves the landscape, and
+  // its own darker foot with it. It ends in the next chapter's colour
+  // (HomeJourney's --chapter-next), so that the join leaves no edge.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    z-index: -1;
+    height: clamp(8rem, 26svh, 15rem);
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      var(--chapter-next, #{v.$color-night})
+    );
+    // The same fall on an eased curve: no visible band where it starts.
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(
+          in srgb,
+          var(--chapter-next, #{v.$color-night}) 14%,
+          transparent
+        )
+        22%,
+      color-mix(
+          in srgb,
+          var(--chapter-next, #{v.$color-night}) 52%,
+          transparent
+        )
+        52%,
+      color-mix(
+          in srgb,
+          var(--chapter-next, #{v.$color-night}) 88%,
+          transparent
+        )
+        80%,
+      var(--chapter-next, #{v.$color-night})
+    );
+  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero[data-scene-ready] .image {
