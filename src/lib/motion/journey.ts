@@ -7,7 +7,7 @@ const smooth = (value: number) => {
 
 /** Content has settled before it reaches the upper reading area. */
 export function itemReveal(top: number, viewport: number) {
-  return smooth((viewport * 0.95 - top) / Math.max(1, viewport * 0.7));
+  return smooth((viewport * 1.1 - top) / Math.max(1, viewport * 0.85));
 }
 
 export function chapterFlow(top: number, height: number, viewport: number) {
@@ -85,6 +85,14 @@ export function observeHomeJourney() {
             '--journey-progress',
             flow.progress.toFixed(4),
           );
+          node.style.setProperty(
+            '--journey-crossing',
+            (4 * flow.departure * (1 - flow.departure)).toFixed(4),
+          );
+          node.style.setProperty(
+            '--journey-departure',
+            flow.departure.toFixed(4),
+          );
         }
       }
     };
@@ -135,6 +143,8 @@ export function observeHomeJourney() {
           ?.removeAttribute('data-home-anchor');
         delete node.dataset.homeJourneyReady;
         node.style.removeProperty('--journey-progress');
+        node.style.removeProperty('--journey-crossing');
+        node.style.removeProperty('--journey-departure');
       });
       items.forEach((node) => node.style.removeProperty('--item-reveal'));
     };

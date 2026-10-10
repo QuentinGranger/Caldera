@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { ArrowDown } from 'lucide-react';
 import styles from './CardStory.module.scss';
@@ -188,9 +187,9 @@ export function CardStory({
               </div>
             ))}
           </div>
-          <Link className={styles.skip} href={skipTo.href}>
+          <a className={styles.skip} href={skipTo.href}>
             {skipTo.label} <ArrowDown size={16} aria-hidden="true" />
-          </Link>
+          </a>
         </div>
         <div className={styles.footer}>
           <span>Cartes emblématiques du JCC Pokémon</span>

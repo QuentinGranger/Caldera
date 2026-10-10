@@ -1,7 +1,7 @@
 // The backgrounds join inside existing section padding. No extra scroll
 // chapter, except a short bridge where a dark chapter meets a light one.
 .chapter {
-  --fade: var(--chapter-bridge, clamp(3rem, 8svh, 6rem));
+  --fade: var(--chapter-bridge, clamp(6rem, 18svh, 12rem));
   position: relative;
   min-width: 0;
   padding-bottom: var(--chapter-bridge, 0px);
@@ -40,8 +40,53 @@
     background: transparent;
   }
 }
+// One light field straddles each actual boundary; no new scroll interval.
+// It is absent without the motion observer, and never captures input.
+.handoff {
+  display: none;
+  position: absolute;
+  inset: auto 0 calc(clamp(10rem, 30svh, 20rem) * -0.5);
+  height: clamp(10rem, 30svh, 20rem);
+  z-index: 2;
+  overflow: hidden;
+  overflow: clip;
+  pointer-events: none;
+  span {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 42% 34% at 32% 50%, #e8c26130, transparent 100%),
+      radial-gradient(ellipse 34% 24% at 74% 48%, #d5e2c31c, transparent 100%);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .chapter[data-home-journey-ready] {
+    .handoff {
+      display: block;
+      opacity: var(--journey-crossing, 0);
+      span {
+        transform: translateX(calc((var(--journey-departure, 0) - 0.5) * 12%))
+          scale(calc(0.8 + var(--journey-departure, 0) * 0.5));
+      }
+    }
+    // The next light surface rises into the reserved bridge like a curved page.
+    // All of this stays below the outgoing content, including its last CTA.
+    &[data-home-bridge] {
+      background: var(--chapter-end);
+      .handoff {
+        bottom: -1px;
+        height: var(--chapter-bridge);
+        opacity: 1;
+        span {
+          background: var(--chapter-next);
+          border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+          box-shadow: 0 -2px 0 #e8c26160;
+          transform-origin: 50% 100%;
+          transform: translateY(calc((1 - var(--journey-departure, 0)) * 30%))
+            scaleX(1.5);
+        }
+      }
+    }
     [data-journey-item] {
       --journey-side: -1;
       perspective: 1400px;
@@ -51,18 +96,18 @@
       > :first-child {
         transform-origin: 50% 70%;
         transform: translate3d(
-            calc((1 - var(--item-reveal, 1)) * var(--journey-side) * 4vw),
-            calc((1 - var(--item-reveal, 1)) * 7rem),
+            calc((1 - var(--item-reveal, 1)) * var(--journey-side) * 2vw),
+            calc((1 - var(--item-reveal, 1)) * 6rem),
             0
           )
-          rotateX(calc((1 - var(--item-reveal, 1)) * 10deg))
+          rotateX(calc((1 - var(--item-reveal, 1)) * 7deg))
           rotateY(
-            calc((1 - var(--item-reveal, 1)) * var(--journey-side) * 16deg)
+            calc((1 - var(--item-reveal, 1)) * var(--journey-side) * 10deg)
           )
           rotateZ(
-            calc((1 - var(--item-reveal, 1)) * var(--journey-side) * 4deg)
+            calc((1 - var(--item-reveal, 1)) * var(--journey-side) * 2deg)
           )
-          scale(calc(0.82 + var(--item-reveal, 1) * 0.18));
+          scale(calc(0.9 + var(--item-reveal, 1) * 0.1));
       }
     }
     [data-journey-item='page'] > :first-child {
