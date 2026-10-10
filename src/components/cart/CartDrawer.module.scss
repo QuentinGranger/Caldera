@@ -115,3 +115,31 @@
     border-radius: v.$radius-small;
   }
 }
+
+// On short screens, keep a single scroll area so the footer cannot squeeze
+// the product list to zero height. The close button remains within reach.
+@media (max-height: 36rem) {
+  .panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-shrink: 0;
+    padding-block: 0.75rem;
+  }
+  .feedback {
+    flex-shrink: 0;
+  }
+  .content {
+    flex: none;
+    overflow: visible;
+  }
+  .footer {
+    max-height: none;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+}
