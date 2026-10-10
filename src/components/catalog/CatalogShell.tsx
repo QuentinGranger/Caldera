@@ -22,7 +22,7 @@ export function CatalogShell({
   world,
   motionKey = '',
 }: {
-  world?: 'pokemon' | 'sealed';
+  world?: 'pokemon' | 'sealed' | 'extensions';
   motionKey?: string;
   hero: ReactNode;
   children: ReactNode;

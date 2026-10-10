@@ -150,12 +150,12 @@ export function ExtensionsPageSkeleton() {
   return (
     <main
       id="contenu"
-      className={styles.loadingMain}
+      className={`${styles.loadingMain} ${styles.extensionsPage}`}
       aria-busy="true"
       aria-label="Chargement des extensions"
     >
       <span className={styles.srOnly}>Chargement des extensions…</span>
-      <HeroSkeleton />
+      <HeroSkeleton framed />
       <Container>
         <div className={styles.catalogBody} aria-hidden="true">
           <div className={styles.chips}>

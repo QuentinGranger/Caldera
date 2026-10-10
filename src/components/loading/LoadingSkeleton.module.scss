@@ -798,3 +798,27 @@ $hairline: rgb(23 62 50 / 14%);
     object-position: 50% 100%;
   }
 }
+
+.extensionsPage {
+  background: #071a12;
+  .hero {
+    min-height: 39rem;
+  }
+  .block {
+    background-image: linear-gradient(
+      100deg,
+      #ffffff08 20%,
+      #ffffff16 38%,
+      #ffffff08 56%
+    );
+  }
+  .setCard {
+    background: #10261c;
+    border-color: #e8c26125;
+  }
+  @media (max-width: 1199px) {
+    .hero {
+      min-height: 56rem;
+    }
+  }
+}
