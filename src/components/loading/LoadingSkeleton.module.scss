@@ -553,7 +553,6 @@ $hairline: rgb(23 62 50 / 14%);
   }
 }
 
-
 .releaseList {
   border-top: 1px solid v.$color-border;
 }
@@ -588,7 +587,6 @@ $hairline: rgb(23 62 50 / 14%);
     justify-self: end;
   }
 }
-
 
 .simplePage {
   min-height: 65vh;
@@ -635,7 +633,6 @@ $hairline: rgb(23 62 50 / 14%);
   width: min(24rem, 76%);
   height: clamp(3rem, 8vw, 4.4rem);
 }
-
 
 .checkoutPage {
   min-height: 65vh;
@@ -786,4 +783,18 @@ $hairline: rgb(23 62 50 / 14%);
   height: 5.5rem;
   margin-top: 1rem;
   border-radius: 0.7rem;
+}
+
+// Match the product entrance while its server data streams in.
+.productPage {
+  background: #071a12;
+  .galleryFilled {
+    background: #17372c;
+    border-color: #e8c26130;
+    border-radius: 1.5rem;
+  }
+  .galleryImage {
+    padding: clamp(2.5rem, 5vw, 4.5rem) clamp(2rem, 4vw, 4rem)
+      clamp(4rem, 7vw, 6rem);
+  }
 }

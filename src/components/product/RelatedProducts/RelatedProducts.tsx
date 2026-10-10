@@ -8,8 +8,10 @@ export function RelatedProducts({
   eyebrow = 'Poursuivre l’exploration',
   title = 'À découvrir également',
   description,
+  tone = 'day',
 }: {
   products: CatalogProduct[];
+  tone?: 'day' | 'night';
   /** Id of the heading, also usable as an in-page anchor. */
   id?: string;
   eyebrow?: string;
@@ -27,7 +29,7 @@ export function RelatedProducts({
       />
       <div className={styles.grid}>
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} product={product} tone={tone} />
         ))}
       </div>
     </section>

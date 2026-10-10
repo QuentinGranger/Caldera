@@ -70,3 +70,23 @@
 .guide {
   padding-bottom: 0.5rem;
 }
+
+:global([data-product-world]) .explore {
+  border-color: #e8c26130;
+  .column {
+    padding: 1.5rem;
+    border: 1px solid #e8c26126;
+    border-radius: 1.25rem;
+    background: #10261c;
+  }
+  .column h3 {
+    color: #f4d985;
+  }
+  .column a:hover {
+    color: #f4d985;
+  }
+  .text,
+  .count {
+    color: #bdc6b8;
+  }
+}

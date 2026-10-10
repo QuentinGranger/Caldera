@@ -26,3 +26,8 @@
     color: v.$color-gold;
   }
 }
+
+:global([data-product-world]) .set {
+  border: 1px solid #e8c26130;
+  border-radius: 1.5rem;
+}
