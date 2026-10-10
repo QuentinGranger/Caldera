@@ -8,6 +8,8 @@ Le catalogue vient directement après le hero : navigation des rayons, recherche
 
 ## Mouvement et repli
 
+Visuel du hub : Rayquaza VMAX 218/203 — Évolution Céleste, scan français vérifié via [TCGdex](https://api.tcgdex.net/v2/fr/cards/swsh7-218), source `https://assets.tcgdex.net/fr/swsh/swsh7/218/high.webp`. L’image est optimisée en WebP et servie localement ; le dos Pokémon et les animations restent identiques.
+
 `PokemonHero` est rendu côté serveur. `PokemonMotion` réutilise l’observateur de profondeur de la home, limité à son propre `main` et réinitialisé quand la requête catalogue change. Perspective CSS sur les images uniquement ; titres, liens, boutons, filtres et barre sticky restent dans leur géométrie native. Aucun canvas supplémentaire, dépendance, API, verrouillage du scroll ou longue séquence imposée.
 
 Travail à la demande sur les objets proches du viewport, événements passifs, aucun rendu continu au repos. Les observateurs et événements sont libérés au démontage. `prefers-reduced-motion` coupe les mouvements ; sans JavaScript ou sans IntersectionObserver, les images et toutes les fonctions de navigation restent accessibles. Le pointeur tactile ne pilote pas l’inclinaison ; les mouvements des images de grille sont réduits sur petit écran.
