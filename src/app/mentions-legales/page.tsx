@@ -61,7 +61,7 @@ export default function MentionsLegalesPage() {
           <h1>Mentions légales</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
           <p className={styles.version}>
-            Dernière mise à jour : 26 septembre 2026
+            Dernière mise à jour : 10 octobre 2026
           </p>
         </Container>
       </section>
@@ -397,7 +397,7 @@ export default function MentionsLegalesPage() {
 
             <Section id="section-10" title="10. Mesure d’audience">
               <p>
-                Le site peut utiliser <strong>Vercel Web Analytics</strong> afin
+                Le site utilise <strong>Vercel Web Analytics</strong> afin
                 d’obtenir des statistiques relatives notamment à la
                 fréquentation et à l’utilisation du site.
               </p>

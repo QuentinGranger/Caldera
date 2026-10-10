@@ -10,6 +10,7 @@ import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
 import { SpeedInsights } from '@/components/monitoring/SpeedInsights';
+import { WebAnalytics } from '@/components/monitoring/WebAnalytics';
 import { TransitionStage } from '@/components/transitions/TransitionStage';
 import { rootMetadata } from '@/components/layout/siteMetadata';
 import { WishlistProvider } from '@/components/wishlist/WishlistProvider';
@@ -61,7 +62,12 @@ export default async function RootLayout({
             {children}
             <StorefrontOnly>
               <Footer />
-              {process.env.VERCEL === '1' && <SpeedInsights />}
+              {process.env.VERCEL === '1' && (
+                <>
+                  <SpeedInsights />
+                  <WebAnalytics />
+                </>
+              )}
             </StorefrontOnly>
           </WishlistProvider>
         </CartProvider>
