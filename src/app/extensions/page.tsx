@@ -1,26 +1,24 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
-import { AisleNav } from '@/components/catalog/AisleNav';
+import { Archive, Clock3, Sparkles } from 'lucide-react';
 import { ExtensionsPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { CatalogShell } from '@/components/catalog/CatalogShell';
-import { EXTENSIONS_COPY } from '@/components/catalog/pageCopy';
-import { PageHero } from '@/components/catalog/PageHero';
 import {
-  CALENDAR_PATH,
   EXTENSIONS_PATH,
   type SetEntry,
 } from '@/components/landing/landingData';
 import { getExtensionsIndex } from '@/components/landing/releaseData';
 import { RECENT_EXTENSION_MONTHS } from '@/components/landing/landingText';
 import { SetCard } from '@/components/landing/SetCard';
-import { SectionTitle } from '@/components/ui/SectionTitle/SectionTitle';
+import {
+  ExtensionsHero,
+  ExtensionsNavigation,
+  ExtensionsGuide,
+} from '@/components/landing/ExtensionsWorld';
 import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
-import type { SeoLink } from '@/lib/seo/types';
-import catalogStyles from '@/components/catalog/Catalog.module.scss';
-import landingStyles from '@/components/landing/Landing.module.scss';
-import setStyles from '@/components/landing/Sets.module.scss';
+import styles from '@/components/landing/ExtensionsWorld.module.scss';
 
 const UPCOMING = 'a-venir';
 const RECENT = 'extensions-recentes';
@@ -34,6 +32,7 @@ function ExtensionSection({
   entries,
   emptyText,
   featuredFirst = false,
+  number,
 }: {
   id: string;
   eyebrow: string;
@@ -42,33 +41,38 @@ function ExtensionSection({
   entries: readonly SetEntry[];
   emptyText: string;
   featuredFirst?: boolean;
+  number: number;
 }) {
+  const Icon = number === 1 ? Clock3 : number === 2 ? Sparkles : Archive;
   return (
-    <section
-      id={id}
-      className={landingStyles.section}
-      aria-labelledby={`${id}-titre`}
-    >
-      <SectionTitle
-        id={`${id}-titre`}
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-      />
-      {entries.length ? (
-        <ul className={setStyles.grid}>
-          {entries.map((entry, position) => (
-            <li key={entry.id}>
-              <SetCard
-                entry={entry}
-                featured={featuredFirst && position === 0}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className={setStyles.emptyState}>{emptyText}</p>
-      )}
+    <section id={id} className={styles.chapter} aria-labelledby={`${id}-titre`}>
+      <div className={styles.chapterHeading}>
+        <span className={styles.chapterNumber} aria-hidden="true">
+          0{number}
+        </span>
+        <p className={styles.eyebrow}>{eyebrow}</p>
+        <h2 id={`${id}-titre`}>{title}</h2>
+        <p>{description}</p>
+      </div>
+      <div className={styles.chapterBody}>
+        {entries.length ? (
+          <ul className={styles.setGrid}>
+            {entries.map((entry, position) => (
+              <li key={entry.id}>
+                <SetCard
+                  entry={entry}
+                  featured={featuredFirst && position === 0}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className={styles.empty}>
+            <Icon strokeWidth={1} aria-hidden="true" />
+            <p>{emptyText}</p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -93,7 +97,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function ExtensionsContent() {
   await connection();
   const index = await getExtensionsIndex();
-  const ways: SeoLink[] = [
+  const ways = [
     {
       href: `#${UPCOMING}`,
       label: 'À venir',
@@ -109,9 +113,6 @@ async function ExtensionsContent() {
       label: 'Déjà sorties',
       count: index.released.length,
     },
-    ...(index.calendarIndexable
-      ? [{ href: CALENDAR_PATH, label: 'Calendrier des sorties' }]
-      : []),
   ];
   const linked = [
     ...index.upcoming,
@@ -123,24 +124,8 @@ async function ExtensionsContent() {
 
   return (
     <CatalogShell
-      hero={
-        <PageHero
-          breadcrumb={[
-            { label: 'Accueil', href: '/' },
-            { label: 'Extensions' },
-          ]}
-          path={EXTENSIONS_PATH}
-          eyebrow={EXTENSIONS_COPY.eyebrow}
-          title={index.heading}
-          lead={EXTENSIONS_COPY.lead}
-          view={EXTENSIONS_COPY.view}
-          action={
-            index.calendarIndexable
-              ? { href: CALENDAR_PATH, label: 'Voir le calendrier' }
-              : undefined
-          }
-        />
-      }
+      world="extensions"
+      hero={<ExtensionsHero calendar={index.calendarIndexable} />}
       newsletter="Recevez les prochaines sorties, réassorts et sélections sans avoir à surveiller le catalogue."
       jsonLd={graph(
         collectionPageNode({
@@ -151,11 +136,10 @@ async function ExtensionsContent() {
         }),
       )}
     >
-      <div className={catalogStyles.explorer}>
-        <AisleNav aisles={ways} label="Parcourir les extensions" />
-      </div>
+      <ExtensionsNavigation entries={ways} />
 
       <ExtensionSection
+        number={1}
         id={UPCOMING}
         eyebrow="Sorties annoncées"
         title="À venir"
@@ -165,6 +149,7 @@ async function ExtensionsContent() {
         featuredFirst
       />
       <ExtensionSection
+        number={2}
         id={RECENT}
         eyebrow="Dernières sorties"
         title="Extensions récentes"
@@ -173,6 +158,7 @@ async function ExtensionsContent() {
         emptyText={`Aucune extension sortie au cours des ${RECENT_EXTENSION_MONTHS} derniers mois.`}
       />
       <ExtensionSection
+        number={3}
         id={RELEASED}
         eyebrow="Historique"
         title="Déjà sorties"
@@ -180,6 +166,7 @@ async function ExtensionsContent() {
         entries={index.released}
         emptyText="Aucune extension plus ancienne à afficher."
       />
+      <ExtensionsGuide />
     </CatalogShell>
   );
 }

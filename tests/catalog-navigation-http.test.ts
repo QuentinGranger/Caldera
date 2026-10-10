@@ -455,7 +455,7 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   // /extensions: three stable sections; demo rows never leak in production.
   const extensions = (await page('/extensions')).html;
   assert.equal(h1Count(extensions), 1);
-  assert.match(extensions, /<section[^>]+data-frame="backdrop"/);
+  assert.ok(extensions.includes('data-pokemon-world="extensions"'));
   assert.ok(!extensions.includes('[Démo]'));
   for (const label of ['À venir', 'Extensions récentes', 'Déjà sorties'])
     assert.ok(strip(extensions).includes(label), label);
