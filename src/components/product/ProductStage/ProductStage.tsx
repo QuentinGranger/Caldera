@@ -2,19 +2,12 @@
 import { useEffect, useRef } from 'react';
 
 /** Decorative only: the HTML photograph and zoom never depend on WebGL. */
-export function ProductStage({
-  enabled,
-  imageUrl,
-}: {
-  enabled: boolean;
-  imageUrl: string;
-}) {
+export function ProductStage({ imageUrl }: { imageUrl: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const surface = canvas.current;
     const root = surface?.parentElement;
     if (
-      !enabled ||
       !surface ||
       !root ||
       !('IntersectionObserver' in window) ||
@@ -87,6 +80,6 @@ export function ProductStage({
       size.removeEventListener('change', preference);
       reset();
     };
-  }, [enabled, imageUrl]);
+  }, [imageUrl]);
   return <canvas ref={canvas} data-product-canvas aria-hidden="true" />;
 }

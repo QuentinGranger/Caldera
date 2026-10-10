@@ -6,7 +6,6 @@ import {
   type BreadcrumbItem,
 } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { Button } from '@/components/ui/Button/Button';
-import type { CatalogProduct } from '@/types/product';
 import styles from './PokemonWorld.module.scss';
 
 /** A short entrance to the shop, with depth on imagery and stable shopping links. */
@@ -17,7 +16,6 @@ export function PokemonHero({
   lead,
   breadcrumb,
   path,
-  product,
   hasProducts,
 }: {
   kind: 'pokemon' | 'sealed';
@@ -26,7 +24,6 @@ export function PokemonHero({
   lead: string;
   breadcrumb: BreadcrumbItem[];
   path: string;
-  product?: CatalogProduct;
   hasProducts: boolean;
 }) {
   const sealed = kind === 'sealed';
@@ -89,10 +86,10 @@ export function PokemonHero({
           >
             <span className={styles.orbit} />
             <span className={styles.ground} />
-            {sealed && product ? (
+            {sealed ? (
               <div className={styles.object} data-hero-object>
                 <Image
-                  src={product.image}
+                  src="/assets/images/products/prismatic.png"
                   alt=""
                   fill
                   sizes="(min-width: 960px) 40vw, 75vw"
@@ -120,8 +117,8 @@ export function PokemonHero({
               </div>
             )}
             <p className={styles.caption}>
-              {sealed && product
-                ? 'Un aperçu de la sélection'
+              {sealed
+                ? 'ETB Évolutions Prismatiques · illustration hors catalogue'
                 : 'Illustration du JCC Pokémon · hors catalogue'}
             </p>
           </div>

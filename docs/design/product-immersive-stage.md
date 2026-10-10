@@ -8,7 +8,7 @@ La fiche produit reprend le paysage forestier, le vert profond, l’or et la typ
 
 La photographie déjà chargée devient une texture dans la même scène que le socle. Ses marges transparentes sont retirées en mémoire, à une résolution maximale de 1 024 pixels, pour poser son pied au centre du plateau. La caméra déplace ainsi l’ensemble sans décalage indépendant de la photo. Ses couleurs restent inchangées ; aucun modèle 360° ni côté absent des images n’est inventé. L’image HTML conserve le texte alternatif, le zoom et le secours statique, sans requête d’image supplémentaire.
 
-Le rendu est à la demande, arrêté hors écran et dans un onglet masqué. Le DPR est plafonné à 1,5 ; les ressources, observateurs et événements sont libérés à la désactivation ou au démontage. Le bouton « Vue immersive » permet de revenir au décor statique.
+Le rendu est à la demande, arrêté hors écran et dans un onglet masqué. Le DPR est plafonné à 1,5 ; les ressources, observateurs et événements sont libérés à la désactivation ou au démontage. L’effet est automatique, sans bouton de mode ; les conditions de secours restent prioritaires.
 
 Sans WebGL, en cas de perte de contexte, avec `prefers-reduced-motion`, sous 360 px de large ou 500 px de haut, la photographie, le socle CSS, les miniatures et le zoom restent utilisables. La scène décorative est exclue de l’arbre d’accessibilité.
 
@@ -16,7 +16,7 @@ Sans WebGL, en cas de perte de contexte, avec `prefers-reduced-motion`, sous 360
 
 - TypeScript, ESLint et les 10 tests unitaires produit : réussis.
 - Navigation des miniatures, zoom, flèches clavier, fermeture Échap et retour de focus : contrôlés dans Chromium.
-- Désactivation/réactivation de la scène : contrôlée ; premier rendu WebGL confirmé par `data-product-stage="ready"`.
+- Premier rendu WebGL confirmé par `data-product-stage="ready"`.
 - Alignement sur le plateau, absence de filaments, changement de photographie et zoom : contrôlés dans Chromium après correction du socle.
 - La galerie devient sticky uniquement à partir du passage en deux colonnes (1 200 px), pour éviter de couvrir les informations sur les largeurs intermédiaires.
 - Trois tests unitaires vérifient le détourage des marges transparentes, les photos opaques et le secours sur image vide.
