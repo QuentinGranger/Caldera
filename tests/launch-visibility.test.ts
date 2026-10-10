@@ -129,4 +129,8 @@ test('tris : aucun tri par prix sur les exemples, aucun menu pour un seul produi
     ['recommended'],
   );
   assert.ok(catalogSortOptions(examples, 'price-asc').includes('price-asc'));
+  assert.deepEqual(catalogSortOptions({ ...examples, total: 1 }, 'price-asc'), [
+    'recommended',
+    'price-asc',
+  ]);
 });

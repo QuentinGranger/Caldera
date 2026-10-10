@@ -122,6 +122,7 @@ export function catalogSortOptions(
 ): CatalogSort[] {
   return (Object.keys(sortLabels) as CatalogSort[]).filter(
     (sort) =>
+      sort === 'recommended' ||
       sort === current ||
       (facets.total > 1 &&
         (!sort.startsWith('price-') || hasPriceFilter(facets, {}))),
