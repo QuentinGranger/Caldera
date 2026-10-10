@@ -107,7 +107,7 @@ export function PokemonHero({
                 </div>
                 <div className={styles.cardFront}>
                   <Image
-                    src="/assets/images/experience/noctali-vmax-215-203.webp"
+                    src="/assets/images/experience/rayquaza-vmax-218-203.webp"
                     alt=""
                     fill
                     sizes="(min-width: 960px) 23vw, 48vw"
