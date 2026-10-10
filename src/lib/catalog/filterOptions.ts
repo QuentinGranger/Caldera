@@ -85,12 +85,23 @@ export function catalogFilterSections(
     ),
     set: Object.fromEntries(facets.sets.map((s) => [s.slug, s.name])),
   };
+  const order: MultiFilter[] = [
+    'set',
+    'type',
+    'availability',
+    'category',
+    'language',
+  ];
   return sections
+    .sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
     .map((section) => {
       const options = section.options.filter(
         (option) =>
           (filters[section.key] as string[]).includes(option.value) ||
-          (option.count > 0 && option.count < facets.total),
+          (section.key !== 'category' &&
+            section.key !== 'language' &&
+            option.count > 0 &&
+            option.count < facets.total),
       );
       for (const value of filters[section.key]) {
         if (
@@ -134,6 +145,8 @@ export function catalogSortOptions(
       sort === 'recommended' ||
       sort === current ||
       (facets.total > 1 &&
+        sort !== 'name-asc' &&
+        (sort !== 'popular' || facets.hasSales) &&
         (!sort.startsWith('price-') || hasPriceFilter(facets, {}))),
   );
 }

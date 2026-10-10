@@ -38,6 +38,6 @@ export function getProductBadge(
 export const availabilityLabels: Record<Availability, string> = {
   IN_STOCK: 'En stock',
   LOW_STOCK: 'Dernières pièces',
-  OUT_OF_STOCK: 'Rupture',
+  OUT_OF_STOCK: 'Épuisé',
   PREORDER: 'Précommande',
 };

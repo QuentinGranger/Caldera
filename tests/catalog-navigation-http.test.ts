@@ -203,7 +203,7 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.ok(articles(preorders).some((a) => a.includes('Précommande')));
   assert.ok(
     articles(preorders).every(
-      (a) => a.includes('Précommande') || a.includes('Rupture'),
+      (a) => a.includes('Précommande') || a.includes('Épuisé'),
     ),
   );
   // The stock filter cannot narrow a preorder listing: it is not offered.
@@ -216,7 +216,7 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.ok(articles(stock).length > 0);
   assert.ok(
     articles(stock).every(
-      (a) => !a.includes('Précommande') && !a.includes('Rupture'),
+      (a) => !a.includes('Précommande') && !a.includes('Épuisé'),
     ),
   );
 

@@ -20,7 +20,7 @@ export async function getCatalogFacets(scope: CatalogScope) {
     scope,
     categories,
   );
-  const [groups, languageGroups, sets, availability, prices] =
+  const [groups, languageGroups, sets, availability, prices, sale] =
     await Promise.all([
       db.product.groupBy({
         by: ['categoryId', 'productType', 'tcgSetId'],
@@ -37,7 +37,7 @@ export async function getCatalogFacets(scope: CatalogScope) {
       demonstration
         ? []
         : Promise.all(
-            (['in-stock', 'low-stock', 'preorder'] as const)
+            (['in-stock', 'low-stock', 'out-of-stock', 'preorder'] as const)
               .filter((value) => value !== 'preorder' || preordersEnabled())
               .map(async (value) => {
                 const filtered = buildCatalogWhere(
@@ -57,6 +57,15 @@ export async function getCatalogFacets(scope: CatalogScope) {
             where: { AND: [variant, { product: where }] },
             _min: { price: true },
             _max: { price: true },
+          }),
+      demonstration
+        ? null
+        : db.orderItem.findFirst({
+            where: {
+              order: { status: 'PAID' },
+              product: { AND: [where, { isDemonstration: false }] },
+            },
+            select: { id: true },
           }),
     ]);
   // A product counts once per language, whatever its number of variants in it.
@@ -106,6 +115,7 @@ export async function getCatalogFacets(scope: CatalogScope) {
   const total = groups.reduce((sum, group) => sum + group._count._all, 0);
   return {
     total,
+    hasSales: Boolean(sale),
     availability: demonstration
       ? []
       : availability.map(([value, count]) => ({ value, count })),

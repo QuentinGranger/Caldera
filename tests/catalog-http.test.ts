@@ -94,7 +94,7 @@ test('HTTP : un changement de prix et de stock apparaît au rafraîchissement', 
         'Le produit en rupture quitte les réassorts',
       );
       assert.ok(text(matches[0]!).includes(text(formatPrice('6.37'))));
-      assert.ok(text(matches[0]!).includes('Rupture'));
+      assert.ok(text(matches[0]!).includes('Épuisé'));
     }
     const detail = text(await page(`/produit/${slug}`));
     assert.ok(detail.includes(text(formatPrice('6.37'))));

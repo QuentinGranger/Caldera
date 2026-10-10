@@ -44,16 +44,25 @@ export function buildCatalogWhere(
       : {}),
   };
   if (filters.availability.length) {
+    const stockedVariant: Prisma.ProductVariantWhereInput = {
+      ...variant,
+      availableQuantity: { gt: 0 },
+    };
     variant.OR = filters.availability.map((value) =>
       value === 'preorder'
         ? { product: { preorder: true } }
-        : {
-            product: { preorder: false },
-            availableQuantity:
-              value === 'in-stock'
-                ? { gt: 0 }
-                : { gt: 0, lte: db.productVariant.fields.lowStockThreshold },
-          },
+        : value === 'out-of-stock'
+          ? {
+              availableQuantity: { lte: 0 },
+              product: { preorder: false, variants: { none: stockedVariant } },
+            }
+          : {
+              product: { preorder: false },
+              availableQuantity:
+                value === 'in-stock'
+                  ? { gt: 0 }
+                  : { gt: 0, lte: db.productVariant.fields.lowStockThreshold },
+            },
     );
   }
   const conditions: Prisma.ProductWhereInput[] = [visibleProductWhere];
@@ -156,6 +165,49 @@ export async function getCatalogProducts(
       skip: (page - 1) * CATALOG_PAGE_SIZE,
       take: CATALOG_PAGE_SIZE,
     };
+    if (filters.sort === 'popular') {
+      // Gross units in paid orders only. Examples never contribute to popularity.
+      const paid = { order: { status: 'PAID' as const } };
+      const soldWhere: Prisma.ProductWhereInput = {
+        AND: [where, { isDemonstration: false, orderItems: { some: paid } }],
+      };
+      const [soldCount, groups] = await Promise.all([
+        db.product.count({ where: soldWhere }),
+        db.orderItem.groupBy({
+          by: ['productId'],
+          where: { ...paid, productId: { not: null }, product: soldWhere },
+          _sum: { quantity: true },
+          orderBy: [{ _sum: { quantity: 'desc' } }, { productId: 'asc' }],
+          ...pagination,
+        }),
+      ]);
+      const ids = groups.flatMap((group) =>
+        group.productId ? [group.productId] : [],
+      );
+      const rows = ids.length
+        ? await db.product.findMany({ where: { id: { in: ids } }, select })
+        : [];
+      const byId = new Map(rows.map((row) => [row.id, row]));
+      const sold = ids.flatMap((id) => {
+        const row = byId.get(id);
+        return row ? [toCatalogProduct(row)] : [];
+      });
+      if (sold.length === CATALOG_PAGE_SIZE) return sold;
+      // Products without sales follow in publication order, with SQL pagination.
+      const unsold = await db.product.findMany({
+        where: {
+          AND: [
+            where,
+            { OR: [{ isDemonstration: true }, { orderItems: { none: paid } }] },
+          ],
+        },
+        select,
+        orderBy: buildCatalogOrderBy('newest'),
+        skip: Math.max(0, pagination.skip - soldCount),
+        take: CATALOG_PAGE_SIZE - sold.length,
+      });
+      return [...sold, ...unsold.map(toCatalogProduct)];
+    }
     if (filters.sort === 'price-asc' || filters.sort === 'price-desc') {
       // Prisma ne trie pas Product par MIN(variants.price) : groupBy pagine en SQL.
       const groups = await db.productVariant.groupBy({
