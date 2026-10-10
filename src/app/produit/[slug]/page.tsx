@@ -1,5 +1,6 @@
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
@@ -58,7 +59,15 @@ async function ProductContent({
     ? []
     : page.related.filter((item) => item.availability !== 'OUT_OF_STOCK');
   return (
-    <main id="contenu" tabIndex={-1} className={styles.main}>
+    <main id="contenu" tabIndex={-1} className={styles.main} data-product-world>
+      <div className={styles.landscape} aria-hidden="true">
+        <Image
+          src="/assets/images/editorial/foret.png"
+          alt=""
+          fill
+          sizes="100vw"
+        />
+      </div>
       <Container>
         <JsonLd data={page.structuredData} />
         <Breadcrumb
@@ -95,54 +104,57 @@ async function ProductContent({
                 productId={product.id}
                 productName={product.name}
               />
-              {product.isDemonstration ? (
-                <div className={styles.notice}>
-                  <strong>Produit d’exemple — non commercialisé.</strong>
-                  <p>
-                    Cette fiche sert à présenter le site. Aucun prix, stock,
-                    date de sortie ou délai de livraison réel n’est annoncé.
-                    Aucun achat ni alerte stock n’est possible.
-                  </p>
-                </div>
-              ) : (
-                <ProductPurchasePanel
-                  key={product.id}
-                  productId={product.id}
-                  variants={product.variants}
-                  newArrival={product.newArrival}
-                  preorder={product.preorder}
-                  releaseDate={product.releaseDate}
-                  typeLabel={productTypeLabels[product.productType]}
-                  shipping={page.shipping}
-                  accountEmail={alertEmail}
-                />
-              )}
-              {!product.isDemonstration &&
-                !purchasable &&
-                (product.variants.length > 0 || alternatives.length > 0) && (
+              <div className={styles.purchasePanel}>
+                {product.isDemonstration ? (
                   <div className={styles.notice}>
-                    {product.variants.length > 0 && (
-                      <p>
-                        <strong>Produit épuisé.</strong>{' '}
-                        {product.variants.length > 1
-                          ? 'Toutes les versions de ce produit sont en rupture de stock.'
-                          : 'Ce produit est en rupture de stock.'}
-                      </p>
-                    )}
-                    {alternatives.length > 0 && (
-                      <a href="#alternatives-title">
-                        {alternatives.length > 1
-                          ? `Voir les ${alternatives.length} produits similaires disponibles`
-                          : 'Voir un produit similaire disponible'}
-                      </a>
-                    )}
+                    <strong>Produit d’exemple — non commercialisé.</strong>
+                    <p>
+                      Cette fiche sert à présenter le site. Aucun prix, stock,
+                      date de sortie ou délai de livraison réel n’est annoncé.
+                      Aucun achat ni alerte stock n’est possible.
+                    </p>
                   </div>
+                ) : (
+                  <ProductPurchasePanel
+                    key={product.id}
+                    productId={product.id}
+                    variants={product.variants}
+                    newArrival={product.newArrival}
+                    preorder={product.preorder}
+                    releaseDate={product.releaseDate}
+                    typeLabel={productTypeLabels[product.productType]}
+                    shipping={page.shipping}
+                    accountEmail={alertEmail}
+                  />
                 )}
+                {!product.isDemonstration &&
+                  !purchasable &&
+                  (product.variants.length > 0 || alternatives.length > 0) && (
+                    <div className={styles.notice}>
+                      {product.variants.length > 0 && (
+                        <p>
+                          <strong>Produit épuisé.</strong>{' '}
+                          {product.variants.length > 1
+                            ? 'Toutes les versions de ce produit sont en rupture de stock.'
+                            : 'Ce produit est en rupture de stock.'}
+                        </p>
+                      )}
+                      {alternatives.length > 0 && (
+                        <a href="#alternatives-title">
+                          {alternatives.length > 1
+                            ? `Voir les ${alternatives.length} produits similaires disponibles`
+                            : 'Voir un produit similaire disponible'}
+                        </a>
+                      )}
+                    </div>
+                  )}
+              </div>
             </ArrivalLayers>
           </div>
         </div>
         {alternatives.length > 0 && (
           <RelatedProducts
+            tone="night"
             products={alternatives}
             id="alternatives-title"
             eyebrow={
@@ -160,7 +172,9 @@ async function ProductContent({
           glossary={page.glossary}
           guides={page.guides}
         />
-        {!alternatives.length && <RelatedProducts products={page.related} />}
+        {!alternatives.length && (
+          <RelatedProducts products={page.related} tone="night" />
+        )}
       </Container>
     </main>
   );

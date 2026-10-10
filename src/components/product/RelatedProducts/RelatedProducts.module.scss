@@ -15,3 +15,8 @@
     gap: 2rem;
   }
 }
+
+:global([data-product-world]) .section {
+  padding-top: 2rem;
+  border-top: 1px solid #e8c26130;
+}

@@ -44,3 +44,20 @@
     fill: currentColor;
   }
 }
+
+:global([data-product-world]) .button {
+  color: #f4d985;
+  border-color: #e8c26140;
+  border-radius: 99px;
+  &.active {
+    background: #17372c;
+    border-color: #e8c261;
+  }
+  &:hover:not(:disabled) {
+    background: #17372c;
+    border-color: #e8c261;
+  }
+  &:focus-visible {
+    outline-color: #e8c261;
+  }
+}
