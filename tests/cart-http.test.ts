@@ -123,16 +123,19 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
         assert.match(html, /59,90/);
         // Ignore the RSC payload: server children of hidden storefront chrome
         // are still serialized, but never rendered in the cart.
-        const rendered = html.replace(
-          /<script\b[^>]*>[\s\S]*?<\/script>/gi,
-          '',
-        );
+        const rendered = html
+          .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<!--[\s\S]*?-->/g, '');
         assert.match(rendered, /Récapitulatif/);
         assert.match(rendered, /Sous-total/);
         assert.match(rendered, /Livraison estimée/);
         assert.match(rendered, /Total hors livraison|Total estimé/);
         assert.match(rendered, /Expédition sous 1 à 2 jours ouvrés/);
         assert.match(rendered, /Paiement sécurisé/);
+        assert.match(rendered, /Suivi colis/);
+        assert.match(rendered, /14 jours pour changer d’avis/);
+        assert.match(rendered, /Conditions de retour/);
+        assert.match(rendered, /Une question \? Contactez-nous/);
         assert.match(rendered, /Passer à la commande/);
         assert.match(rendered, /Aide et conditions du panier/);
         assert.doesNotMatch(

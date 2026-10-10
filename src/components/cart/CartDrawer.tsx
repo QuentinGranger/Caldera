@@ -90,6 +90,7 @@ export function CartDrawer() {
               Voir le panier et commander
             </Link>
             <CartAssurance
+              onNavigate={() => setOpen(false)}
               preorder={cart.items.some((item) => item.preorder)}
             />
           </footer>
