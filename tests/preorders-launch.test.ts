@@ -16,14 +16,12 @@ const { mergeFaq } = await import('../src/components/landing/landingText');
 const { buildShopFaq } = await import('../src/components/editorial/shopFaq');
 const { publishedProductWhere } = await import('../src/lib/catalog/queries');
 
-test('lancement : désactivation par défaut, activation explicite seulement', () => {
-  for (const value of [undefined, '', '1', 'false', 'TRUE']) {
+test('lancement : précommandes verrouillées même si le flag public est activé', () => {
+  for (const value of [undefined, '', '1', 'false', 'TRUE', 'true']) {
     if (value === undefined) delete process.env.NEXT_PUBLIC_PREORDERS_ENABLED;
     else process.env.NEXT_PUBLIC_PREORDERS_ENABLED = value;
     assert.equal(preordersEnabled(), false);
   }
-  process.env.NEXT_PUBLIC_PREORDERS_ENABLED = 'true';
-  assert.equal(preordersEnabled(), true);
   process.env.NEXT_PUBLIC_PREORDERS_ENABLED = 'false';
 });
 

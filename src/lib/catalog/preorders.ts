@@ -1,6 +1,15 @@
-/** Explicit launch gate, independent of demo mode. Changing it requires a rebuild. */
+/**
+ * Hard launch gate: preorders stay unavailable until the business is actually
+ * ready to operate them. The public env flag alone must never expose preorder
+ * filters, pages or purchasing before this is deliberately switched to true.
+ */
+const PREORDERS_OPERATIONAL = false;
+
 export function preordersEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_PREORDERS_ENABLED === 'true';
+  return (
+    PREORDERS_OPERATIONAL &&
+    process.env.NEXT_PUBLIC_PREORDERS_ENABLED === 'true'
+  );
 }
 
 export function isPreorderContent(section: string, slug: string): boolean {
