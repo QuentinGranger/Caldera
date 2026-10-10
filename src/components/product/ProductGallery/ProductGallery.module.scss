@@ -109,7 +109,7 @@
 
 :global([data-product-world]) {
   .gallery {
-    @media (min-width: 960px) {
+    @media (min-width: v.$breakpoint-desktop) {
       position: sticky;
       top: calc(var(--header-height, 84px) + 1rem);
     }

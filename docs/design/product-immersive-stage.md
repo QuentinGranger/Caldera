@@ -18,6 +18,7 @@ Sans WebGL, en cas de perte de contexte, avec `prefers-reduced-motion`, sous 360
 - Navigation des miniatures, zoom, flèches clavier, fermeture Échap et retour de focus : contrôlés dans Chromium.
 - Désactivation/réactivation de la scène : contrôlée ; premier rendu WebGL confirmé par `data-product-stage="ready"`.
 - Alignement sur le plateau, absence de filaments, changement de photographie et zoom : contrôlés dans Chromium après correction du socle.
+- La galerie devient sticky uniquement à partir du passage en deux colonnes (1 200 px), pour éviter de couvrir les informations sur les largeurs intermédiaires.
 - Trois tests unitaires vérifient le détourage des marges transparentes, les photos opaques et le secours sur image vide.
 - Variante anglaise : prix, SKU, stock et caractéristiques actualisés.
 - Largeurs 390 et 320 px : aucun débordement horizontal ; secours statique à 320 px.
