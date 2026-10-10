@@ -52,10 +52,12 @@ function isPrivateArea(pathname: string) {
 export function CartProvider({
   cart: serverCart,
   shipping,
+  enabled = true,
   children,
 }: {
   cart: CartView;
   shipping: ShippingOptionView[];
+  enabled?: boolean;
   children: ReactNode;
 }) {
   // The layout snapshot wins whenever the server renders it again (cookie
@@ -115,6 +117,7 @@ export function CartProvider({
   // and no re-render of the page (refreshCartAction only returns data).
   const refresh = useEffectEvent(() => {
     if (
+      !enabled ||
       isPrivateArea(pathname) ||
       busy.current ||
       pending ||
@@ -163,7 +166,7 @@ export function CartProvider({
       }}
     >
       {children}
-      {pathname !== '/admin' && !pathname.startsWith('/admin/') && (
+      {enabled && pathname !== '/admin' && !pathname.startsWith('/admin/') && (
         <CartDrawer />
       )}
     </CartContext>

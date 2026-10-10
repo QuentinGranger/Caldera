@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { catalogFallback } from '@/components/landing/routes';
 import { connection } from 'next/server';
 import { listingPageText } from '@/lib/catalog/metadata';
 import type { SearchParams } from '@/lib/catalog/params';
@@ -51,6 +53,8 @@ export async function listingHubMetadata(
   // Rendered per request: no catalog read may start during the build.
   await connection();
   const hub = await getListingHub(listing);
+  if (!hub.stats.productCount)
+    redirect(listing === 'catalogue' ? '/' : await catalogFallback());
   return catalogListingMetadata({
     path: hub.config.path,
     searchParams,
@@ -85,6 +89,8 @@ export async function ListingHubPage({
     }),
     getListingHub(listing),
   ]);
+  if (!hub.stats.productCount)
+    redirect(listing === 'catalogue' ? '/' : await catalogFallback());
   const links = await getListingHubLinks(hub);
   const text = listingPageText(hub.text, load.page);
   const breadcrumb = [

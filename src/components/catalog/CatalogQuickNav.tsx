@@ -28,7 +28,11 @@ export function CatalogQuickNav({
   path: string;
   facet?: keyof typeof ROWS;
 }) {
-  const options = facet === 'set' ? facets.sets : facets.categories;
+  const options = (facet === 'set' ? facets.sets : facets.categories).filter(
+    (option) =>
+      (option.count > 0 && option.count < facets.total) ||
+      filters[facet].includes(option.slug),
+  );
   if (options.length < 2) return null;
   const chosen = filters[facet];
   const only = chosen.length === 1 ? chosen[0] : null;

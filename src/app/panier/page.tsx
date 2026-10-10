@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Container } from '@/components/ui/Container/Container';
 import { CartPageContent } from '@/components/cart/CartPageContent';
 import { getCheckout } from '@/lib/checkout/getCheckout';
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CartPage() {
+  if (process.env.CATALOG_DEMO_MODE === '1') redirect('/catalogue');
   const promotionState = toCartPromotionState(await getCheckout());
 
   return (

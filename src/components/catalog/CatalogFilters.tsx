@@ -6,23 +6,16 @@ import { Button } from '@/components/ui/Button/Button';
 import {
   activeFilterCount,
   catalogUrl,
-  languageLabels,
-  typeLabels,
-  stockLabels,
   type CatalogFilters as Filters,
   type CatalogScope,
-  type MultiFilter,
-  type StockFilter,
 } from '@/lib/catalog/params';
 import type { CatalogFacets } from '@/lib/catalog/facets';
 import styles from './Catalog.module.scss';
+import {
+  catalogFilterSections,
+  hasPriceFilter,
+} from '@/lib/catalog/filterOptions';
 
-/** Stock options that can still narrow the scope. */
-function availabilityOptions(scope: CatalogScope): StockFilter[] {
-  if (scope.preorder || scope.status === 'precommandes') return [];
-  if (scope.status === 'en-stock') return ['low-stock'];
-  return Object.keys(stockLabels) as StockFilter[];
-}
 type Props = {
   filters: Filters;
   facets: CatalogFacets;
@@ -56,71 +49,8 @@ function FilterForm({
   pending: boolean;
 }) {
   const id = useId();
-  const stock = availabilityOptions(scope);
-  const sections: {
-    key: MultiFilter;
-    label: string;
-    options: { value: string; label: string; count?: number }[];
-  }[] = [
-    ...(stock.length
-      ? [
-          {
-            key: 'availability' as const,
-            label: 'Disponibilité',
-            options: stock.map((value) => ({
-              value,
-              label: stockLabels[value],
-            })),
-          },
-        ]
-      : []),
-    {
-      key: 'category',
-      label: 'Catégorie',
-      options: facets.categories.map((c) => ({
-        value: c.slug,
-        label: c.name,
-        count: c.count,
-      })),
-    },
-    {
-      key: 'type',
-      label: 'Type de produit',
-      options: facets.types.map((value) => ({
-        value,
-        label: typeLabels[value],
-        count: facets.counts.types[value],
-      })),
-    },
-    ...(!scope.set
-      ? [
-          {
-            key: 'set' as const,
-            label: 'Extension',
-            options: facets.sets.map((s) => ({
-              value: s.slug,
-              label: s.name,
-              count: s.count,
-            })),
-          },
-        ]
-      : []),
-    // A language scope already restricts every price and stock to its variants.
-    ...(!scope.language
-      ? [
-          {
-            key: 'language' as const,
-            label: 'Langue',
-            options: facets.languages.map((value) => ({
-              value,
-              label: languageLabels[value],
-              count: facets.counts.languages[value],
-            })),
-          },
-        ]
-      : []),
-  ];
-  const shown = sections.filter((section) => section.options.length);
+  const shown = catalogFilterSections(facets, filters, scope);
+  const price = hasPriceFilter(facets, filters);
   return (
     <div className={styles.filterBody} aria-busy={pending}>
       {shown.map((section, index) => (
@@ -174,57 +104,59 @@ function FilterForm({
           </fieldset>
         </details>
       ))}
-      <form
-        className={styles.filterSection}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (pending) return;
-          const data = new FormData(event.currentTarget);
-          onChange({
-            minPrice: String(data.get('minPrice') ?? '') || undefined,
-            maxPrice: String(data.get('maxPrice') ?? '') || undefined,
-          });
-        }}
-      >
-        <fieldset aria-disabled={pending}>
-          <legend>Prix en euros</legend>
-          <div className={styles.prices}>
-            <label htmlFor={`${id}-min`}>
-              Minimum
-              <input
-                key={`min-${filters.minPrice}`}
-                id={`${id}-min`}
-                name="minPrice"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                max="99999999.99"
-                step="0.01"
-                placeholder="0"
-                defaultValue={filters.minPrice ?? ''}
-              />
-            </label>
-            <label htmlFor={`${id}-max`}>
-              Maximum
-              <input
-                key={`max-${filters.maxPrice}`}
-                id={`${id}-max`}
-                name="maxPrice"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                max="99999999.99"
-                step="0.01"
-                placeholder="Sans limite"
-                defaultValue={filters.maxPrice ?? ''}
-              />
-            </label>
-          </div>
-          <button type="submit" className={styles.textButton}>
-            Appliquer le prix
-          </button>
-        </fieldset>
-      </form>
+      {price && (
+        <form
+          className={styles.filterSection}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (pending) return;
+            const data = new FormData(event.currentTarget);
+            onChange({
+              minPrice: String(data.get('minPrice') ?? '') || undefined,
+              maxPrice: String(data.get('maxPrice') ?? '') || undefined,
+            });
+          }}
+        >
+          <fieldset aria-disabled={pending}>
+            <legend>Prix en euros</legend>
+            <div className={styles.prices}>
+              <label htmlFor={`${id}-min`}>
+                Minimum
+                <input
+                  key={`min-${filters.minPrice}`}
+                  id={`${id}-min`}
+                  name="minPrice"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  max="99999999.99"
+                  step="0.01"
+                  placeholder="0"
+                  defaultValue={filters.minPrice ?? ''}
+                />
+              </label>
+              <label htmlFor={`${id}-max`}>
+                Maximum
+                <input
+                  key={`max-${filters.maxPrice}`}
+                  id={`${id}-max`}
+                  name="maxPrice"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  max="99999999.99"
+                  step="0.01"
+                  placeholder="Sans limite"
+                  defaultValue={filters.maxPrice ?? ''}
+                />
+              </label>
+            </div>
+            <button type="submit" className={styles.textButton}>
+              Appliquer le prix
+            </button>
+          </fieldset>
+        </form>
+      )}
     </div>
   );
 }
@@ -246,6 +178,12 @@ export function CatalogFilters({ filters, facets, scope, path, total }: Props) {
     startTransition(() =>
       router.push(catalogUrl(path, filters, patch), { scroll: false }),
     );
+  if (
+    !count &&
+    !catalogFilterSections(facets, filters, scope).length &&
+    !hasPriceFilter(facets, filters)
+  )
+    return null;
   return (
     <>
       <button

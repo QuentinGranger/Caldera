@@ -49,9 +49,11 @@ async function ProductContent({
   const images = product.images.length
     ? product.images
     : [{ url: product.image, alt: product.imageAlt }];
+  const salesEnabled = process.env.CATALOG_DEMO_MODE !== '1';
   const purchasable = product.availability !== 'OUT_OF_STOCK';
   // Back-in-stock alerts go to a signed-in customer's address.
   const alertEmail =
+    salesEnabled &&
     !product.isDemonstration &&
     product.variants.some((variant) => variant.availability === 'OUT_OF_STOCK')
       ? ((await currentCustomer())?.email ?? null)
@@ -108,6 +110,14 @@ async function ProductContent({
                       Aucun achat ni alerte stock n’est possible.
                     </p>
                   </div>
+                ) : !salesEnabled ? (
+                  <div className={styles.notice}>
+                    <strong>Les achats ne sont pas encore ouverts.</strong>
+                    <p>
+                      Vous pouvez découvrir ce produit et l’enregistrer dans vos
+                      favoris.
+                    </p>
+                  </div>
                 ) : (
                   <ProductPurchasePanel
                     key={product.id}
@@ -122,7 +132,8 @@ async function ProductContent({
                     accountEmail={alertEmail}
                   />
                 )}
-                {!product.isDemonstration &&
+                {salesEnabled &&
+                  !product.isDemonstration &&
                   !purchasable &&
                   (product.variants.length > 0 || alternatives.length > 0) && (
                     <div className={styles.notice}>

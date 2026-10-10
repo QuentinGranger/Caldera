@@ -4,6 +4,7 @@ import { connection } from 'next/server';
 import type { ReactNode } from 'react';
 import { listingMetadata } from '@/lib/catalog/metadata';
 import { activeFilterCount } from '@/lib/catalog/params';
+import { catalogSortOptions } from '@/lib/catalog/filterOptions';
 import type { MetadataImage } from '@/lib/seo/metadata';
 import type { IndexDecision } from '@/lib/seo/types';
 import {
@@ -145,6 +146,7 @@ export function CatalogResults({
             filters={filters}
             path={path}
             total={total}
+            sorts={catalogSortOptions(facets, filters.sort)}
             filterControl={
               <CatalogFilters
                 filters={filters}

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getCartCookie } from '@/lib/cart/cartCookie';
 import { currentCustomer } from '@/lib/account/auth';
 import { getCustomerAddress } from '@/lib/account/queries';
@@ -64,19 +63,7 @@ export default async function CheckoutPage({
 }: {
   searchParams: Promise<{ step?: string | string[] }>;
 }) {
-  if (process.env.CATALOG_DEMO_MODE === '1')
-    return (
-      <main id="contenu" className={styles.main}>
-        <Container>
-          <h1>Catalogue de démonstration</h1>
-          <p>
-            Les produits présentés sont des exemples non commercialisés. Aucun
-            achat ni paiement n’est possible pour le moment.
-          </p>
-          <Link href="/catalogue">Découvrir les exemples</Link>
-        </Container>
-      </main>
-    );
+  if (process.env.CATALOG_DEMO_MODE === '1') redirect('/catalogue');
   // Authentication/order redirects must settle before streaming a fallback.
   const active = await getActiveOrder(await getCartCookie());
   if (active) redirect(`/checkout/paiement/${active.publicId}`);

@@ -160,25 +160,19 @@ export default async function AccountProfile({
               </button>
             </form>
           </>
-        ) : (
+        ) : discordAccountConfigured() ? (
           <>
             <p>
               Reliez votre compte pour obtenir le rôle « Compte Caldera lié » si
               vous êtes membre de notre serveur Discord.
             </p>
-            {discordAccountConfigured() ? (
-              <form action={connectDiscordAction}>
-                <button className={styles.submit} type="submit">
-                  Connecter Discord
-                </button>
-              </form>
-            ) : (
-              <p className={styles.panelLead}>
-                La connexion Discord sera bientôt disponible.
-              </p>
-            )}
+            <form action={connectDiscordAction}>
+              <button className={styles.submit} type="submit">
+                Connecter Discord
+              </button>
+            </form>
           </>
-        )}
+        ) : null}
       </section>
 
       <details className={styles.dangerZone}>

@@ -44,7 +44,7 @@ export async function Header() {
           role="group"
           aria-label="Services de la boutique"
         >
-          <HeaderSearch />
+          {navigation.catalogueAvailable && <HeaderSearch />}
           <IconLink
             href={navigation.account.href}
             className={styles.desktop}
@@ -53,7 +53,7 @@ export async function Header() {
             <UserRound aria-hidden="true" />
           </IconLink>
           <HeaderWishlistLink className={styles.desktop} />
-          <CartButton />
+          {process.env.CATALOG_DEMO_MODE !== '1' && <CartButton />}
         </div>
       </Container>
     </header>

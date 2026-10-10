@@ -87,7 +87,13 @@ export default async function HomePage() {
   // The story of the card ends on the first section after it.
   const cardSkip = home.collections.length
     ? { href: '#collections', label: 'Voir les extensions' }
-    : { href: '#garanties', label: 'Voir les garanties' };
+    : {
+        href: '#garanties',
+        label:
+          process.env.CATALOG_DEMO_MODE === '1'
+            ? 'Découvrir Caldera'
+            : 'Voir les garanties',
+      };
   const night = '#03140e',
     forest = '#072419',
     paper = '#f6f1e4',

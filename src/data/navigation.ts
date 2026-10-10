@@ -17,6 +17,10 @@ import {
 import type { ListingKind } from '@/lib/seo/metadata';
 import { CATALOG_CACHE_TAG } from '@/lib/cache/catalogCache';
 import { isShopGame } from '@/lib/catalog/shopGame';
+import {
+  getExtensionsIndex,
+  getReleaseCalendar,
+} from '@/components/landing/releaseData';
 
 export interface NavLink {
   href: string;
@@ -52,12 +56,13 @@ export interface SiteNavigation {
    * the multi-game page (licence-free products only).
    */
   families: NavLink[];
-  /** /catalogue: always reachable, even before it has enough products to be indexed. */
+  /** The catalogue target; only offered while it has visible products. */
   catalogue: NavLink;
+  catalogueAvailable: boolean;
   /** Nouveautés, Précommandes, En stock while indexable. */
   listings: NavLink[];
-  extensions: NavLink;
-  calendar: NavLink;
+  extensions: NavLink | null;
+  calendar: NavLink | null;
   guides: NavLink;
   glossary: NavLink;
   /** Only once the section has published entries. */
@@ -99,7 +104,12 @@ function rootFamilies(families: readonly NavigationFamily[]): NavLink[] {
 export function buildSiteNavigation(
   navigation: Navigation,
   listings: ReadonlySet<ListingKind>,
-  content: { questions: boolean; news: boolean } = {
+  content: {
+    questions: boolean;
+    news: boolean;
+    extensions?: boolean;
+    calendar?: boolean;
+  } = {
     questions: false,
     news: false,
   },
@@ -132,16 +142,21 @@ export function buildSiteNavigation(
       ...games.flatMap((game) => game.families),
       ...navigation.categoryHubs.filter(({ slug }) => !covered.has(slug)),
     ]),
+    catalogueAvailable: listings.has('catalogue'),
     catalogue: {
       href: LISTING_HUBS.catalogue.path,
       label: 'Tout le catalogue',
     },
     listings: LISTING_ORDER.filter((kind) => listings.has(kind)).map(listing),
-    extensions: { href: '/extensions', label: 'Extensions' },
-    calendar: {
-      href: '/calendrier-des-sorties',
-      label: 'Calendrier des sorties',
-    },
+    extensions: content.extensions
+      ? { href: '/extensions', label: 'Extensions' }
+      : null,
+    calendar: content.calendar
+      ? {
+          href: '/calendrier-des-sorties',
+          label: 'Calendrier des sorties',
+        }
+      : null,
     guides: { href: '/guides', label: 'Guides' },
     glossary: { href: '/glossaire', label: 'Glossaire' },
     questions: content.questions
@@ -165,18 +180,35 @@ const cachedListings = unstable_cache(
   { tags: [CATALOG_CACHE_TAG], revalidate: 3600 },
 );
 
+const cachedReleaseSections = unstable_cache(
+  async () => {
+    const [extensions, calendar] = await Promise.all([
+      getExtensionsIndex(),
+      getReleaseCalendar(),
+    ]);
+    return {
+      extensions: extensions.total > 0,
+      calendar: calendar.upcoming.length + calendar.recent.length > 0,
+    };
+  },
+  ['site-navigation-release-sections'],
+  { tags: [CATALOG_CACHE_TAG], revalidate: 300 },
+);
+
 /** Menus of the current request; without the database, only fixed pages. */
 export const getSiteNavigation = cache(async (): Promise<SiteNavigation> => {
   try {
-    const [navigation, listings, content] = await Promise.all([
+    const [navigation, listings, content, releases] = await Promise.all([
       getNavigation(),
       cachedListings(),
       getAllContent(),
+      cachedReleaseSections(),
     ]);
     return buildSiteNavigation(navigation, new Set(listings), {
       // The shop's FAQ is always there, card questions or not.
       questions: true,
       news: content.some((entry) => entry.kind === 'actualite'),
+      ...releases,
     });
   } catch {
     return buildSiteNavigation({ games: [], categoryHubs: [] }, new Set(), {
@@ -200,7 +232,9 @@ export function shopGroups(site: SiteNavigation): NavGroup[] {
     ...(site.productTypes.length
       ? [{ title: 'Par type de produit', links: site.productTypes }]
       : []),
-    { title: 'Sélections', links: [site.catalogue, ...site.listings] },
+    ...(site.catalogueAvailable
+      ? [{ title: 'Sélections', links: [site.catalogue, ...site.listings] }]
+      : []),
   ];
 }
 
@@ -220,13 +254,19 @@ export function headerItems(site: SiteNavigation): NavItem[] {
       : [];
 
   return [
-    // Until Pokémon has its page, the whole catalogue leads the menu.
-    pokemon ?? { href: site.catalogue.href, label: 'Catalogue', children: [] },
+    // The catalogue leads only while there are products to explore.
+    ...(pokemon
+      ? [pokemon]
+      : site.catalogueAvailable
+        ? [{ href: site.catalogue.href, label: 'Catalogue', children: [] }]
+        : []),
     ...shown(site.listings, '/nouveautes', 'Nouveautés'),
     ...shown(site.productTypes, '/categorie/scelles', 'Scellés'),
     ...shown(site.productTypes, '/categorie/cartes', 'Cartes'),
     ...shown(site.productTypes, '/categorie/accessoires', 'Accessoires'),
-    { href: site.extensions.href, label: 'Collections', children: [] },
+    ...(site.extensions
+      ? [{ href: site.extensions.href, label: 'Collections', children: [] }]
+      : []),
     { ...site.universe, children: [] },
   ];
 }

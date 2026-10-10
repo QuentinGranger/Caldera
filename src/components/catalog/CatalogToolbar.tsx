@@ -20,12 +20,14 @@ export function CatalogToolbar({
   path,
   total,
   filterControl,
+  sorts = Object.keys(sortLabels) as CatalogSort[],
 }: {
   filters: CatalogFilters;
   path: string;
   total: number;
   /** The filters' button and drawer. */
   filterControl: ReactNode;
+  sorts?: CatalogSort[];
 }) {
   const router = useRouter(),
     id = useId();
@@ -94,26 +96,28 @@ export function CatalogToolbar({
         )}
       </button>
       {filterControl}
-      <div className={styles.sort}>
-        <label htmlFor={`${id}-sort`}>
-          <ArrowDownUp size={15} aria-hidden="true" />
-          <span>Trier</span>
-        </label>
-        <select
-          id={`${id}-sort`}
-          value={filters.sort}
-          aria-disabled={pending}
-          onChange={(event) =>
-            !pending && change({ sort: event.target.value as CatalogSort })
-          }
-        >
-          {Object.entries(sortLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {sorts.length > 1 && (
+        <div className={styles.sort}>
+          <label htmlFor={`${id}-sort`}>
+            <ArrowDownUp size={15} aria-hidden="true" />
+            <span>Trier</span>
+          </label>
+          <select
+            id={`${id}-sort`}
+            value={filters.sort}
+            aria-disabled={pending}
+            onChange={(event) =>
+              !pending && change({ sort: event.target.value as CatalogSort })
+            }
+          >
+            {sorts.map((value) => (
+              <option key={value} value={value}>
+                {sortLabels[value]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }
