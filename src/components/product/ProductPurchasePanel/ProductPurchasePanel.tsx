@@ -108,7 +108,11 @@ function SelectedVariant({
           accountEmail={accountEmail}
         />
       )}
-      <TrustStrip sealed={sealed} secureOrders={shipping.length > 0} />
+      <TrustStrip
+        sealed={sealed}
+        secureOrders={shipping.length > 0}
+        preorder={preorderProduct}
+      />
       <div className={`${styles.service} ${styles.delivery}`}>
         <Truck size={20} aria-hidden="true" />
         <div>

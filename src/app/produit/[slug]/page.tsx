@@ -11,6 +11,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { ProductGallery } from '@/components/product/ProductGallery/ProductGallery';
 import { ProductPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { currentCustomer } from '@/lib/account/auth';
+import { PurchaseAssurance } from '@/components/shipping/PurchaseAssurance';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel/ProductPurchasePanel';
 import { ProductWishlistButton } from '@/components/product/ProductWishlistButton/ProductWishlistButton';
 import { ProductDetails } from '@/components/product/ProductDetails/ProductDetails';
@@ -131,6 +132,9 @@ async function ProductContent({
                     shipping={page.shipping}
                     accountEmail={alertEmail}
                   />
+                )}
+                {(product.isDemonstration || !salesEnabled) && (
+                  <PurchaseAssurance commerce={false} />
                 )}
                 {salesEnabled &&
                   !product.isDemonstration &&
