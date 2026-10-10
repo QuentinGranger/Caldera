@@ -18,47 +18,6 @@
     }
   }
 }
-.progress {
-  margin-bottom: 0.9rem;
-  p {
-    font-size: 0.85rem;
-    line-height: 1.5;
-  }
-  strong {
-    color: v.$color-gold-light;
-  }
-  progress {
-    display: block;
-    width: 100%;
-    height: 0.5rem;
-    margin-top: 0.5rem;
-    appearance: none;
-    border: 0;
-    border-radius: v.$radius-pill;
-    background: rgb(255 255 255 / 16%);
-    overflow: hidden;
-    &::-webkit-progress-bar {
-      background: rgb(255 255 255 / 16%);
-    }
-    &::-webkit-progress-value {
-      border-radius: v.$radius-pill;
-      background: v.$color-gold;
-    }
-    &::-moz-progress-bar {
-      border-radius: v.$radius-pill;
-      background: v.$color-gold;
-    }
-  }
-}
-.reached {
-  margin-bottom: 0.9rem;
-  padding: 0.55rem 0.8rem;
-  border-radius: v.$radius-card;
-  background: rgb(232 194 97 / 16%);
-  color: v.$color-gold-light;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
 .offers {
   display: grid;
   gap: 0.6rem;

@@ -91,3 +91,32 @@ export function freeShipping(
     ratio: Math.min(1, Math.max(0, total / threshold)),
   };
 }
+
+/** Price of a method for this basket, after its real free-shipping threshold. */
+export function cartShippingPrice(offer: Offer, itemsTotal: string): string {
+  return offer.freeFromAmount !== null &&
+    toCents(itemsTotal) >= toCents(offer.freeFromAmount)
+    ? '0.00'
+    : fromCents(toCents(offer.price));
+}
+
+/** A lower-bound estimate, never a confirmed checkout total or a guessed tariff. */
+export function estimateCartTotal(
+  offers: readonly Offer[],
+  subtotal: string,
+  discount = '0.00',
+) {
+  const itemsCents = Math.max(0, toCents(subtotal) - toCents(discount));
+  const itemsTotal = fromCents(itemsCents);
+  if (!offers.length) return { itemsTotal, shipping: null, total: itemsTotal };
+  const shipping = fromCents(
+    Math.min(
+      ...offers.map((offer) => toCents(cartShippingPrice(offer, itemsTotal))),
+    ),
+  );
+  return {
+    itemsTotal,
+    shipping,
+    total: fromCents(itemsCents + toCents(shipping)),
+  };
+}

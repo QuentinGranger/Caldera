@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  cartShippingPrice,
+  estimateCartTotal,
   freeShipping,
   freeThresholdLabel,
   lowestShippingPrice,
@@ -108,4 +110,45 @@ test('livraison : une vue de mode garde le prix, le seuil et le délai pour le p
     { ...fact, minDays: null, maxDays: null },
   ]);
   assert.equal(unknown?.transit, null);
+});
+
+test('panier : estimation au centime, seuil après remise et aucun tarif inventé', () => {
+  assert.deepEqual(estimateCartTotal([], '59.90', '5.99'), {
+    itemsTotal: '53.91',
+    shipping: null,
+    total: '53.91',
+  });
+  assert.deepEqual(estimateCartTotal([home, relay], '60.00'), {
+    itemsTotal: '60.00',
+    shipping: '0.00',
+    total: '60.00',
+  });
+  assert.deepEqual(estimateCartTotal([home, relay], '60.00', '0.01'), {
+    itemsTotal: '59.99',
+    shipping: '4.90',
+    total: '64.89',
+  });
+  assert.deepEqual(estimateCartTotal([home, relay], '59.90', '5.99'), {
+    itemsTotal: '53.91',
+    shipping: '4.90',
+    total: '58.81',
+  });
+  assert.equal(cartShippingPrice(relay, '60.00'), '0.00');
+  assert.equal(cartShippingPrice(home, '60.00'), '7.90');
+  assert.deepEqual(estimateCartTotal([relay], '0.00', '5.00'), {
+    itemsTotal: '0.00',
+    shipping: '4.90',
+    total: '4.90',
+  });
+});
+
+test('panier : chaque mode garde son seuil et un tarif gratuit réel reste gratuit', () => {
+  const a = offer('A', '10.00', '50.00'),
+    b = offer('B', '4.90', '100.00');
+  assert.equal(estimateCartTotal([b, a], '50.00').shipping, '0.00');
+  assert.equal(cartShippingPrice(b, '50.00'), '4.90');
+  assert.equal(
+    estimateCartTotal([home, offer('Retrait', '0.00', null)], '10.00').total,
+    '10.00',
+  );
 });

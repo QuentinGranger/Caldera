@@ -5,6 +5,7 @@
   margin: 0 0 0 auto;
   width: min(460px, 96vw);
   max-width: none;
+  height: 100vh;
   height: 100dvh;
   max-height: none;
   background: v.$color-background;
@@ -85,6 +86,8 @@
 }
 .footer {
   padding: 1.25rem 1.5rem max(1.25rem, env(safe-area-inset-bottom));
+  max-height: 65%;
+  overflow-y: auto;
   border-top: 1px solid v.$color-border;
   background: v.$color-surface;
   > div {
@@ -105,8 +108,9 @@
     align-items: center;
     justify-content: center;
     min-height: 48px;
-    background: v.$color-green-dark;
-    color: v.$color-cream;
+    background: v.$color-gold;
+    color: v.$color-ink;
+    font-weight: 700;
     margin-top: 1rem;
     border-radius: v.$radius-small;
   }

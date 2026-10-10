@@ -16,7 +16,6 @@ import {
 } from '@/lib/checkout/actions';
 import type { CartView } from '@/lib/cart/types';
 import type { CartPromotionState } from '@/lib/checkout/types';
-import { formatPrice } from '@/utils/formatPrice';
 import styles from './CartSummary.module.scss';
 
 export function CartPromotionField({
@@ -141,21 +140,6 @@ export function CartPromotionField({
           </button>
         </div>
 
-        {promotion && discount > 0 && (
-          <div className={styles.promotionResult}>
-            <div>
-              <span>Votre économie</span>
-              <strong className={styles.promotionSaving}>
-                −{formatPrice(promotion.discount)}
-              </strong>
-            </div>
-            <div>
-              <span>Total provisoire</span>
-              <strong>{formatPrice(state!.provisionalTotal)}</strong>
-            </div>
-          </div>
-        )}
-
         {promotion && discount === 0 && (
           <div className={styles.promotionShipping}>
             <TicketPercent size={16} aria-hidden="true" />
@@ -247,8 +231,7 @@ export function CartPromotionField({
           </div>
 
           <p id="cart-promotion-description" className={styles.promotionHint}>
-            La remise est calculée côté serveur et sera revérifiée avant le
-            paiement.
+            Votre code sera vérifié avant le paiement.
           </p>
 
           {message && (

@@ -1,6 +1,6 @@
 @use '@/styles/abstracts/variables' as v;
 .heading {
-  padding-top: clamp(2.5rem, 5vw, 5rem);
+  padding-top: clamp(2rem, 3vw, 3rem);
   span {
     font-size: 0.65rem;
     letter-spacing: 0.18em;
@@ -8,7 +8,7 @@
   }
   h1 {
     font-family: v.$font-heading;
-    font-size: clamp(2.8rem, 6vw, 4.5rem);
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
     line-height: 1.1;
     margin-block: 0.75rem;
   }
@@ -18,8 +18,8 @@
   }
 }
 .feedback {
-  min-height: 3rem;
-  padding-block: 1rem;
+  min-height: 2rem;
+  padding-block: 0.5rem;
   font-size: 0.8rem;
 }
 .grid {
@@ -71,8 +71,25 @@
 }
 @media (min-width: v.$breakpoint-desktop) {
   .grid {
-    grid-template-columns: minmax(0, 7fr) minmax(290px, 3fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
     gap: 3rem;
     align-items: start;
+  }
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem 2rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid v.$color-border;
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.75rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 }

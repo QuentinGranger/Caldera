@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { X } from 'lucide-react';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import { ShippingFromLine } from '@/components/shipping/ShippingFromLine';
+import { CartAssurance } from './CartAssurance';
 import { formatPrice } from '@/utils/formatPrice';
 import { useCart } from './CartProvider';
 import { CartItem } from './CartItem';
@@ -83,11 +84,14 @@ export function CartDrawer() {
             {shipping.length > 0 ? (
               <ShippingFromLine offers={shipping} details={false} />
             ) : (
-              <p>Livraison calculée lors de la commande.</p>
+              <p>Livraison estimée : à confirmer à la commande.</p>
             )}
             <Link href="/panier" onClick={() => setOpen(false)}>
-              Voir mon panier
+              Voir le panier et commander
             </Link>
+            <CartAssurance
+              preorder={cart.items.some((item) => item.preorder)}
+            />
           </footer>
         )}
       </div>

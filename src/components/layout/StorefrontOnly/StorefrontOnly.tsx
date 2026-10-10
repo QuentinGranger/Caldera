@@ -2,9 +2,16 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 // Keep server-rendered navigation intact, but use the dedicated checkout shell.
-export function StorefrontOnly({ children }: { children: ReactNode }) {
+export function StorefrontOnly({
+  children,
+  hideOnCart = false,
+}: {
+  children: ReactNode;
+  hideOnCart?: boolean;
+}) {
   const path = usePathname();
-  return path === '/checkout' ||
+  return (hideOnCart && path === '/panier') ||
+    path === '/checkout' ||
     path.startsWith('/checkout/') ||
     path === '/admin' ||
     path.startsWith('/admin/') ? null : (
