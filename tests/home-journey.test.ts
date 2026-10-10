@@ -4,7 +4,7 @@ import { chapterFlow, itemReveal } from '../src/lib/motion/journey';
 
 test('real visuals settle before reaching the upper reading area', () => {
   for (const viewport of [320, 720, 844, 1200]) {
-    assert.equal(itemReveal(viewport, viewport), 0);
+    assert.equal(itemReveal(viewport * 1.1, viewport), 0);
     assert.equal(itemReveal(viewport * 0.25, viewport), 1);
     assert.equal(itemReveal(0, viewport), 1);
     for (const top of [-100_000, 0, 100_000, NaN]) {

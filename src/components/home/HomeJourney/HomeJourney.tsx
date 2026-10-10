@@ -23,6 +23,7 @@ export function HomeJourney({ chapters }: { chapters: HomeChapter[] }) {
       key={chapter.key}
       className={styles.chapter}
       data-home-chapter={chapter.key}
+      data-home-bridge={chapter.bridge ? '' : undefined}
       style={
         {
           '--chapter-start': chapter.start,
@@ -40,6 +41,11 @@ export function HomeJourney({ chapters }: { chapters: HomeChapter[] }) {
       >
         <div className={styles.body}>{chapter.content}</div>
       </div>
+      {index < chapters.length - 1 && (
+        <div className={styles.handoff} aria-hidden="true">
+          <span />
+        </div>
+      )}
     </div>
   ));
 }
