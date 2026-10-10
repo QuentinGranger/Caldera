@@ -50,6 +50,9 @@ jobs:
       # Fixed value expected by tests/maintenance-http.test.ts, test only.
       CRON_SECRET: cron_local_http_test_only
       NEXT_TELEMETRY_DISABLED: '1'
+      # Exercise the implemented preorder engine in the legacy integration suite.
+      # Dedicated launch tests force this off and check the production default.
+      NEXT_PUBLIC_PREORDERS_ENABLED: 'true'
     steps:
       - uses: actions/checkout@v7
 
@@ -117,6 +120,24 @@ jobs:
 
       - name: Audit SEO
         run: npm run seo -- --all
+
+      - name: Build de lancement sans précommandes
+        env:
+          NEXT_PUBLIC_PREORDERS_ENABLED: 'false'
+        run: npm run build
+
+      - name: Vérification HTTP des précommandes fermées
+        env:
+          NEXT_PUBLIC_PREORDERS_ENABLED: 'false'
+          TEST_PREORDERS_LAUNCH: '1'
+          TEST_BASE_URL: http://localhost:3002
+        run: |
+          nohup npm run start -- --port 3002 > "$RUNNER_TEMP/launch-server.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3002/ && break
+            sleep 1
+          done
+          node --conditions=react-server --import tsx --test tests/preorders-launch-http.test.ts
 
       - name: Journal du serveur
         if: failure()

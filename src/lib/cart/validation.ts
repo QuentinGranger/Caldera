@@ -1,6 +1,7 @@
 import { availableQuantity } from '@/lib/inventory/availability';
 import { MAX_CART_ITEM_QUANTITY } from './constants';
 import type { CartIssue } from './types';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 export class CartError extends Error {}
 export function validateId(value: unknown): string {
   if (
@@ -31,6 +32,7 @@ export type ValidatableVariant = {
   product: {
     status: string;
     isDemonstration?: boolean;
+    preorder?: boolean;
     category: { isActive: boolean };
     tcgSet: { isActive: boolean } | null;
     game: { isActive: boolean } | null;
@@ -45,6 +47,7 @@ export function itemIssue(
     !variant.isActive ||
     variant.product.status !== 'ACTIVE' ||
     variant.product.isDemonstration === true ||
+    (variant.product.preorder === true && !preordersEnabled()) ||
     !variant.product.category.isActive ||
     variant.product.tcgSet?.isActive === false ||
     // Same rule as the public catalogue: a product of an inactive game is withdrawn.
@@ -65,7 +68,9 @@ export function assertPurchasable(
     throw new CartError('Ce produit n’est plus disponible.');
   if (issue === 'OUT_OF_STOCK')
     throw new CartError(
-      'Ce produit est en rupture de stock ou son quota de précommande est épuisé.',
+      preordersEnabled()
+        ? 'Ce produit est en rupture de stock ou son quota de précommande est épuisé.'
+        : 'Ce produit est en rupture de stock.',
     );
   if (issue === 'INSUFFICIENT_STOCK')
     throw new CartError(

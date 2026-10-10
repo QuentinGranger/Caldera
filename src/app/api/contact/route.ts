@@ -11,6 +11,7 @@ import { ContactRequestError, readContactBody } from '@/lib/contact/request';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import { appOrigin } from '@/lib/orders/access';
 import { renderContactEmail } from '@/emails/contact';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 
 export const runtime = 'nodejs';
 
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
     name.length < 2 ||
     !emailPattern.test(email) ||
     !Object.hasOwn(topics, topic) ||
+    (topic === 'precommande' && !preordersEnabled()) ||
     message.length < 10
   ) {
     return NextResponse.json(

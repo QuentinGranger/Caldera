@@ -4,6 +4,12 @@
 // checkout re-reads prices and stock from the database in any case.
 import 'server-only';
 import { revalidateTag, unstable_cache } from 'next/cache';
+import { preordersEnabled } from '@/lib/catalog/preorders';
+
+/** Separate aggregates when the launch gate changes between deployments. */
+export const PREORDER_CACHE_KEY = preordersEnabled()
+  ? 'preorders-on'
+  : 'preorders-off';
 
 /** Cache tag of every shared catalog entry. */
 export const CATALOG_CACHE_TAG = 'catalog';
@@ -30,7 +36,7 @@ export function sharedCache<Args extends string[], Result>(
   keyParts: string[],
   revalidate: number,
 ) {
-  const cached = unstable_cache(fn, keyParts, {
+  const cached = unstable_cache(fn, [...keyParts, PREORDER_CACHE_KEY], {
     tags: [CATALOG_CACHE_TAG],
     revalidate,
   });

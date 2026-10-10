@@ -15,7 +15,11 @@ import {
   type NavigationFamily,
 } from '@/lib/seo/links';
 import type { ListingKind } from '@/lib/seo/metadata';
-import { CATALOG_CACHE_TAG } from '@/lib/cache/catalogCache';
+import {
+  CATALOG_CACHE_TAG,
+  PREORDER_CACHE_KEY,
+} from '@/lib/cache/catalogCache';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import { isShopGame } from '@/lib/catalog/shopGame';
 import {
   getExtensionsIndex,
@@ -147,7 +151,10 @@ export function buildSiteNavigation(
       href: LISTING_HUBS.catalogue.path,
       label: 'Tout le catalogue',
     },
-    listings: LISTING_ORDER.filter((kind) => listings.has(kind)).map(listing),
+    listings: LISTING_ORDER.filter(
+      (kind) =>
+        listings.has(kind) && (kind !== 'precommandes' || preordersEnabled()),
+    ).map(listing),
     extensions: content.extensions
       ? { href: '/extensions', label: 'Extensions' }
       : null,
@@ -176,7 +183,7 @@ const cachedListings = unstable_cache(
   async (): Promise<ListingKind[]> => [
     ...(await getIndexableListings()).keys(),
   ],
-  ['site-navigation-listings'],
+  ['site-navigation-listings', PREORDER_CACHE_KEY],
   { tags: [CATALOG_CACHE_TAG], revalidate: 3600 },
 );
 
@@ -191,7 +198,7 @@ const cachedReleaseSections = unstable_cache(
       calendar: calendar.upcoming.length + calendar.recent.length > 0,
     };
   },
-  ['site-navigation-release-sections'],
+  ['site-navigation-release-sections', PREORDER_CACHE_KEY],
   { tags: [CATALOG_CACHE_TAG], revalidate: 300 },
 );
 

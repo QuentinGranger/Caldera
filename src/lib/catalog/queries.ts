@@ -10,12 +10,14 @@ import { getPricing } from './getPricing';
 import { getCategoryImage, getProductVisual } from './images';
 import type { ProductVariantView } from '@/lib/product/purchase';
 import type { CatalogProduct } from '@/types/product';
+import { preordersEnabled } from './preorders';
 
 // Lectures non persistées : Studio est visible au prochain rafraîchissement.
 // Published product: every parent (category, set, game) is active; the SQL facts
 // of src/lib/seo/registry.ts apply the same rules.
 export const publishedProductWhere: Prisma.ProductWhereInput = {
   status: 'ACTIVE',
+  ...(!preordersEnabled() ? { preorder: false } : {}),
   category: { isActive: true },
   AND: [
     { OR: [{ tcgSetId: null }, { tcgSet: { isActive: true } }] },
@@ -459,6 +461,7 @@ export const getProductRoute = cache(
     // Same rules as publishedProductWhere.
     if (
       product.status !== 'ACTIVE' ||
+      (product.preorder && !preordersEnabled()) ||
       !product.category.isActive ||
       (product.tcgSet && !product.tcgSet.isActive) ||
       (product.game && !product.game.isActive)

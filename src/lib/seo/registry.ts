@@ -5,8 +5,13 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 import { Prisma } from '@/generated/prisma/client';
-import { CATALOG_CACHE_TAG, sharedCache } from '@/lib/cache/catalogCache';
+import {
+  CATALOG_CACHE_TAG,
+  PREORDER_CACHE_KEY,
+  sharedCache,
+} from '@/lib/cache/catalogCache';
 import { visibleProductWhere } from '@/lib/catalog/queries';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import {
   getCategories,
   getGameSets,
@@ -198,6 +203,7 @@ function productFactsSql(filter: FactFilter): Prisma.Sql {
     Prisma.sql`(p."tcgSetId" IS NULL OR s."isActive")`,
     Prisma.sql`(p."gameId" IS NULL OR g."isActive")`,
   ];
+  if (!preordersEnabled()) conditions.push(Prisma.sql`NOT p."preorder"`);
   if (filter.gameId)
     conditions.push(Prisma.sql`p."gameId" = ${filter.gameId}::uuid`);
   if (filter.setId)
@@ -919,12 +925,12 @@ const cacheOptions = {
 };
 const cachedGameLandings = unstable_cache(
   async (gameId: string) => pack(await loadGameLandings(gameId)),
-  ['seo-game-landings'],
+  ['seo-game-landings', PREORDER_CACHE_KEY],
   cacheOptions,
 );
 const cachedCategoryHubs = unstable_cache(
   async () => pack(await loadCategoryHubs()),
-  ['seo-category-hubs'],
+  ['seo-category-hubs', PREORDER_CACHE_KEY],
   cacheOptions,
 );
 

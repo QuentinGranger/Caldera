@@ -13,6 +13,7 @@ import {
 import { withSearchParams } from './landingText';
 import { resolveSetPage, type StandaloneSetView } from './releaseData';
 import { getScopeStats } from '@/lib/seo/registry';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 
 /** Temporary: publishing products in the admin restores the original page. */
 export async function catalogFallback(gameSlug?: string): Promise<string> {
@@ -44,6 +45,8 @@ export async function requireLandingView(
   searchParams: Promise<SearchParams>,
 ): Promise<LandingView> {
   await connection();
+  if (segments.includes('precommandes') && !preordersEnabled())
+    redirect(await catalogFallback(gameSlug));
   const view = await answer(
     await resolveLanding(gameSlug, segments.join('/')),
     searchParams,

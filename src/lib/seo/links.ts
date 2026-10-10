@@ -34,7 +34,10 @@ import {
   type IndexedPage,
   type LandingIndex,
 } from './registry';
-import { CATALOG_CACHE_TAG } from '@/lib/cache/catalogCache';
+import {
+  CATALOG_CACHE_TAG,
+  PREORDER_CACHE_KEY,
+} from '@/lib/cache/catalogCache';
 import type {
   CategoryRef,
   GameRef,
@@ -891,7 +894,7 @@ const cachedNavigation = unstable_cache(
     ]);
     return buildNavigation(index, games, categories);
   },
-  ['seo-navigation'],
+  ['seo-navigation', PREORDER_CACHE_KEY],
   { tags: [CATALOG_CACHE_TAG], revalidate: 3600 },
 );
 /** Header and footer menus: active games and families with indexable pages. */

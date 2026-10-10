@@ -166,12 +166,8 @@ export function buildShopFaq(methods: readonly ShippingFact[]): ShopFaqGroup[] {
       ],
     },
     {
-      title: 'Précommandes, alertes et nouveautés',
+      title: 'Alertes et nouveautés',
       items: [
-        [
-          'Proposez-vous des précommandes ?',
-          `Les CGV en vigueur précisent que CALDERA ne propose pas de précommandes au lancement du service (${cgv(3)}) ; ce sont toujours les conditions acceptées au moment de la commande qui s’appliquent (${cgv(2)}). Notre guide [Précommander un produit scellé](/guides/precommander-produit-scelle) explique comment le site signale un produit en précommande.`,
-        ],
         [
           'Un produit est épuisé : comment être prévenu de son retour ?',
           'Sur sa fiche, la version épuisée propose « Être prévenu du retour » : vous recevez un seul e-mail, lorsqu’elle revient. Sans compte, confirmez d’abord votre adresse grâce à l’e-mail reçu ; avec un compte, l’alerte est envoyée à l’adresse du compte et se retrouve dans « Alertes de stock ».',
@@ -191,7 +187,7 @@ export function buildShopFaq(methods: readonly ShippingFact[]): ShopFaqGroup[] {
       items: [
         [
           'Comment vous contacter ?',
-          `Par le [formulaire de contact](/contact), en choisissant le motif de votre demande (une commande, un produit ou le stock, une précommande, la livraison ou autre chose), ou par e-mail à ${email}. Pour une commande, indiquez son numéro (${cgv(17)}).`,
+          `Par le [formulaire de contact](/contact), en choisissant le motif de votre demande (une commande, un produit ou le stock, la livraison ou autre chose), ou par e-mail à ${email}. Pour une commande, indiquez son numéro (${cgv(17)}).`,
         ],
         [
           'Comment exercer mes droits sur mes données personnelles ?',

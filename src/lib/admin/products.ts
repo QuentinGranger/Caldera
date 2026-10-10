@@ -1,4 +1,5 @@
 import 'server-only';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import {
   Prisma,
   ProductLanguage,
@@ -104,6 +105,8 @@ export async function saveProduct(adminId: string, form: FormData) {
     throw new AdminError('Maximum 12 tags de 50 caractères.');
   return adminTransaction(adminId, async (tx) => {
     const previous = productId ? await lockProduct(tx, productId) : null;
+    if (!preordersEnabled() && data.preorder && !previous?.preorder)
+      throw new AdminError('Les précommandes sont désactivées au lancement.');
     if (previous && text(form, 'version') !== previous.updatedAt.toISOString())
       throw new AdminError(
         'Ce produit a été modifié. Rechargez avant d’enregistrer.',

@@ -31,3 +31,26 @@ Publier les produits et renseigner les extensions depuis l’admin réactive les
 - Tests PostgreSQL des comptes de disponibilité comparés aux résultats réels.
 - Tests HTTP des anciens liens vers familles/extensions vides, préservation des données admin et recherches sans résultat.
 - Test HTTP supplémentaire avec `TEST_CATALOG_DEMO=1` contre un serveur démarré en mode démonstration pour vérifier les accès panier/checkout et les fonctions conservées.
+
+## Précommandes : fermeture explicite au lancement
+
+`NEXT_PUBLIC_PREORDERS_ENABLED` est désactivé par défaut, indépendamment de
+`CATALOG_DEMO_MODE`. Seule la valeur exacte `true` active le système ; un nouveau
+build est obligatoire pour synchroniser serveur et interface.
+
+Tant que le système est fermé : les précommandes sont exclues du catalogue,
+des fiches publiques, des statistiques, du maillage et du sitemap ; les anciens
+liens de listings redirigent vers le catalogue ou le jeu. Le filtre est retiré
+des anciennes URL sans perdre les autres critères. Les paniers antérieurs et
+les requêtes directes ne peuvent pas acheter ces produits. Les données restent
+en base, et l’admin préserve le statut existant sans pouvoir créer une nouvelle
+précommande. Le guide et la définition dédiés restent hors publication, avec
+leurs sources conservées. Les CGV conservent leur clause explicite d’absence de
+précommandes au lancement.
+
+Avant toute activation : vérifier les allocations fournisseur, quotas et
+concurrence, paiement et remboursements, commandes mixtes, expédition à partir
+de la date de sortie, notifications, puis mettre à jour et valider les CGV et
+les contenus éditoriaux. L’ouverture des achats ordinaires ne réactive jamais
+automatiquement les précommandes. La CI teste le moteur activé et, dans des
+processus distincts, les protections du lancement avec le système désactivé.

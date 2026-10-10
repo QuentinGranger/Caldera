@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import { catalogFallback } from '@/components/landing/routes';
 import { connection } from 'next/server';
 import { listingPageText } from '@/lib/catalog/metadata';
@@ -52,6 +53,8 @@ export async function listingHubMetadata(
 ): Promise<Metadata> {
   // Rendered per request: no catalog read may start during the build.
   await connection();
+  if (listing === 'precommandes' && !preordersEnabled())
+    redirect(await catalogFallback());
   const hub = await getListingHub(listing);
   if (!hub.stats.productCount)
     redirect(listing === 'catalogue' ? '/' : await catalogFallback());
@@ -79,6 +82,8 @@ export async function ListingHubPage({
 }) {
   // Before the hub statistics, which would otherwise query during the build.
   await connection();
+  if (listing === 'precommandes' && !preordersEnabled())
+    redirect(await catalogFallback());
   const config = LISTING_HUBS[listing];
   const copy = LISTING_COPY[listing];
   const [load, hub] = await Promise.all([

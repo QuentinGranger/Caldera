@@ -15,7 +15,7 @@ import styles from './contact.module.scss';
 export const metadata = editorialMetadata({
   title: 'Contact : commandes, produits et livraison',
   description:
-    'Contactez Les Terres de Caldera pour une question sur une commande, un produit, une précommande ou la livraison.',
+    'Contactez Les Terres de Caldera pour une question sur une commande, un produit, le stock ou la livraison.',
   decision: editorialDecision('/contact'),
 });
 

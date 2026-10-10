@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { languageLabels } from '@/lib/catalog/params';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import type { CheckoutView } from '@/lib/checkout/types';
 import { formatPrice } from '@/utils/formatPrice';
 import { PromotionCodeField } from './PromotionCodeField';
@@ -57,7 +58,7 @@ export function CheckoutSummary({ view }: { view: CheckoutView }) {
                 <span aria-hidden="true"> · </span>
                 {formatPrice(item.price)} / unité
               </span>
-              {item.preorder && (
+              {item.preorder && preordersEnabled() && (
                 <span className={styles.summaryTag}>Précommande</span>
               )}
             </div>

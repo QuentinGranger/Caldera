@@ -49,7 +49,7 @@ export const LISTING_COPY: Readonly<Record<ListingKind, PageCopy>> = {
     title: 'Nouveautés',
     lead: 'Les dernières références ajoutées au comptoir de Caldera.',
     // The badge says the availability first (getProductBadge).
-    note: '« Nouveau » : signalé comme nouveauté par la boutique ; une précommande garde son badge.',
+    note: '« Nouveau » : signalé comme nouveauté par la boutique.',
     view: { src: VIEWS.path, frame: 'backdrop', focus: '62% 45%' },
   },
   precommandes: {
