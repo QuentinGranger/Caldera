@@ -4,7 +4,9 @@ La fiche produit reprend le paysage forestier, le vert profond, l’or et la typ
 
 ## Three.js
 
-`ProductStage` charge dynamiquement `mountProductStage` près du viewport. La scène WebGL représente un socle minéral et deux anneaux dorés éclairés, avec une caméra liée doucement au pointeur et au scroll natif. La photographie HTML reste la source réelle du produit : aucun modèle 360° ni côté absent des images n’est inventé.
+`ProductStage` charge dynamiquement `mountProductStage` près du viewport. La scène WebGL représente un socle minéral avec son bord doré, sans filaments derrière le produit. La caméra suit doucement le pointeur et le scroll natif.
+
+La photographie déjà chargée devient une texture dans la même scène que le socle. Ses marges transparentes sont retirées en mémoire, à une résolution maximale de 1 024 pixels, pour poser son pied au centre du plateau. La caméra déplace ainsi l’ensemble sans décalage indépendant de la photo. Ses couleurs restent inchangées ; aucun modèle 360° ni côté absent des images n’est inventé. L’image HTML conserve le texte alternatif, le zoom et le secours statique, sans requête d’image supplémentaire.
 
 Le rendu est à la demande, arrêté hors écran et dans un onglet masqué. Le DPR est plafonné à 1,5 ; les ressources, observateurs et événements sont libérés à la désactivation ou au démontage. Le bouton « Vue immersive » permet de revenir au décor statique.
 
@@ -15,6 +17,8 @@ Sans WebGL, en cas de perte de contexte, avec `prefers-reduced-motion`, sous 360
 - TypeScript, ESLint et les 10 tests unitaires produit : réussis.
 - Navigation des miniatures, zoom, flèches clavier, fermeture Échap et retour de focus : contrôlés dans Chromium.
 - Désactivation/réactivation de la scène : contrôlée ; premier rendu WebGL confirmé par `data-product-stage="ready"`.
+- Alignement sur le plateau, absence de filaments, changement de photographie et zoom : contrôlés dans Chromium après correction du socle.
+- Trois tests unitaires vérifient le détourage des marges transparentes, les photos opaques et le secours sur image vide.
 - Variante anglaise : prix, SKU, stock et caractéristiques actualisés.
 - Largeurs 390 et 320 px : aucun débordement horizontal ; secours statique à 320 px.
 - Tests HTTP, base de données, build et SEO : contrôlés par la CI avant fusion.

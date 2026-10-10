@@ -30,22 +30,22 @@ export function ProductGallery({
     setIndex((current) => (current + step + images.length) % images.length);
   return (
     <section aria-label={`Galerie de ${name}`} className={styles.gallery}>
-      <button
-        ref={trigger}
-        type="button"
-        className={styles.main}
-        aria-label={`Agrandir : ${active.alt}`}
-        aria-haspopup="dialog"
-        aria-controls={id}
-        onClick={() => dialog.current?.showModal()}
+      <ViewTransition
+        name={index === 0 ? productTransitionName(slug) : undefined}
+        share={PRODUCT_MORPH}
+        default="none"
       >
-        <ProductStage enabled={immersive} />
-        <span className={styles.staticStage} aria-hidden="true" />
-        <ViewTransition
-          name={index === 0 ? productTransitionName(slug) : undefined}
-          share={PRODUCT_MORPH}
-          default="none"
+        <button
+          ref={trigger}
+          type="button"
+          className={styles.main}
+          aria-label={`Agrandir : ${active.alt}`}
+          aria-haspopup="dialog"
+          aria-controls={id}
+          onClick={() => dialog.current?.showModal()}
         >
+          <ProductStage enabled={immersive} imageUrl={active.url} />
+          <span className={styles.staticStage} aria-hidden="true" />
           <Image
             src={active.url}
             alt={active.alt}
@@ -53,12 +53,12 @@ export function ProductGallery({
             sizes="(min-width: 1440px) 680px, (min-width: 1200px) 50vw, (min-width: 768px) 80vw, 100vw"
             preload={index === 0}
           />
-        </ViewTransition>
-        <span className={styles.zoom}>
-          <Expand size={16} aria-hidden="true" />
-          Agrandir
-        </span>
-      </button>
+          <span className={styles.zoom}>
+            <Expand size={16} aria-hidden="true" />
+            Agrandir
+          </span>
+        </button>
+      </ViewTransition>
       {images.length > 1 && (
         <div className={styles.thumbnails} aria-label="Choisir une image">
           {images.map((image, i) => (

@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { depthPoint } from '../motion/depth';
+import { prepareProductPhoto } from './product-photo';
 
 /** Real 3D scenery around the unchanged product photograph; no invented product sides. */
 export function mountProductStage(
   root: HTMLElement,
   canvas: HTMLCanvasElement,
+  photo: HTMLImageElement,
 ) {
   const resources: { dispose(): void }[] = [];
   const own = <T extends { dispose(): void }>(value: T) => {
@@ -20,12 +22,16 @@ export function mountProductStage(
     stopped = true;
     detach();
     delete root.dataset.productStage;
-    for (const name of ['--stage-x', '--stage-y', '--stage-scroll'])
-      root.style.removeProperty(name);
     for (const resource of resources.reverse()) resource.dispose();
     renderer?.dispose();
   };
   try {
+    const photograph = prepareProductPhoto(photo);
+    own({
+      dispose: () => {
+        photograph.width = photograph.height = 1;
+      },
+    });
     renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
@@ -80,18 +86,24 @@ export function mountProductStage(
     edge.rotation.x = Math.PI / 2;
     edge.position.y = -1.39;
     scene.add(edge);
-    const halo = new THREE.Mesh(
-      own(new THREE.TorusGeometry(1.95, 0.009, 6, 112)),
-      gold,
+    const texture = own(new THREE.CanvasTexture(photograph));
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const aspect = photograph.width / photograph.height;
+    const productHeight = Math.min(3.5, 2.55 / aspect);
+    const product = new THREE.Mesh(
+      own(new THREE.PlaneGeometry(productHeight * aspect, productHeight)),
+      own(
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          alphaTest: 0.04,
+          toneMapped: false,
+        }),
+      ),
     );
-    halo.position.set(0, 0.1, -0.5);
-    scene.add(halo);
-    const orbit = new THREE.Mesh(
-      own(new THREE.TorusGeometry(2.15, 0.006, 6, 112)),
-      gold,
-    );
-    orbit.position.set(0, -0.15, -0.7);
-    scene.add(orbit);
+    // The actual opaque foot shares the plinth's top and centre in world space.
+    product.position.set(0, -1.405 + productHeight / 2, 0);
+    scene.add(product);
     const pointer = matchMedia('(hover: hover) and (pointer: fine)');
     let point: { x: number; y: number } | undefined;
     let active = false,
@@ -130,16 +142,7 @@ export function mountProductStage(
         8.5,
       );
       camera.lookAt(0, 0, 0);
-      halo.rotation.set(
-        0.15 + aim.scroll * 0.3,
-        -0.35 + aim.x * 0.25,
-        0.2 + aim.scroll * 0.18,
-      );
-      orbit.rotation.set(0.9 + aim.scroll * 0.2, 0.45 + aim.x * 0.15, -0.35);
       key.position.x = -3 + aim.x * 2;
-      root.style.setProperty('--stage-x', aim.x.toFixed(3));
-      root.style.setProperty('--stage-y', aim.y.toFixed(3));
-      root.style.setProperty('--stage-scroll', aim.scroll.toFixed(3));
       try {
         renderer!.render(scene, camera);
         root.dataset.productStage = 'ready';

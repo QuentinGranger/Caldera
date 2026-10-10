@@ -124,9 +124,10 @@
     color: #f4f0e4;
     img {
       z-index: 2;
-      padding: clamp(2.5rem, 5vw, 4.5rem) clamp(2rem, 4vw, 4rem)
-        clamp(4rem, 7vw, 6rem);
-      filter: drop-shadow(0 25px 25px #0006);
+      padding: 12% 14% 14%;
+      object-position: 50% 100%;
+      filter: drop-shadow(0 8px 8px #0003);
+      transform-origin: 50% 80%;
     }
     [data-product-canvas] {
       position: absolute;
@@ -143,10 +144,15 @@
     &[data-product-stage='ready'] .staticStage {
       opacity: 0;
     }
+    &[data-product-stage='ready'] img {
+      opacity: 0;
+      transform: none;
+      transition: none;
+    }
   }
   .staticStage {
     position: absolute;
-    inset: auto 12% 8%;
+    inset: auto 19% 12%;
     height: 11%;
     border: 1px solid #e8c26155;
     border-bottom: 10px solid #17372c;
@@ -203,22 +209,6 @@
   .immersiveToggle:focus-visible {
     outline: 2px solid #f4d985;
     outline-offset: 4px;
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  :global([data-product-world]) .main[data-product-stage='ready'] img {
-    transform: translate3d(
-        calc(var(--stage-x, 0) * 10px),
-        calc(var(--stage-scroll, 0) * -12px),
-        0
-      )
-      rotateX(calc(var(--stage-y, 0) * -3deg))
-      rotateY(calc(var(--stage-x, 0) * 7deg))
-      rotateZ(calc(var(--stage-scroll, 0) * 2deg));
-    transition: none;
-  }
-  :global([data-product-world]) .main:focus-visible img {
-    transform: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
