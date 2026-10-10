@@ -6,9 +6,9 @@ import buttonStyles from '@/components/ui/Button/Button.module.scss';
 import styles from './ExtensionsWorld.module.scss';
 
 const illustrations = [
-  '/assets/images/experience/giratina-v-186-196.webp',
-  '/assets/images/experience/rayquaza-gold-star-107-107.webp',
-  '/assets/images/experience/noctali-vmax-215-203.webp',
+  '/assets/images/experience/lugia-9-111.webp',
+  '/assets/images/experience/mewtwo-gx-78-73.webp',
+  '/assets/images/experience/ectoplasma-vmax-271-264.webp',
 ];
 
 /** Real card artwork illustrates collecting; the release index below stays authoritative. */
