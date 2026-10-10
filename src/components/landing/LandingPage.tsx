@@ -103,7 +103,6 @@ export function LandingPage({
             lead={copy?.lead ?? view.description ?? view.heading}
             breadcrumb={view.breadcrumb}
             path={view.path}
-            product={load.result.products[0]}
             hasProducts={load.total > 0}
           />
         ) : (

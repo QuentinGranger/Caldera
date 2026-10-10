@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useId, useRef, useState, ViewTransition } from 'react';
-import { ChevronLeft, ChevronRight, Expand, Sparkles, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react';
 import {
   PRODUCT_MORPH,
   productTransitionName,
@@ -20,7 +20,6 @@ export function ProductGallery({
   slug: string;
 }) {
   const [index, setIndex] = useState(0);
-  const [immersive, setImmersive] = useState(true);
   const dialog = useRef<HTMLDialogElement>(null),
     trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -44,7 +43,7 @@ export function ProductGallery({
           aria-controls={id}
           onClick={() => dialog.current?.showModal()}
         >
-          <ProductStage enabled={immersive} imageUrl={active.url} />
+          <ProductStage imageUrl={active.url} />
           <span className={styles.staticStage} aria-hidden="true" />
           <Image
             src={active.url}
@@ -74,14 +73,6 @@ export function ProductGallery({
           ))}
         </div>
       )}
-      <button
-        type="button"
-        className={styles.immersiveToggle}
-        aria-pressed={immersive}
-        onClick={() => setImmersive((value) => !value)}
-      >
-        <Sparkles size={15} aria-hidden="true" /> Vue immersive
-      </button>
       <p className={styles.caption} role="status">
         {index + 1} / {images.length} · {active.alt}
       </p>
