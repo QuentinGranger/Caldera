@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
+import { ShippingFromLine } from '@/components/shipping/ShippingFromLine';
 import { formatPrice } from '@/utils/formatPrice';
 import { useCart } from './CartProvider';
 import { CartItem } from './CartItem';
@@ -10,7 +11,8 @@ import { CartUnavailable } from './CartUnavailable';
 import { CartEmpty } from './CartEmpty';
 import styles from './CartDrawer.module.scss';
 export function CartDrawer() {
-  const { cart, pending, message, open, setOpen, cartButton } = useCart();
+  const { cart, shipping, pending, message, open, setOpen, cartButton } =
+    useCart();
   const dialog = useRef<HTMLDialogElement>(null);
   const overlayStart = useRef(false);
   useEffect(() => {
@@ -78,7 +80,11 @@ export function CartDrawer() {
               <span>Sous-total</span>
               <strong>{formatPrice(cart.subtotal)}</strong>
             </div>
-            <p>Livraison calculée lors de la commande.</p>
+            {shipping.length > 0 ? (
+              <ShippingFromLine offers={shipping} details={false} />
+            ) : (
+              <p>Livraison calculée lors de la commande.</p>
+            )}
             <Link href="/panier" onClick={() => setOpen(false)}>
               Voir mon panier
             </Link>

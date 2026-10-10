@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header/Header';
 
 import { CartProvider } from '@/components/cart/CartProvider';
 import { getCart } from '@/lib/cart/getCart';
+import { getShippingOptions } from '@/lib/shipping/options';
 import { StorefrontOnly } from '@/components/layout/StorefrontOnly/StorefrontOnly';
 import { SpeedInsights } from '@/components/monitoring/SpeedInsights';
 import { WebAnalytics } from '@/components/monitoring/WebAnalytics';
@@ -37,9 +38,12 @@ export const metadata: Metadata = rootMetadata();
 export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  const [cart, wishlist] = await Promise.all([
+  const [cart, wishlist, shipping] = await Promise.all([
     getCart(),
     getWishlistSnapshot(),
+    // A failed read must never take a page down: the cart then keeps saying
+    // that delivery is calculated at checkout.
+    getShippingOptions().catch(() => []),
   ]);
   return (
     // data-scroll-behavior: smooth scrolling stays for anchors, but Next.js
@@ -53,7 +57,7 @@ export default async function RootLayout({
         <a className="skip-link" href="#contenu">
           Aller au contenu
         </a>
-        <CartProvider cart={cart}>
+        <CartProvider cart={cart} shipping={shipping}>
           <WishlistProvider snapshot={wishlist}>
             <StorefrontOnly>
               <AnnouncementBar />

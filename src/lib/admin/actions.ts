@@ -314,8 +314,10 @@ export async function saveBusinessPilotageAction(
     return failure(error);
   }
 }
-/** Read live by the checkout, /livraison, the FAQ and the product pages. */
+/** Read live by the checkout, /livraison, the FAQ, the cart and the product pages. */
 function refreshShipping() {
+  // The cart and the drawer read the methods through the root layout.
+  invalidateCatalogCache();
   revalidatePath('/admin/livraison');
   revalidatePath('/livraison');
   revalidatePath('/questions');

@@ -45,6 +45,11 @@
     flex-shrink: 0;
     color: v.$color-green-secondary;
   }
+  // The text takes the width: the carriers' prices end on its right edge.
+  > div {
+    flex: 1;
+    min-width: 0;
+  }
   strong {
     font-size: 0.8rem;
   }
@@ -103,12 +108,37 @@
   }
 }
 .shipping {
+  display: grid;
+  gap: 0.55rem;
   list-style: none;
   padding: 0;
-  margin: 0.3rem 0 0;
+  margin: 0.55rem 0 0;
   li {
-    font-size: 0.73rem;
-    color: v.$color-text-muted;
-    line-height: 1.7;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.8rem;
   }
+  span {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  strong {
+    font-size: 0.8rem;
+  }
+  small {
+    color: v.$color-text-muted;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  b {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+}
+// « Livraison dès … » under the stock: close to the price, light.
+.shippingFrom {
+  margin: -0.4rem 0 1rem;
 }

@@ -38,7 +38,7 @@ export default async function ShippingAdminPage() {
     <>
       <PageHeader
         title="Livraison"
-        description="Tarifs, gratuité, délais et pays : le paiement, la page Livraison, la FAQ et les fiches produit les lisent directement."
+        description="Tarifs, gratuité, délais et pays : le paiement, le panier, la page Livraison, la FAQ et les fiches produit les lisent directement."
       >
         <Link
           href="/livraison"

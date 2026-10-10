@@ -1,12 +1,14 @@
 'use client';
 
+import { Check, ChevronDown, TicketPercent, TriangleAlert } from 'lucide-react';
 import {
-  Check,
-  ChevronDown,
-  TicketPercent,
-  TriangleAlert,
-} from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import {
   applyCartPromotionAction,
   refreshCartPromotionAction,
@@ -20,11 +22,21 @@ import styles from './CartSummary.module.scss';
 export function CartPromotionField({
   cart,
   initialState,
+  onStateChange,
 }: {
   cart: CartView;
   initialState: CartPromotionState | null;
+  /** Told of every new state: the cart's delivery reads the code's discount. */
+  onStateChange?: (state: CartPromotionState | null) => void;
 }) {
-  const [state, setState] = useState(initialState);
+  const [state, setLocalState] = useState(initialState);
+  const setState = useCallback(
+    (next: CartPromotionState | null) => {
+      setLocalState(next);
+      onStateChange?.(next);
+    },
+    [onStateChange],
+  );
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [open, setOpen] = useState(Boolean(initialState?.promotionIssue));
@@ -57,7 +69,7 @@ export function CartPromotionField({
         );
       }
     });
-  }, [fingerprint]);
+  }, [fingerprint, setState]);
 
   const promotion = state?.promotion ?? null;
   const issue = state?.promotionIssue ?? null;
@@ -112,7 +124,9 @@ export function CartPromotionField({
           </span>
 
           <div className={styles.promotionIdentity}>
-            <span>{valid ? 'Code promo appliqué' : 'Code promo à vérifier'}</span>
+            <span>
+              {valid ? 'Code promo appliqué' : 'Code promo à vérifier'}
+            </span>
             <strong>{applied.code}</strong>
             {promotion && <small>{promotion.label}</small>}
           </div>
@@ -232,10 +246,7 @@ export function CartPromotionField({
             </button>
           </div>
 
-          <p
-            id="cart-promotion-description"
-            className={styles.promotionHint}
-          >
+          <p id="cart-promotion-description" className={styles.promotionHint}>
             La remise est calculée côté serveur et sera revérifiée avant le
             paiement.
           </p>

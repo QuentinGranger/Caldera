@@ -9,6 +9,12 @@ import { formatPrice } from '@/utils/formatPrice';
 export interface ShippingOptionView {
   code: string;
   name: string;
+  /** Decimal string, « 4.90 ». */
+  price: string;
+  /** Decimal string: the amount of items from which the method is free. */
+  freeFromAmount: string | null;
+  /** « 2 à 4 jours ouvrés », when the carrier's transit time is known. */
+  transit: string | null;
   /** « 5,90 € », « offerte dès 150,00 € d’achat », « 2 à 4 jours ouvrés ». */
   details: string[];
   destinations: string[];
@@ -24,7 +30,7 @@ function transitTime(fact: Pick<ShippingFact, 'minDays' | 'maxDays'>) {
   const { minDays: min, maxDays: max } = fact;
   if (!Number.isInteger(min) || !Number.isInteger(max)) return null;
   if (min === null || max === null || min < 0 || max < min) return null;
-  return `livraison en ${businessDays(min, max)}`;
+  return businessDays(min, max);
 }
 
 export function shippingOptionViews(
@@ -35,12 +41,15 @@ export function shippingOptionViews(
     return {
       code: fact.code,
       name: fact.name,
+      price: fact.price,
+      freeFromAmount: fact.freeFromAmount,
+      transit,
       details: [
         Number(fact.price) > 0 ? formatPrice(fact.price) : 'offerte',
         ...(fact.freeFromAmount && Number(fact.price) > 0
           ? [`offerte dès ${formatPrice(fact.freeFromAmount)} d’achat`]
           : []),
-        ...(transit ? [transit] : []),
+        ...(transit ? [`livraison en ${transit}`] : []),
       ],
       destinations: fact.destinations.map((destination) => destination.name),
     };

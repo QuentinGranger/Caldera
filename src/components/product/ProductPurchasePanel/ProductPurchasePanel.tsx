@@ -25,6 +25,7 @@ import {
 } from '@/lib/product/services';
 import { formatPrice } from '@/utils/formatPrice';
 import { formatProductDate, formatProductWeight } from '@/utils/formatProduct';
+import { ShippingFromLine } from '@/components/shipping/ShippingFromLine';
 import { StickyBuyBar } from './StickyBuyBar';
 import { stockLabel } from '@/lib/product/stock';
 import { StockStatus } from './StockStatus';
@@ -120,10 +121,26 @@ function SelectedVariant({
               <ul className={styles.shipping}>
                 {shipping.map((option) => (
                   <li key={option.code}>
-                    {option.name}
-                    {option.destinations.length > 0 &&
-                      ` (${option.destinations.join(', ')})`}{' '}
-                    : {option.details.join(', ')}
+                    <span>
+                      <strong>{option.name}</strong>
+                      <small>
+                        {[
+                          option.transit && `livraison en ${option.transit}`,
+                          option.freeFromAmount &&
+                            Number(option.price) > 0 &&
+                            `offerte dès ${formatPrice(option.freeFromAmount)} d’achat`,
+                          option.destinations.length > 0 &&
+                            option.destinations.join(', '),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </small>
+                    </span>
+                    <b>
+                      {Number(option.price) > 0
+                        ? formatPrice(option.price)
+                        : 'Offerte'}
+                    </b>
                   </li>
                 ))}
               </ul>
@@ -233,6 +250,10 @@ export function ProductPurchasePanel(props: Props) {
         )}
       </div>
       <StockStatus variant={selected} newArrival={props.newArrival} />
+      {/* Delivery where the price is read: from how much, free from when. */}
+      <div className={styles.shippingFrom}>
+        <ShippingFromLine offers={props.shipping} />
+      </div>
       <ProductVariantSelector
         variants={props.variants}
         selected={selected.sku}

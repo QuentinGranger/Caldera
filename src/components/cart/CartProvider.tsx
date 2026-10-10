@@ -13,10 +13,13 @@ import {
 import { usePathname } from 'next/navigation';
 import { refreshCartAction } from '@/lib/cart/actions';
 import type { CartActionResult, CartView } from '@/lib/cart/types';
+import type { ShippingOptionView } from '@/lib/product/services';
 import { CartDrawer } from './CartDrawer';
 
 type CartContextValue = {
   cart: CartView;
+  /** The delivery methods offered, for what the cart says of delivery. */
+  shipping: ShippingOptionView[];
   pending: boolean;
   message: string;
   open: boolean;
@@ -48,9 +51,11 @@ function isPrivateArea(pathname: string) {
 
 export function CartProvider({
   cart: serverCart,
+  shipping,
   children,
 }: {
   cart: CartView;
+  shipping: ShippingOptionView[];
   children: ReactNode;
 }) {
   // The layout snapshot wins whenever the server renders it again (cookie
@@ -146,7 +151,16 @@ export function CartProvider({
 
   return (
     <CartContext
-      value={{ cart, pending, message, open, setOpen, cartButton, execute }}
+      value={{
+        cart,
+        shipping,
+        pending,
+        message,
+        open,
+        setOpen,
+        cartButton,
+        execute,
+      }}
     >
       {children}
       {pathname !== '/admin' && !pathname.startsWith('/admin/') && (
