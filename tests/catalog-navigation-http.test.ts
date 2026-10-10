@@ -69,7 +69,6 @@ test('HTTP : routes, hiérarchie, extensions et 404', async () => {
     '/catalogue',
     '/categorie/scelles',
     '/categorie/etb?language=FR&sort=price-asc',
-    '/extensions',
     '/nouveautes',
     '/precommandes',
     '/en-stock',
@@ -82,14 +81,13 @@ test('HTTP : routes, hiérarchie, extensions et 404', async () => {
     '/extensions/dev-terres-de-braise',
     '/pokemon/dev-terres-de-braise',
   );
-  const extensionsIndex = (await page('/extensions')).html;
-  assert.ok(!extensionsIndex.includes('[Démo]'));
-  for (const href of [
-    'href="#a-venir"',
-    'href="#extensions-recentes"',
-    'href="#deja-sorties"',
-  ])
-    assert.ok(extensionsIndex.includes(href), href);
+  // Production has only development-seeded extensions: the empty hub is hidden.
+  const hidden = await page('/extensions');
+  assert.ok(hidden.html.includes('NEXT_REDIRECT;replace;/catalogue;307;'));
+  assert.ok(!hidden.html.includes('data-pokemon-world="extensions"'));
+  assert.ok(!hidden.html.includes('href="/extensions"'));
+  const calendar = await page('/calendrier-des-sorties');
+  assert.ok(calendar.html.includes('NEXT_REDIRECT;replace;/catalogue;307;'));
 });
 
 test('HTTP : filtre FR cohérent, cases synchronisées, URL nettoyée et SEO', async () => {
@@ -248,7 +246,6 @@ test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () =
   // The products come before every secondary block, in this order.
   const blocks = [
     '<article',
-    'id="extensions"',
     'id="explorer"',
     'id="guides"',
     'id="questions"',
@@ -258,6 +255,9 @@ test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () =
     blocks,
     [...blocks].sort((a, b) => a - b),
   );
+  // Fictitious release announcements are absent in the production build.
+  assert.ok(!html.includes('id="extensions"'));
+  assert.ok(!html.includes('href="/extensions"'));
   // Three guides at most; the questions open in place.
   const guides = html.slice(at('id="guides"'), at('id="questions"'));
   const guideCount = (guides.match(/<h3[\s>]/g) ?? []).length;
@@ -452,19 +452,6 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   const sealed = (await page('/pokemon/scelles')).html;
   assert.ok(sealed.includes('href="/guides/etb-display-ou-booster"'));
   assert.ok(strip(sealed).includes('Lire le guide'));
-  // /extensions: three stable sections; demo rows never leak in production.
-  const extensions = (await page('/extensions')).html;
-  assert.equal(h1Count(extensions), 1);
-  assert.ok(extensions.includes('data-pokemon-world="extensions"'));
-  assert.ok(!extensions.includes('[Démo]'));
-  for (const label of ['À venir', 'Extensions récentes', 'Déjà sorties'])
-    assert.ok(strip(extensions).includes(label), label);
-  for (const id of [
-    'id="a-venir"',
-    'id="extensions-recentes"',
-    'id="deja-sorties"',
-  ])
-    assert.ok(extensions.includes(id), id);
 });
 
 test('HTTP : aucun résultat et filtres mobile / recherche accessibles', async () => {

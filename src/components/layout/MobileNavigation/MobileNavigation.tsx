@@ -171,8 +171,8 @@ export function MobileNavigation({
     ({ href }) => href !== NEW_ARRIVALS,
   );
   const reading: NavLink[] = [
-    navigation.extensions,
-    navigation.calendar,
+    ...(navigation.extensions ? [navigation.extensions] : []),
+    ...(navigation.calendar ? [navigation.calendar] : []),
     navigation.guides,
     navigation.glossary,
     ...(navigation.questions ? [navigation.questions] : []),
@@ -210,65 +210,67 @@ export function MobileNavigation({
         onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 4)}
       >
         <div className={styles.content}>
-          <section className={styles.group} aria-labelledby="mobile-shop">
-            <p id="mobile-shop" className={styles.eyebrow}>
-              Boutique
-            </p>
-            <ul className={styles.mainLinks}>
-              <li>
-                <MainLink
-                  link={navigation.catalogue}
-                  pathname={pathname}
-                  onNavigate={close}
-                />
-              </li>
-              {navigation.games.map((game) => (
-                <li key={game.href}>
-                  {game.children.length > 0 ? (
-                    <Accordion
-                      item={game}
-                      open={expanded === game.href}
-                      onToggle={() =>
-                        setExpanded(expanded === game.href ? null : game.href)
-                      }
-                      pathname={pathname}
-                      onNavigate={close}
-                    />
-                  ) : (
-                    <MainLink
-                      link={game}
-                      pathname={pathname}
-                      onNavigate={close}
-                    />
-                  )}
-                </li>
-              ))}
-              {[...navigation.families, ...newArrivals].map((link) => (
-                <li key={link.href}>
+          {navigation.catalogueAvailable && (
+            <section className={styles.group} aria-labelledby="mobile-shop">
+              <p id="mobile-shop" className={styles.eyebrow}>
+                Boutique
+              </p>
+              <ul className={styles.mainLinks}>
+                <li>
                   <MainLink
-                    link={link}
+                    link={navigation.catalogue}
                     pathname={pathname}
                     onNavigate={close}
                   />
                 </li>
-              ))}
-            </ul>
-            {otherListings.length > 0 && (
-              <ul className={styles.minorLinks}>
-                {otherListings.map(({ href, label }) => (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      onClick={close}
-                      aria-current={pathname === href ? 'page' : undefined}
-                    >
-                      {label}
-                    </Link>
+                {navigation.games.map((game) => (
+                  <li key={game.href}>
+                    {game.children.length > 0 ? (
+                      <Accordion
+                        item={game}
+                        open={expanded === game.href}
+                        onToggle={() =>
+                          setExpanded(expanded === game.href ? null : game.href)
+                        }
+                        pathname={pathname}
+                        onNavigate={close}
+                      />
+                    ) : (
+                      <MainLink
+                        link={game}
+                        pathname={pathname}
+                        onNavigate={close}
+                      />
+                    )}
+                  </li>
+                ))}
+                {[...navigation.families, ...newArrivals].map((link) => (
+                  <li key={link.href}>
+                    <MainLink
+                      link={link}
+                      pathname={pathname}
+                      onNavigate={close}
+                    />
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
+              {otherListings.length > 0 && (
+                <ul className={styles.minorLinks}>
+                  {otherListings.map(({ href, label }) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={close}
+                        aria-current={pathname === href ? 'page' : undefined}
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           <section className={styles.group} aria-labelledby="mobile-reading">
             <p id="mobile-reading" className={styles.eyebrow}>

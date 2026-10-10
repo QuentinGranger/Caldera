@@ -40,8 +40,9 @@ export function Showcase({
                 Il y a des pièces que l’on cherche. Et celles qui nous trouvent.
               </p>
               <p>
-                Mises en avant par l’équipe, avec leur prix et leur
-                disponibilité du jour.
+                {products.every((product) => product.isDemonstration)
+                  ? 'Des produits d’exemple pour découvrir le catalogue de Caldera.'
+                  : 'Mises en avant par l’équipe, avec leur prix et leur disponibilité du jour.'}
               </p>
               {catalogue && (
                 <Link href={catalogue} className={styles.link}>

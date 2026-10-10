@@ -49,9 +49,13 @@ export function ProductCard({
   buy?: boolean;
 }) {
   const edition = layout === 'edition';
+  const salesEnabled = process.env.CATALOG_DEMO_MODE !== '1';
   const inStock =
-    !product.isDemonstration && product.availability === 'IN_STOCK';
-  const stock = buy && !product.isDemonstration ? stockLine(product) : null;
+    salesEnabled &&
+    !product.isDemonstration &&
+    product.availability === 'IN_STOCK';
+  const stock =
+    buy && salesEnabled && !product.isDemonstration ? stockLine(product) : null;
   return (
     <article
       className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''} ${layout === 'spotlight' ? styles.spotlight : ''} ${buy ? styles.buying : ''}`}
@@ -62,7 +66,9 @@ export function ProductCard({
         data-depth-stage={depth ? 'product' : undefined}
       >
         <div className={styles.badge}>
-          {product.badge && <ProductBadge kind={product.badge} />}
+          {salesEnabled && product.badge && (
+            <ProductBadge kind={product.badge} />
+          )}
         </div>
         <ProductFavorite
           className={styles.favorite}
@@ -146,7 +152,7 @@ export function ProductCard({
               </>
             )}
           </div>
-          {!product.isDemonstration && (
+          {salesEnabled && !product.isDemonstration && (
             <ProductCardQuickAdd
               className={buy ? styles.buy : styles.add}
               productName={product.name}

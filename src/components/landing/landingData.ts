@@ -1,6 +1,7 @@
 // Data of the game silos: route matching (renamed slugs, facet order), real
 // aggregates, indexation, generated text and the links a page may carry.
 import 'server-only';
+import { visibleSetInEnvironment } from '@/lib/catalog/publicReleases';
 import * as Sentry from '@sentry/nextjs';
 import { cache } from 'react';
 import { presentFamilies } from '@/components/catalog/listingHub';
@@ -269,7 +270,7 @@ export interface LandingView {
   fallbackLinks: SeoLink[];
   /** Extra link groups for a landing without product. */
   emptyLinkGroups: SeoLinkGroup[];
-  /** Paths of every active set of the game. */
+  /** Paths of public sets with products or an announced release. */
   setPaths: ReadonlySet<string>;
   calendarIndexable: boolean;
 }
@@ -326,6 +327,14 @@ export const hasReleaseCalendar = cache(async () => {
       isActive: true,
       gameId: { in: games.map((game) => game.id) },
       releaseDate: { gte: releaseWindowStart(getToday()) },
+      ...(process.env.NODE_ENV === 'production'
+        ? {
+            NOT: [
+              { slug: { startsWith: 'dev-' } },
+              { name: { startsWith: '[Démo]' } },
+            ],
+          }
+        : {}),
     },
   });
   return count > 0;
@@ -448,7 +457,7 @@ async function buildLandingView(
   let releases: LandingView['releases'] = null;
   let nextRelease: DatedLink | null = null;
   if (kind === 'game') {
-    const entries = sets.map(setEntry);
+    const entries = sets.filter(visibleSetInEnvironment).map(setEntry);
     const upcoming = entries.filter((entry) => entry.upcoming).reverse();
     releases = {
       upcoming,
@@ -642,7 +651,14 @@ async function buildLandingView(
     fallbackLinks,
     emptyLinkGroups: emptyLinkGroups.filter((group) => group.links.length),
     setPaths: new Set(
-      sets.map((set) => landingPath({ game: scope.game, set: toSetRef(set) })),
+      sets
+        .filter(visibleSetInEnvironment)
+        .filter(
+          (set) =>
+            (setCounts.get(set.id) ?? 0) > 0 ||
+            (set.releaseDate && isUpcoming(set.releaseDate, today)),
+        )
+        .map((set) => landingPath({ game: scope.game, set: toSetRef(set) })),
     ),
     calendarIndexable,
   };

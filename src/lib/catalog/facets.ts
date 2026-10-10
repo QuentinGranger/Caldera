@@ -12,25 +12,52 @@ import { parseCatalogParams, type CatalogScope } from './params';
  */
 export async function getCatalogFacets(scope: CatalogScope) {
   const db = getPrisma();
+  const demonstration = process.env.CATALOG_DEMO_MODE === '1';
   const categories = await getCategories();
   const { where, variant } = buildCatalogWhere(
     parseCatalogParams({}),
     scope,
     categories,
   );
-  const [groups, languageGroups, sets] = await Promise.all([
-    db.product.groupBy({
-      by: ['categoryId', 'productType', 'tcgSetId'],
-      where,
-      _count: { _all: true },
-    }),
-    db.productVariant.groupBy({
-      by: ['language'],
-      where: { AND: [variant, { product: where }] },
-      orderBy: { language: 'asc' },
-    }),
-    getExtensions(),
-  ]);
+  const [groups, languageGroups, sets, availability, prices] =
+    await Promise.all([
+      db.product.groupBy({
+        by: ['categoryId', 'productType', 'tcgSetId'],
+        where,
+        _count: { _all: true },
+      }),
+      db.productVariant.groupBy({
+        by: ['language'],
+        where: { AND: [variant, { product: where }] },
+        orderBy: { language: 'asc' },
+      }),
+      getExtensions(),
+      // Count the same predicates as the actual filter (including low-stock thresholds).
+      demonstration
+        ? []
+        : Promise.all(
+            (['in-stock', 'low-stock', 'preorder'] as const).map(
+              async (value) => {
+                const filtered = buildCatalogWhere(
+                  parseCatalogParams({ availability: value }),
+                  scope,
+                  categories,
+                );
+                return [
+                  value,
+                  await db.product.count({ where: filtered.where }),
+                ] as const;
+              },
+            ),
+          ),
+      demonstration
+        ? null
+        : db.productVariant.aggregate({
+            where: { AND: [variant, { product: where }] },
+            _min: { price: true },
+            _max: { price: true },
+          }),
+    ]);
   // A product counts once per language, whatever its number of variants in it.
   const languageCounts = await Promise.all(
     languageGroups.map(({ language }) =>
@@ -75,7 +102,18 @@ export async function getCatalogFacets(scope: CatalogScope) {
     if (count > 0) languages[language] = count;
   });
 
+  const total = groups.reduce((sum, group) => sum + group._count._all, 0);
   return {
+    total,
+    availability: demonstration
+      ? []
+      : availability.map(([value, count]) => ({ value, count })),
+    priceRange: demonstration
+      ? null
+      : {
+          min: prices?._min.price?.toString() ?? null,
+          max: prices?._max.price?.toString() ?? null,
+        },
     categories: categories
       .filter(
         (category) =>

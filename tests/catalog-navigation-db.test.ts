@@ -210,6 +210,14 @@ test('facettes : comptes réels du périmètre, options vides masquées', async 
   assert.equal(facets.sets.length, 1);
   assert.deepEqual(facets.categories, []);
   const all = await getCatalogFacets({});
+  assert.equal(all.total, VISIBLE);
+  for (const option of all.availability) {
+    assert.equal(
+      option.count,
+      (await catalog({ availability: option.value })).total,
+    );
+  }
+  assert.ok(all.priceRange?.min != null && all.priceRange.max != null);
   assert.ok(all.languages.includes('JP'));
   assert.deepEqual(
     all.categories.find((c) => c.slug === 'scelles'),

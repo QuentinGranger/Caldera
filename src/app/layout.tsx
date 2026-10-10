@@ -57,7 +57,11 @@ export default async function RootLayout({
         <a className="skip-link" href="#contenu">
           Aller au contenu
         </a>
-        <CartProvider cart={cart} shipping={shipping}>
+        <CartProvider
+          cart={cart}
+          shipping={shipping}
+          enabled={process.env.CATALOG_DEMO_MODE !== '1'}
+        >
           <WishlistProvider snapshot={wishlist}>
             <StorefrontOnly>
               <AnnouncementBar />

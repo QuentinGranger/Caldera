@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -14,11 +15,13 @@ import styles from '@/components/editorial/Editorial.module.scss';
 
 export async function generateMetadata(): Promise<Metadata> {
   const index = await getNewsIndex();
+  if (!index.entries.length) redirect('/guides');
   return editorialMetadata({ ...index.text, decision: index.decision });
 }
 
 export default async function NewsPage() {
   const index = await getNewsIndex();
+  if (!index.entries.length) redirect('/guides');
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <Container>

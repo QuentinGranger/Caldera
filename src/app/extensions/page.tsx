@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
-import { Archive, Clock3, Sparkles } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import { catalogFallback } from '@/components/landing/routes';
 import { ExtensionsPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { CatalogShell } from '@/components/catalog/CatalogShell';
 import {
@@ -30,7 +31,6 @@ function ExtensionSection({
   title,
   description,
   entries,
-  emptyText,
   featuredFirst = false,
   number,
 }: {
@@ -39,11 +39,10 @@ function ExtensionSection({
   title: string;
   description: string;
   entries: readonly SetEntry[];
-  emptyText: string;
   featuredFirst?: boolean;
   number: number;
 }) {
-  const Icon = number === 1 ? Clock3 : number === 2 ? Sparkles : Archive;
+  if (!entries.length) return null;
   return (
     <section id={id} className={styles.chapter} aria-labelledby={`${id}-titre`}>
       <div className={styles.chapterHeading}>
@@ -55,23 +54,16 @@ function ExtensionSection({
         <p>{description}</p>
       </div>
       <div className={styles.chapterBody}>
-        {entries.length ? (
-          <ul className={styles.setGrid}>
-            {entries.map((entry, position) => (
-              <li key={entry.id}>
-                <SetCard
-                  entry={entry}
-                  featured={featuredFirst && position === 0}
-                />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className={styles.empty}>
-            <Icon strokeWidth={1} aria-hidden="true" />
-            <p>{emptyText}</p>
-          </div>
-        )}
+        <ul className={styles.setGrid}>
+          {entries.map((entry, position) => (
+            <li key={entry.id}>
+              <SetCard
+                entry={entry}
+                featured={featuredFirst && position === 0}
+              />
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -80,6 +72,7 @@ function ExtensionSection({
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
   const index = await getExtensionsIndex();
+  if (!index.total) redirect(await catalogFallback());
   return buildMetadata({
     title: index.text.title,
     description: index.text.description,
@@ -97,6 +90,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function ExtensionsContent() {
   await connection();
   const index = await getExtensionsIndex();
+  if (!index.total) redirect(await catalogFallback());
   const ways = [
     {
       href: `#${UPCOMING}`,
@@ -113,7 +107,7 @@ async function ExtensionsContent() {
       label: 'Déjà sorties',
       count: index.released.length,
     },
-  ];
+  ].filter((entry) => entry.count > 0);
   const linked = [
     ...index.upcoming,
     ...index.recent,
@@ -145,7 +139,6 @@ async function ExtensionsContent() {
         title="À venir"
         description="Les prochaines extensions annoncées, de la sortie la plus proche à la plus lointaine."
         entries={index.upcoming}
-        emptyText="Aucune extension annoncée pour le moment."
         featuredFirst
       />
       <ExtensionSection
@@ -155,7 +148,6 @@ async function ExtensionsContent() {
         title="Extensions récentes"
         description={`Les extensions sorties au cours des ${RECENT_EXTENSION_MONTHS} derniers mois, de la plus récente à la plus ancienne.`}
         entries={index.recent}
-        emptyText={`Aucune extension sortie au cours des ${RECENT_EXTENSION_MONTHS} derniers mois.`}
       />
       <ExtensionSection
         number={3}
@@ -164,7 +156,6 @@ async function ExtensionsContent() {
         title="Déjà sorties"
         description="Les extensions plus anciennes, de la plus récente à la plus ancienne."
         entries={index.released}
-        emptyText="Aucune extension plus ancienne à afficher."
       />
       <ExtensionsGuide />
     </CatalogShell>

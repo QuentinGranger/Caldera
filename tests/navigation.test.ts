@@ -18,11 +18,7 @@ const menu = (items: ReturnType<typeof headerItems>) =>
 test('menu principal : aucun lien vers une page absente quand le catalogue est vide', () => {
   // Production before opening, or the database unreachable.
   const empty = buildSiteNavigation({ games: [], categoryHubs: [] }, new Set());
-  assert.deepEqual(menu(headerItems(empty)), [
-    'Catalogue /catalogue',
-    'Collections /extensions',
-    'Univers /univers',
-  ]);
+  assert.deepEqual(menu(headerItems(empty)), ['Univers /univers']);
 });
 
 test('menu principal : jeux, familles et listes indexables seulement', () => {
@@ -50,6 +46,7 @@ test('menu principal : jeux, familles et listes indexables seulement', () => {
       ],
     },
     new Set(['nouveautes', 'en-stock'] as const),
+    { questions: true, news: false, extensions: true, calendar: true },
   );
   const items = headerItems(site);
   assert.deepEqual(menu(items), [

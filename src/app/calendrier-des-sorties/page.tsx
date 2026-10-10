@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
+import { redirect } from 'next/navigation';
+import { catalogFallback } from '@/components/landing/routes';
 import { ExploreSection } from '@/components/catalog/ExploreSection';
 import { PageHero, HeroStats } from '@/components/catalog/PageHero';
 import { VIEWS } from '@/components/catalog/pageCopy';
@@ -20,6 +22,8 @@ import styles from '@/components/catalog/Catalog.module.scss';
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
   const calendar = await getReleaseCalendar();
+  if (!calendar.upcoming.length && !calendar.recent.length)
+    redirect(await catalogFallback());
   return buildMetadata({
     title: calendar.text.title,
     description: calendar.text.description,
@@ -35,6 +39,8 @@ async function CalendarContent() {
     getReleaseCalendar(),
     getCalendarYears(),
   ]);
+  if (!calendar.upcoming.length && !calendar.recent.length)
+    redirect(await catalogFallback());
   const today = getToday();
   const entries = [...calendar.upcoming, ...calendar.recent];
   const thisMonth = entries.filter(

@@ -2,6 +2,7 @@
 // a set without active game) and /calendrier-des-sorties.
 import 'server-only';
 import { cache } from 'react';
+import { visibleSetInEnvironment } from '@/lib/catalog/publicReleases';
 import { presentFamilies } from '@/components/catalog/listingHub';
 import type { BreadcrumbItem } from '@/components/ui/Breadcrumb/Breadcrumb';
 import type { CatalogScope } from '@/lib/catalog/params';
@@ -78,12 +79,6 @@ const countStats = (productCount: number): ScopeStats => ({
 
 const setPagePath = (slug: string) =>
   `${EXTENSIONS_PATH}/${encodeURIComponent(slug)}`;
-
-const isDemoSet = (set: { slug: string; name: string }) =>
-  set.slug.startsWith('dev-') || set.name.trimStart().startsWith('[Démo]');
-
-const visibleSetInEnvironment = (set: { slug: string; name: string }) =>
-  process.env.NODE_ENV !== 'production' || !isDemoSet(set);
 
 /** Canonical page of a set living under an active game, if any. */
 function siloPath(
@@ -450,29 +445,31 @@ const getDatedSets = cache(async () => {
         new Map(breakdown.sets.map((set) => [set.id, set.count]));
       const [total, inStock, preorder] = [all, stock, preorders].map(counts);
       const gameRef = toGameRef(game);
-      return sets.flatMap((set): CalendarEntry[] => {
-        const releaseDate = set.releaseDate;
-        if (!releaseDate) return [];
-        const path = landingPath({ game: gameRef, set: toSetRef(set) });
-        return [
-          {
-            id: set.id,
-            name: set.name,
-            series: set.series,
-            code: set.code,
-            releaseDate,
-            logoUrl: set.logoUrl,
-            symbolUrl: set.symbolUrl,
-            gameName: game.name,
-            gameSlug: game.slug,
-            count: total?.get(set.id) ?? 0,
-            inStockCount: inStock?.get(set.id) ?? 0,
-            preorderCount: preorder?.get(set.id) ?? 0,
-            href: indexed.has(path) ? path : undefined,
-            upcoming: isUpcoming(releaseDate, today),
-          },
-        ];
-      });
+      return sets
+        .filter(visibleSetInEnvironment)
+        .flatMap((set): CalendarEntry[] => {
+          const releaseDate = set.releaseDate;
+          if (!releaseDate) return [];
+          const path = landingPath({ game: gameRef, set: toSetRef(set) });
+          return [
+            {
+              id: set.id,
+              name: set.name,
+              series: set.series,
+              code: set.code,
+              releaseDate,
+              logoUrl: set.logoUrl,
+              symbolUrl: set.symbolUrl,
+              gameName: game.name,
+              gameSlug: game.slug,
+              count: total?.get(set.id) ?? 0,
+              inStockCount: inStock?.get(set.id) ?? 0,
+              preorderCount: preorder?.get(set.id) ?? 0,
+              href: indexed.has(path) ? path : undefined,
+              upcoming: isUpcoming(releaseDate, today),
+            },
+          ];
+        });
     }),
   );
   return { games, entries: perGame.flat() };

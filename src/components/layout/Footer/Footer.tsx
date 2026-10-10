@@ -25,7 +25,7 @@ export async function Footer() {
     {
       title: 'Boutique',
       links: [
-        navigation.catalogue,
+        ...(navigation.catalogueAvailable ? [navigation.catalogue] : []),
         ...navigation.games.map(({ href, label }) => ({ href, label })),
         ...navigation.productTypes,
         ...navigation.listings,
@@ -36,8 +36,8 @@ export async function Footer() {
       links: [
         navigation.universe,
         { label: 'Les territoires', href: '/univers/territoires' },
-        navigation.extensions,
-        navigation.calendar,
+        ...(navigation.extensions ? [navigation.extensions] : []),
+        ...(navigation.calendar ? [navigation.calendar] : []),
         navigation.guides,
         ...(navigation.news ? [navigation.news] : []),
       ],
@@ -101,18 +101,20 @@ export async function Footer() {
           </div>
         </div>
         <nav className={styles.nav} aria-label="Plan du site">
-          {groups.map((group) => (
-            <div key={group.title}>
-              <h2>{group.title}</h2>
-              <ul>
-                {group.links.map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href}>{link.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {groups
+            .filter((group) => group.links.length)
+            .map((group) => (
+              <div key={group.title}>
+                <h2>{group.title}</h2>
+                <ul>
+                  {group.links.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href}>{link.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
         </nav>
         <div className={styles.bottom}>
           <p>

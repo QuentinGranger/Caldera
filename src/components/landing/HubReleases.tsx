@@ -24,7 +24,6 @@ export function HubReleases({ view }: { view: LandingView }) {
     next ? SHOWN - 1 : SHOWN,
   );
   if (!next && !recent.length) return null;
-  const game = view.game;
   return (
     <section className={landing.section} aria-labelledby="extensions">
       <SectionTitle
@@ -52,7 +51,7 @@ export function HubReleases({ view }: { view: LandingView }) {
         ))}
       </ul>
       <p className={landing.moreLink}>
-        <Link href={`${EXTENSIONS_PATH}#${game.slug}`}>
+        <Link href={EXTENSIONS_PATH}>
           Voir toutes les extensions <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </p>
