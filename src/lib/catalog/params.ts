@@ -8,6 +8,7 @@ export const sortLabels = {
   newest: 'Nouveautés',
   'price-asc': 'Prix croissant',
   'price-desc': 'Prix décroissant',
+  popular: 'Popularité',
   'name-asc': 'Nom A–Z',
 } as const;
 export const typeLabels: Record<ProductType, string> = {
@@ -36,6 +37,7 @@ export const languageLabels: Record<ProductLanguage, string> = {
 export const stockLabels = {
   'in-stock': 'En stock',
   'low-stock': 'Dernières pièces',
+  'out-of-stock': 'Épuisé',
   preorder: 'Précommande',
 } as const;
 export type CatalogSort = keyof typeof sortLabels;

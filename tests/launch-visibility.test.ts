@@ -10,6 +10,7 @@ import type { CatalogFacets } from '../src/lib/catalog/facets';
 
 const examples: CatalogFacets = {
   total: 3,
+  hasSales: false,
   categories: [{ slug: 'scelles', name: 'Produits scellés', count: 3 }],
   types: ['BOOSTER', 'COLLECTION_BOX', 'ETB'],
   languages: ['FR'],
@@ -46,13 +47,13 @@ test('exemples : seuls les types distincts permettent d’affiner, sans prix ni 
   );
 });
 
-test('une seule langue reste utile si elle ne couvre qu’une partie des produits', () => {
+test('les langues ne sont proposées que pour retirer un ancien filtre', () => {
   const facets = {
     ...examples,
     counts: { ...examples.counts, languages: { FR: 2 } },
   };
   assert.ok(
-    catalogFilterSections(facets, parseCatalogParams({}), {}).some(
+    !catalogFilterSections(facets, parseCatalogParams({}), {}).some(
       (s) => s.key === 'language',
     ),
   );
@@ -122,7 +123,6 @@ test('tris : aucun tri par prix sur les exemples, aucun menu pour un seul produi
   assert.deepEqual(catalogSortOptions(examples, 'recommended'), [
     'recommended',
     'newest',
-    'name-asc',
   ]);
   assert.deepEqual(
     catalogSortOptions({ ...examples, total: 1 }, 'recommended'),
@@ -133,4 +133,38 @@ test('tris : aucun tri par prix sur les exemples, aucun menu pour un seul produi
     'recommended',
     'price-asc',
   ]);
+});
+
+test('tris : popularité uniquement avec des ventes, ancien tri toujours retirable', () => {
+  assert.ok(!catalogSortOptions(examples, 'recommended').includes('popular'));
+  assert.ok(
+    catalogSortOptions({ ...examples, hasSales: true }, 'recommended').includes(
+      'popular',
+    ),
+  );
+  assert.ok(catalogSortOptions(examples, 'popular').includes('popular'));
+  assert.ok(catalogSortOptions(examples, 'name-asc').includes('name-asc'));
+});
+
+test('lancement : quatre filtres utiles, extensions avant types et stock', () => {
+  const facets: CatalogFacets = {
+    ...examples,
+    sets: [{ slug: 'extension', name: 'Extension', count: 1 }],
+    availability: [{ value: 'out-of-stock', count: 1 }],
+    priceRange: { min: '5', max: '50' },
+  };
+  assert.deepEqual(
+    catalogFilterSections(facets, parseCatalogParams({}), {}).map((s) => s.key),
+    ['set', 'type', 'availability'],
+  );
+  assert.ok(hasPriceFilter(facets, {}));
+  const old = catalogFilterSections(
+    facets,
+    parseCatalogParams({ category: 'scelles', language: 'FR' }),
+    {},
+  );
+  assert.deepEqual(
+    old.find((s) => s.key === 'language')?.options.map((o) => o.value),
+    ['FR'],
+  );
 });

@@ -13,7 +13,15 @@ La visibilité publique suit les données administrées. Aucun produit, catégor
 
 ## Filtres
 
+Le tiroir propose seulement **extension, type de produit, disponibilité et prix**, lorsque ces critères permettent réellement d’affiner. Les catégories et langues des anciens liens restent actives et retirables, sans être proposées comme choix supplémentaires. La navigation rapide reprend les types de produits (ou les extensions sur leurs pages), limitée à six choix pertinents plus les sélections actives.
+
 Les comptes sont calculés dans le périmètre non filtré de la page. Les choix à zéro et ceux couvrant tout le périmètre sont masqués. Un choix déjà actif reste retirable, même s’il est devenu vide. Les prix sont proposés seulement lorsque leur intervalle permet d’affiner, ou lorsqu’une borne est active.
+
+## Tris et badges du catalogue
+
+Nouveautés et prix croissant/décroissant sont disponibles dès que les données permettent un tri utile. « Popularité » apparaît lorsqu’au moins un produit réel du périmètre a été vendu : classement par quantités cumulées des commandes au statut `PAID`, sans compter les commandes en attente/annulées ni les exemples. Il s’agit de ventes brutes, sans déduction des remboursements. Les égalités sont stables ; les produits sans ventes suivent par date de publication. Agrégation et pagination sont effectuées en PostgreSQL. Un ancien lien avec un tri conserve sa sélection.
+
+Les cartes de produits réellement commercialisés affichent un badge de disponibilité : **En stock**, **Dernières pièces** ou **Épuisé**. Le seuil de dernières pièces reste celui administré par variante et le stock réservé est déduit. « Épuisé » exclut les produits ayant encore une variante correspondant aux critères en stock. Les exemples ne portent aucun badge de stock.
 
 ## Mode de démonstration
 

@@ -189,7 +189,23 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.match(description, /\d+ produits de [\d,]+\s€ à [\d,]+\s€/);
   for (const href of ['/nouveautes', '/precommandes', '/en-stock', '/pokemon'])
     assert.ok(catalogue.includes(`href="${href}"`), href);
-  assert.ok(strip(catalogue).includes('Produits scellés (14)'));
+  // Launch filters expose product types, not a redundant category tree.
+  assert.match(catalogue, /<summary>Type de produit/);
+  assert.match(catalogue, /<summary>Extension/);
+  assert.match(catalogue, /<summary>Disponibilité/);
+  assert.match(catalogue, /<legend[^>]*>Prix en euros<\/legend>/);
+  assert.doesNotMatch(catalogue, /<summary>(?:Catégorie|Langue)/);
+  assert.match(catalogue, /aria-label="Types de produits"/);
+  const quick =
+    /<nav[^>]*aria-label="Types de produits"[^>]*>([\s\S]*?)<\/nav>/.exec(
+      catalogue,
+    )?.[1] ?? '';
+  assert.ok((quick.match(/<a\b/g) ?? []).length <= 7);
+  assert.ok(
+    articles(catalogue).every((a) =>
+      /En stock|Dernières pièces|Épuisé|Précommande/.test(strip(a)),
+    ),
+  );
 
   const preorders = (await page('/precommandes')).html;
   // Every preorder is a Pokémon one: the game's page defers to the listing.
@@ -203,7 +219,7 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.ok(articles(preorders).some((a) => a.includes('Précommande')));
   assert.ok(
     articles(preorders).every(
-      (a) => a.includes('Précommande') || a.includes('Rupture'),
+      (a) => a.includes('Précommande') || a.includes('Épuisé'),
     ),
   );
   // The stock filter cannot narrow a preorder listing: it is not offered.
@@ -216,7 +232,7 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   assert.ok(articles(stock).length > 0);
   assert.ok(
     articles(stock).every(
-      (a) => !a.includes('Précommande') && !a.includes('Rupture'),
+      (a) => !a.includes('Précommande') && !a.includes('Épuisé'),
     ),
   );
 

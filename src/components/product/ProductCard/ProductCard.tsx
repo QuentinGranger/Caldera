@@ -3,6 +3,7 @@ import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { SharedProductImage } from '@/components/transitions/SharedProductImage';
 import { ProductCardQuickAdd } from './ProductCardQuickAdd';
 import { ProductFavorite } from './ProductFavorite';
+import { getProductBadge } from '@/lib/catalog/getAvailability';
 import { languageLabels } from '@/lib/catalog/params';
 import type { CatalogProduct } from '@/types/product';
 import { formatPrice } from '@/utils/formatPrice';
@@ -50,12 +51,13 @@ export function ProductCard({
 }) {
   const edition = layout === 'edition';
   const salesEnabled = process.env.CATALOG_DEMO_MODE !== '1';
-  const inStock =
-    salesEnabled &&
-    !product.isDemonstration &&
-    product.availability === 'IN_STOCK';
-  const stock =
-    buy && salesEnabled && !product.isDemonstration ? stockLine(product) : null;
+  const badge =
+    salesEnabled && !product.isDemonstration
+      ? product.availability === 'IN_STOCK'
+        ? 'in-stock'
+        : getProductBadge(product.availability, false)
+      : undefined;
+  const lowStock = buy && badge === 'limited' && product.lowStockLeft;
   return (
     <article
       className={`${styles.card} ${compact ? styles.compact : ''} ${tone === 'night' ? styles.night : ''} ${layout === 'spotlight' ? styles.spotlight : ''} ${buy ? styles.buying : ''}`}
@@ -66,9 +68,7 @@ export function ProductCard({
         data-depth-stage={depth ? 'product' : undefined}
       >
         <div className={styles.badge}>
-          {salesEnabled && product.badge && (
-            <ProductBadge kind={product.badge} />
-          )}
+          {badge && <ProductBadge kind={badge} />}
         </div>
         <ProductFavorite
           className={styles.favorite}
@@ -97,7 +97,7 @@ export function ProductCard({
         <h3>
           <Link href={`/produit/${product.slug}`}>{product.name}</Link>
         </h3>
-        {/* Pre-order, sold out and last pieces already show as a badge. */}
+        {/* Availability is stated once, on the image badge. */}
         {edition && product.languages.length > 0 ? (
           <p className={styles.facts}>
             <span className={styles.languages}>
@@ -112,15 +112,12 @@ export function ProductCard({
                 </span>
               ))}
             </span>
-            {inStock && <span className={styles.availability}>En stock</span>}
           </p>
-        ) : stock ? (
-          <p className={styles.availability} data-stock={stock.tone}>
-            {stock.text}
+        ) : lowStock ? (
+          <p className={styles.availability} data-stock="low">
+            Plus que {lowStock} en stock
           </p>
-        ) : (
-          inStock && <p className={styles.availability}>En stock</p>
-        )}
+        ) : null}
         <div className={styles.bottom}>
           {/* The amount always ends the block: amounts align along a row. */}
           <div className={styles.price}>
@@ -166,26 +163,4 @@ export function ProductCard({
       </div>
     </article>
   );
-}
-
-/** What the shelves say of the stock: the same words as the product page. */
-function stockLine(product: CatalogProduct): {
-  text: string;
-  tone: 'available' | 'low' | 'preorder' | 'none';
-} {
-  switch (product.availability) {
-    case 'LOW_STOCK':
-      return {
-        text: product.lowStockLeft
-          ? `Plus que ${product.lowStockLeft} en stock`
-          : 'Dernières pièces',
-        tone: 'low',
-      };
-    case 'PREORDER':
-      return { text: 'Précommande ouverte', tone: 'preorder' };
-    case 'OUT_OF_STOCK':
-      return { text: 'Rupture de stock', tone: 'none' };
-    default:
-      return { text: 'En stock', tone: 'available' };
-  }
 }

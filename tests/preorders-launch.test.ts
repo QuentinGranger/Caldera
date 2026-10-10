@@ -37,6 +37,7 @@ test('anciens liens : retirer la précommande sans perdre les autres filtres', (
   const sections = catalogFilterSections(
     {
       total: 3,
+      hasSales: false,
       categories: [],
       types: [],
       languages: [],

@@ -1,5 +1,6 @@
 import type { ProductLanguage } from '@/generated/prisma/client';
-export type ProductBadgeKind = 'new' | 'preorder' | 'sold-out' | 'limited';
+export type ProductBadgeKind =
+  'new' | 'in-stock' | 'preorder' | 'sold-out' | 'limited';
 export type Availability =
   'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'PREORDER';
 /**
