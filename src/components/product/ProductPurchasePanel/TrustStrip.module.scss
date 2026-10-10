@@ -1,0 +1,44 @@
+@use '../../../styles/abstracts/variables' as v;
+.trust {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.1rem 0 0.25rem;
+  padding: 0.95rem 0;
+  border-block: 1px solid v.$color-border;
+  list-style: none;
+  // Three badges side by side, the icon above its words.
+  li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    text-align: center;
+  }
+  svg {
+    flex-shrink: 0;
+    color: v.$color-green-secondary;
+  }
+  span {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+  strong {
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+  small {
+    color: v.$color-text-muted;
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+  a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: v.$color-green;
+  }
+}

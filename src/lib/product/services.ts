@@ -2,6 +2,7 @@
 // ShippingMethod rows and CGV values as the Offer markup (src/lib/seo/jsonld.ts).
 import type { ShippingFact } from '@/lib/seo/shipping';
 import { HANDLING_TIME, RETURN_POLICY } from '@/lib/seo/policies';
+import type { ProductType } from '@/generated/prisma/client';
 import { formatPrice } from '@/utils/formatPrice';
 
 /** Serializable view of a shipping method, for the client purchase panel. */
@@ -46,6 +47,14 @@ export function shippingOptionViews(
   });
 }
 
+/** CGV art. 10.1: delivery in metropolitan France only. */
+export const DELIVERY_ZONE_LABEL = 'France métropolitaine';
+/** CGV art. 10.3, as a headline under the buy button. */
+export const HANDLING_HEADLINE = `Expédition sous ${businessDays(
+  HANDLING_TIME.minDays,
+  HANDLING_TIME.maxDays,
+)}`;
+
 /** CGV art. 10.3. */
 /** A preorder leaves with the whole order once the product is released. */
 export const PREORDER_HANDLING_LABEL =
@@ -58,3 +67,26 @@ export const HANDLING_LABEL = `Commande préparée et expédiée sous ${business
 /** CGV art. 12. */
 export const RETURN_LABEL = `Droit de rétractation de ${RETURN_POLICY.days} jours à compter de la réception ; les frais de retour sont à votre charge.`;
 export const RETURN_POLICY_PATH = RETURN_POLICY.path;
+
+/** « 14 jours pour changer d’avis »: the right of withdrawal, never a promise of free returns. */
+export const WITHDRAWAL_HEADLINE = `${RETURN_POLICY.days} jours`;
+export const WITHDRAWAL_TEXT = 'pour changer d’avis';
+
+/**
+ * Sealed goods (CGV art. 3: « produits Pokémon JCC scellés »): the types sold
+ * in their original packaging. Every variant is « Neuf »; only these are
+ * also said to be sealed. Accessories, single cards and the rest are not.
+ */
+const SEALED_TYPES: readonly ProductType[] = [
+  'BOOSTER',
+  'BLISTER',
+  'TRIPACK',
+  'BUNDLE',
+  'DISPLAY',
+  'ETB',
+  'COLLECTION_BOX',
+  'TIN',
+  'DECK',
+];
+export const isSealedProduct = (type: ProductType) =>
+  SEALED_TYPES.includes(type);

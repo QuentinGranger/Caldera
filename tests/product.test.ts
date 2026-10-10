@@ -27,11 +27,22 @@ import {
   productStructuredData,
 } from '../src/lib/product/seo';
 import {
+  DELIVERY_ZONE_LABEL,
+  HANDLING_HEADLINE,
   HANDLING_LABEL,
+  PREORDER_HANDLING_LABEL,
   RETURN_LABEL,
+  WITHDRAWAL_HEADLINE,
   businessDays,
+  isSealedProduct,
   shippingOptionViews,
 } from '../src/lib/product/services';
+import { stockLabel } from '../src/lib/product/stock';
+import {
+  DELIVERY_ZONE,
+  handlingLabel,
+} from '../src/components/editorial/delivery';
+import { RETURN_POLICY } from '../src/lib/seo/policies';
 import { breadcrumbTrail } from '../src/lib/seo/jsonld';
 import { absoluteUrl, siteOrigin } from '../src/lib/site';
 import type { ProductDetail } from '../src/lib/catalog/queries';
@@ -519,4 +530,47 @@ test('livraison et retours affichés : mêmes faits que les offres', () => {
   assert.equal(unknownTransit?.details.length, 1);
   assert.match(HANDLING_LABEL, /1 à 2 jours ouvrés/);
   assert.match(RETURN_LABEL, /14 jours/);
+});
+
+test('fiche produit : les engagements affichés reposent sur les CGV et le code, pas sur un texte libre', () => {
+  // Under the buy button: the delay of the CGV (art. 10.3), the zone (art.
+  // 10.1) and the 14 days (art. 12) are the ones the footer and the structured
+  // data already publish.
+  assert.equal(HANDLING_HEADLINE, `Expédition sous ${handlingLabel()}`);
+  assert.equal(HANDLING_HEADLINE, 'Expédition sous 1 à 2 jours ouvrés');
+  assert.equal(DELIVERY_ZONE_LABEL, DELIVERY_ZONE);
+  assert.equal(WITHDRAWAL_HEADLINE, `${RETURN_POLICY.days} jours`);
+  assert.match(PREORDER_HANDLING_LABEL, /date de sortie/);
+  // « Neuf et scellé » only for the sealed types of the CGV (art. 3).
+  for (const type of [
+    'BOOSTER',
+    'DISPLAY',
+    'ETB',
+    'COLLECTION_BOX',
+    'TIN',
+    'BUNDLE',
+  ] as const)
+    assert.equal(isSealedProduct(type), true, type);
+  for (const type of ['ACCESSORY', 'SINGLE_CARD', 'OTHER'] as const)
+    assert.equal(isSealedProduct(type), false, type);
+});
+
+test('fiche produit : le stock dit les mêmes mots que la carte et la fiche, avec le bon ton', () => {
+  const base = variant('SKU-STOCK');
+  assert.deepEqual(stockLabel({ ...base, availability: 'IN_STOCK' }), {
+    text: 'En stock',
+    tone: 'available',
+  });
+  assert.deepEqual(
+    stockLabel({ ...base, availability: 'LOW_STOCK', lowStockQuantity: 2 }),
+    { text: 'Plus que 2 en stock', tone: 'low' },
+  );
+  assert.deepEqual(stockLabel({ ...base, availability: 'PREORDER' }), {
+    text: 'Précommande',
+    tone: 'preorder',
+  });
+  assert.deepEqual(stockLabel({ ...base, availability: 'OUT_OF_STOCK' }), {
+    text: 'Rupture de stock',
+    tone: 'none',
+  });
 });

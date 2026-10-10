@@ -55,7 +55,7 @@
     font-weight: 500;
     line-height: 1.03;
     letter-spacing: -0.025em;
-    margin: 0.8rem 0 1.2rem;
+    margin: 0.8rem 0 1rem;
     overflow-wrap: anywhere;
   }
 }
@@ -80,8 +80,8 @@
   max-width: 42ch;
 }
 .purchasePanel {
-  margin-top: 1.5rem;
-  padding: clamp(1.25rem, 2.5vw, 2rem);
+  margin-top: 1.25rem;
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
   border: 1px solid #e8c26140;
   border-radius: 1.25rem;
   color: v.$color-text;

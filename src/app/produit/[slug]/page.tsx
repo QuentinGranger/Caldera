@@ -23,6 +23,7 @@ import {
   productPageMetadata,
 } from '@/lib/product/page';
 import { productTypeLabels } from '@/lib/product/purchase';
+import { isSealedProduct } from '@/lib/product/services';
 import { productPath } from '@/lib/product/seo';
 import styles from './product.module.scss';
 type Props = { params: Promise<{ slug: string }> };
@@ -97,13 +98,6 @@ async function ProductContent({
                     Extension : {product.tcgSet.name}
                   </p>
                 ))}
-              {product.shortDescription && (
-                <p className={styles.summary}>{product.shortDescription}</p>
-              )}
-              <ProductWishlistButton
-                productId={product.id}
-                productName={product.name}
-              />
               <div className={styles.purchasePanel}>
                 {product.isDemonstration ? (
                   <div className={styles.notice}>
@@ -123,6 +117,7 @@ async function ProductContent({
                     preorder={product.preorder}
                     releaseDate={product.releaseDate}
                     typeLabel={productTypeLabels[product.productType]}
+                    sealed={isSealedProduct(product.productType)}
                     shipping={page.shipping}
                     accountEmail={alertEmail}
                   />
@@ -149,6 +144,13 @@ async function ProductContent({
                     </div>
                   )}
               </div>
+              {product.shortDescription && (
+                <p className={styles.summary}>{product.shortDescription}</p>
+              )}
+              <ProductWishlistButton
+                productId={product.id}
+                productName={product.name}
+              />
             </ArrivalLayers>
           </div>
         </div>

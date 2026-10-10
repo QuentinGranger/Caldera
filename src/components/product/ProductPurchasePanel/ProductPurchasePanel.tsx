@@ -1,19 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { MAX_CART_ITEM_QUANTITY } from '@/lib/cart/constants';
 import { useSearchParams } from 'next/navigation';
 import { Package, RotateCcw, Truck } from 'lucide-react';
-import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { ProductVariantSelector } from '@/components/product/ProductVariantSelector/ProductVariantSelector';
 import { QuantitySelector } from '@/components/product/QuantitySelector/QuantitySelector';
 import { AddToCartButton } from '@/components/product/AddToCartButton/AddToCartButton';
 import { StockAlertForm } from '@/components/product/StockAlertForm/StockAlertForm';
 import { languageLabels } from '@/lib/catalog/params';
-import {
-  getProductBadge,
-  availabilityLabels,
-} from '@/lib/catalog/getAvailability';
 import {
   selectProductVariant,
   canPreparePurchase,
@@ -21,7 +16,8 @@ import {
   type ProductVariantView,
 } from '@/lib/product/purchase';
 import {
-  HANDLING_LABEL,
+  DELIVERY_ZONE_LABEL,
+  HANDLING_HEADLINE,
   PREORDER_HANDLING_LABEL,
   RETURN_LABEL,
   RETURN_POLICY_PATH,
@@ -29,7 +25,13 @@ import {
 } from '@/lib/product/services';
 import { formatPrice } from '@/utils/formatPrice';
 import { formatProductDate, formatProductWeight } from '@/utils/formatProduct';
+import { StickyBuyBar } from './StickyBuyBar';
+import { stockLabel } from '@/lib/product/stock';
+import { StockStatus } from './StockStatus';
+import { TrustStrip } from './TrustStrip';
 import styles from './ProductPurchasePanel.module.scss';
+/** The page of the delivery terms (src/components/editorial/delivery.ts). */
+const DELIVERY_PATH = '/livraison';
 type Props = {
   productId: string;
   variants: ProductVariantView[];
@@ -38,6 +40,8 @@ type Props = {
   preorder: boolean;
   releaseDate: string | null;
   typeLabel: string;
+  /** A sealed type (src/lib/product/services.ts): « neuf et scellé ». */
+  sealed: boolean;
   /** Shipping methods offered at checkout (ShippingMethod). */
   shipping: ShippingOptionView[];
   /** Signed-in customer's e-mail, for back-in-stock alerts. */
@@ -45,28 +49,19 @@ type Props = {
 };
 function SelectedVariant({
   variant,
-  newArrival,
   preorder: preorderProduct,
   releaseDate,
   typeLabel,
+  sealed,
   shipping,
   accountEmail,
-}: Omit<Props, 'variants'> & { variant: ProductVariantView }) {
+}: Omit<Props, 'variants' | 'newArrival'> & { variant: ProductVariantView }) {
   const [quantity, setQuantity] = useState(1);
-  const badge = getProductBadge(variant.availability, newArrival);
+  const buy = useRef<HTMLDivElement>(null);
   const preorder = variant.availability === 'PREORDER',
     soldOut = variant.availability === 'OUT_OF_STOCK';
-  const label = soldOut
-    ? 'Rupture de stock'
-    : variant.lowStockQuantity !== null
-      ? `Plus que ${variant.lowStockQuantity} en stock`
-      : availabilityLabels[variant.availability];
   return (
     <div>
-      <div className={styles.stock} role="status">
-        {badge && <ProductBadge kind={badge} />}
-        <span className={soldOut ? styles.unavailable : ''}>{label}</span>
-      </div>
       {preorderProduct && releaseDate && (
         <p className={styles.release}>
           Sortie prévue le {formatProductDate(releaseDate)}
@@ -80,7 +75,7 @@ function SelectedVariant({
       <p className={styles.sku}>
         SKU : <span>{variant.sku}</span> · {languageLabels[variant.language]}
       </p>
-      <div className={styles.purchase}>
+      <div className={styles.purchase} ref={buy}>
         <QuantitySelector
           quantity={quantity}
           max={Math.min(variant.maxQuantity, MAX_CART_ITEM_QUANTITY)}
@@ -95,6 +90,16 @@ function SelectedVariant({
           unavailable={soldOut}
         />
       </div>
+      {!soldOut && canPreparePurchase(variant, quantity) && (
+        <StickyBuyBar
+          target={buy}
+          variantId={variant.id}
+          quantity={quantity}
+          price={formatPrice(variant.price)}
+          stock={stockLabel(variant).text}
+          preorder={preorder}
+        />
+      )}
       {soldOut && (
         <StockAlertForm
           variantId={variant.id}
@@ -102,12 +107,16 @@ function SelectedVariant({
           accountEmail={accountEmail}
         />
       )}
-      <div className={styles.service}>
+      <TrustStrip sealed={sealed} secureOrders={shipping.length > 0} />
+      <div className={`${styles.service} ${styles.delivery}`}>
         <Truck size={20} aria-hidden="true" />
         <div>
-          <strong>Livraison</strong>
           {shipping.length ? (
             <>
+              {/* CGV art. 10.3, right under the button. */}
+              <strong>
+                {preorderProduct ? PREORDER_HANDLING_LABEL : HANDLING_HEADLINE}
+              </strong>
               <ul className={styles.shipping}>
                 {shipping.map((option) => (
                   <li key={option.code}>
@@ -119,14 +128,18 @@ function SelectedVariant({
                 ))}
               </ul>
               <p>
-                {preorderProduct ? PREORDER_HANDLING_LABEL : HANDLING_LABEL}
+                Après confirmation du paiement · {DELIVERY_ZONE_LABEL} ·{' '}
+                <Link href={DELIVERY_PATH}>Détails de la livraison</Link>
               </p>
             </>
           ) : (
-            <p>
-              Les modalités, frais et délais seront précisés à l’ouverture des
-              commandes.
-            </p>
+            <>
+              <strong>Livraison</strong>
+              <p>
+                Les modalités, frais et délais seront précisés à l’ouverture des
+                commandes.
+              </p>
+            </>
           )}
         </div>
       </div>
@@ -219,6 +232,7 @@ export function ProductPurchasePanel(props: Props) {
           </del>
         )}
       </div>
+      <StockStatus variant={selected} newArrival={props.newArrival} />
       <ProductVariantSelector
         variants={props.variants}
         selected={selected.sku}

@@ -1,0 +1,84 @@
+@use '../../../styles/abstracts/variables' as v;
+// Below the header (z-index 10) and the cart drawer, above the page.
+.bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem clamp(1rem, 4vw, 2rem)
+    calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgb(232 194 97 / 35%);
+  background: #f4f0e4;
+  box-shadow: 0 -12px 32px rgb(0 0 0 / 28%);
+  color: v.$color-text;
+  transform: translateY(110%);
+  visibility: hidden;
+  &[data-visible] {
+    transform: none;
+    visibility: visible;
+  }
+  // 64rem and above: the panel stays beside the gallery.
+  @media (min-width: 64rem) {
+    display: none;
+  }
+  button {
+    display: inline-flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    max-width: 18rem;
+    min-height: 3rem;
+    padding: 0.7rem 1.25rem;
+    border: 1px solid v.$color-green-dark;
+    border-radius: v.$radius-card;
+    background: v.$color-green-dark;
+    color: v.$color-text-on-dark;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    &:hover:enabled,
+    &:focus-visible {
+      background: v.$color-green;
+    }
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+  :focus-visible {
+    outline: 2px solid v.$color-green;
+    outline-offset: 2px;
+  }
+}
+.summary {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  strong {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  span {
+    color: v.$color-text-muted;
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar {
+    transition:
+      transform v.$duration-medium v.$ease-out,
+      visibility 0s linear v.$duration-medium;
+    &[data-visible] {
+      transition:
+        transform v.$duration-medium v.$ease-out,
+        visibility 0s;
+    }
+  }
+}
