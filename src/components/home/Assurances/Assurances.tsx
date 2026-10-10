@@ -6,6 +6,7 @@ import {
   handlingLabel,
 } from '@/components/editorial/delivery';
 import { ORGANIZATION, RETURN_POLICY } from '@/lib/seo/policies';
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './Assurances.module.scss';
 
 /**
@@ -21,7 +22,7 @@ export function Assurances() {
           title: 'Découvrir les produits',
           text: 'Parcourez les produits d’exemple pour découvrir Caldera. Aucun achat n’est encore possible.',
           href: '/catalogue',
-          link: 'Explorer le catalogue',
+          link: ALL_PRODUCTS_LABEL,
         },
         {
           title: 'Garder vos favoris',
