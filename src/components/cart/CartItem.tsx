@@ -5,6 +5,7 @@ import { Trash2 } from 'lucide-react';
 import { QuantitySelector } from '@/components/product/QuantitySelector/QuantitySelector';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { languageLabels } from '@/lib/catalog/params';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import { removeCartItemAction, updateCartItemAction } from '@/lib/cart/actions';
 import type { CartItemView } from '@/lib/cart/types';
 import { formatPrice } from '@/utils/formatPrice';
@@ -22,7 +23,7 @@ export function CartItem({
     item.issue === 'UNAVAILABLE'
       ? 'Ce produit n’est plus disponible.'
       : item.issue === 'OUT_OF_STOCK'
-        ? item.preorder
+        ? item.preorder && preordersEnabled()
           ? 'Quota de précommande épuisé.'
           : 'Rupture de stock.'
         : item.issue === 'INSUFFICIENT_STOCK'
@@ -49,7 +50,9 @@ export function CartItem({
         <p className={styles.language}>
           Langue : {languageLabels[item.language]}
         </p>
-        {item.preorder && <ProductBadge kind="preorder" />}
+        {item.preorder && preordersEnabled() && (
+          <ProductBadge kind="preorder" />
+        )}
         <p className={styles.unit}>{formatPrice(item.price)} / unité</p>
         {issue && <p className={styles.issue}>{issue}</p>}
         {item.issue === 'INSUFFICIENT_STOCK' && (

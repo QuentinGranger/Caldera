@@ -1,4 +1,5 @@
 import type { CatalogFacets } from './facets';
+import { preordersEnabled } from './preorders';
 import {
   languageLabels,
   typeLabels,
@@ -26,11 +27,13 @@ export function catalogFilterSections(
     {
       key: 'availability',
       label: 'Disponibilité',
-      options: facets.availability.map(({ value, count }) => ({
-        value,
-        label: stockLabels[value],
-        count,
-      })),
+      options: facets.availability
+        .filter(({ value }) => value !== 'preorder' || preordersEnabled())
+        .map(({ value, count }) => ({
+          value,
+          label: stockLabels[value],
+          count,
+        })),
     },
     {
       key: 'category',
@@ -90,6 +93,12 @@ export function catalogFilterSections(
           (option.count > 0 && option.count < facets.total),
       );
       for (const value of filters[section.key]) {
+        if (
+          section.key === 'availability' &&
+          value === 'preorder' &&
+          !preordersEnabled()
+        )
+          continue;
         if (!options.some((option) => option.value === value))
           options.push({
             value,

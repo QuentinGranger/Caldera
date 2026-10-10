@@ -1,4 +1,5 @@
 import { ProductType } from '@/generated/prisma/client';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import { saveProductAction } from '@/lib/admin/actions';
 import { dateInput, label } from '@/lib/admin/format';
 import type { getAdminOptions, getAdminProduct } from '@/lib/admin/queries';
@@ -104,12 +105,23 @@ export function ProductInformationForm({
           label="Nouveauté"
           checked={product?.newArrival}
         />
-        <Check
-          name="preorder"
-          label="Précommande"
-          checked={product?.preorder}
-        />
+        {preordersEnabled() ? (
+          <Check
+            name="preorder"
+            label="Précommande"
+            checked={product?.preorder}
+          />
+        ) : product?.preorder ? (
+          <Hidden name="preorder" value="on" />
+        ) : null}
       </div>
+      {!preordersEnabled() && (
+        <small>
+          Les précommandes sont désactivées au lancement. Les produits déjà
+          marqués en précommande restent masqués sur le site et ne peuvent pas
+          être achetés.
+        </small>
+      )}
       <small>
         La visibilité dépend du statut de publication. La date éditoriale ne
         programme pas une mise en ligne.

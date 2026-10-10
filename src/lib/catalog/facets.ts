@@ -5,6 +5,7 @@ import { aggregateOverTree, categoryDescendants } from '@/lib/seo/registry';
 import { getCategories, getExtensions } from './taxonomy';
 import { buildCatalogWhere } from './getCatalogProducts';
 import { parseCatalogParams, type CatalogScope } from './params';
+import { preordersEnabled } from './preorders';
 
 /**
  * Filter options of a listing, with real product counts for its scope. Only
@@ -36,8 +37,9 @@ export async function getCatalogFacets(scope: CatalogScope) {
       demonstration
         ? []
         : Promise.all(
-            (['in-stock', 'low-stock', 'preorder'] as const).map(
-              async (value) => {
+            (['in-stock', 'low-stock', 'preorder'] as const)
+              .filter((value) => value !== 'preorder' || preordersEnabled())
+              .map(async (value) => {
                 const filtered = buildCatalogWhere(
                   parseCatalogParams({ availability: value }),
                   scope,
@@ -47,8 +49,7 @@ export async function getCatalogFacets(scope: CatalogScope) {
                   value,
                   await db.product.count({ where: filtered.where }),
                 ] as const;
-              },
-            ),
+              }),
           ),
       demonstration
         ? null

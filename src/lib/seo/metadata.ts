@@ -1,6 +1,7 @@
 // Metadata builders (docs/seo-architecture.md §5). Every sentence is made of
 // facts passed in; nothing is claimed when the matching data is missing.
 import type { Metadata } from 'next';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import { absoluteUrl } from '@/lib/site';
 import type { Availability } from '@/types/product';
 import {
@@ -324,7 +325,8 @@ function statsSentences(
     : `${subject} : aucun produit disponible pour le moment.`;
   const availability = [
     !skipStock && stats.inStockCount > 0 && `${stats.inStockCount} en stock`,
-    !skipPreorder &&
+    preordersEnabled() &&
+      !skipPreorder &&
       stats.preorderCount > 0 &&
       `${stats.preorderCount} en précommande`,
   ].filter((part): part is string => Boolean(part));

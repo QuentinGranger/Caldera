@@ -2,6 +2,7 @@
 // and the landing index (docs/seo-architecture.md §1 and §7), for the licence
 // the shop sells (SHOP_GAME) and licence-free products.
 import 'server-only';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import type { Prisma } from '@/generated/prisma/client';
 import { getScopeFacets } from '@/components/catalog/catalogLoad';
 import {
@@ -123,7 +124,9 @@ export function homeDescription({ stats, families }: ShopOffer): string {
     return fitSentences([HOME_PROMISE, 'Livraison en France métropolitaine.']);
   const availability = [
     stats.inStockCount > 0 && `${stats.inStockCount} en stock`,
-    stats.preorderCount > 0 && `${stats.preorderCount} en précommande`,
+    preordersEnabled() &&
+      stats.preorderCount > 0 &&
+      `${stats.preorderCount} en précommande`,
   ].filter((part): part is string => Boolean(part));
   const range =
     stats.minPrice && stats.maxPrice && stats.maxPrice !== stats.minPrice

@@ -1,5 +1,6 @@
 import type { ProductLanguage, ProductType } from '@/generated/prisma/client';
 import type { LanguageCode, StatusSlug } from '@/lib/seo/types';
+import { preordersEnabled } from './preorders';
 
 export const CATALOG_PAGE_SIZE = 12;
 export const sortLabels = {
@@ -144,7 +145,9 @@ export function parseCatalogParams(params: SearchParams): CatalogFilters {
       (v) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v) && v.length <= 120,
     ),
     language: members(params.language, languageLabels),
-    availability: members(params.availability, stockLabels),
+    availability: members(params.availability, stockLabels).filter(
+      (value) => value !== 'preorder' || preordersEnabled(),
+    ),
     ...(minPrice ? { minPrice } : {}),
     ...(maxPrice ? { maxPrice } : {}),
     search: (first(params.search) ?? '')

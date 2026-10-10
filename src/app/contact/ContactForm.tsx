@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 
 import styles from './contact.module.scss';
 
@@ -40,9 +41,9 @@ export function ContactForm() {
         }),
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
         setState({
@@ -112,7 +113,9 @@ export function ContactForm() {
           <select name="topic" defaultValue="commande" required>
             <option value="commande">Une commande</option>
             <option value="produit">Un produit ou le stock</option>
-            <option value="precommande">Une précommande</option>
+            {preordersEnabled() && (
+              <option value="precommande">Une précommande</option>
+            )}
             <option value="livraison">La livraison</option>
             <option value="autre">Autre demande</option>
           </select>

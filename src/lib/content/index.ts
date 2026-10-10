@@ -4,6 +4,7 @@ import 'server-only';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { cache } from 'react';
+import { isPreorderContent, preordersEnabled } from '@/lib/catalog/preorders';
 import type { ProductType } from '@/generated/prisma/client';
 import {
   GLOSSARY_SLUG_BY_PRODUCT_TYPE,
@@ -63,7 +64,28 @@ async function readSection(section: ContentSection) {
 
 async function readLibrary(): Promise<ContentLibrary> {
   const sections = await Promise.all(CONTENT_SECTIONS.map(readSection));
-  return buildContentLibrary(sections.flat());
+  const parsed = sections.flat();
+  // Validate even unpublished sources, then remove their public suggestions.
+  const library = buildContentLibrary(parsed);
+  if (preordersEnabled()) return library;
+  const hidden = new Set(
+    parsed
+      .filter(({ page }) =>
+        isPreorderContent(page.href.split('/')[1] ?? '', page.slug),
+      )
+      .map(({ page }) => page.slug),
+  );
+  return buildContentLibrary(
+    parsed
+      .filter(({ page }) => !hidden.has(page.slug))
+      .map((entry) => ({
+        ...entry,
+        page: {
+          ...entry.page,
+          related: entry.page.related.filter((slug) => !hidden.has(slug)),
+        },
+      })),
+  );
 }
 
 let loaded: Promise<ContentLibrary> | undefined;

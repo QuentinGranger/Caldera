@@ -3,6 +3,7 @@
 // breadcrumbs and release windows. Every sentence is built from the data passed
 // in; a fact without data is left out. Pure module.
 import type { BreadcrumbItem } from '@/components/ui/Breadcrumb/Breadcrumb';
+import { preordersEnabled } from '@/lib/catalog/preorders';
 import {
   LANGUAGE_IN_LABELS,
   LANGUAGE_LABELS,
@@ -227,7 +228,9 @@ function availabilityParts(
 ): string[] {
   return [
     stats.inStockCount > 0 ? `${stats.inStockCount} en stock` : null,
-    stats.preorderCount > 0 ? `${stats.preorderCount} en précommande` : null,
+    preordersEnabled() && stats.preorderCount > 0
+      ? `${stats.preorderCount} en précommande`
+      : null,
   ].filter((part): part is string => Boolean(part));
 }
 
@@ -504,7 +507,7 @@ export function factualFaq({
       entries.push({
         question: `Quand sort l’extension ${name} ?`,
         answer: `La sortie de l’extension ${name} est prévue le ${formatDateFr(releaseDate)}.${
-          stats.preorderCount
+          preordersEnabled() && stats.preorderCount
             ? ` ${plural(stats.preorderCount, 'produit est', 'produits sont')} en précommande.`
             : ''
         }`,
@@ -577,6 +580,11 @@ export function factualFaq({
 export function mergeFaq(...lists: readonly (readonly FaqEntry[])[]) {
   const seen = new Set<string>();
   return lists.flat().filter((entry) => {
+    if (
+      !preordersEnabled() &&
+      /précommand|precommand/i.test(`${entry.question} ${entry.answer}`)
+    )
+      return false;
     if (entry.question.includes('[Démo]') || entry.answer.includes('[Démo]'))
       return false;
     const key = words(entry.question).join(' ');
@@ -717,11 +725,7 @@ export function recentExtensionsStart(today: Date): Date {
     ),
   );
   const lastDay = new Date(
-    Date.UTC(
-      targetMonth.getUTCFullYear(),
-      targetMonth.getUTCMonth() + 1,
-      0,
-    ),
+    Date.UTC(targetMonth.getUTCFullYear(), targetMonth.getUTCMonth() + 1, 0),
   ).getUTCDate();
   return new Date(
     Date.UTC(
