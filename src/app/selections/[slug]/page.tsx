@@ -1,3 +1,4 @@
+import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import { connection } from 'next/server';
 import { notFound, redirect } from 'next/navigation';
 import {
@@ -97,7 +98,7 @@ export default async function SelectionPage({ params, searchParams }: Props) {
         emptyState={
           <EmptyState
             title="Aucun produit ne correspond à ces critères"
-            actions={[{ href: '/catalogue', label: 'Explorer le catalogue' }]}
+            actions={[{ href: '/catalogue', label: ALL_PRODUCTS_LABEL }]}
           />
         }
       />
