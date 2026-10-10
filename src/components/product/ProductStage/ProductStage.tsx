@@ -2,7 +2,13 @@
 import { useEffect, useRef } from 'react';
 
 /** Decorative only: the HTML photograph and zoom never depend on WebGL. */
-export function ProductStage({ enabled }: { enabled: boolean }) {
+export function ProductStage({
+  enabled,
+  imageUrl,
+}: {
+  enabled: boolean;
+  imageUrl: string;
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const surface = canvas.current;
@@ -29,7 +35,10 @@ export function ProductStage({ enabled }: { enabled: boolean }) {
       loading = false;
     };
     const start = async () => {
+      const photo = root.querySelector('img');
       if (
+        !photo?.complete ||
+        !photo.naturalWidth ||
         stopped ||
         loading ||
         cleanup ||
@@ -43,7 +52,7 @@ export function ProductStage({ enabled }: { enabled: boolean }) {
       try {
         const { mountProductStage } = await import('@/lib/three/product-stage');
         if (stopped || current !== generation) return;
-        const dispose = mountProductStage(root, surface);
+        const dispose = mountProductStage(root, surface, photo);
         if (stopped || current !== generation) dispose();
         else cleanup = dispose;
       } catch {
@@ -60,6 +69,10 @@ export function ProductStage({ enabled }: { enabled: boolean }) {
       { rootMargin: '200px' },
     );
     observer.observe(root);
+    const photoLoaded = () => {
+      void start();
+    };
+    root.addEventListener('load', photoLoaded, true);
     const preference = () => {
       reset();
       void start();
@@ -69,10 +82,11 @@ export function ProductStage({ enabled }: { enabled: boolean }) {
     return () => {
       stopped = true;
       observer.disconnect();
+      root.removeEventListener('load', photoLoaded, true);
       motion.removeEventListener('change', preference);
       size.removeEventListener('change', preference);
       reset();
     };
-  }, [enabled]);
+  }, [enabled, imageUrl]);
   return <canvas ref={canvas} data-product-canvas aria-hidden="true" />;
 }

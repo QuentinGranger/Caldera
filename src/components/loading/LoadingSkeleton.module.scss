@@ -794,7 +794,7 @@ $hairline: rgb(23 62 50 / 14%);
     border-radius: 1.5rem;
   }
   .galleryImage {
-    padding: clamp(2.5rem, 5vw, 4.5rem) clamp(2rem, 4vw, 4rem)
-      clamp(4rem, 7vw, 6rem);
+    padding: 12% 14% 14%;
+    object-position: 50% 100%;
   }
 }
