@@ -360,3 +360,96 @@
     transform: none;
   }
 }
+
+// The shop shelves of the home page: the stock always said, then the price
+// and a written button across the card, the action at the reach of a thumb.
+.availability[data-stock='low'] {
+  color: v.$color-volcanic;
+}
+.availability[data-stock='preorder'] {
+  color: v.$color-green;
+}
+.availability[data-stock='none'] {
+  color: v.$color-text-muted;
+}
+.buying {
+  .bottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+}
+.buy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  border: 1px solid v.$color-green;
+  border-radius: v.$radius-card;
+  background: v.$color-green;
+  color: v.$color-text-on-dark;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background v.$duration-short v.$ease-out,
+    border-color v.$duration-short v.$ease-out;
+  svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  &:hover:enabled,
+  &:focus-visible {
+    border-color: v.$color-green-dark;
+    background: v.$color-green-dark;
+  }
+  &:disabled {
+    border-color: v.$color-border;
+    background: transparent;
+    color: v.$color-text-muted;
+    cursor: not-allowed;
+  }
+  &[aria-busy] svg {
+    animation: buy-spin 900ms linear infinite;
+  }
+}
+.night {
+  .availability[data-stock='low'] {
+    color: #f0a77c;
+  }
+  .availability[data-stock='preorder'] {
+    color: v.$color-gold-light;
+  }
+  .availability[data-stock='none'] {
+    color: v.$color-muted-on-night;
+  }
+  .buy {
+    border-color: v.$color-gold;
+    background: v.$color-gold;
+    color: v.$color-ink;
+    &:hover:enabled,
+    &:focus-visible {
+      border-color: v.$color-gold-light;
+      background: v.$color-gold-light;
+    }
+    &:disabled {
+      border-color: rgb(255 255 255 / 22%);
+      background: transparent;
+      color: v.$color-muted-on-night;
+    }
+  }
+}
+@keyframes buy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .buy[aria-busy] svg {
+    animation: none;
+  }
+}

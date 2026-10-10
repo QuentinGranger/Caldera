@@ -11,6 +11,7 @@ import {
   getProductsByCategory,
   getProductsBySet,
   getRestockedProducts,
+  getLastPiecesProducts,
 } from '../src/lib/catalog/queries';
 if (
   process.env.NODE_ENV === 'production' ||
@@ -134,6 +135,33 @@ test('lecture : statuts, variantes, DTO public, prix minimum et listes spéciali
   assert.deepEqual(await getProductsBySet('inexistant'), []);
   assert.equal((await getRestockedProducts()).length, 3);
   await assert.rejects(getFeaturedProducts(0), RangeError);
+});
+test('lecture : dernières pièces, comptées comme sur la fiche produit', async () => {
+  const lastPieces = (await getLastPiecesProducts(20)).filter((product) =>
+    product.slug.startsWith('dev-'),
+  );
+  const slugs = lastPieces.map((product) => product.slug);
+  // At the threshold itself (2 left, threshold 2): last pieces.
+  assert.ok(slugs.includes('dev-tripack-expedition'));
+  // One variant still above its threshold: the product is not running out.
+  assert.ok(!slugs.includes('dev-etb-terres-de-braise'));
+  // A preorder or a sold-out product is never among the last pieces.
+  assert.ok(!slugs.includes('dev-coffret-aurores'));
+  assert.ok(!slugs.includes('dev-display-vallees'));
+  for (const product of lastPieces) {
+    assert.equal(product.availability, 'LOW_STOCK');
+    assert.ok(product.lowStockLeft && product.lowStockLeft > 0);
+  }
+  assert.equal(
+    lastPieces.find((product) => product.slug === 'dev-tripack-expedition')
+      ?.lowStockLeft,
+    2,
+  );
+  // The stock of a product that is not running out stays private.
+  const etb = (await getProducts()).find(
+    (product) => product.slug === 'dev-etb-terres-de-braise',
+  );
+  assert.equal(etb?.lowStockLeft, undefined);
 });
 test('UNIQUE PostgreSQL : slugs, SKU et barcode nullable', async () => {
   const product = await db.product.findUniqueOrThrow({

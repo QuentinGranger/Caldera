@@ -1,7 +1,7 @@
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowDown, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ViewTransition } from 'react';
 import { Button } from '@/components/ui/Button/Button';
 import { HOME_PROMISE, type HomeLinks } from '@/components/home/homeData';
@@ -16,15 +16,9 @@ import styles from './Hero.module.scss';
 /**
  * The landscape and who Caldera is for, in one glance: the specialty above
  * the title, the promise under it, the shop first and the universe second.
+ * Shorter than the screen: the shop's first products show beneath it.
  */
-export function Hero({
-  links,
-  next,
-}: {
-  links: HomeLinks;
-  /** Anchor of the first section below, for the scroll cue. */
-  next: string;
-}) {
+export function Hero({ links }: { links: HomeLinks }) {
   return (
     // Into the universe, the landscape carries the visitor in.
     <section
@@ -89,26 +83,6 @@ export function Hero({
               </div>
             </ArrivalLayers>
           </div>
-          <a className={styles.cue} href={next}>
-            <span>Défiler</span>
-            <ArrowDown size={16} aria-hidden="true" />
-          </a>
-        </div>
-        <div className={styles.reflection}>
-          <p className={styles.eyebrow}>Les Terres de Caldera</p>
-          <h2>
-            Un univers pour{' '}
-            <span className={styles.words}>
-              {['collectionner.', 'jouer.', 'découvrir.', 'transmettre.'].map(
-                (word) => (
-                  <span key={word}>{word} </span>
-                ),
-              )}
-            </span>
-          </h2>
-          <p className={styles.reflectionNote}>
-            Une carte. Une histoire. La vôtre.
-          </p>
         </div>
       </div>
     </section>

@@ -6,8 +6,9 @@ import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import styles from './Showcase.module.scss';
 
 /**
- * The team's selection, shown like pieces in a cabinet: lit, few, with
- * their real price and availability. Absent when nothing is selected.
+ * The Caldera selection, the last shelf of the shop: the team's picks shown
+ * like pieces in a cabinet, lit, few, with their real price, their stock
+ * and a button to buy. Absent when nothing is selected.
  */
 export function Showcase({
   products,
@@ -31,7 +32,7 @@ export function Showcase({
             <div>
               <p className={styles.eyebrow}>Le regard du collectionneur</p>
               <h2 id="selection-title">
-                Les trésors <em>de Caldera.</em>
+                Sélection <em>Caldera.</em>
               </h2>
             </div>
             <div className={styles.intro}>
@@ -62,6 +63,7 @@ export function Showcase({
                   tone="night"
                   layout="spotlight"
                   sizes="(min-width: 1440px) 640px, (min-width: 768px) 46vw, 92vw"
+                  buy
                 />
               </li>
             ))}

@@ -2,7 +2,10 @@ import type { ProductLanguage } from '@/generated/prisma/client';
 export type ProductBadgeKind = 'new' | 'preorder' | 'sold-out' | 'limited';
 export type Availability =
   'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'PREORDER';
-/** DTO public : montants décimaux sérialisés, aucun coût ni stock interne. */
+/**
+ * DTO public : montants décimaux sérialisés, aucun coût ni stock interne (sauf
+ * les dernières pièces, comptées comme sur la fiche produit).
+ */
 export type CatalogProduct = {
   isDemonstration?: boolean;
   id: string;
@@ -21,4 +24,9 @@ export type CatalogProduct = {
   languages: ProductLanguage[];
   quickAddVariantId?: string | null;
   badge?: ProductBadgeKind;
+  /**
+   * Last pieces only (LOW_STOCK): how many are left, as the product page
+   * already says it. Never the stock of a product that is not running out.
+   */
+  lowStockLeft?: number;
 };

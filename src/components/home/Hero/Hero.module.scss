@@ -2,6 +2,11 @@
 @use '../../../styles/abstracts/mixins' as m;
 // A monumental, centred opening over the Caldera landscape.
 .hero {
+  // Shorter than the screen: the first shelf of the shop shows beneath.
+  --hero-height: max(32rem, 78svh);
+  @include m.from(v.$breakpoint-desktop) {
+    --hero-height: max(32rem, 72svh);
+  }
   position: relative;
   isolation: isolate;
   overflow: clip;
@@ -13,7 +18,7 @@
 .landscape {
   position: absolute;
   inset: 0 0 auto;
-  height: max(36rem, calc(100svh - 2rem));
+  height: var(--hero-height);
   isolation: isolate;
   z-index: -1;
 }
@@ -77,7 +82,7 @@
   flex-direction: column;
   justify-content: center;
   @include m.container;
-  min-height: max(36rem, calc(100svh - 2rem));
+  min-height: var(--hero-height);
   padding-top: calc(var(--header-height) + 3rem);
   padding-bottom: clamp(3rem, 7vh, 5rem);
 }
@@ -88,7 +93,7 @@
   h1 {
     margin-block: 1.25rem 1.5rem;
     // Short lines leave the landscape room to breathe.
-    font-size: clamp(3.4rem, 11vw, 9.5rem);
+    font-size: clamp(3.4rem, 9vw, 8rem);
     font-weight: 500;
     line-height: 0.9;
     letter-spacing: -0.045em;
@@ -142,122 +147,14 @@
   @include m.underline-link;
   color: v.$color-text-on-dark;
 }
-.cue {
-  display: none;
-  @include m.from(v.$breakpoint-tablet) {
-    display: inline-flex;
-    align-self: center;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 2rem;
-    padding: 0.6rem 0;
-    color: v.$color-muted-on-night;
-    font-size: v.$text-small;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    transition: color v.$duration-short v.$ease-out;
-    &:hover,
-    &:focus-visible {
-      color: v.$color-gold-light;
-    }
-  }
-}
-
 .stage {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   overflow: clip;
 }
-.reflection {
-  @include m.container;
-  padding-block: 3rem 6rem;
-  text-align: center;
-  h2 {
-    margin-top: 1rem;
-    font-size: clamp(2.6rem, 5.5vw, 6rem);
-    line-height: 1.04;
-    font-weight: 400;
-    letter-spacing: -0.03em;
-  }
-}
-.words {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 0.3em;
-  justify-content: center;
-  color: v.$color-gold-light;
-  font-style: italic;
-}
-.reflectionNote {
-  margin-top: 1.8rem;
-  color: v.$color-muted-on-night;
-  font-size: v.$text-lead;
-}
 @media (prefers-reduced-motion: no-preference) {
   .hero[data-scene-ready] .image {
     transform: scale(calc(1.01 + var(--scene-progress, 0) * 0.12));
-  }
-  @media (min-width: 64rem) and (min-height: 42rem) {
-    .hero[data-scene-ready] {
-      min-height: 185svh;
-      .stage {
-        position: sticky;
-        top: 0;
-        min-height: 100svh;
-      }
-      .landscape {
-        height: 100%;
-      }
-      .inner {
-        min-height: 100svh;
-      }
-      .content {
-        opacity: calc(1 - var(--story-blend, 0));
-        transform: translateY(calc(var(--story-blend, 0) * -2rem));
-      }
-      .reflection {
-        position: absolute;
-        inset: auto 0 12svh;
-        padding-block: 0;
-        opacity: var(--story-blend, 0);
-        transform: translateY(calc((1 - var(--story-blend, 0)) * 2rem));
-        pointer-events: none;
-      }
-      .words {
-        display: block;
-        height: 1.16em;
-        overflow: clip;
-        span {
-          display: block;
-          line-height: 1.16;
-          transform: translateY(calc(var(--story-position, 0) * -100%));
-        }
-      }
-      .cue {
-        opacity: calc(1 - var(--story-blend, 0));
-      }
-      &[data-hero-past] {
-        .content,
-        .cue {
-          pointer-events: none;
-        }
-      }
-      // A keyboard user can always see the CTA they focus.
-      &:focus-within {
-        .content {
-          opacity: 1;
-          transform: none;
-          pointer-events: auto;
-        }
-        .cue {
-          opacity: 1;
-          pointer-events: auto;
-        }
-        .reflection {
-          opacity: 0;
-        }
-      }
-    }
   }
 }

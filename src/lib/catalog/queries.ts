@@ -140,6 +140,13 @@ export function toCatalogProduct(
       ? null
       : (quickAddVariant?.id ?? null),
     ...(badge ? { badge } : {}),
+    ...(availability === 'LOW_STOCK'
+      ? {
+          lowStockLeft: product.variants
+            .filter((variant) => variant.isActive)
+            .reduce((sum, variant) => sum + availableQuantity(variant), 0),
+        }
+      : {}),
   };
 }
 /** The languages of the variants given, in the shop's order; none unknown. */
@@ -212,6 +219,34 @@ export function getRestockedProducts(
           preorder: false,
           tags: { some: { slug: 'reassort' } },
           variants: { some: { isActive: true, availableQuantity: { gt: 0 } } },
+        },
+        where,
+      ],
+    },
+    limit,
+  );
+}
+/**
+ * Last pieces (LOW_STOCK, as getAvailability decides it): some active
+ * variant still has a few, none has more than its threshold.
+ */
+export function getLastPiecesProducts(
+  limit = 4,
+  where: Prisma.ProductWhereInput = {},
+) {
+  const threshold = getPrisma().productVariant.fields.lowStockThreshold;
+  return list(
+    {
+      AND: [
+        {
+          preorder: false,
+          variants: {
+            some: {
+              isActive: true,
+              availableQuantity: { gt: 0, lte: threshold },
+            },
+            none: { isActive: true, availableQuantity: { gt: threshold } },
+          },
         },
         where,
       ],

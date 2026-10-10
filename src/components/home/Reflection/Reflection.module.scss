@@ -1,0 +1,33 @@
+@use '../../../styles/abstracts/variables' as v;
+@use '../../../styles/abstracts/mixins' as m;
+// The night again: the words of the universe, after the shop.
+.reflection {
+  @include m.container;
+  padding-block: clamp(4rem, 9vw, 7rem);
+  color: v.$color-text-on-dark;
+  text-align: center;
+  h2 {
+    margin-top: 1rem;
+    font-size: clamp(2.6rem, 5.5vw, 6rem);
+    line-height: 1.04;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+}
+.eyebrow {
+  @include m.eyebrow;
+  color: v.$color-gold-light;
+}
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.3em;
+  justify-content: center;
+  color: v.$color-gold-light;
+  font-style: italic;
+}
+.note {
+  margin-top: 1.8rem;
+  color: v.$color-muted-on-night;
+  font-size: v.$text-lead;
+}
