@@ -68,8 +68,10 @@ export default async function RootLayout({
               <Header />
             </StorefrontOnly>
             {children}
-            <StorefrontOnly>
+            <StorefrontOnly hideOnCart>
               <Footer />
+            </StorefrontOnly>
+            <StorefrontOnly>
               {process.env.VERCEL === '1' && (
                 <>
                   <SpeedInsights />

@@ -84,6 +84,14 @@ export function CartPageContent({
       ) : (
         <CartEmpty />
       )}
+      <footer
+        className={styles.footer}
+        aria-label="Aide et conditions du panier"
+      >
+        <Link href="/livraison">Livraison</Link>
+        <Link href="/cgv">Conditions de vente</Link>
+        <Link href="/contact">Besoin d’aide ?</Link>
+      </footer>
     </>
   );
 }

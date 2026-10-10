@@ -119,7 +119,27 @@ test('Server Actions panier : HTTP, cookie et rendu personnalisé', async (t) =>
         cookie = result.setCookie.split(';')[0]!;
         assert.match(result.body, /"itemCount":1/);
         assert.match(await page(), /Ouvrir le panier · 1 article/);
-        assert.match(await page(), /59,90/);
+        const html = await page();
+        assert.match(html, /59,90/);
+        // Ignore the RSC payload: server children of hidden storefront chrome
+        // are still serialized, but never rendered in the cart.
+        const rendered = html.replace(
+          /<script\b[^>]*>[\s\S]*?<\/script>/gi,
+          '',
+        );
+        assert.match(rendered, /Récapitulatif/);
+        assert.match(rendered, /Sous-total/);
+        assert.match(rendered, /Livraison estimée/);
+        assert.match(rendered, /Total hors livraison|Total estimé/);
+        assert.match(rendered, /Expédition sous 1 à 2 jours ouvrés/);
+        assert.match(rendered, /Paiement sécurisé/);
+        assert.match(rendered, /Passer à la commande/);
+        assert.match(rendered, /Aide et conditions du panier/);
+        assert.doesNotMatch(
+          rendered,
+          /La lettre de Caldera|Réassorts, nouvelles extensions et sélections, par e-mail/,
+        );
+        assert.match(rendered, /Les articles ne sont pas encore réservés/);
       },
     );
     await t.test(

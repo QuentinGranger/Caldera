@@ -1,0 +1,42 @@
+@use '@/styles/abstracts/variables' as v;
+.assurance {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0;
+  margin: 1.2rem 0;
+  list-style: none;
+  color: v.$color-text;
+  li {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+  }
+  svg {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    color: v.$color-green;
+  }
+  strong,
+  small {
+    display: block;
+  }
+  strong {
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  small {
+    margin-top: 0.12rem;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: v.$color-text-muted;
+  }
+}
+.night {
+  color: v.$color-cream;
+  svg {
+    color: v.$color-gold-light;
+  }
+  small {
+    color: v.$color-muted-on-dark;
+  }
+}

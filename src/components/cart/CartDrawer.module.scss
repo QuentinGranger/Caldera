@@ -5,6 +5,7 @@
   margin: 0 0 0 auto;
   width: min(460px, 96vw);
   max-width: none;
+  height: 100vh;
   height: 100dvh;
   max-height: none;
   background: v.$color-background;
@@ -85,6 +86,8 @@
 }
 .footer {
   padding: 1.25rem 1.5rem max(1.25rem, env(safe-area-inset-bottom));
+  max-height: 65%;
+  overflow-y: auto;
   border-top: 1px solid v.$color-border;
   background: v.$color-surface;
   > div {
@@ -105,9 +108,38 @@
     align-items: center;
     justify-content: center;
     min-height: 48px;
-    background: v.$color-green-dark;
-    color: v.$color-cream;
+    background: v.$color-gold;
+    color: v.$color-ink;
+    font-weight: 700;
     margin-top: 1rem;
     border-radius: v.$radius-small;
+  }
+}
+
+// On short screens, keep a single scroll area so the footer cannot squeeze
+// the product list to zero height. The close button remains within reach.
+@media (max-height: 36rem) {
+  .panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-shrink: 0;
+    padding-block: 0.75rem;
+  }
+  .feedback {
+    flex-shrink: 0;
+  }
+  .content {
+    flex: none;
+    overflow: visible;
+  }
+  .footer {
+    max-height: none;
+    flex-shrink: 0;
+    overflow: visible;
   }
 }
