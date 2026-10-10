@@ -21,7 +21,12 @@ const chapters = [
   },
 ];
 
-export function CardStory() {
+export function CardStory({
+  skipTo,
+}: {
+  /** The section that follows the story, for those who skip it. */
+  skipTo: { href: string; label: string };
+}) {
   const root = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -183,8 +188,8 @@ export function CardStory() {
               </div>
             ))}
           </div>
-          <Link className={styles.skip} href="#selection-produits">
-            Voir la sélection <ArrowDown size={16} aria-hidden="true" />
+          <Link className={styles.skip} href={skipTo.href}>
+            {skipTo.label} <ArrowDown size={16} aria-hidden="true" />
           </Link>
         </div>
         <div className={styles.footer}>

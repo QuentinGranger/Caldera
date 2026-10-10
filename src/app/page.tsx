@@ -84,10 +84,18 @@ export default async function HomePage() {
     restocked = restockShelf.slice(0, SHELF),
     lastPieces = lastShelf.slice(0, SHELF);
   const onSale = [latest, restocked, lastPieces].some((list) => list.length);
+  // The story of the card ends on the first section after it.
+  const cardSkip = home.collections.length
+    ? { href: '#collections', label: 'Voir les extensions' }
+    : { href: '#garanties', label: 'Voir les garanties' };
   const night = '#03140e',
     forest = '#072419',
     paper = '#f6f1e4',
     sand = '#ebe5d7';
+  // Chapters join by their colours (HomeJourney): the dark ones are kept
+  // together so that the landscape flows from the hero to the story of the
+  // card without a seam; the light ones (collections, reassurance, guides)
+  // follow, and the origins hand back to the night.
   const chapters: HomeChapter[] = [
     {
       key: 'hero',
@@ -117,8 +125,8 @@ export default async function HomePage() {
           ])}
         />
       ),
-      start: paper,
-      end: paper,
+      start: night,
+      end: forest,
     });
   if (selected.length)
     chapters.push({
@@ -136,20 +144,7 @@ export default async function HomePage() {
       start: night,
       end: forest,
     });
-  if (home.collections.length)
-    chapters.push({
-      key: 'collections',
-      content: <Collections collections={home.collections} />,
-      start: paper,
-      end: paper,
-    });
   chapters.push(
-    {
-      key: 'assurances',
-      content: <Assurances />,
-      start: sand,
-      end: sand,
-    },
     {
       key: 'reflection',
       content: <Reflection />,
@@ -158,12 +153,26 @@ export default async function HomePage() {
     },
     {
       key: 'card',
-      content: <CardStory />,
+      content: <CardStory skipTo={cardSkip} />,
       start: night,
       end: night,
       pinned: true,
+      bridge: true,
     },
   );
+  if (home.collections.length)
+    chapters.push({
+      key: 'collections',
+      content: <Collections collections={home.collections} />,
+      start: paper,
+      end: paper,
+    });
+  chapters.push({
+    key: 'assurances',
+    content: <Assurances />,
+    start: sand,
+    end: sand,
+  });
   if (home.journal)
     chapters.push({
       key: 'journal',

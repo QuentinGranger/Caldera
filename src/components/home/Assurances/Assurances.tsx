@@ -41,7 +41,11 @@ export function Assurances() {
     },
   ];
   return (
-    <section className={styles.section} aria-labelledby="assurances-title">
+    <section
+      id="garanties"
+      className={styles.section}
+      aria-labelledby="assurances-title"
+    >
       <div className={styles.inner}>
         <header className={styles.head}>
           <p className={styles.eyebrow}>Commander à Caldera</p>

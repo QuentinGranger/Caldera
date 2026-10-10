@@ -1,13 +1,35 @@
-// The backgrounds join inside existing section padding. No extra scroll chapter.
+// The backgrounds join inside existing section padding. No extra scroll
+// chapter, except a short bridge where a dark chapter meets a light one.
 .chapter {
+  --fade: var(--chapter-bridge, clamp(3rem, 8svh, 6rem));
   position: relative;
   min-width: 0;
+  padding-bottom: var(--chapter-bridge, 0px);
   background: linear-gradient(
     180deg,
     var(--chapter-start),
-    var(--chapter-end) calc(100% - clamp(3rem, 8svh, 6rem)),
+    var(--chapter-end) calc(100% - var(--fade)),
     var(--chapter-next)
   );
+  // The same join on an eased curve: no visible band where it starts or ends.
+  background: linear-gradient(
+    180deg,
+    var(--chapter-start),
+    var(--chapter-end) calc(100% - var(--fade)),
+    color-mix(in srgb, var(--chapter-end) 88%, var(--chapter-next))
+      calc(100% - var(--fade) * 0.75),
+    color-mix(in srgb, var(--chapter-end) 50%, var(--chapter-next))
+      calc(100% - var(--fade) * 0.5),
+    color-mix(in srgb, var(--chapter-end) 12%, var(--chapter-next))
+      calc(100% - var(--fade) * 0.25),
+    var(--chapter-next)
+  );
+}
+// A chapter starts a pixel above its end of the previous one: at a fractional
+// position the page's own background would otherwise show as a hairline. The
+// colour it covers is the one it starts with (--chapter-next).
+.chapter + .chapter {
+  margin-top: -1px;
 }
 .camera[data-home-camera='free'] {
   overflow-x: clip;

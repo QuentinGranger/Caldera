@@ -19,7 +19,9 @@ type Shelf = {
 /**
  * The shop, right under the hero: what is new, what is back, what is about
  * to run out. Every card shows its photo, price, stock and a button to buy.
- * A shelf without products is absent; the whole block too.
+ * It stays in the night of the hero (and of the selection after it): the
+ * landscape flows into the products without a seam. A shelf without
+ * products is absent; the whole block too.
  */
 export function HomeShop({
   latest,
@@ -92,7 +94,12 @@ export function HomeShop({
             {shelf.products.map((product) => (
               // Still and readable at once: no scroll entrance on a shelf.
               <li key={product.id}>
-                <ProductCard product={product} sizes={SHELF_SIZES} buy />
+                <ProductCard
+                  product={product}
+                  sizes={SHELF_SIZES}
+                  tone="night"
+                  buy
+                />
               </li>
             ))}
           </ul>
