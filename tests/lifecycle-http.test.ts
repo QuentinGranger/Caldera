@@ -5,6 +5,17 @@ test('automations HTTP : cron privé, reprise sans accès au compte et consentem
   const denied = await fetch(`${base}/api/cron/lifecycle`);
   assert.equal(denied.status, process.env.CRON_SECRET ? 401 : 503);
   assert.equal(denied.headers.get('cache-control'), 'no-store');
+  if (process.env.CRON_SECRET) {
+    const scheduled = await fetch(`${base}/api/cron/lifecycle`, {
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+    });
+    assert.equal(
+      scheduled.status,
+      202,
+      'Vercel backup scheduler remains authorized',
+    );
+  }
+
   const recovery = await fetch(`${base}/panier/reprendre`);
   assert.equal(recovery.status, 200);
   const html = await recovery.text();

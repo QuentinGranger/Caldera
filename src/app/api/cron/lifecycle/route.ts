@@ -7,12 +7,16 @@ export const maxDuration = 60;
 export async function GET(request: Request) {
   const headers = { 'Cache-Control': 'no-store' };
   const secret = cronSecret(process.env.LIFECYCLE_CRON_SECRET) ?? cronSecret();
-  if (!secret)
+  if (!secrets.length)
     return Response.json(
       { error: 'Planificateur indisponible' },
       { status: 503, headers },
     );
-  if (!isCronAuthorized(request.headers.get('authorization'), secret))
+  if (
+    !secrets.some((secret) =>
+      isCronAuthorized(request.headers.get('authorization'), secret),
+    )
+  )
     return Response.json({ error: 'Non autorisé' }, { status: 401, headers });
   after(async () => {
     await runLifecycle();
