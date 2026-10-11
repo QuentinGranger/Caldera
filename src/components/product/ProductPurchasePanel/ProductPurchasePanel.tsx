@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { MAX_CART_ITEM_QUANTITY } from '@/lib/cart/constants';
 import { useSearchParams } from 'next/navigation';
-import { Package, RotateCcw, Truck } from 'lucide-react';
+import { Truck } from 'lucide-react';
 import { ProductVariantSelector } from '@/components/product/ProductVariantSelector/ProductVariantSelector';
 import { QuantitySelector } from '@/components/product/QuantitySelector/QuantitySelector';
 import { AddToCartButton } from '@/components/product/AddToCartButton/AddToCartButton';
@@ -12,19 +12,17 @@ import { languageLabels } from '@/lib/catalog/params';
 import {
   selectProductVariant,
   canPreparePurchase,
-  conditionLabels,
   type ProductVariantView,
 } from '@/lib/product/purchase';
 import {
   DELIVERY_ZONE_LABEL,
   HANDLING_HEADLINE,
   PREORDER_HANDLING_LABEL,
-  RETURN_LABEL,
-  RETURN_POLICY_PATH,
   type ShippingOptionView,
 } from '@/lib/product/services';
 import { formatPrice } from '@/utils/formatPrice';
-import { formatProductDate, formatProductWeight } from '@/utils/formatProduct';
+import { formatProductDate } from '@/utils/formatProduct';
+import { cartShippingPrice } from '@/lib/shipping/summary';
 import { ShippingFromLine } from '@/components/shipping/ShippingFromLine';
 import { StickyBuyBar } from './StickyBuyBar';
 import { stockLabel } from '@/lib/product/stock';
@@ -52,13 +50,16 @@ function SelectedVariant({
   variant,
   preorder: preorderProduct,
   releaseDate,
-  typeLabel,
   sealed,
   shipping,
   accountEmail,
 }: Omit<Props, 'variants' | 'newArrival'> & { variant: ProductVariantView }) {
   const [quantity, setQuantity] = useState(1);
   const buy = useRef<HTMLDivElement>(null);
+  const itemsTotal = (
+    (Math.round(Number(variant.price) * 100) * quantity) /
+    100
+  ).toFixed(2);
   const preorder = variant.availability === 'PREORDER',
     soldOut = variant.availability === 'OUT_OF_STOCK';
   return (
@@ -124,32 +125,43 @@ function SelectedVariant({
               <strong>
                 {preorderProduct ? PREORDER_HANDLING_LABEL : HANDLING_HEADLINE}
               </strong>
-              <ul className={styles.shipping}>
-                {shipping.map((option) => (
-                  <li key={option.code}>
-                    <span>
-                      <strong>{option.name}</strong>
-                      <small>
-                        {[
-                          option.transit && `livraison en ${option.transit}`,
-                          option.freeFromAmount &&
-                            Number(option.price) > 0 &&
-                            `offerte dès ${formatPrice(option.freeFromAmount)} d’achat`,
-                          option.destinations.length > 0 &&
-                            option.destinations.join(', '),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </small>
-                    </span>
-                    <b>
-                      {Number(option.price) > 0
-                        ? formatPrice(option.price)
-                        : 'Offerte'}
-                    </b>
-                  </li>
-                ))}
-              </ul>
+              <details className={styles.estimate}>
+                <summary>Estimer les frais de livraison</summary>
+                <p>
+                  Pour {quantity} exemplaire{quantity > 1 ? 's' : ''} de ce
+                  produit, hors autres articles et remises.
+                </p>
+                <ul className={styles.shipping} aria-live="polite">
+                  {shipping.map((option) => (
+                    <li key={option.code}>
+                      <span>
+                        <strong>{option.name}</strong>
+                        <small>
+                          {[
+                            option.transit && `livraison en ${option.transit}`,
+                            option.freeFromAmount &&
+                              Number(option.price) > 0 &&
+                              `offerte dès ${formatPrice(option.freeFromAmount)} d’achat`,
+                            option.destinations.length > 0 &&
+                              option.destinations.join(', '),
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </small>
+                      </span>
+                      <b>
+                        {Number(cartShippingPrice(option, itemsTotal)) > 0
+                          ? formatPrice(cartShippingPrice(option, itemsTotal))
+                          : 'Offerte'}
+                      </b>
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Estimation selon la destination et le transporteur. Le tarif
+                  exact est confirmé avant le paiement.
+                </p>
+              </details>
               <p>
                 Après confirmation du paiement · {DELIVERY_ZONE_LABEL} ·{' '}
                 <Link href={DELIVERY_PATH}>Détails de la livraison</Link>
@@ -166,65 +178,6 @@ function SelectedVariant({
           )}
         </div>
       </div>
-      <div className={styles.service}>
-        <RotateCcw size={20} aria-hidden="true" />
-        <div>
-          <strong>Retours</strong>
-          <p>
-            {RETURN_LABEL}{' '}
-            <Link href={RETURN_POLICY_PATH}>
-              Conditions de retour (article 12 des CGV)
-            </Link>
-          </p>
-        </div>
-      </div>
-      <div className={styles.service}>
-        <Package size={20} aria-hidden="true" />
-        <div>
-          <strong>
-            État du produit : {conditionLabels[variant.condition]}
-          </strong>
-          <p>
-            Consultez la description et les caractéristiques de cette sélection.
-          </p>
-        </div>
-      </div>
-      <section
-        className={styles.specs}
-        aria-label="Caractéristiques de la variante"
-      >
-        <h2>Caractéristiques</h2>
-        <dl>
-          <div>
-            <dt>Type</dt>
-            <dd>{typeLabel}</dd>
-          </div>
-          <div>
-            <dt>Langue</dt>
-            <dd>{languageLabels[variant.language]}</dd>
-          </div>
-          <div>
-            <dt>État</dt>
-            <dd>{conditionLabels[variant.condition]}</dd>
-          </div>
-          <div>
-            <dt>SKU</dt>
-            <dd>{variant.sku}</dd>
-          </div>
-          {releaseDate && (
-            <div>
-              <dt>Date de sortie</dt>
-              <dd>{formatProductDate(releaseDate)}</dd>
-            </div>
-          )}
-          {variant.weightGrams !== null && (
-            <div>
-              <dt>Poids</dt>
-              <dd>{formatProductWeight(variant.weightGrams)}</dd>
-            </div>
-          )}
-        </dl>
-      </section>
     </div>
   );
 }
@@ -247,6 +200,7 @@ export function ProductPurchasePanel(props: Props) {
     <section aria-label="Choisir votre produit">
       <div className={styles.price} aria-live="polite">
         <strong>{formatPrice(selected.price)}</strong>
+        <span className={styles.tax}>TTC</span>
         {selected.compareAtPrice && (
           <del
             aria-label={`Ancien prix : ${formatPrice(selected.compareAtPrice)}`}

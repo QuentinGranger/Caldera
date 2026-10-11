@@ -53,6 +53,11 @@ test('HTTP : sélection FR / EN par URL, quantités et SKU', async () => {
   assert.ok(fr.includes('SKU : DEV-ETB-BRAISE-FR'));
   assert.ok(fr.includes('Français'));
   assert.ok(fr.includes('69,90 €'));
+  assert.ok(fr.includes('TTC'));
+  assert.ok(fr.includes('Estimer les frais de livraison'));
+  assert.ok(fr.indexOf('Ajouter au panier') < fr.indexOf('Caractéristiques'));
+  assert.ok(fr.includes('hors autres articles et remises'));
+
   const en = await page('dev-etb-terres-de-braise?variant=DEV-ETB-BRAISE-EN');
   const copy = text(en);
   assert.ok(copy.includes('SKU : DEV-ETB-BRAISE-EN'));
