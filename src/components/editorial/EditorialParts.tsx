@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/Button/Button';
+import type { ContentLinks } from '@/lib/seo/links';
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -143,11 +145,13 @@ export function ShopSection({
   products,
   landings,
   intro,
+  browse,
   id = 'en-boutique-titre',
 }: {
   products: readonly CatalogProduct[];
   landings: readonly SeoLink[];
   intro?: string;
+  browse?: ContentLinks['browse'];
   id?: string;
 }) {
   if (!products.length && !landings.length) return null;
@@ -155,6 +159,17 @@ export function ShopSection({
     <section className={styles.section} aria-labelledby={id}>
       <h2 id={id}>Dans la boutique</h2>
       {intro && <p className={styles.sectionIntro}>{intro}</p>}
+      {browse && (
+        <div className={styles.shopCta}>
+          <Button href={browse.href}>{browse.label}</Button>
+          {browse.demonstration && (
+            <p>
+              Ces produits illustrent le catalogue. Aucun achat n’est possible
+              pour le moment.
+            </p>
+          )}
+        </div>
+      )}
       {products.length > 0 && <CatalogGrid products={[...products]} />}
       <LandingPills links={landings} />
     </section>

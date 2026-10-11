@@ -642,3 +642,29 @@
     color: v.$color-green;
   }
 }
+
+.shopCta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+
+  p {
+    max-width: 35rem;
+    color: v.$color-text-muted;
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+}
+
+.facts .headerCta {
+  justify-self: start;
+  margin-top: 0.5rem;
+
+  a,
+  a:hover {
+    color: v.$color-text-on-dark;
+    text-decoration: none;
+  }
+}

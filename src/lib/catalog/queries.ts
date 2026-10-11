@@ -197,6 +197,33 @@ async function list(
   });
   return rows.map(toCatalogProduct);
 }
+/** Only genuinely purchasable variants; no cheaper sold-out price in a guide. */
+export function listInStockProducts(
+  where: Prisma.ProductWhereInput,
+  limit = 8,
+) {
+  const variant = {
+    isActive: true,
+    price: { gt: 0 },
+    availableQuantity: { gt: 0 },
+  };
+  return list(
+    {
+      AND: [
+        shopProductWhere,
+        where,
+        {
+          isDemonstration: false,
+          preorder: false,
+          variants: { some: variant },
+        },
+      ],
+    },
+    limit,
+    variant,
+  );
+}
+
 /** Bounded: the full catalogue is paginated by getCatalogProducts. */
 export function getProducts(limit = 100) {
   return list({}, limit);
