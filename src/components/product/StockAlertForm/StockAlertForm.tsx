@@ -35,10 +35,10 @@ export function StockAlertForm({
       <div className={styles.heading}>
         <BellRing size={20} aria-hidden="true" />
         <div>
-          <h2 id={`alerte-${variantId}`}>Être prévenu du retour</h2>
+          <h2 id={`alerte-${variantId}`}>Prévenez-moi du retour en stock</h2>
           <p>
-            Un e-mail, une seule fois, dès que la version sélectionnée (
-            {language}) est de nouveau disponible.
+            Un seul e-mail lorsque la version sélectionnée ({language}) est de
+            nouveau disponible.
           </p>
         </div>
       </div>
@@ -104,10 +104,11 @@ export function StockAlertForm({
             </div>
           )}
           <button type="submit" disabled={pending} className={styles.submit}>
-            {pending ? 'Un instant…' : 'M’avertir du retour'}
+            {pending ? 'Un instant…' : 'M’avertir du retour en stock'}
           </button>
           <p className={styles.legal}>
-            Adresse utilisée uniquement pour cette alerte, puis effacée.{' '}
+            Sans inscription à la newsletter. Adresse utilisée uniquement pour
+            cette alerte, puis effacée.{' '}
             <Link href="/confidentialite">Confidentialité</Link>
           </p>
         </form>

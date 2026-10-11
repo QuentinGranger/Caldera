@@ -76,21 +76,23 @@ function SelectedVariant({
       <p className={styles.sku}>
         SKU : <span>{variant.sku}</span> · {languageLabels[variant.language]}
       </p>
-      <div className={styles.purchase} ref={buy}>
-        <QuantitySelector
-          quantity={quantity}
-          max={Math.min(variant.maxQuantity, MAX_CART_ITEM_QUANTITY)}
-          disabled={!variant.maxQuantity || soldOut}
-          onChange={setQuantity}
-        />
-        <AddToCartButton
-          variantId={variant.id}
-          quantity={quantity}
-          disabled={!canPreparePurchase(variant, quantity)}
-          preorder={preorder}
-          unavailable={soldOut}
-        />
-      </div>
+      {!soldOut && (
+        <div className={styles.purchase} ref={buy}>
+          <QuantitySelector
+            quantity={quantity}
+            max={Math.min(variant.maxQuantity, MAX_CART_ITEM_QUANTITY)}
+            disabled={!variant.maxQuantity || soldOut}
+            onChange={setQuantity}
+          />
+          <AddToCartButton
+            variantId={variant.id}
+            quantity={quantity}
+            disabled={!canPreparePurchase(variant, quantity)}
+            preorder={preorder}
+            unavailable={soldOut}
+          />
+        </div>
+      )}
       {!soldOut && canPreparePurchase(variant, quantity) && (
         <StickyBuyBar
           target={buy}

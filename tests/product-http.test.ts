@@ -104,7 +104,10 @@ test('HTTP : galerie, fil d’Ariane indexable, metadata et JSON-LD', async () =
 });
 test('HTTP : rupture indexable avec alternatives, précommande, sans extension et sans variante', async () => {
   const sold = await page('dev-display-vallees');
-  assert.match(sold, /<button[^>]*disabled=""[^>]*>[\s\S]*?Rupture de stock/);
+  assert.match(
+    sold,
+    /<button(?=[^>]*type="submit")(?![^>]*disabled)[^>]*>M’avertir du retour en stock<\/button>/,
+  );
   assert.ok(text(sold).includes('Rupture de stock'));
   assert.ok(text(sold).includes('Produit épuisé.'));
   assert.ok(text(sold).includes('Alternatives disponibles'));

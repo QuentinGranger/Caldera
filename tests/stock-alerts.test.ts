@@ -38,6 +38,15 @@ test('alertes : e-mails échappés, lien unique, version texte', () => {
   assert.equal(notification.subject, `De retour en stock : ${product.name}`);
   assert.match(notification.text, /une seule fois/);
   assert.match(notification.text, /59,90 €/);
+  assert.match(
+    notification.html,
+    /href="https:\/\/lesterresdecaldera.fr\/produit\/etb\?variant=ETB-FR"/,
+  );
+  assert.match(
+    notification.text,
+    /https:\/\/lesterresdecaldera.fr\/produit\/etb\?variant=ETB-FR/,
+  );
+  assert.doesNotMatch(notification.text, /quantités sont limitées/);
   // No line break can reach the subject header.
   assert.doesNotMatch(
     renderStockAlertNotificationEmail(

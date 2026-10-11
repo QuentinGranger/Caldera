@@ -116,13 +116,26 @@ test('alertes de retour en stock : double opt-in, un seul envoi, suppression, r√
           mails.at(-1)!.text,
           /Annuler cette alerte : http.*#token=/,
         );
-        // Asking again replaces the link: still one alert.
+        // Asking again sends nothing and preserves the original link.
+        const confirmations = mails.length;
         await service.subscribeToStockAlert({
           email: guest,
           variantId: soldOut.id,
           customer: null,
         });
         assert.equal(await db.stockAlert.count({ where: { email: guest } }), 1);
+        assert.equal(mails.length, confirmations);
+        // An expired confirmation can be requested again; the old token dies.
+        await db.stockAlert.update({
+          where: { id: alert.id },
+          data: { confirmationExpiresAt: new Date(Date.now() - 1000) },
+        });
+        await service.subscribeToStockAlert({
+          email: guest,
+          variantId: soldOut.id,
+          customer: null,
+        });
+        assert.equal(mails.length, confirmations + 1);
         assert.equal(await service.confirmStockAlert(token), false);
         const latest = fragmentToken(mails.at(-1)!.action);
         assert.equal(await service.confirmStockAlert(latest), true);
