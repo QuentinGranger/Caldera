@@ -12,6 +12,7 @@ import { ProductGallery } from '@/components/product/ProductGallery/ProductGalle
 import { ProductPageSkeleton } from '@/components/loading/LoadingSkeleton';
 import { currentCustomer } from '@/lib/account/auth';
 import { PurchaseAssurance } from '@/components/shipping/PurchaseAssurance';
+import { ProductSpecifications } from '@/components/product/ProductPurchasePanel/ProductSpecifications';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel/ProductPurchasePanel';
 import { ProductWishlistButton } from '@/components/product/ProductWishlistButton/ProductWishlistButton';
 import { ProductDetails } from '@/components/product/ProductDetails/ProductDetails';
@@ -187,6 +188,13 @@ async function ProductContent({
               product.variants.length ? 'Produit épuisé' : 'Indisponible'
             }
             title="Alternatives disponibles"
+          />
+        )}
+        {salesEnabled && !product.isDemonstration && (
+          <ProductSpecifications
+            variants={product.variants}
+            typeLabel={productTypeLabels[product.productType]}
+            releaseDate={product.releaseDate}
           />
         )}
         <ProductDetails description={product.description} tags={product.tags} />

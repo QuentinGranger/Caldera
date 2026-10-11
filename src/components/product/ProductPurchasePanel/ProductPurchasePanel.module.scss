@@ -6,7 +6,7 @@
   gap: 0.25rem 1rem;
   margin: 0 0 0.6rem;
   strong {
-    font-size: clamp(2.4rem, 7vw, 3rem);
+    font-size: clamp(2.8rem, 7vw, 3.7rem);
     font-weight: 700;
     letter-spacing: -0.045em;
     line-height: 1;
@@ -31,7 +31,7 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: stretch;
   margin: 0.75rem 0;
   padding-top: 1rem;
   border-top: 1px solid v.$color-border;
@@ -141,4 +141,64 @@
 // « Livraison dès … » under the stock: close to the price, light.
 .shippingFrom {
   margin: -0.4rem 0 1rem;
+}
+
+.tax {
+  font-size: 0.75rem;
+  color: v.$color-text-muted;
+}
+.purchase {
+  > div:last-child {
+    flex-basis: 100%;
+    button {
+      min-height: 4rem;
+      font-size: 1.1rem;
+    }
+  }
+}
+.estimate {
+  margin-top: 0.75rem;
+  summary {
+    cursor: pointer;
+    min-height: 44px;
+    padding-block: 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+:global([data-product-world]) .specs {
+  margin-top: clamp(3rem, 7vw, 5rem);
+  padding-block: 2rem;
+  border-top: 1px solid #e8c26130;
+  h2 {
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    margin-bottom: 1rem;
+  }
+  dl {
+    max-width: 45rem;
+    font-size: 0.9rem;
+  }
+  dl > div {
+    border-color: #e8c26130;
+    grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr);
+  }
+  dt {
+    color: #c7d4c3;
+  }
+}
+
+.returnNote {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  span {
+    color: v.$color-text-muted;
+  }
 }
