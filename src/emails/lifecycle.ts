@@ -1,8 +1,6 @@
+import { emailLayout } from './layout';
 import { escapeHtml } from './templates';
-import {
-  EMAIL_SOCIAL_LINKS_HTML,
-  EMAIL_SOCIAL_LINKS_TEXT,
-} from './social-links';
+import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import type { LifecycleKind } from '@/lib/lifecycle/policy';
 export type LifecycleProduct = {
   name: string;
@@ -89,15 +87,25 @@ export function renderLifecycleEmail(
     );
   const button = (url: string, label: string) =>
     `<a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 22px;margin:12px 0;background:#003c2d;color:#fff;text-decoration:none;border-radius:4px">${escapeHtml(label)}</a>`;
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:20px 8px;background:#f6f1e4;color:#173e32;font-family:Arial,sans-serif;line-height:1.6"><main style="max-width:640px;margin:auto;background:#fffcf5"><header style="padding:26px;background:#003c2d;border-bottom:3px solid #e8c261"><img src="${escapeHtml(urls.logo)}" width="240" alt="Les Terres de Caldera" style="max-width:100%;height:auto"></header><section style="padding:24px"><h1 style="font-family:Georgia,serif;font-size:30px;line-height:1.2">${escapeHtml(subject)}</h1><p>${escapeHtml(message.body)}</p>${products
-    .slice(0, 4)
-    .map(
-      (p, i) =>
-        `<p><a href="${escapeHtml(p.url)}" style="color:#173e32"><strong>${escapeHtml(lines[i] ?? p.name)}</strong></a></p>`,
-    )
-    .join(
-      '',
-    )}${button(urls.action, message.cta)}<p style="font-size:12px"><a href="${escapeHtml(urls.preferences)}">Gérer mes préférences</a> · <a href="${escapeHtml(urls.unsubscribe)}">Me désinscrire des e-mails commerciaux</a></p></section><footer style="padding:20px 24px;border-top:1px solid #d8d5c7;font-size:13px">Les Terres de Caldera${EMAIL_SOCIAL_LINKS_HTML}</footer></main></body></html>`;
+  const html = emailLayout({
+    subject,
+    logo: urls.logo,
+    label:
+      kind === 'CART_FIRST' || kind === 'CART_SECOND'
+        ? 'Votre sélection'
+        : kind === 'WELCOME'
+          ? 'Bienvenue à Caldera'
+          : 'Votre rendez-vous Caldera',
+    preheader: message.body,
+    content: `<h1>${escapeHtml(subject)}</h1><p>${escapeHtml(message.body)}</p>${products
+      .slice(0, 4)
+      .map(
+        (p) =>
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;border:1px solid #ddd6c4;background:#f6f2e8"><tr><td style="padding:20px"><p style="margin:0 0 8px;font-size:17px;line-height:1.4"><a href="${escapeHtml(p.url)}" style="color:#173e32;text-decoration:none"><strong>${escapeHtml(p.name)}</strong></a></p><p style="margin:0;font-size:21px;font-weight:700;color:#123d31">${escapeHtml(p.price)}${p.quantity ? `<span style="font-size:13px;font-weight:400;color:#526157"> · Quantité : ${p.quantity}</span>` : ''}</p>${p.stock !== undefined ? `<p style="margin:8px 0 0;font-size:13px;color:#76551e">Plus que ${p.stock} exemplaire${p.stock > 1 ? 's' : ''} disponible${p.stock > 1 ? 's' : ''}</p>` : ''}</td></tr></table>`,
+      )
+      .join('')}${button(urls.action, message.cta)}`,
+    footer: `<p style="margin:18px 0 0;font-size:12px;line-height:1.8"><a href="${escapeHtml(urls.preferences)}" style="color:#345b48">Gérer mes préférences</a><br><a href="${escapeHtml(urls.unsubscribe)}" style="color:#345b48">Me désinscrire des e-mails commerciaux</a></p>`,
+  });
   return {
     subject,
     html,
