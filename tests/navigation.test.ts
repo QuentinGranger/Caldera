@@ -21,6 +21,16 @@ test('menu principal : aucun lien vers une page absente quand le catalogue est v
   assert.deepEqual(menu(headerItems(empty)), ['Univers /univers']);
 });
 
+test('menu principal : Collections reste masqué quand le catalogue existe sans extension', () => {
+  const site = buildSiteNavigation(
+    { games: [], categoryHubs: [] },
+    new Set(['catalogue'] as const),
+    { questions: true, news: false, extensions: false, calendar: false },
+  );
+  assert.equal(site.extensions, null);
+  assert.ok(!menu(headerItems(site)).some((item) => item.includes('/extensions')));
+});
+
 test('menu principal : jeux, familles et listes indexables seulement', () => {
   const site = buildSiteNavigation(
     {
