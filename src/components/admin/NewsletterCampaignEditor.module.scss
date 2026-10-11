@@ -169,3 +169,24 @@
     grid-column: auto;
   }
 }
+
+.guidance {
+  padding: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  margin-block: 1rem;
+  summary {
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+  }
+  ul {
+    padding-left: 1.25rem;
+    line-height: 1.7;
+  }
+  li + li {
+    margin-top: 0.5rem;
+  }
+}

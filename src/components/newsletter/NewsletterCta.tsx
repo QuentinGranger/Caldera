@@ -19,7 +19,7 @@ export function NewsletterCta({
         <h2>{title}</h2>
         <p>{children}</p>
       </div>
-      <Link href="/#newsletter">
+      <Link href="/newsletter">
         S’inscrire
         <ArrowRight size={16} aria-hidden="true" />
       </Link>

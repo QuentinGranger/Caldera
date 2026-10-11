@@ -1,0 +1,66 @@
+@use '@/styles/abstracts/variables' as v;
+@use '@/styles/abstracts/mixins' as m;
+
+.main {
+  padding-block: clamp(2rem, 6vw, 5rem);
+  background: v.$color-night;
+  color: v.$color-text-on-dark;
+}
+.header {
+  display: grid;
+  gap: 1rem;
+  max-width: 48rem;
+  margin-bottom: 2rem;
+  h1 {
+    font: 500 clamp(2.5rem, 7vw, 4.5rem)/1.05 v.$font-heading;
+  }
+  > p:first-child {
+    color: v.$color-gold-light;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+  }
+  p {
+    line-height: 1.7;
+  }
+}
+.grid,
+.channels {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.grid {
+  @include m.from(v.$breakpoint-desktop) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.panel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid rgb(232 194 97 / 25%);
+  border-radius: v.$radius-medium;
+  background: rgb(255 255 255 / 3%);
+  h2 {
+    color: v.$color-gold-light;
+    font: 500 1.8rem/1.15 v.$font-heading;
+  }
+  p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  nav {
+    display: grid;
+    gap: 0.25rem;
+  }
+  nav a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    color: v.$color-gold-light;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}

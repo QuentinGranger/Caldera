@@ -102,6 +102,31 @@ export function NewsletterCampaignEditor({
     <div className={styles.layout}>
       <section className={styles.editor}>
         <h2>Contenu de la campagne</h2>
+        <details className={styles.guidance}>
+          <summary>Préparer une lettre utile</summary>
+          <ul>
+            <li>
+              Sortie : extension, date confirmée, source officielle et lien vers
+              sa page.
+            </li>
+            <li>
+              Réassort : vérifiez le stock actuel et la version ; liez
+              directement la fiche produit.
+            </li>
+            <li>
+              Sélection : expliquez à qui elle convient et pourquoi, avec des
+              produits disponibles.
+            </li>
+            <li>
+              Regroupez les informations proches. Sans nouveauté concrète,
+              reportez l’envoi.
+            </li>
+            <li>
+              Relisez les liens, dates et disponibilités puis envoyez-vous un
+              test. Évitez les fausses urgences.
+            </li>
+          </ul>
+        </details>
         <AdminForm action={action} submit="Enregistrer le brouillon">
           {value.id && <input type="hidden" name="id" value={value.id} />}
           <div className={styles.fields}>

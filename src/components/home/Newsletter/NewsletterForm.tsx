@@ -68,8 +68,9 @@ export function NewsletterForm() {
             }
           />
           <span>
-            J’accepte de recevoir par e-mail les nouvelles et offres des Terres
-            de Caldera. Je peux me désinscrire à tout moment.{' '}
+            J’accepte de recevoir par e-mail les sorties, réassorts et
+            sélections des Terres de Caldera. Je peux me désinscrire à tout
+            moment.{' '}
             <Link href="/confidentialite">Politique de confidentialité</Link>
           </span>
         </label>
