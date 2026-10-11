@@ -71,7 +71,7 @@ test('alertes de retour en stock HTTP : formulaire, inscription, pages privées'
       'fiche épuisée : formulaire d’alerte pour la version',
       async () => {
         const html = await (await fetch(`${base}${path}`)).text();
-        assert.match(html, /Être prévenu du retour/);
+        assert.match(html, /Prévenez-moi du retour en stock/);
         assert.match(html, /M’avertir du retour/);
         assert.ok(html.includes(`name="variantId" value="${variantId}"`));
         assert.doesNotMatch(html, /seront disponibles ultérieurement/);

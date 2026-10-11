@@ -58,14 +58,14 @@ export function renderStockAlertNotificationEmail(
   );
   const html = layout(
     subject,
-    `<p style="font-size:13px">Alerte de retour en stock</p><h1 style="font-family:Georgia,serif;font-size:30px;line-height:1.2">Il est de retour</h1><p><strong>${escapeHtml(productLine(product))}</strong><br>${escapeHtml(product.price)}</p><p>Les quantités sont limitées et ne sont pas réservées : la commande reste ouverte à tous jusqu’à épuisement.</p>${button(urls.product, 'Voir le produit')}<p style="font-size:12px;color:#60665d">Vous recevez ce message une seule fois : cette alerte est maintenant terminée et votre adresse sera effacée sous 30 jours.</p>`,
+    `<p style="font-size:13px">Alerte de retour en stock</p><h1 style="font-family:Georgia,serif;font-size:30px;line-height:1.2">Il est de retour</h1><p><strong>${escapeHtml(productLine(product))}</strong><br>${escapeHtml(product.price)}</p><p>La version que vous suiviez est de nouveau disponible. Consultez sa fiche pour vérifier le stock actuel ; cette alerte ne réserve pas de produit.</p>${button(urls.product, 'Voir le produit disponible')}<p style="font-size:12px;color:#60665d">Vous recevez ce message une seule fois : cette alerte est maintenant terminée et votre adresse sera effacée sous 30 jours.</p>`,
     urls.logo,
   );
   const text = [
     'Il est de retour',
     productLine(product),
     product.price,
-    'Les quantités sont limitées et ne sont pas réservées : la commande reste ouverte à tous jusqu’à épuisement.',
+    'La version que vous suiviez est de nouveau disponible. Consultez sa fiche pour vérifier le stock actuel ; cette alerte ne réserve pas de produit.',
     `Voir le produit : ${urls.product}`,
     'Vous recevez ce message une seule fois : cette alerte est maintenant terminée.',
     'Les Terres de Caldera',

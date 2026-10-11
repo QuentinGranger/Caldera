@@ -170,7 +170,7 @@ export function buildShopFaq(methods: readonly ShippingFact[]): ShopFaqGroup[] {
       items: [
         [
           'Un produit est épuisé : comment être prévenu de son retour ?',
-          'Sur sa fiche, la version épuisée propose « Être prévenu du retour » : vous recevez un seul e-mail, lorsqu’elle revient. Sans compte, confirmez d’abord votre adresse grâce à l’e-mail reçu ; avec un compte, l’alerte est envoyée à l’adresse du compte et se retrouve dans « Alertes de stock ».',
+          'Sur sa fiche, la version épuisée propose « M’avertir du retour en stock » : vous recevez un seul e-mail, lorsqu’elle revient. Sans compte, confirmez d’abord votre adresse grâce à l’e-mail reçu ; avec un compte, l’alerte est envoyée à l’adresse du compte et se retrouve dans « Alertes de stock ».',
         ],
         [
           'Comment suivre les nouveautés et les réassorts ?',

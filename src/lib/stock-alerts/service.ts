@@ -87,9 +87,16 @@ export async function subscribeToStockAlert({
   }
   const existing = await db.stockAlert.findUnique({
     where: { email_variantId: { email, variantId } },
-    select: { status: true },
+    select: { status: true, confirmationExpiresAt: true },
   });
   if (existing?.status === 'ACTIVE' || existing?.status === 'SENDING')
+    return 'pending';
+  // Keep the original confirmation link valid and avoid repeated reminders.
+  if (
+    existing?.status === 'PENDING' &&
+    existing.confirmationExpiresAt &&
+    existing.confirmationExpiresAt > new Date()
+  )
     return 'pending';
   const held = await db.stockAlert.count({
     where: { email, status: { in: ['PENDING', 'ACTIVE', 'SENDING'] } },
