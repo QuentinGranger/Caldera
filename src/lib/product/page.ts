@@ -10,6 +10,7 @@ import {
   type ContentEntry,
   type ContentScope,
 } from '@/lib/content';
+import { getComplementaryProducts } from '@/lib/catalog/getComplementaryProducts';
 import { getRelatedProducts } from '@/lib/catalog/getRelatedProducts';
 import {
   getProductRoute,
@@ -180,6 +181,7 @@ export interface ProductPageData {
   guides: ContentEntry[];
   /** Purchasable products first. */
   related: CatalogProduct[];
+  complementary: CatalogProduct[];
   shipping: ShippingOptionView[];
   /** Product markup of an indexable page, null otherwise. */
   structuredData: JsonLdGraph | null;
@@ -189,15 +191,23 @@ export async function loadProductPage(
   product: ProductDetail,
   decision: IndexDecision,
 ): Promise<ProductPageData> {
-  const [index, categories, related, linkGroups, glossary, shipping] =
-    await Promise.all([
-      getLandingIndex(),
-      getCategories(),
-      getRelatedProducts(product),
-      getProductLinks(product),
-      getGlossaryTermForProductType(product.productType),
-      getShippingFacts(),
-    ]);
+  const [
+    index,
+    categories,
+    related,
+    complementary,
+    linkGroups,
+    glossary,
+    shipping,
+  ] = await Promise.all([
+    getLandingIndex(),
+    getCategories(),
+    getRelatedProducts(product),
+    getComplementaryProducts(product),
+    getProductLinks(product),
+    getGlossaryTermForProductType(product.productType),
+    getShippingFacts(),
+  ]);
   const placement: ProductPlacement = {
     game: product.game,
     set: product.tcgSet
@@ -228,6 +238,7 @@ export async function loadProductPage(
     glossary,
     guides,
     related,
+    complementary,
     shipping: shippingOptionViews(shipping),
     structuredData:
       decision.index && productMarkup
