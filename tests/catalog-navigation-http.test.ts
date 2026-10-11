@@ -139,14 +139,17 @@ test('HTTP : filtre FR cohérent, cases synchronisées, URL nettoyée et SEO', a
 test('HTTP : pagination crawlable, indexable et bornée', async () => {
   const first = await page('/catalogue?language=FR&sort=price-asc');
   assert.equal(articles(first.html).length, 12);
+  // Twelve French products remain after hiding the two preorders: one page.
   assert.ok(
-    first.html.includes(
+    !first.html.includes(
       'language=FR&amp;sort=price-asc&amp;page=2#catalogue-resultats',
     ),
   );
-  const second = await page('/catalogue?language=FR&sort=price-asc&page=2');
-  assert.ok(articles(second.html).length > 0);
-  assert.ok(noindex(second.html));
+  assert.ok(noindex(first.html));
+  await redirects(
+    '/catalogue?language=FR&sort=price-asc&page=2',
+    '/catalogue?language=FR&sort=price-asc',
+  );
 
   const catalogue = await page('/catalogue');
   assert.match(
