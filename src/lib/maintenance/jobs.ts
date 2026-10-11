@@ -1,3 +1,4 @@
+import { purgeEmailEngagement } from '@/lib/email/engagement';
 import { purgeMeasurement } from '@/lib/analytics/server';
 import 'server-only';
 import { processPendingEmails } from '@/lib/email/processor';
@@ -101,6 +102,7 @@ const tasks: Record<
     ok: true,
     counts: {
       ...(await purgeMeasurement()),
+      ...(await purgeEmailEngagement()),
       ...(await purgeReturnPhotos()),
       ...(await purgeContactMessages()),
     },

@@ -2,6 +2,7 @@ import 'server-only';
 import { appOrigin } from '@/lib/orders/access';
 export type EmailEnvelope = {
   from: string;
+  tags?: { name: string; value: string }[];
   to: string[];
   reply_to?: string;
   subject: string;
@@ -51,12 +52,15 @@ export function resendProvider(): EmailProvider {
   return {
     name: 'resend',
     async send(envelope, idempotencyKey) {
+      const sendingKey = envelope.from.includes('@news.lesterresdecaldera.fr')
+        ? process.env.MARKETING_EMAIL_PROVIDER_API_KEY || key
+        : key;
       let response: Response;
       try {
         response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${key}`,
+            Authorization: `Bearer ${sendingKey}`,
             'Content-Type': 'application/json',
             'Idempotency-Key': idempotencyKey,
           },

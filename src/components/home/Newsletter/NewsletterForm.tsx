@@ -82,6 +82,15 @@ export function NewsletterForm() {
             désactivable à tout moment dans mon compte.
           </span>
         </label>
+        <label className={styles.consent}>
+          <input name="emailTracking" type="checkbox" />
+          <span>
+            J’autorise la mesure des ouvertures et clics dans les e-mails
+            commerciaux pour aider Caldera à améliorer ses contenus. Facultatif
+            ; les e-mails restent disponibles sans ce suivi. Retrait dans mon
+            compte ou par désinscription.
+          </span>
+        </label>
         {errors.consent && (
           <p id="newsletter-consent-error" className={styles.fieldError}>
             {errors.consent}

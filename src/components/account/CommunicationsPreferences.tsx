@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { trackingAllowed } from '@/lib/email/engagement';
 import { getPrisma } from '@/lib/db/prisma';
 import { newsletterUnsubscribeUrl } from '@/lib/newsletter/tokens';
 import { saveCommunicationsAction } from '@/lib/lifecycle/actions';
@@ -39,8 +40,23 @@ export async function CommunicationsPreferences({ email }: { email: string }) {
             <p>
               Facultatif. Au maximum un message commercial automatique tous les
               trois jours et trois sur trente jours, avec un délai possible
-              selon les campagnes déjà reçues. Aucun suivi de navigation ni
-              pixel d’ouverture.
+              selon les campagnes déjà reçues.
+            </p>
+            <label>
+              <input
+                type="checkbox"
+                name="emailTracking"
+                defaultChecked={trackingAllowed(subscriber)}
+              />{' '}
+              J’autorise Caldera à mesurer les ouvertures et clics dans les
+              e-mails commerciaux pour améliorer ses contenus.
+            </label>
+            <p>
+              Facultatif, valable six mois. Refuser ne change pas les e-mails
+              reçus. Le retrait arrête le suivi des futurs envois et la prise en
+              compte des événements des anciens messages ; leur contenu déjà
+              reçu ne peut pas être modifié.{' '}
+              <Link href="/confidentialite">En savoir plus</Link>.
             </p>
           </AccountForm>
           <Link href={newsletterUnsubscribeUrl(subscriber.id)}>

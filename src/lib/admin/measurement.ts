@@ -18,6 +18,8 @@ export async function getMeasurementOverview() {
     stock,
     campaigns,
     lifecycle,
+    engagement,
+    lifecycleEngagement,
   ] = await Promise.all([
     db.order.aggregate({
       where: { paidAt: { gte: since }, payment: { status: 'SUCCEEDED' } },
@@ -93,6 +95,26 @@ export async function getMeasurementOverview() {
       by: ['kind', 'status'],
       where: { createdAt: { gte: since } },
       _count: true,
+    }),
+    db.newsletterCampaignDelivery.groupBy({
+      by: ['campaignId'],
+      where: { trackingEnabled: true, status: 'SENT', sentAt: { gte: since } },
+      _count: {
+        _all: true,
+        deliveredAt: true,
+        openedAt: true,
+        clickedAt: true,
+      },
+    }),
+    db.lifecycleDelivery.groupBy({
+      by: ['kind'],
+      where: { trackingEnabled: true, status: 'SENT', sentAt: { gte: since } },
+      _count: {
+        _all: true,
+        deliveredAt: true,
+        openedAt: true,
+        clickedAt: true,
+      },
     }),
   ]);
   const products = new Map<
@@ -208,5 +230,7 @@ export async function getMeasurementOverview() {
       })),
     ),
     lifecycle,
+    engagement,
+    lifecycleEngagement,
   };
 }

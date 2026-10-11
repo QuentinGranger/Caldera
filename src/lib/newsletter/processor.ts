@@ -1,3 +1,8 @@
+import {
+  marketingSender,
+  trackingAllowed,
+  trackingTags,
+} from '@/lib/email/engagement';
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@/generated/prisma/client';
@@ -126,7 +131,7 @@ async function claim() {
         firstAttemptAt: current.firstAttemptAt ?? new Date(),
         lastError: null,
       },
-      include: { campaign: true },
+      include: { campaign: true, subscriber: true },
     });
     if (delivery.campaign.status === 'QUEUED')
       await tx.newsletterCampaign.update({
@@ -207,6 +212,7 @@ export async function processNewsletterDeliveries(
       leaseToken: delivery.leaseToken,
     };
     try {
+      let frozenTrackingConsentAt = delivery.trackingConsentAt;
       let envelope: EmailEnvelope;
       if (delivery.envelope) envelope = parseEnvelope(delivery.envelope);
       else {
@@ -217,8 +223,15 @@ export async function processNewsletterDeliveries(
             unsubscribe: newsletterUnsubscribeUrl(delivery.subscriberId),
           },
         );
+        const sender = marketingSender(delivery.subscriber, settings.from);
+        frozenTrackingConsentAt = sender.tracked
+          ? delivery.subscriber.emailTrackingConsentAt
+          : null;
         envelope = {
-          from: settings.from,
+          from: sender.from,
+          ...(sender.tracked
+            ? { tags: trackingTags(delivery.id, 'campaign') }
+            : {}),
           to: [settings.testRecipient ?? delivery.recipient],
           ...(settings.replyTo ? { reply_to: settings.replyTo } : {}),
           subject: `${settings.testRecipient ? '[TEST] ' : ''}${rendered.subject}`,
@@ -231,12 +244,38 @@ export async function processNewsletterDeliveries(
             data: {
               envelope: envelope as unknown as Prisma.InputJsonObject,
               provider: provider.name,
+              trackingEnabled: sender.tracked,
+              trackingConsentAt: sender.tracked
+                ? delivery.subscriber.emailTrackingConsentAt
+                : null,
             },
           });
         if (!persisted.count) continue;
       }
       if (settings.testRecipient && envelope.to[0] !== settings.testRecipient)
         throw new EmailProviderError('DESTINATAIRE_FIGE_DIFFERENT_DU_TEST');
+      const consent = await getPrisma().newsletterSubscriber.findUnique({
+        where: { id: delivery.subscriberId },
+      });
+      if (
+        consent?.status !== 'ACTIVE' ||
+        (envelope.from.includes('@news.lesterresdecaldera.fr') &&
+          (process.env.EMAIL_ENGAGEMENT_ENABLED !== 'true' ||
+            !trackingAllowed(consent) ||
+            !frozenTrackingConsentAt ||
+            consent.emailTrackingConsentAt! > frozenTrackingConsentAt))
+      ) {
+        await getPrisma().newsletterCampaignDelivery.updateMany({
+          where: owned,
+          data: {
+            status: 'SKIPPED',
+            leaseUntil: null,
+            leaseToken: null,
+            lastError: 'CONSENTEMENT_RETIRE',
+          },
+        });
+        continue;
+      }
       const result = await provider.send(
         envelope,
         `caldera-newsletter:${delivery.id}`,

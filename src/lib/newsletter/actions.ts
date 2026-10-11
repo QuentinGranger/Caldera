@@ -1,4 +1,8 @@
 'use server';
+import {
+  clearSubscriberEngagement,
+  EMAIL_TRACKING_VERSION,
+} from '@/lib/email/engagement';
 import { deliverAfterResponse } from '@/lib/auth/deliver';
 import { runLifecycle } from '@/lib/lifecycle/run';
 import { revalidatePath } from 'next/cache';
@@ -72,6 +76,10 @@ export async function subscribeNewsletterAction(
     const token = newNewsletterConfirmationToken();
     const data = {
       status: 'PENDING' as const,
+      emailTracking: form.get('emailTracking') === 'on',
+      emailTrackingConsentAt: form.get('emailTracking') === 'on' ? now : null,
+      emailTrackingConsentVersion:
+        form.get('emailTracking') === 'on' ? EMAIL_TRACKING_VERSION : null,
       personalizedEmails: form.get('personalized') === 'on',
       personalizedConsentAt: form.get('personalized') === 'on' ? now : null,
       personalizedConsentVersion:
@@ -151,6 +159,9 @@ export async function unsubscribeNewsletterAction(
       where: { id },
       data: {
         status: 'UNSUBSCRIBED',
+        emailTracking: false,
+        emailTrackingConsentAt: null,
+        emailTrackingConsentVersion: null,
         personalizedEmails: false,
         personalizedConsentAt: null,
         unsubscribedAt: new Date(),
@@ -158,6 +169,7 @@ export async function unsubscribeNewsletterAction(
         confirmationExpiresAt: null,
       },
     });
+    await clearSubscriberEngagement(id);
     revalidatePath('/admin/newsletter');
     return {
       success: true,

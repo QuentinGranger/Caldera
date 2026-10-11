@@ -55,6 +55,22 @@ test('automations : événements vrais, opt-in, plafonds, concurrence et annulat
     },
     include: { variants: true },
   });
+  // WIN_BACK requires an actual new product not previously bought. Keep the
+  // fixture self-contained instead of relying on products from other suites.
+  const newcomer = await db.product.create({
+    data: {
+      name: 'QA nouveauté',
+      slug: `qa-new-${key}`,
+      productType: 'BOOSTER',
+      status: 'ACTIVE',
+      categoryId: category.id,
+      publishedAt: past(1),
+      variants: {
+        create: { sku: `QA-NEW-${key}`, price: '5.90', stockQuantity: 10 },
+      },
+    },
+    include: { variants: true },
+  });
   const variant = p.variants[0]!;
   const subscriberIds: string[] = [],
     cartIds: string[] = [],
@@ -320,9 +336,14 @@ test('automations : événements vrais, opt-in, plafonds, concurrence et annulat
     await db.cartItem.deleteMany({ where: { cartId: { in: cartIds } } });
     await db.cart.deleteMany({ where: { id: { in: cartIds } } });
     await db.lifecycleVariantState.deleteMany({
-      where: { variantId: variant.id },
+      where: {
+        variantId: { in: [variant.id, ...newcomer.variants.map((v) => v.id)] },
+      },
     });
-    await db.productVariant.deleteMany({ where: { productId: p.id } });
+    await db.productVariant.deleteMany({
+      where: { productId: { in: [p.id, newcomer.id] } },
+    });
+    await db.product.delete({ where: { id: newcomer.id } });
     await db.product.delete({ where: { id: p.id } });
     await db.category.delete({ where: { id: category.id } });
     await db.lifecycleRuntime.update({
