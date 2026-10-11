@@ -244,6 +244,44 @@ test('automations : événements vrais, opt-in, plafonds, concurrence et annulat
       where: { subscriberId: cart.id, kind: 'CART_FIRST' },
     });
     assert.ok(await currentLifecycleContent(cartRow, cart.email));
+    const attempt = await db.order.create({
+      data: {
+        checkoutSessionId: co.id,
+        email: cart.email,
+        publicId: randomBytes(32).toString('hex'),
+        orderNumber: `QA-PENDING-${key}`,
+        status: 'PENDING_PAYMENT',
+        currency: 'EUR',
+        subtotalAmount: '99.80',
+        shippingAmount: '0',
+        totalAmount: '99.80',
+        shippingMethodCode: 'QA',
+        shippingMethodName: 'QA',
+      },
+    });
+    orderIds.push(attempt.id);
+    assert.ok(
+      await currentLifecycleContent(cartRow, cart.email),
+      'an unpaid abandoned attempt does not hide the reminder',
+    );
+    await db.order.update({
+      where: { id: attempt.id },
+      data: { status: 'PAYMENT_PROCESSING' },
+    });
+    assert.equal(
+      await currentLifecycleContent(cartRow, cart.email),
+      null,
+      'an in-flight payment suppresses recovery',
+    );
+    await db.order.update({
+      where: { id: attempt.id },
+      data: { status: 'PAYMENT_FAILED' },
+    });
+    assert.ok(
+      await currentLifecycleContent(cartRow, cart.email),
+      'failed payment may recover only the product selection',
+    );
+
     await db.checkoutSession.update({
       where: { id: co.id },
       data: { status: 'COMPLETED' },

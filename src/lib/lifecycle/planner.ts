@@ -214,7 +214,17 @@ export async function planLifecycle(now = new Date()) {
               },
             },
           ],
-          checkouts: { none: { order: { isNot: null } } },
+          checkouts: {
+            none: {
+              order: {
+                is: {
+                  status: {
+                    in: ['PAID', 'PAYMENT_PROCESSING', 'PAYMENT_REVIEW'],
+                  },
+                },
+              },
+            },
+          },
         },
         include: {
           items: true,

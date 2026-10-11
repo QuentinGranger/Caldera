@@ -141,7 +141,12 @@ export async function currentLifecycleContent(
       cart.items.some((i) => i.updatedAt > row.createdAt) ||
       cart.checkouts.some(
         (c) =>
-          c.order || c.status === 'COMPLETED' || c.updatedAt > row.createdAt,
+          (c.order &&
+            ['PAID', 'PAYMENT_PROCESSING', 'PAYMENT_REVIEW'].includes(
+              c.order.status,
+            )) ||
+          c.status === 'COMPLETED' ||
+          c.updatedAt > row.createdAt,
       )
     )
       return null;
