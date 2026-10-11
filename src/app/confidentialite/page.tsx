@@ -498,9 +498,30 @@ export default function ConfidentialitePage() {
                 des recommandations après achat et une sélection après une
                 période d’inactivité. Elle utilise les articles de votre panier,
                 vos favoris et vos achats enregistrés, sans historique de
-                navigation ni pixel de suivi des ouvertures. Les nouveautés
-                peuvent être adaptées à ces mêmes informations uniquement si
-                vous avez choisi cette option.
+                navigation. Les nouveautés peuvent être adaptées à ces mêmes
+                informations uniquement si vous avez choisi cette option.
+              </p>
+              <p>
+                Une autre case facultative et décochée par défaut permet de
+                mesurer les ouvertures et clics des e-mails commerciaux, avec
+                Resend, via un pixel et des liens de redirection. Ce
+                consentement est valable six mois. Refuser ne réduit pas les
+                communications reçues. Les observations sont conservées au
+                maximum 90 jours dans Caldera, sans y enregistrer l’adresse IP,
+                le navigateur ou l’URL cliquée. Les ouvertures peuvent être
+                déclenchées par les protections de messagerie et ne prouvent pas
+                une lecture.
+              </p>
+              <p>
+                Le suivi ne concerne pas les e-mails de commande, de connexion,
+                de confirmation d’inscription ni les alertes stock demandées.
+                Vous pouvez retirer votre accord dans « Vos e-mails Caldera » ou
+                vous désinscrire. Le retrait supprime les observations associées
+                dans Caldera, arrête le suivi des futurs envois et écarte les
+                événements ultérieurs des anciens messages. Le pixel et les
+                liens d’un e-mail déjà reçu ne peuvent pas être retirés à
+                distance ; le fournisseur peut encore recevoir des requêtes si
+                vous l’ouvrez.
               </p>
               <p>
                 Vous pouvez modifier cette option depuis votre compte, dans «

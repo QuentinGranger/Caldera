@@ -1015,6 +1015,9 @@ model NewsletterSubscriber {
   personalizedConsentAt DateTime?
   personalizedConsentVersion String?
   lifecycleDeliveries   LifecycleDelivery[]
+  emailTracking Boolean @default(false)
+  emailTrackingConsentAt DateTime?
+  emailTrackingConsentVersion String?
 
   @@index([status, createdAt])
   @@index([confirmationExpiresAt])
@@ -1072,6 +1075,13 @@ model NewsletterCampaignDelivery {
   @@index([status, nextAttemptAt])
   @@index([leaseUntil])
   @@index([subscriberId])
+  trackingEnabled Boolean @default(false)
+  trackingConsentAt DateTime?
+  deliveredAt DateTime?
+  openedAt DateTime?
+  clickedAt DateTime?
+  @@index([providerMessageId])
+
 }
 
 enum StockAlertStatus {
@@ -1796,6 +1806,13 @@ model LifecycleDelivery {
   @@unique([subscriberId, eventKey])
   @@index([status, nextAttemptAt])
   @@index([subscriberId, firstAttemptAt])
+  trackingEnabled Boolean @default(false)
+  trackingConsentAt DateTime?
+  deliveredAt DateTime?
+  openedAt DateTime?
+  clickedAt DateTime?
+  @@index([providerMessageId])
+
 }
 
 /// Stock observations: no customer tracking pixels or browsing history.

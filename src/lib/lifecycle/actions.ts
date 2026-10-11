@@ -1,4 +1,9 @@
 'use server';
+import {
+  clearSubscriberEngagement,
+  EMAIL_TRACKING_VERSION,
+  trackingAllowed,
+} from '@/lib/email/engagement';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireCustomer } from '@/lib/account/guard';
@@ -32,14 +37,25 @@ export async function saveCommunicationsAction(
         'Inscrivez-vous et confirmez d’abord la newsletter pour activer les communications commerciales.',
     };
   const enabled = form.get('personalized') === 'on';
+  const tracking = form.get('emailTracking') === 'on';
+  const consentAt =
+    tracking && trackingAllowed(active)
+      ? active.emailTrackingConsentAt
+      : tracking
+        ? new Date()
+        : null;
   await getPrisma().newsletterSubscriber.update({
     where: { id: active.id },
     data: {
       personalizedEmails: enabled,
+      emailTracking: tracking,
+      emailTrackingConsentAt: consentAt,
+      emailTrackingConsentVersion: tracking ? EMAIL_TRACKING_VERSION : null,
       personalizedConsentAt: enabled ? new Date() : null,
       personalizedConsentVersion: enabled ? '2026-10-11-v1' : null,
     },
   });
+  if (!tracking) await clearSubscriberEngagement(active.id);
   if (!enabled)
     await getPrisma().lifecycleDelivery.updateMany({
       where: {

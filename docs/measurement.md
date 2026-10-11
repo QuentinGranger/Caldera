@@ -29,9 +29,15 @@ Les espaces privés, liens de commande et paiement, recherches et fragments sont
 - Les étapes internes sont des présences d’actions par session, pas une preuve de séquence stricte. GA4 reçoit les événements e-commerce pour construire une exploration d’entonnoir.
 - Newsletter et scénarios automatiques : UTM de campagne ; Discord : UTM par type de publication. Aucun identifiant personnel dans ces liens.
 
-## Limites à activer dans le compte fournisseur
+## Mesure des emails commerciaux
 
-La clé Resend existante est limitée à l’envoi (`restricted_api_key` lors de la lecture des métriques). Les taux d’ouverture et de clic bruts ne sont donc pas disponibles. Ne pas les présenter comme zéro. Leur activation nécessite l’accès au compte Resend, un choix de suivi adapté au consentement et une configuration qui ne réécrive pas les liens d’authentification des emails transactionnels. Les visites et revenus attribués aux campagnes restent disponibles après consentement sur le site.
+Le domaine `news.lesterresdecaldera.fr` et son sous-domaine de liens `liens.news.lesterresdecaldera.fr` sont vérifiés dans Resend. Le domaine transactionnel conserve le suivi désactivé. `EMAIL_ENGAGEMENT_ENABLED`, `MARKETING_EMAIL_FROM` et `RESEND_WEBHOOK_SECRET` activent le traitement. La clé d’envoi existante n’a besoin d’aucun accès de lecture ; une clé d’envoi dédiée peut être définie par `MARKETING_EMAIL_PROVIDER_API_KEY`.
+
+Un accord de suivi distinct, facultatif, décoché par défaut et valable 180 jours est enregistré après double opt-in pour une nouvelle inscription, ou dans le compte vérifié. Les abonnés existants restent sans suivi. Un formulaire public ne peut pas activer le suivi d’une adresse déjà inscrite. La queue fige l’expéditeur et l’accord avant son premier essai et revérifie l’accord avant chaque envoi ; un message figé avec suivi est écarté si son accord a été retiré ou remplacé.
+
+Le webhook `/api/webhooks/resend` vérifie la signature Svix du corps brut et sa fraîcheur, limite le corps à 32 Ko et conserve uniquement la première observation de délivrance/ouverture/clic pour un message éligible. Les doublons n’augmentent pas les statistiques. Les adresses IP, agents utilisateur, adresses des destinataires et URLs cliquées reçus dans le payload ne sont ni stockés ni logués. Les messages non commerciaux ou sans accord sont ignorés. Le retrait efface les observations dans Caldera et ignore les événements ultérieurs ; il ne peut pas effacer les pixels/liens d’un email déjà reçu chez le destinataire.
+
+`/admin/mesures` présente sur 30 jours les messages suivis, délivrés, ouvertures et clics uniques, ainsi que les sessions, commandes et revenus attribués par campagne. Les taux portent sur les seuls messages suivis et délivrés, et non tous les abonnés. Les observations sont purgées après 90 jours par la maintenance. Les robots, caches et protections de messagerie rendent ouvertures/clics approximatifs : le CA confirmé demeure l’indicateur commercial principal.
 
 GA4 commence à mesurer à son activation : aucun historique n’est reconstitué. Les achats GA4 dépendent du retour sur la confirmation ; la mesure interne et les totaux financiers serveur compensent cette limite sans envoyer de données personnelles à Google.
 

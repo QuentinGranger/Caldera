@@ -1,3 +1,8 @@
+import {
+  marketingSender,
+  trackingAllowed,
+  trackingTags,
+} from '@/lib/email/engagement';
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { getPrisma } from '@/lib/db/prisma';
@@ -292,6 +297,7 @@ export async function processLifecycleEmails(
         skipped++;
         continue;
       }
+      let frozenTrackingConsentAt = row.trackingConsentAt;
       let envelope = row.envelope ? parseEnvelope(row.envelope) : null;
       if (
         envelope &&
@@ -333,8 +339,15 @@ export async function processLifecycleEmails(
           preferences: `${origin}/compte/profil#communications`,
           logo: `${origin}/assets/brand/logo-header-no-bg.png`,
         });
+        const sender = marketingSender(row.subscriber, settings.from);
+        frozenTrackingConsentAt = sender.tracked
+          ? row.subscriber.emailTrackingConsentAt
+          : null;
         envelope = {
-          from: settings.from,
+          from: sender.from,
+          ...(sender.tracked
+            ? { tags: trackingTags(row.id, 'lifecycle') }
+            : {}),
           to: [settings.testRecipient ?? row.subscriber.email],
           ...rendered,
           subject: `${settings.testRecipient ? '[TEST] ' : ''}${rendered.subject}`,
@@ -342,7 +355,13 @@ export async function processLifecycleEmails(
         };
         const persisted = await db().lifecycleDelivery.updateMany({
           where: owned,
-          data: { envelope: envelope as unknown as Prisma.InputJsonObject },
+          data: {
+            envelope: envelope as unknown as Prisma.InputJsonObject,
+            trackingEnabled: sender.tracked,
+            trackingConsentAt: sender.tracked
+              ? row.subscriber.emailTrackingConsentAt
+              : null,
+          },
         });
         if (!persisted.count) continue;
       }
@@ -354,6 +373,11 @@ export async function processLifecycleEmails(
       });
       if (
         consent?.status !== 'ACTIVE' ||
+        (envelope.from.includes('@news.lesterresdecaldera.fr') &&
+          (process.env.EMAIL_ENGAGEMENT_ENABLED !== 'true' ||
+            !trackingAllowed(consent) ||
+            !frozenTrackingConsentAt ||
+            consent.emailTrackingConsentAt! > frozenTrackingConsentAt)) ||
         (personalKinds.has(current.kind) && !consent.personalizedEmails)
       ) {
         await db().lifecycleDelivery.updateMany({

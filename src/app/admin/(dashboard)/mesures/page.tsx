@@ -253,6 +253,9 @@ export default async function MeasurementPage() {
               <th>Campagne</th>
               <th>Destinataires</th>
               <th>Envoyés (total)</th>
+              <th>Suivis / délivrés (30 j)</th>
+              <th>Ouverture unique</th>
+              <th>Clic unique</th>
               <th>Sessions sur 30 jours</th>
               <th>Achats attribués</th>
               <th>CA attribué TTC</th>
@@ -260,45 +263,61 @@ export default async function MeasurementPage() {
             </tr>
           </thead>
           <tbody>
-            {data.campaigns.map((c) => (
-              <tr key={c.id}>
-                <td>{c.internalName}</td>
-                <td>{c._count.deliveries}</td>
-                <td>{c.sent}</td>
-                <td>
-                  {data.measurement
-                    .filter(
-                      (r) =>
-                        r.channel === 'newsletter' &&
-                        r.campaign === `campaign_${c.id}`,
-                    )
-                    .reduce((n, r) => n + Number(r.sessions), 0)}
-                </td>
-                <td>
-                  {data.measurement
-                    .filter(
-                      (r) =>
-                        r.channel === 'newsletter' &&
-                        r.campaign === `campaign_${c.id}`,
-                    )
-                    .reduce((n, r) => n + Number(r.orders), 0)}
-                </td>
-                <td>
-                  {euros(
-                    data.measurement
+            {data.campaigns.map((c) => {
+              const e = data.engagement.find(
+                (r) => r.campaignId === c.id,
+              )?._count;
+              return (
+                <tr key={c.id}>
+                  <td>{c.internalName}</td>
+                  <td>{c._count.deliveries}</td>
+                  <td>{c.sent}</td>
+                  <td>{e ? `${e._all} / ${e.deliveredAt}` : '—'}</td>
+                  <td>
+                    {e
+                      ? `${e.openedAt} · ${percent(e.openedAt, e.deliveredAt)}`
+                      : '—'}
+                  </td>
+                  <td>
+                    {e
+                      ? `${e.clickedAt} · ${percent(e.clickedAt, e.deliveredAt)}`
+                      : '—'}
+                  </td>
+                  <td>
+                    {data.measurement
                       .filter(
                         (r) =>
                           r.channel === 'newsletter' &&
                           r.campaign === `campaign_${c.id}`,
                       )
-                      .reduce((n, r) => n + Number(r.revenue), 0),
-                  )}
-                </td>
-                <td>
-                  <code>campaign_{c.id}</code>
-                </td>
-              </tr>
-            ))}
+                      .reduce((n, r) => n + Number(r.sessions), 0)}
+                  </td>
+                  <td>
+                    {data.measurement
+                      .filter(
+                        (r) =>
+                          r.channel === 'newsletter' &&
+                          r.campaign === `campaign_${c.id}`,
+                      )
+                      .reduce((n, r) => n + Number(r.orders), 0)}
+                  </td>
+                  <td>
+                    {euros(
+                      data.measurement
+                        .filter(
+                          (r) =>
+                            r.channel === 'newsletter' &&
+                            r.campaign === `campaign_${c.id}`,
+                        )
+                        .reduce((n, r) => n + Number(r.revenue), 0),
+                    )}
+                  </td>
+                  <td>
+                    <code>campaign_{c.id}</code>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -309,13 +328,36 @@ export default async function MeasurementPage() {
           </li>
         ))}
       </ul>
+      <h3>Mesure des e-mails automatiques · 30 jours</h3>
+      <ul>
+        {data.lifecycleEngagement.map((r) => (
+          <li key={r.kind}>
+            {r.kind} : {r._count._all} suivis, {r._count.deliveredAt} délivrés ·
+            ouvertures {r._count.openedAt} (
+            {percent(r._count.openedAt, r._count.deliveredAt)}) · clics{' '}
+            {r._count.clickedAt} (
+            {percent(r._count.clickedAt, r._count.deliveredAt)})
+          </li>
+        ))}
+      </ul>
+      <p>
+        {process.env.EMAIL_ENGAGEMENT_ENABLED === 'true' &&
+        process.env.RESEND_WEBHOOK_SECRET
+          ? 'Réception Resend configurée.'
+          : 'Réception Resend à configurer.'}{' '}
+        Les taux portent uniquement sur les messages commerciaux avec accord de
+        suivi, parmi ceux délivrés sur 30 jours. Un message compte au maximum
+        une fois par événement. « — » signifie aucune base de mesure disponible.
+        Les pixels, caches et robots de messagerie peuvent fausser ouvertures et
+        clics ; ils ne prouvent pas une lecture humaine.
+      </p>
       <p>
         Les liens de campagne portent des UTM sans identifiant de destinataire.
         Dans GA4, filtrez « source = newsletter », « support = email » puis la
         campagne pour consulter visites, achats et revenu attribué. Les
-        ouvertures et clics bruts du fournisseur ne sont pas activés ici : les
-        pixels d’ouverture sont imprécis et nécessitent une information adaptée.
-        Une visite GA4 après clic est mesurée uniquement avec consentement.
+        ouvertures et clics sont remontés par des webhooks signés, uniquement
+        avec un accord de suivi distinct et encore valable. Une visite GA4 après
+        clic est mesurée uniquement avec consentement.
       </p>
     </>
   );

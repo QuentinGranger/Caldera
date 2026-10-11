@@ -119,6 +119,15 @@ export default async function DashboardPage() {
         title="Tableau de bord"
         description="Un aperçu clair des commandes, du stock et des actions à mener."
       />
+      <p>
+        <Link href="/admin/mesures">
+          Mesures : trafic, conversion, produits et e-mails →
+        </Link>
+        {' · '}
+        <Link href="/admin/pilotage">
+          Pilotage : marge, stock et trésorerie →
+        </Link>
+      </p>
       <section className={styles.dashboardHero} aria-label="Priorités du jour">
         <div>
           <span>AUJOURD’HUI SUR CALDERA</span>
