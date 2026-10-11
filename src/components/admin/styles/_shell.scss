@@ -12,9 +12,9 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.6rem;
   padding: 1.6rem 0.85rem 1rem;
-  background: #153b2e;
+  background: linear-gradient(160deg, #163d30, #112e24);
   color: #e9f0e9;
   scrollbar-width: thin;
   scrollbar-color: #557768 #153b2e;
@@ -111,7 +111,7 @@
   gap: 0.75rem;
   padding: 0.7rem 0.8rem;
   min-height: 2.75rem;
-  border-radius: 7px;
+  border-radius: 9px;
   color: t.$muted;
   font-size: 0.78rem;
   font-weight: 550;
@@ -152,7 +152,7 @@
     min-height: 2.75rem;
     padding: 0.7rem 0.8rem;
     margin: 0 !important;
-    border-radius: 7px;
+    border-radius: 9px;
     font-size: 0.78rem;
     font-weight: 550;
     color: t.$ink;
@@ -212,8 +212,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 2rem;
-  min-height: 4.75rem;
+  padding: 0.65rem 2rem;
+  min-height: 4.25rem;
   background: t.$surface;
   border-bottom: 1px solid t.$border;
 }
@@ -252,7 +252,7 @@
   }
 }
 .content {
-  padding: 2rem clamp(1.25rem, 3vw, 3rem) 3rem;
+  padding: 1.8rem clamp(1.25rem, 2.4vw, 2.5rem) 3rem;
   max-width: 95rem;
   margin-inline: auto;
 }
@@ -264,7 +264,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.3rem;
-    border-radius: 7px;
+    border-radius: 9px;
     min-height: 2.75rem;
     list-style: none;
     margin: 0 !important;
@@ -320,4 +320,23 @@
     padding-top: 0.3rem;
     border-top: 1px solid t.$border;
   }
+}
+
+.storeLink {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.2rem;
+  color: #e9d8a6;
+  font-size: 0.76rem;
+  font-weight: 600;
+  > svg:last-of-type {
+    margin-left: auto;
+  }
+}
+.sidebarFoot > span {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.65rem;
 }

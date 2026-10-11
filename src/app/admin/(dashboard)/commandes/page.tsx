@@ -2,6 +2,7 @@ import { FilterPanel } from '@/components/admin/FilterPanel';
 import { FulfillmentStatus } from '@/generated/prisma/client';
 import { fulfillmentLabels } from '@/lib/fulfillment/carriers';
 import Link from 'next/link';
+import { adminListHref } from '@/lib/admin/list-url';
 import { OrderStatus, PaymentStatus } from '@/generated/prisma/client';
 import {
   getAdminOrders,
@@ -49,7 +50,13 @@ export default async function OrdersPage({
       }),
     ),
     { label: 'Toutes', href: '' },
-  ].map((tab) => ({ ...tab, href: `/admin/commandes${tab.href}` }));
+  ].map((tab) => ({
+    ...tab,
+    href: adminListHref('/admin/commandes', params, {
+      view: 'view' in tab ? tab.view : undefined,
+      fulfillment: 'fulfillment' in tab ? tab.fulfillment : undefined,
+    }),
+  }));
   const currentTab = tabs.find((tab) =>
     'view' in tab
       ? view === tab.view
@@ -68,6 +75,16 @@ export default async function OrdersPage({
     (sort && sort !== 'newest' ? 1 : 0);
   const options = (values: string[]) =>
     values.map((value) => ({ value, label: label(value) }));
+  const filterDefinitions: [string, string][] = [
+    ['emails', 'Emails'],
+    ['status', 'Commande'],
+    ['payment', 'Paiement'],
+    ['from', 'Du'],
+    ['to', 'Au'],
+    ['shipping', 'Livraison'],
+    ['fulfillment', 'Préparation'],
+    ['sort', 'Tri'],
+  ];
   return (
     <>
       <PageHeader
@@ -93,6 +110,30 @@ export default async function OrdersPage({
         search={param(params, 'search')}
         placeholder="Numéro, email, ID public, SKU ou suivi"
         activeCount={activeCount}
+        params={params}
+        criteria={filterDefinitions
+          .filter(
+            ([name]) =>
+              param(params, name) &&
+              !(name === 'fulfillment' && fromTab) &&
+              (name !== 'sort' || sort !== 'newest'),
+          )
+          .map(([name, title]) => {
+            const value = param(params, name);
+            const names: Record<string, string> = {
+              failed: 'En échec',
+              oldest: 'Plus anciennes',
+              amount: 'Montant croissant',
+              amountDesc: 'Montant décroissant',
+              paid: 'Date de paiement',
+              shipped: 'Date d’expédition',
+            };
+            const text =
+              name === 'shipping'
+                ? data.shipping.find((item) => item.code === value)?.name
+                : (names[value] ?? label(value));
+            return { name, label: `${title} : ${text ?? value}` };
+          })}
         keep={{ view }}
       >
         <FilterSelect
@@ -155,13 +196,10 @@ export default async function OrdersPage({
         <AdminTable
           caption="Commandes"
           headings={[
-            'Numéro',
-            'Date',
-            'Email client',
             'Commande',
-            'Paiement',
+            'Client',
+            'Statut & paiement',
             'Préparation',
-            'Lignes',
             'Total',
             'Livraison',
           ]}
@@ -172,26 +210,28 @@ export default async function OrdersPage({
                 <Link href={`/admin/commandes/${order.id}`}>
                   {order.orderNumber}
                 </Link>
+                <small>{formatDate(order.createdAt)}</small>
               </td>
-              <td>{formatDate(order.createdAt)}</td>
               <td>{order.email}</td>
               <td>
-                <Badge value={order.status} />
-                {order.refunds.length > 0 && order.payment && (
-                  <Badge
-                    value={
-                      order.refunds.reduce(
-                        (sum, refund) => sum + toCents(refund.amount),
-                        0,
-                      ) >= toCents(order.payment.amount)
-                        ? 'REFUNDED'
-                        : 'PARTIALLY_REFUNDED'
-                    }
-                  />
-                )}
-              </td>
-              <td>
-                {order.payment ? <Badge value={order.payment.status} /> : '—'}
+                <div className={styles.cellBadges}>
+                  <Badge value={order.status} />
+                  {order.refunds.length > 0 && order.payment && (
+                    <Badge
+                      value={
+                        order.refunds.reduce(
+                          (sum, refund) => sum + toCents(refund.amount),
+                          0,
+                        ) >= toCents(order.payment.amount)
+                          ? 'REFUNDED'
+                          : 'PARTIALLY_REFUNDED'
+                      }
+                    />
+                  )}
+                </div>
+                <small>
+                  Paiement : {order.payment ? label(order.payment.status) : '—'}
+                </small>
               </td>
               <td>
                 {order.status === 'PAID' ? (
@@ -200,8 +240,14 @@ export default async function OrdersPage({
                   '—'
                 )}
               </td>
-              <td>{order._count.items}</td>
-              <td>{euros(order.totalAmount)}</td>
+              <td>
+                <strong className={styles.cellAmount}>
+                  {euros(order.totalAmount)}
+                </strong>
+                <small>
+                  {order._count.items} ligne{order._count.items > 1 ? 's' : ''}
+                </small>
+              </td>
               <td>{order.shippingMethodName}</td>
             </tr>
           ))}

@@ -25,8 +25,32 @@ export function PageHeader({
         <h1>{title}</h1>
         {description && <p>{description}</p>}
       </div>
-      {children}
+      {children && <div className={styles.headerActions}>{children}</div>}
     </header>
+  );
+}
+export function FormSection({
+  number,
+  title,
+  description,
+  children,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={styles.formSection} aria-label={title}>
+      <header>
+        <span aria-hidden="true">{number}</span>
+        <div>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+      </header>
+      {children}
+    </section>
   );
 }
 const TONES = {
@@ -179,32 +203,35 @@ export function Pagination({
   return (
     <nav className={styles.pagination} aria-label="Pagination">
       <span>
-        {total} résultat{total > 1 ? 's' : ''} · Page {page} / {pages}
+        <strong>{total}</strong> résultat{total > 1 ? 's' : ''}
+        {pages > 1 && ` · Page ${page} sur ${pages}`}
       </span>
-      <div className={styles.pageLinks}>
-        {page > 1 ? (
-          <Link href={href(page - 1)}>
-            <ChevronLeft size={14} aria-hidden="true" />
-            Précédente
-          </Link>
-        ) : (
-          <span aria-disabled="true">
-            <ChevronLeft size={14} aria-hidden="true" />
-            Précédente
-          </span>
-        )}
-        {page < pages ? (
-          <Link href={href(page + 1)}>
-            Suivante
-            <ChevronRight size={14} aria-hidden="true" />
-          </Link>
-        ) : (
-          <span aria-disabled="true">
-            Suivante
-            <ChevronRight size={14} aria-hidden="true" />
-          </span>
-        )}
-      </div>
+      {pages > 1 && (
+        <div className={styles.pageLinks}>
+          {page > 1 ? (
+            <Link href={href(page - 1)}>
+              <ChevronLeft size={14} aria-hidden="true" />
+              Précédente
+            </Link>
+          ) : (
+            <span aria-disabled="true">
+              <ChevronLeft size={14} aria-hidden="true" />
+              Précédente
+            </span>
+          )}
+          {page < pages ? (
+            <Link href={href(page + 1)}>
+              Suivante
+              <ChevronRight size={14} aria-hidden="true" />
+            </Link>
+          ) : (
+            <span aria-disabled="true">
+              Suivante
+              <ChevronRight size={14} aria-hidden="true" />
+            </span>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

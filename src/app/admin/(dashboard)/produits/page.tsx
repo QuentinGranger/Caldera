@@ -1,5 +1,7 @@
 import { FilterPanel } from '@/components/admin/FilterPanel';
 import Image from 'next/image';
+import { Package, Plus } from 'lucide-react';
+import { adminListHref } from '@/lib/admin/list-url';
 import Link from 'next/link';
 import {
   ProductLanguage,
@@ -60,6 +62,15 @@ export default async function ProductsPage({
     (sort && sort !== 'updated' ? 1 : 0);
   const enums = (values: string[]) =>
     values.map((value) => ({ value, label: label(value) }));
+  const filterDefinitions: [string, string][] = [
+    ['productType', 'Type'],
+    ['categoryId', 'Catégorie'],
+    ['tcgSetId', 'Extension'],
+    ['language', 'Langue'],
+    ['availability', 'Disponibilité'],
+    ['visibility', 'Boutique'],
+    ['sort', 'Tri'],
+  ];
   return (
     <>
       <PageHeader
@@ -67,18 +78,16 @@ export default async function ProductsPage({
         description="Catalogue, variantes et publication."
       >
         <Link className={styles.button} href="/admin/produits/nouveau">
-          Créer un produit
+          <Plus size={17} aria-hidden="true" /> Créer un produit
         </Link>
       </PageHeader>
       <nav className={styles.tabs} aria-label="Statut des produits">
         {tabs.map((tab) => (
           <Link
             key={tab.label}
-            href={
-              tab.value
-                ? `/admin/produits?status=${tab.value}`
-                : '/admin/produits'
-            }
+            href={adminListHref('/admin/produits', params, {
+              status: tab.value,
+            })}
             aria-current={status === tab.value ? 'page' : undefined}
           >
             {tab.label}
@@ -91,6 +100,32 @@ export default async function ProductsPage({
         search={param(params, 'search')}
         placeholder="Nom, slug, SKU ou EAN"
         activeCount={activeCount}
+        params={params}
+        criteria={filterDefinitions
+          .filter(
+            ([name]) =>
+              param(params, name) && (name !== 'sort' || sort !== 'updated'),
+          )
+          .map(([name, title]) => {
+            const value = param(params, name);
+            const names: Record<string, string> = {
+              in: 'En stock',
+              out: 'Rupture',
+              low: 'Stock faible',
+              hidden: 'Invisibles',
+              created: 'Création récente',
+              name: 'Nom A–Z',
+              price: 'Prix croissant',
+              stock: 'Stock croissant',
+            };
+            const text =
+              name === 'categoryId'
+                ? options.categories.find((item) => item.id === value)?.name
+                : name === 'tcgSetId'
+                  ? options.sets.find((item) => item.id === value)?.name
+                  : (names[value] ?? label(value));
+            return { name, label: `${title} : ${text ?? value}` };
+          })}
       >
         <FilterSelect
           name="status"
@@ -160,9 +195,6 @@ export default async function ProductsPage({
           caption="Produits"
           headings={[
             'Produit',
-            'SKU principal',
-            'Type / catégorie',
-            'Extension',
             'Statut',
             'Prix dès',
             'Disponible',
@@ -172,28 +204,38 @@ export default async function ProductsPage({
           {data.products.map((product) => (
             <tr key={product.id}>
               <td>
-                <div className={styles.inline}>
-                  {product.images[0] && (
-                    <Image
-                      src={product.images[0].url}
-                      alt=""
-                      width={45}
-                      height={55}
-                    />
-                  )}
-                  <Link href={`/admin/produits/${product.id}`}>
-                    {product.name}
-                  </Link>
+                <div className={styles.productCell}>
+                  <span className={styles.productThumbnail}>
+                    {product.images[0] ? (
+                      <Image
+                        src={product.images[0].url}
+                        alt=""
+                        width={48}
+                        height={58}
+                      />
+                    ) : (
+                      <Package size={23} strokeWidth={1.4} aria-hidden="true" />
+                    )}
+                  </span>
+                  <div>
+                    <Link href={`/admin/produits/${product.id}`}>
+                      {product.name}
+                    </Link>
+                    <small>
+                      {[
+                        label(product.productType),
+                        product.category.name,
+                        product.tcgSet?.name,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </small>
+                    <code className={styles.cellMeta}>
+                      {product.variants[0]?.sku ?? 'Sans SKU'}
+                    </code>
+                  </div>
                 </div>
               </td>
-              <td>
-                <code>{product.variants[0]?.sku ?? '—'}</code>
-              </td>
-              <td>
-                {label(product.productType)}
-                <small>{product.category.name}</small>
-              </td>
-              <td>{product.tcgSet?.name ?? '—'}</td>
               <td>
                 <Badge value={product.status} />
                 {product.hidden && (
@@ -205,10 +247,16 @@ export default async function ProductsPage({
                   </span>
                 )}
               </td>
-              <td>{euros(product.price)}</td>
+              <td>
+                <strong className={styles.cellAmount}>
+                  {euros(product.price)}
+                </strong>
+              </td>
               <td>
                 {product.available > 0 ? (
-                  product.available
+                  <strong className={styles.stockNumber}>
+                    {product.available}
+                  </strong>
                 ) : (
                   <span className={`${styles.badge} ${styles.danger}`}>
                     Rupture

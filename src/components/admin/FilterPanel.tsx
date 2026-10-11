@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import type { SearchParams } from '@/lib/admin/queries';
+import { adminListHref } from '@/lib/admin/list-url';
 import styles from './Admin.module.scss';
 export function FilterPanel({
   action,
@@ -8,6 +10,8 @@ export function FilterPanel({
   placeholder,
   activeCount = 0,
   keep = {},
+  params,
+  criteria = [],
   children,
 }: {
   action: string;
@@ -16,27 +20,41 @@ export function FilterPanel({
   activeCount?: number;
   /** The current view (a tab), kept through a new search. */
   keep?: Record<string, string>;
+  params?: SearchParams;
+  /** Human-readable names for the selected criteria, excluding the view tabs. */
+  criteria?: { name: string; label: string }[];
   /** The filters; none: the search alone. */
   children?: ReactNode;
 }) {
+  const selected = [
+    ...(search ? [{ name: 'search', label: `Recherche : ${search}` }] : []),
+    ...criteria,
+  ];
   return (
-    <form action={action} className={styles.filterPanel}>
+    <form
+      key={JSON.stringify(params ?? { search, activeCount, keep })}
+      action={action}
+      className={styles.filterPanel}
+    >
       <div className={styles.filterPrimary}>
-        <label>
+        <label className={styles.filterSearch}>
           Rechercher
-          <input
-            type="search"
-            name="search"
-            defaultValue={search}
-            placeholder={placeholder}
-            maxLength={200}
-          />
+          <span>
+            <Search size={18} aria-hidden="true" />
+            <input
+              type="search"
+              name="search"
+              defaultValue={search}
+              placeholder={placeholder}
+              maxLength={200}
+            />
+          </span>
         </label>
         <button type="submit">
           <Search size={16} aria-hidden="true" />
           Rechercher
         </button>
-        <Link href={action}>Réinitialiser</Link>
+        {(search || activeCount > 0) && <Link href={action}>Tout effacer</Link>}
       </div>
       {Object.entries(keep).map(
         ([name, value]) =>
@@ -45,10 +63,12 @@ export function FilterPanel({
       {children && (
         <details open={activeCount > 0}>
           <summary>
+            <SlidersHorizontal size={16} aria-hidden="true" />
             Filtres & tri
-            {activeCount > 0
-              ? ` · ${activeCount} critère${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}`
-              : ''}
+            {activeCount > 0 && (
+              <b className={styles.tabCount}>{activeCount}</b>
+            )}
+            <ChevronDown size={15} aria-hidden="true" />
           </summary>
           <div className={styles.filterFields}>{children}</div>
           <div className={styles.actions}>
@@ -57,6 +77,20 @@ export function FilterPanel({
             </button>
           </div>
         </details>
+      )}
+      {params && selected.length > 0 && (
+        <nav className={styles.activeFilters} aria-label="Filtres actifs">
+          {selected.map(({ name, label }) => (
+            <Link
+              key={name}
+              href={adminListHref(action, params, { [name]: undefined })}
+              aria-label={`Retirer le filtre ${label}`}
+            >
+              <span>{label}</span>
+              <X size={13} aria-hidden="true" />
+            </Link>
+          ))}
+        </nav>
       )}
     </form>
   );

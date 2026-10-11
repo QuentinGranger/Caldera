@@ -5,10 +5,10 @@
   gap: 1rem;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.6rem;
   flex-wrap: wrap;
   p {
-    margin-top: 0.55rem;
+    margin-top: 0.4rem;
     color: t.$muted;
     max-width: 55rem;
   }
@@ -34,7 +34,7 @@
 .card {
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   min-width: 0;
@@ -112,7 +112,7 @@
   padding: 1.25rem;
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 9px;
+  border-radius: 12px;
   > a {
     font-size: 0.8rem;
     padding-block: 0.6rem;
@@ -124,15 +124,27 @@
   padding: 1.25rem;
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 9px;
+  border-radius: 12px;
   details {
     margin-top: 1rem;
-    border-top: 1px dashed t.$border;
+    border-top: 1px solid t.$border;
     padding-top: 0.6rem;
   }
   summary {
     font-size: 0.8rem;
     color: t.$purple-dark;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    list-style: none;
+    width: fit-content;
+    min-height: 2.75rem;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  details[open] > summary > svg:last-child {
+    transform: rotate(180deg);
   }
 }
 .filterPrimary {
@@ -157,7 +169,7 @@
   overflow-x: auto;
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 9px;
+  border-radius: 12px;
   margin-block: 1rem;
 }
 .table {
@@ -168,22 +180,22 @@
   th,
   td {
     text-align: left;
-    padding: 1.05rem 1rem;
+    padding: 1rem 1.1rem;
     border-bottom: 1px solid #e4e9df;
     vertical-align: middle;
   }
   th {
     white-space: nowrap;
-    background: #f1f4ee;
+    background: #f8faf7;
     color: #365648;
-    font: 650 0.75rem t.$body;
+    font: 650 0.72rem t.$body;
   }
   tr:last-child td {
     border-bottom: 0;
   }
   tbody tr:hover,
   tbody tr:focus-within {
-    background: #f0f6ed;
+    background: #f7faf5;
   }
   td:first-child {
     min-width: 10rem;
@@ -204,7 +216,7 @@
     object-fit: contain;
     background: #f2f5ef;
     border: 1px solid #dfe8dc;
-    border-radius: 3px;
+    border-radius: 7px;
     flex: none;
   }
   td details[open] {
@@ -219,7 +231,7 @@
   color: #42594c;
   padding: 0.2rem 0.55rem;
   border: 1px solid #cbd5c9;
-  border-radius: 3px;
+  border-radius: 7px;
   font-size: 0.7rem;
   font-weight: 700;
   white-space: nowrap;
@@ -227,6 +239,7 @@
     content: '';
     width: 5px;
     height: 5px;
+    border-radius: 50%;
     background: currentColor;
     flex: none;
   }
@@ -258,7 +271,7 @@
   border-left: 4px solid #b97721;
   padding: 1rem;
   margin-block: 1rem;
-  border-radius: 3px;
+  border-radius: 7px;
   a {
     text-decoration: underline;
     font-weight: 700;
@@ -310,7 +323,7 @@
     padding: 0.5rem 0.75rem;
     border: 1px solid t.$border;
     background: t.$surface;
-    border-radius: 3px;
+    border-radius: 7px;
   }
   a {
     color: t.$purple-dark;
@@ -318,5 +331,218 @@
   span {
     color: t.$muted;
     background: #edf0e8;
+  }
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  > a:not(.button) {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: t.$purple;
+  }
+}
+.filterSearch > span {
+  position: relative;
+  > svg {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: t.$muted;
+    pointer-events: none;
+  }
+  input {
+    padding-left: 2.5rem;
+  }
+}
+.activeFilters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    background: #edf4eb;
+    color: t.$purple-dark;
+    border: 1px solid #cbdcc8;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    max-width: 100%;
+    > span {
+      overflow-wrap: anywhere;
+    }
+    > svg {
+      flex: none;
+    }
+    &:hover {
+      text-decoration: none;
+      background: #e1eddd;
+    }
+  }
+}
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 15rem;
+  max-width: 34rem;
+  > div {
+    min-width: 0;
+  }
+  a {
+    display: block;
+    font-size: 0.83rem;
+    line-height: 1.5;
+  }
+  small {
+    font-size: 0.7rem;
+    line-height: 1.5;
+  }
+}
+.productThumbnail {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3.5rem;
+  height: 4.2rem;
+  border: 1px solid t.$border;
+  border-radius: 9px;
+  background: #f8faf6;
+  color: #688470;
+  img {
+    border: 0;
+    background: none;
+  }
+}
+.cellMeta {
+  display: block;
+  font-size: 0.67rem !important;
+  color: t.$muted;
+  margin-top: 0.3rem;
+}
+.cellAmount {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+.stockNumber {
+  color: t.$purple-dark;
+  font-size: 0.9rem;
+}
+.cellBadges {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.formSection {
+  padding-block: 1.6rem;
+  border-bottom: 1px solid t.$border;
+  &:first-of-type {
+    padding-top: 0.5rem;
+  }
+  &:last-of-type {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  > header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-bottom: 1.25rem;
+    > span {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 1px solid #d2dfcf;
+      border-radius: 9px;
+      background: #f0f5ec;
+      color: t.$purple;
+      font: 700 0.75rem t.$body;
+    }
+    h2 {
+      margin: 0 0 0.25rem;
+      font-size: 0.93rem;
+    }
+    p {
+      font-size: 0.76rem;
+      color: t.$muted;
+    }
+  }
+  > small {
+    margin-top: 0.8rem;
+    font-size: 0.74rem;
+    max-width: 65rem;
+  }
+  .checks {
+    gap: 0.65rem;
+    margin-block: 0.9rem;
+  }
+  .checks label {
+    min-height: 2.75rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid t.$border;
+    border-radius: 8px;
+    background: #fafbf8;
+  }
+  .checks label:has(:checked) {
+    background: #edf5e9;
+    border-color: #9fbf98;
+    color: t.$purple-dark;
+  }
+}
+.fieldGroupTitle {
+  font-size: 0.8rem;
+  margin-top: 1.3rem;
+  font-weight: 650;
+}
+.formHelp {
+  background: #f6f8f3;
+  border-radius: 9px;
+  padding: 0.5rem 0.9rem;
+  margin-top: 1rem;
+  summary {
+    font-size: 0.76rem;
+    color: t.$purple;
+  }
+  small {
+    margin-block: 0.5rem;
+    font-size: 0.74rem;
+  }
+}
+@media (max-width: 47.99rem) {
+  .productCell {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+  .productThumbnail {
+    width: 2.6rem;
+    height: 3.3rem;
+    img {
+      width: 2.4rem;
+      height: 3rem;
+    }
+  }
+  .cardTable td:has(.productCell) {
+    padding-left: 0.9rem;
+    &::before {
+      display: none;
+    }
+  }
+  .headerActions {
+    width: 100%;
+    .button {
+      width: 100%;
+    }
   }
 }

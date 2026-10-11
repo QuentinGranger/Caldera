@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Compass, LogOut } from 'lucide-react';
+import { ArrowUpRight, Compass, LogOut, Store } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin/auth';
 import { logoutAction } from '@/lib/admin/actions';
 import { countOrdersToHandle } from '@/lib/admin/queries';
@@ -46,8 +46,17 @@ export default async function DashboardLayout({
         </Link>
         <AdminNavigation counts={counts} />
         <div className={styles.sidebarFoot}>
-          <p>LES TERRES DE CALDERA</p>
-          <span>Votre boutique, aux commandes.</span>
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.storeLink}
+          >
+            <Store size={17} aria-hidden="true" /> Voir la boutique
+            <ArrowUpRight size={14} aria-hidden="true" />
+            <span className={styles.visuallyHidden}> (nouvel onglet)</span>
+          </a>
+          <span>Les Terres de Caldera</span>
         </div>
       </aside>
       <div className={styles.workspace}>
