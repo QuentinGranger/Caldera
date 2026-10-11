@@ -1,4 +1,6 @@
 'use client';
+import { trackCommerce } from '@/lib/analytics/client';
+import { useCart } from '@/components/cart/CartProvider';
 import { useState, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button/Button';
@@ -10,6 +12,7 @@ export function StartPaymentButton({
   sessionId: string;
   disabled: boolean;
 }) {
+  const { cart } = useCart();
   const [pending, start] = useTransition(),
     [message, setMessage] = useState('');
   const busy = useRef(false),
@@ -25,7 +28,18 @@ export function StartPaymentButton({
             try {
               const result = await startPaymentAction(sessionId);
               setMessage(result.message);
-              if (result.success) router.push(result.href);
+              if (result.success) {
+                trackCommerce('add_payment_info', {
+                  items: cart.items.map((item) => ({
+                    item_id: item.variantId,
+                    item_name: item.name,
+                    price: Number(item.price),
+                    quantity: item.quantity,
+                  })),
+                  value: Number(cart.subtotal),
+                });
+                router.push(result.href);
+              }
             } catch {
               setMessage(
                 'Connexion interrompue. Réessayez pour retrouver votre tentative.',

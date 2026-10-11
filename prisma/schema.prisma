@@ -420,6 +420,7 @@ enum ReservationStatus {
 }
 
 model Order {
+  measurement MeasurementOrder?
   id                     String               @id @default(uuid()) @db.Uuid
   publicId               String               @unique @db.Char(64)
   orderNumber            String               @unique
@@ -1814,4 +1815,29 @@ model LifecycleRuntime {
   subscriberCursor String?
   leaseUntil DateTime?
   leaseToken String? @db.Uuid
+}
+
+/// Consented first-party measurement. No IP, email, URL query or account identity.
+model MeasurementSession {
+  id String @id @default(uuid()) @db.Uuid
+  visitorHash String @db.Char(64)
+  channel String @db.VarChar(24)
+  source String @db.VarChar(80)
+  campaign String? @db.VarChar(80)
+  startedAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  productViewed Boolean @default(false)
+  cartAdded Boolean @default(false)
+  checkoutStarted Boolean @default(false)
+  paymentStarted Boolean @default(false)
+  orders MeasurementOrder[]
+  @@index([startedAt, channel])
+  @@index([visitorHash])
+}
+model MeasurementOrder {
+  orderId String @id @db.Uuid
+  order Order @relation(fields:[orderId],references:[id],onDelete:Cascade)
+  sessionId String @db.Uuid
+  session MeasurementSession @relation(fields:[sessionId],references:[id],onDelete:Cascade)
+  @@index([sessionId])
 }

@@ -30,6 +30,9 @@ export function rootMetadata(): Metadata {
     alt: DEFAULT_OG_IMAGE.alt,
   };
   return {
+    verification: process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : undefined,
     metadataBase: new URL(siteOrigin()),
     title: { default: DEFAULT_TITLE, template: TITLE_TEMPLATE },
     description,

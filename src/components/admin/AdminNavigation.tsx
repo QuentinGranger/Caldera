@@ -30,6 +30,11 @@ export const adminNavGroups = [
   {
     label: 'Pilotage',
     links: [
+      {
+        href: '/admin/mesures',
+        label: 'Mesures & acquisition',
+        icon: BarChart3,
+      },
       { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
       {
         href: '/admin/pilotage',

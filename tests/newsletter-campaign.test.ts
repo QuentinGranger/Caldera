@@ -23,7 +23,7 @@ test('campagne newsletter : HTML sûr, liens absolus et désinscription', () => 
   assert.equal(email.subject, 'Nouveautés injectées');
   assert.match(
     email.html,
-    /href="https:\/\/lesterresdecaldera\.fr\/nouveautes"/,
+    /href="https:\/\/lesterresdecaldera\.fr\/nouveautes\?utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=newsletter"/,
   );
   assert.match(email.html, /Les cartes arrivent &lt;demain&gt;/);
   assert.ok(email.html.includes(unsubscribe));

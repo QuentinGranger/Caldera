@@ -1,3 +1,4 @@
+import { CommerceEvent } from '@/components/monitoring/CommerceEvent';
 import { OrderFulfillment } from '@/components/fulfillment/OrderFulfillment';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -98,6 +99,31 @@ export default async function OrderPage({
     order.status === 'PAID' ? await orderDocuments(order.id) : [];
   return (
     <main id="contenu" className={styles.main}>
+      {order.status === 'PAID' && order.payment?.status === 'SUCCEEDED' && (
+        <CommerceEvent
+          name="purchase"
+          transactionId={order.id}
+          value={
+            Number(order.subtotalAmount) -
+            Number(order.discountAmount) -
+            Number(order.taxAmount) +
+            Number(order.shippingTaxAmount)
+          }
+          shipping={
+            Number(order.shippingAmount) - Number(order.shippingTaxAmount)
+          }
+          tax={Number(order.taxAmount)}
+          items={order.items.map((item) => ({
+            item_id: item.variantId ?? item.productId ?? item.sku,
+            item_name: item.productName,
+            price:
+              Number(item.unitPrice) -
+              (Number(item.discountAmount) + Number(item.taxAmount)) /
+                item.quantity,
+            quantity: item.quantity,
+          }))}
+        />
+      )}
       <Container>
         <div className={styles.heading}>
           <p className={styles.eyebrow}>Commande {order.orderNumber}</p>

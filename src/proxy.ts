@@ -201,11 +201,11 @@ export async function proxy(request: NextRequest) {
   const dev = process.env.NODE_ENV === 'development';
   const policy = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://*.js.stripe.com${dev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://*.js.stripe.com https://www.googletagmanager.com${dev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://*.stripe.com https://*.link.com",
     "font-src 'self'",
-    `connect-src 'self' https://api.stripe.com https://*.js.stripe.com https://link.com https://*.link.com${sentryOrigin()}${dev ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
+    `connect-src 'self' https://api.stripe.com https://*.js.stripe.com https://link.com https://*.link.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com${sentryOrigin()}${dev ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
     'frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://link.com https://*.link.com',
     "object-src 'none'",
     "base-uri 'self'",

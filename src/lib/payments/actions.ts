@@ -1,4 +1,5 @@
 'use server';
+import { attributePreparedOrder } from '@/lib/analytics/server';
 
 import { revalidatePath } from 'next/cache';
 import { getCartCookie } from '@/lib/cart/cartCookie';
@@ -77,6 +78,7 @@ export async function startPaymentAction(sessionId: unknown) {
       sessionId,
       customer?.id ?? null,
     );
+    await attributePreparedOrder(order.id);
     revalidatePath('/', 'layout');
     invalidateCatalogCache();
     return {

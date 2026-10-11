@@ -128,5 +128,8 @@ export async function restoreSelectionAction(
         'Le prix ou le stock a évolué. Consultez les fiches pour refaire votre sélection.',
     };
   }
-  redirect('/panier');
+  // Carry only the public campaign through the recovery redirect, never its token.
+  redirect(
+    `/panier?utm_source=newsletter&utm_medium=email&utm_campaign=${encodeURIComponent(`lifecycle_${row.kind.toLowerCase()}`)}`,
+  );
 }

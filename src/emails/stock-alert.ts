@@ -1,3 +1,4 @@
+import { campaignUrl } from '@/lib/analytics/campaign';
 import { emailLayout } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { escapeHtml } from './templates';
@@ -54,6 +55,7 @@ export function renderStockAlertNotificationEmail(
   product: StockAlertEmailProduct,
   urls: { product: string; logo: string },
 ) {
+  urls = { ...urls, product: campaignUrl(urls.product, 'stock_alert') };
   const subject = `De retour en stock : ${product.name}`.replace(
     /[\r\n]/g,
     ' ',

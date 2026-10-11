@@ -10,6 +10,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { trackCommerce } from '@/lib/analytics/client';
 import { usePathname } from 'next/navigation';
 import { refreshCartAction } from '@/lib/cart/actions';
 import type { CartActionResult, CartView } from '@/lib/cart/types';
@@ -99,6 +100,32 @@ export function CartProvider({
     startTransition(async () => {
       try {
         const result = await action();
+        if (result.success) {
+          const added = result.cart.items.flatMap((item) => {
+            const before =
+              cart.items.find(
+                (previous) => previous.variantId === item.variantId,
+              )?.quantity ?? 0;
+            return item.quantity > before
+              ? [
+                  {
+                    item_id: item.variantId,
+                    item_name: item.name,
+                    price: Number(item.price),
+                    quantity: item.quantity - before,
+                  },
+                ]
+              : [];
+          });
+          if (added.length)
+            trackCommerce('add_to_cart', {
+              items: added,
+              value: added.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0,
+              ),
+            });
+        }
         apply(request, result);
         setFeedback({ path, text: result.message });
         if (result.success && openOnSuccess) setOpen(true);
