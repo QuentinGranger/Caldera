@@ -56,7 +56,8 @@ export function CheckoutContactForm({
             </>
           ) : (
             <>
-              Aucun compte n’est nécessaire.{' '}
+              Commandez sans créer de compte. Le lien reçu par e-mail vous
+              permettra de consulter votre commande et son suivi.{' '}
               <Link href="/compte/connexion?retour=/checkout">
                 Se connecter
               </Link>{' '}

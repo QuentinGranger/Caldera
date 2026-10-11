@@ -470,14 +470,13 @@
   margin-top: 1rem;
   ul {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin: 0;
-    padding: 0 0 0.25rem;
-    overflow-x: auto;
+    padding: 0;
     list-style: none;
     scrollbar-width: none;
-    // The row scrolls: its right edge fades out to show there is more.
-    mask-image: linear-gradient(90deg, #000 82%, transparent);
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -572,7 +571,7 @@
   padding: 0;
   list-style: none;
   @include m.from(v.$breakpoint-tablet) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

@@ -149,6 +149,8 @@ test('checkout HTTP : parcours invité et actions autorisées', async (t) => {
           '/checkout?step=contact',
         );
         const result = await page('/checkout?step=contact');
+        assert.match(result.html, /Commandez sans créer de compte/);
+        assert.match(result.html, /consulter votre commande et son suivi/);
         assert.equal(result.response.status, 200);
         assert.match(result.html, /noindex, nofollow/);
         assert.match(result.html, /Vos coordonnées/);
