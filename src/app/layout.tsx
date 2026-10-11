@@ -1,3 +1,5 @@
+import { headers } from 'next/headers';
+import { CommerceAnalytics } from '@/components/monitoring/CommerceAnalytics';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
@@ -81,6 +83,10 @@ export default async function RootLayout({
             </StorefrontOnly>
           </WishlistProvider>
         </CartProvider>
+        <CommerceAnalytics
+          measurementId={process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID}
+          nonce={(await headers()).get('x-nonce') ?? undefined}
+        />
         <TransitionStage />
       </body>
     </html>

@@ -24,8 +24,8 @@ const sections = [
   ['section-5', '5. Destinataires et prestataires'],
   ['section-6', '6. Transferts hors EEE'],
   ['section-7', '7. Durées de conservation'],
-  ['section-8', '8. Vercel Web Analytics'],
-  ['section-9', '9. Cookies et traceurs nécessaires'],
+  ['section-8', '8. Mesure d’audience'],
+  ['section-9', '9. Cookies et préférences'],
   ['section-10', '10. Sécurité'],
   ['section-11', '11. Droits des personnes'],
   ['section-12', '12. Exercice des droits'],
@@ -793,7 +793,7 @@ export default function ConfidentialitePage() {
               </p>
             </Section>
 
-            <Section id="section-8" title="8. Vercel Web Analytics">
+            <Section id="section-8" title="8. Mesure d’audience">
               <p>
                 CALDERA utilise <strong>Vercel Web Analytics</strong> afin de
                 mesurer la fréquentation et le fonctionnement du site.
@@ -820,9 +820,45 @@ export default function ConfidentialitePage() {
                 présente politique et le dispositif de recueil du consentement
                 seront adaptés avant leur utilisation.
               </p>
+              <h3>
+                Google Analytics 4 et mesure Caldera, uniquement avec votre
+                accord
+              </h3>
+              <p>
+                Lorsque GA4 est configuré, un choix Accepter / Refuser permet de
+                mesurer les pages publiques, les produits vus, les ajouts au
+                panier et les étapes d’achat. Aucun script Google Analytics
+                n’est chargé avant votre accord. Vous pouvez retirer cet accord
+                depuis « Cookies · préférences ». Le choix est conservé 180
+                jours, comme les cookies de mesure Google configurés sur ce
+                site.
+              </p>
+              <p>
+                Caldera conserve aussi, pendant 90 jours, des sessions
+                pseudonymes : canal d’arrivée, campagne publique, actions sur le
+                panier et association aux commandes payées. Aucune adresse IP ni
+                URL complète n’est stockée par cette mesure interne. Le retrait
+                supprime la session courante et son attribution ; les
+                obligations légales de conservation des commandes restent
+                indépendantes.
+              </p>
+              <p>
+                Les noms, adresses, e-mails, coordonnées de paiement et liens
+                personnels de commande ne sont pas transmis. Les campagnes sont
+                identifiées par des paramètres UTM publics sans identifiant de
+                destinataire. Les espaces compte et admin sont exclus des pages
+                vues ; un achat confirmé peut être transmis sous un identifiant
+                technique pour éviter son double comptage. Google traite ces
+                données et peut les transférer hors de l’EEE selon ses garanties
+                contractuelles. Consultez{' '}
+                <a href="https://policies.google.com/technologies/partner-sites">
+                  le fonctionnement des données chez Google
+                </a>
+                .
+              </p>
             </Section>
 
-            <Section id="section-9" title="9. Cookies et traceurs nécessaires">
+            <Section id="section-9" title="9. Cookies et préférences">
               <p>
                 Certaines technologies peuvent être nécessaires au
                 fonctionnement du site, notamment pour :
@@ -847,9 +883,9 @@ export default function ConfidentialitePage() {
                 destinés au profilage ou au ciblage comportemental.
               </p>
               <p>
-                L’ajout futur de traceurs nécessitant un consentement préalable
-                donnera lieu à la mise en place d’un mécanisme permettant
-                notamment de les accepter ou de les refuser avant leur dépôt.
+                Les cookies de mesure décrits à la section 8 sont facultatifs.
+                Le bouton « Cookies · préférences » permet de modifier votre
+                choix à tout moment ; refuser ne bloque pas les achats.
               </p>
             </Section>
 

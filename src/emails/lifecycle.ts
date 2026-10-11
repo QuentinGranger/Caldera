@@ -1,3 +1,4 @@
+import { campaignUrl } from '@/lib/analytics/campaign';
 import { emailLayout } from './layout';
 import { escapeHtml } from './templates';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
@@ -74,6 +75,14 @@ export function renderLifecycleEmail(
     logo: string;
   },
 ) {
+  urls = {
+    ...urls,
+    action: campaignUrl(urls.action, `lifecycle_${kind.toLowerCase()}`),
+  };
+  products = products.map((product) => ({
+    ...product,
+    url: campaignUrl(product.url, `lifecycle_${kind.toLowerCase()}`),
+  }));
   const message = copy[kind];
   const subject =
     kind === 'NEW_ARRIVAL' && products[0]

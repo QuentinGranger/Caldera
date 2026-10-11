@@ -210,10 +210,13 @@ export async function processNewsletterDeliveries(
       let envelope: EmailEnvelope;
       if (delivery.envelope) envelope = parseEnvelope(delivery.envelope);
       else {
-        const rendered = renderNewsletterCampaignEmail(delivery.campaign, {
-          logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
-          unsubscribe: newsletterUnsubscribeUrl(delivery.subscriberId),
-        });
+        const rendered = renderNewsletterCampaignEmail(
+          { ...delivery.campaign, campaignId: delivery.campaign.id },
+          {
+            logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
+            unsubscribe: newsletterUnsubscribeUrl(delivery.subscriberId),
+          },
+        );
         envelope = {
           from: settings.from,
           to: [settings.testRecipient ?? delivery.recipient],

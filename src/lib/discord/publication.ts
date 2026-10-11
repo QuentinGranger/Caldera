@@ -1,3 +1,4 @@
+import { campaignUrl } from '@/lib/analytics/campaign';
 /** Public Discord publications only. Customer and order data have no place here. */
 export type DiscordPublicationKind =
   'release' | 'restock' | 'announcement' | 'campaign';
@@ -51,7 +52,7 @@ export function renderDiscordPublication(
 ) {
   const label = labels[publication.kind];
   if (!label) throw new Error('DISCORD_KIND_INVALID');
-  const content = `**${label}**\n${cleanText(publication.title, 160)}\n${cleanText(publication.summary, 600)}\n${publicUrl(publication.path, origin)}`;
+  const content = `**${label}**\n${cleanText(publication.title, 160)}\n${cleanText(publication.summary, 600)}\n${campaignUrl(publicUrl(publication.path, origin), `discord_${publication.kind}`, 'discord')}`;
   if (content.length > 2000) throw new Error('DISCORD_CONTENT_INVALID');
   return {
     content,

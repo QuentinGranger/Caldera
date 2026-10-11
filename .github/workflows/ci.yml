@@ -45,6 +45,8 @@ jobs:
       APP_URL: http://localhost:3001
       TEST_BASE_URL: http://localhost:3001
       SEO_BASE_URL: http://localhost:3001
+      MEASUREMENT_ENABLED: 'true'
+      MEASUREMENT_TEST_ORIGIN: http://localhost:3001
       EMAILS_ENABLED: 'false'
       PASSWORD_BREACH_CHECK: 'off'
       # Fixed value expected by tests/maintenance-http.test.ts, test only.

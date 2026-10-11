@@ -1,3 +1,4 @@
+import { campaignUrl } from '@/lib/analytics/campaign';
 import { emailLayout } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { decodeEntities, renderMarkdown } from '@/lib/content/markdown';
@@ -11,6 +12,8 @@ export type NewsletterCampaignContent = {
   bodyMarkdown: string;
   ctaLabel: string | null;
   ctaUrl: string | null;
+  /** Stable public campaign ID (never a recipient ID). */
+  campaignId?: string;
 };
 
 function absoluteUrl(value: string) {
@@ -52,8 +55,21 @@ export function renderNewsletterCampaignEmail(
   campaign: NewsletterCampaignContent,
   urls: { logo: string; unsubscribe?: string },
 ) {
+  const code = campaign.campaignId
+    ? `campaign_${campaign.campaignId}`
+    : 'newsletter';
+  campaign = {
+    ...campaign,
+    ctaUrl: campaign.ctaUrl
+      ? campaignUrl(absoluteUrl(campaign.ctaUrl), code)
+      : null,
+  };
   const subject = campaign.subject.replace(/[\r\n]+/g, ' ').trim();
-  const content = emailMarkdown(campaign.bodyMarkdown);
+  const content = emailMarkdown(campaign.bodyMarkdown).replace(
+    /href="([^"#]+)"/g,
+    (_match, url: string) =>
+      `href="${escapeHtml(campaignUrl(decodeEntities(url), code))}"`,
+  );
   const cta =
     campaign.ctaLabel && campaign.ctaUrl
       ? `<p style="margin:24px 0"><a href="${escapeHtml(absoluteUrl(campaign.ctaUrl))}" style="display:inline-block;padding:14px 22px;background:#003c2d;color:#fff;text-decoration:none;border-radius:4px;font-weight:700">${escapeHtml(campaign.ctaLabel)}</a></p>`

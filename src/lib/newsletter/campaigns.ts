@@ -160,9 +160,12 @@ export async function sendNewsletterCampaignTest(
     throw new AdminError('Les e-mails sont désactivés dans cet environnement.');
   try {
     const settings = emailSettings();
-    const rendered = renderNewsletterCampaignEmail(campaign, {
-      logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
-    });
+    const rendered = renderNewsletterCampaignEmail(
+      { ...campaign, campaignId: campaign.id },
+      {
+        logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
+      },
+    );
     await resendProvider().send(
       {
         from: settings.from,

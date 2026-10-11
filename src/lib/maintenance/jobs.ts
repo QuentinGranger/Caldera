@@ -1,3 +1,4 @@
+import { purgeMeasurement } from '@/lib/analytics/server';
 import 'server-only';
 import { processPendingEmails } from '@/lib/email/processor';
 import { processNewsletterDeliveries } from '@/lib/newsletter/processor';
@@ -99,6 +100,7 @@ const tasks: Record<
   'purge-customer-data': async () => ({
     ok: true,
     counts: {
+      ...(await purgeMeasurement()),
       ...(await purgeReturnPhotos()),
       ...(await purgeContactMessages()),
     },

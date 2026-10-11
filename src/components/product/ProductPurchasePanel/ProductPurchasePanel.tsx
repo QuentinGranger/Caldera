@@ -1,4 +1,5 @@
 'use client';
+import { CommerceEvent } from '@/components/monitoring/CommerceEvent';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { MAX_CART_ITEM_QUANTITY } from '@/lib/cart/constants';
@@ -224,6 +225,13 @@ export function ProductPurchasePanel(props: Props) {
         variants={props.variants}
         selected={selected.sku}
         onChange={change}
+      />
+      <CommerceEvent
+        name="view_item"
+        items={[
+          { item_id: selected.id, price: Number(selected.price), quantity: 1 },
+        ]}
+        value={Number(selected.price)}
       />
       <SelectedVariant key={selected.id} {...props} variant={selected} />
     </section>
