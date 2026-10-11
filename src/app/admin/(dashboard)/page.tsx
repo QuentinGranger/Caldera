@@ -172,28 +172,6 @@ export default async function DashboardPage() {
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
       </nav>
-      <section className={styles.reportLinks} aria-label="Rapports et analyses">
-        <Link href="/admin/mesures">
-          <span className={styles.reportIcon}>
-            <BarChart3 size={21} aria-hidden="true" />
-          </span>
-          <span>
-            <strong>Comprendre les performances</strong>
-            <small>Trafic, conversions et campagnes email</small>
-          </span>
-          <ArrowUpRight size={18} aria-hidden="true" />
-        </Link>
-        <Link href="/admin/pilotage">
-          <span className={styles.reportIcon}>
-            <Landmark size={21} aria-hidden="true" />
-          </span>
-          <span>
-            <strong>Piloter la rentabilité</strong>
-            <small>Marge, rotation du stock et trésorerie</small>
-          </span>
-          <ArrowUpRight size={18} aria-hidden="true" />
-        </Link>
-      </section>
       <div className={styles.dashboardGrid}>
         <div>
           <section className={styles.card}>
@@ -361,6 +339,28 @@ export default async function DashboardPage() {
           </section>
         </div>
       </div>
+      <section className={styles.reportLinks} aria-label="Rapports et analyses">
+        <Link href="/admin/mesures">
+          <span className={styles.reportIcon}>
+            <BarChart3 size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Comprendre les performances</strong>
+            <small>Trafic, conversions et campagnes email</small>
+          </span>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </Link>
+        <Link href="/admin/pilotage">
+          <span className={styles.reportIcon}>
+            <Landmark size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Piloter la rentabilité</strong>
+            <small>Marge, rotation du stock et trésorerie</small>
+          </span>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </Link>
+      </section>
     </>
   );
 }
