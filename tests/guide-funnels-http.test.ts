@@ -27,6 +27,7 @@ test('HTTP guides : CTA contextualisés, disponibles et listes cohérentes', asy
       [...categories].sort(),
     );
     assert.equal(target.searchParams.get('availability'), 'in-stock');
+    assert.equal(target.hash, '#catalogue-resultats');
     const catalog = await fetch(target);
     assert.equal(catalog.status, 200);
     const results = withoutScripts(await catalog.text());
