@@ -40,7 +40,7 @@ test('alertes : e-mails échappés, lien unique, version texte', () => {
   assert.match(notification.text, /59,90 €/);
   assert.match(
     notification.html,
-    /href="https:\/\/lesterresdecaldera.fr\/produit\/etb\?variant=ETB-FR"/,
+    /href="https:\/\/lesterresdecaldera.fr\/produit\/etb\?variant=ETB-FR&amp;utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=stock_alert"/,
   );
   assert.match(
     notification.text,
