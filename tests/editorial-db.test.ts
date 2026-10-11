@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { after, before, test } from 'node:test';
 
@@ -278,5 +279,46 @@ test('tunnel article : correspondance exacte, variantes disponibles et aucun fau
       });
     if (beforeMode === undefined) delete process.env.CATALOG_DEMO_MODE;
     else process.env.CATALOG_DEMO_MODE = beforeMode;
+  }
+});
+
+test('destination en stock : ni exemple ni variante sans prix achetable', async () => {
+  const { parseCatalogParams } = await import('../src/lib/catalog/params');
+  const { getCatalogProducts } =
+    await import('../src/lib/catalog/getCatalogProducts');
+  const key = randomUUID();
+  const category = await db.category.create({
+    data: { name: 'Articles QA', slug: `article-${key}` },
+  });
+  try {
+    for (const [name, price, demonstration] of [
+      ['zero', '0', false],
+      ['demo', '5', true],
+      ['real', '5', false],
+    ] as const) {
+      await db.product.create({
+        data: {
+          name,
+          slug: `${name}-${key}`,
+          status: 'ACTIVE',
+          categoryId: category.id,
+          productType: 'ACCESSORY',
+          isDemonstration: demonstration,
+          variants: {
+            create: { sku: `${name}-${key}`, price, stockQuantity: 2 },
+          },
+        },
+      });
+    }
+    const list = await getCatalogProducts(
+      parseCatalogParams({ category: category.slug, availability: 'in-stock' }),
+    );
+    assert.deepEqual(
+      list.products.map((product) => product.slug),
+      [`real-${key}`],
+    );
+  } finally {
+    await db.product.deleteMany({ where: { categoryId: category.id } });
+    await db.category.delete({ where: { id: category.id } });
   }
 });

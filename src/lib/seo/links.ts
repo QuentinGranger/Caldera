@@ -758,11 +758,9 @@ export async function getContentLinks(
             parseCatalogParams({
               category: categoryList.map((category) => category.slug).join(','),
               set: setList.map((set) => set.slug).join(','),
-              ...(demonstration
-                ? {}
-                : { availability: 'in-stock', minPrice: '0.01' }),
+              ...(demonstration ? {} : { availability: 'in-stock' }),
             }),
-          )}`,
+          )}#catalogue-resultats`,
           label: demonstration
             ? 'Voir les produits d’exemple'
             : 'Voir les produits disponibles',

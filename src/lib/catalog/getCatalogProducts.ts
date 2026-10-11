@@ -68,7 +68,11 @@ export async function buildCatalogWhere(
               product: { preorder: false, variants: { none: stockedVariant } },
             }
           : {
-              product: { preorder: false },
+              product: { preorder: false, isDemonstration: false },
+              price: {
+                gt: 0,
+                ...(typeof variant.price === 'object' ? variant.price : {}),
+              },
               availableQuantity:
                 value === 'in-stock'
                   ? { gt: 0 }

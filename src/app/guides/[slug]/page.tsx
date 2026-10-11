@@ -80,7 +80,7 @@ export default async function GuidePage({ params }: Props) {
         </ArticleLayout>
         <ShopSection
           products={shop.products}
-          landings={shop.browse ? [] : shop.landings}
+          landings={shop.landings}
           browse={shop.browse}
           intro={
             shop.browse?.demonstration
