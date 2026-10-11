@@ -429,14 +429,6 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   );
   const boxes = (await page('/pokemon/coffrets')).html;
   const latestStart = boxes.indexOf('aria-labelledby="derniers-ajouts"');
-  assert.ok(latestStart > 0 && latestStart < boxes.indexOf('role="status"'));
-  const latest = boxes.slice(latestStart, boxes.indexOf('role="status"'));
-  assert.ok(strip(latest).includes('Derniers coffrets ajoutés'));
-  // « Voir tous les coffrets »: the full list right below, no sort URL.
-  assert.ok(latest.includes('href="#liste-complete"'));
-  assert.ok(
-    boxes.indexOf('id="liste-complete"') < boxes.indexOf('role="status"'),
-  );
   const slugs = (html: string) =>
     [...html.matchAll(/<h3><a href="\/produit\/([^"]+)"/g)].map(
       ([, slug]) => slug,
@@ -444,9 +436,22 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   const newest = slugs(
     articles((await page('/pokemon/coffrets?sort=newest')).html).join(''),
   );
-  const shown = slugs(latest);
-  assert.ok(shown.length >= 4 && shown.length < newest.length);
-  assert.deepEqual(shown, newest.slice(0, shown.length));
+  // A preview is useful only when the full list has more than four boxes.
+  // Preorders are absent at launch, leaving three ordinary seed products.
+  if (newest.length > 4) {
+    assert.ok(latestStart > 0 && latestStart < boxes.indexOf('role="status"'));
+    const latest = boxes.slice(latestStart, boxes.indexOf('role="status"'));
+    assert.ok(strip(latest).includes('Derniers coffrets ajoutés'));
+    assert.ok(latest.includes('href="#liste-complete"'));
+    const shown = slugs(latest);
+    assert.ok(shown.length >= 4 && shown.length < newest.length);
+    assert.deepEqual(shown, newest.slice(0, shown.length));
+  } else {
+    assert.equal(latestStart, -1);
+  }
+  assert.ok(
+    boxes.indexOf('id="liste-complete"') < boxes.indexOf('role="status"'),
+  );
   // Other aisles keep their page as it was.
   assert.ok(!boosters.includes('derniers-ajouts'));
 
