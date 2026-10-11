@@ -1,4 +1,7 @@
 'use server';
+import { currentCustomer } from '@/lib/account/auth';
+import { getPrisma } from '@/lib/db/prisma';
+import { cartTokenHash } from './identity';
 import { getCartCookie, setCartCookie } from './cartCookie';
 import { readCart } from './getCart';
 import { mutateCart } from './service';
@@ -16,6 +19,14 @@ async function run(
   try {
     token = await mutateCart(token, mutation);
     await setCartCookie(token);
+    // Relate an authenticated customer's own cookie cart; never take an id from a form.
+    const customer = await currentCustomer();
+    if (customer?.emailVerified) {
+      await getPrisma().cart.updateMany({
+        where: { tokenHash: cartTokenHash(token)! },
+        data: { customerId: customer.id },
+      });
+    }
     return { success: true, message, cart: await readCart(token) };
   } catch (error) {
     return {

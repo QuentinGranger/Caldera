@@ -74,6 +74,14 @@ export function NewsletterForm() {
             <Link href="/confidentialite">Politique de confidentialité</Link>
           </span>
         </label>
+        <label className={styles.consent}>
+          <input name="personalized" type="checkbox" />
+          <span>
+            Je souhaite aussi recevoir des rappels de panier, des nouvelles de
+            mes favoris et des recommandations liées à mes achats. Facultatif ;
+            désactivable à tout moment dans mon compte.
+          </span>
+        </label>
         {errors.consent && (
           <p id="newsletter-consent-error" className={styles.fieldError}>
             {errors.consent}

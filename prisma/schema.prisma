@@ -266,6 +266,8 @@ enum CartStatus {
 }
 
 model Cart {
+  customerId String? @db.Uuid
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   id        String            @id @default(uuid()) @db.Uuid
   tokenHash String            @unique @db.Char(64)
   status    CartStatus        @default(ACTIVE)
@@ -275,6 +277,7 @@ model Cart {
   items     CartItem[]
   checkouts CheckoutSession[]
 
+  @@index([customerId])
   @@index([status])
   @@index([expiresAt])
 }
@@ -693,6 +696,7 @@ model Customer {
   address       CustomerAddress?
   orders        Order[]
   wishlistItems WishlistItem[]
+  carts         Cart[]
   stockAlerts   StockAlert[]
   discordLink   CustomerDiscordLink?
 }
@@ -1006,6 +1010,10 @@ model NewsletterSubscriber {
   createdAt             DateTime                     @default(now())
   updatedAt             DateTime                     @updatedAt
   deliveries            NewsletterCampaignDelivery[]
+  personalizedEmails    Boolean                      @default(false)
+  personalizedConsentAt DateTime?
+  personalizedConsentVersion String?
+  lifecycleDeliveries   LifecycleDelivery[]
 
   @@index([status, createdAt])
   @@index([confirmationExpiresAt])
@@ -1759,4 +1767,51 @@ model SupplierOfferChange {
   @@index([offerId, createdAt])
   @@index([importId])
   @@index([kind, createdAt])
+}
+
+/// Commercial automations, separate from mandatory transactional messages.
+model LifecycleDelivery {
+  id String @id @default(uuid()) @db.Uuid
+  subscriberId String @db.Uuid
+  subscriber NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  kind String
+  eventKey String
+  sourceId String?
+  variantIds String[]
+  quantities Int[]
+  status NewsletterDeliveryStatus @default(PENDING)
+  dueAt DateTime @default(now())
+  expiresAt DateTime
+  envelope Json?
+  attemptCount Int @default(0)
+  firstAttemptAt DateTime?
+  nextAttemptAt DateTime @default(now())
+  leaseToken String? @db.Uuid
+  leaseUntil DateTime?
+  providerMessageId String?
+  sentAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  @@unique([subscriberId, eventKey])
+  @@index([status, nextAttemptAt])
+  @@index([subscriberId, firstAttemptAt])
+}
+
+/// Stock observations: no customer tracking pixels or browsing history.
+model LifecycleVariantState {
+  variantId String @id @db.Uuid
+  stock Int
+  price Decimal @db.Decimal(10, 2)
+  cycle Int @default(0)
+  restockedAt DateTime?
+  priceChangedAt DateTime?
+  observedAt DateTime @default(now())
+}
+
+model LifecycleRuntime {
+  id String @id
+  startedAt DateTime @default(now())
+  subscriberCursor String?
+  leaseUntil DateTime?
+  leaseToken String? @db.Uuid
 }
