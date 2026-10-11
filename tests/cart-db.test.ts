@@ -251,28 +251,23 @@ test('panier invité PostgreSQL : persistance, validation et isolation', async (
         });
       },
     );
-    await t.test('précommande : quota respecté, libellé préservé', async () => {
-      await db.product.update({
-        where: { id: product.id },
-        data: { preorder: true },
-      });
-      const preorder = await add(undefined, en.id, 2);
-      assert.equal((await getCartByToken(preorder)).items[0]?.preorder, true);
-      await assert.rejects(add(preorder, en.id), CartError);
-      await db.productVariant.update({
-        where: { id: en.id },
-        data: { stockQuantity: 0 },
-      });
-      await assert.rejects(add(undefined, en.id), CartError);
-      await db.productVariant.update({
-        where: { id: en.id },
-        data: { stockQuantity: 2 },
-      });
-      await db.product.update({
-        where: { id: product.id },
-        data: { preorder: false },
-      });
-    });
+    await t.test(
+      'précommande : ajout refusé au lancement même avec du stock',
+      async () => {
+        await db.product.update({
+          where: { id: product.id },
+          data: { preorder: true },
+        });
+        try {
+          await assert.rejects(add(undefined, en.id, 2), CartError);
+        } finally {
+          await db.product.update({
+            where: { id: product.id },
+            data: { preorder: false },
+          });
+        }
+      },
+    );
     await t.test(
       'concurrence : pas de doublon ou de dépassement du stock',
       async () => {

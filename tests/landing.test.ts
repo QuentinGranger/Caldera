@@ -248,7 +248,7 @@ test('intro factuelle du hub jeu : comptes, familles, extensions, stock, langues
     `16 produits au catalogue, de ${eur('5,90')} à ${eur('189,90')}.`,
     'Familles de produits : Boosters (6) et ETB (1).',
     '2 extensions au catalogue, la plus récente : Flammes Obsidiennes (sortie le 11 août 2023).',
-    'Disponibilité : 12 en stock et 2 en précommande.',
+    'Disponibilité : 12 en stock.',
     'Langues : français (13) et japonais (1).',
     'Prochaine sortie annoncée : Sentiers d’Opale, le 25 décembre 2026.',
   ]);
@@ -329,7 +329,7 @@ test('intro factuelle : chaque phrase dépend des données disponibles', () => {
       '4 produits au catalogue.',
       'Sous-familles : Boosters (3) et ETB (1).',
       'Extensions : Sentiers d’Opale (3) et Flammes Obsidiennes (1).',
-      'Disponibilité : 1 en stock et 3 en précommande.',
+      'Disponibilité : 1 en stock.',
     ],
   );
   // Status and language facets do not repeat what the URL already says.
@@ -517,8 +517,8 @@ test('FAQ factuelle d’une extension : seulement ce que les données disent', (
       today,
     }).map((entry) => entry.answer),
     [
-      'La sortie de l’extension Sentiers d’Opale est prévue le 25 décembre 2026. 2 produits sont en précommande.',
-      '2 produits de l’extension Sentiers d’Opale au catalogue. Disponibilité : 2 en précommande.',
+      'La sortie de l’extension Sentiers d’Opale est prévue le 25 décembre 2026.',
+      '2 produits de l’extension Sentiers d’Opale au catalogue. Aucun n’est en stock pour le moment.',
     ],
   );
   assert.deepEqual(
@@ -626,7 +626,7 @@ test('FAQ : l’éditorial d’abord, une question posée deux fois gardée une 
   ];
   assert.deepEqual(
     mergeFaq(editorial, generated).map((entry) => entry.answer),
-    ['Éditorial.', 'Oui.', 'Deux.'],
+    ['Éditorial.', 'Deux.'],
   );
   assert.deepEqual(mergeFaq([{ question: '  ?', answer: 'x' }]), []);
   assert.deepEqual(
@@ -795,7 +795,7 @@ test('calendrier : jour à Paris, fenêtre de 12 mois, regroupement par mois', (
   );
   assert.equal(
     releaseStockText({ count: 5, inStockCount: 3, preorderCount: 2 }),
-    '5 produits : 3 en stock, 2 en précommande',
+    '5 produits : 3 en stock',
   );
   assert.equal(
     releaseStockText({ count: 1, inStockCount: 0, preorderCount: 0 }),

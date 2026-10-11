@@ -51,7 +51,7 @@ const catalog = (params: SearchParams = {}, scope: CatalogScope = {}) =>
 const resolve = (searchParams: SearchParams, scope: CatalogScope = {}) =>
   resolveCatalog({ path: '/catalogue', searchParams, scope });
 const etb = 'dev-etb-terres-de-braise';
-const VISIBLE = 17;
+const VISIBLE = 15;
 const indexable = (canonicalPath: string) => ({
   index: true,
   reason: 'indexable',
@@ -112,12 +112,12 @@ test('filtres combinés, périmètres jeu / famille / statut et recherche litté
     etb,
   );
   // Root families include their descendants; the game is its own axis.
-  assert.equal((await catalog({}, { category: 'scelles' })).total, 14);
+  assert.equal((await catalog({}, { category: 'scelles' })).total, 12);
   // The game scope leaves out the game-less accessory.
   assert.equal((await catalog({}, { game: 'pokemon' })).total, VISIBLE - 1);
   assert.equal(
     (await catalog({ category: 'boosters' }, { game: 'pokemon' })).total,
-    6,
+    5,
   );
   assert.equal(
     (await catalog({ category: 'accessoires' }, { category: 'scelles' })).total,
@@ -141,17 +141,11 @@ test('filtres combinés, périmètres jeu / famille / statut et recherche litté
     { status: 'precommandes' },
   ] as const) {
     const preorder = await catalog({}, scope);
-    assert.equal(preorder.total, 2);
-    // Preorders with quota left are orderable; an exhausted one is sold out.
-    assert.ok(preorder.products.some((p) => p.availability === 'PREORDER'));
-    assert.ok(
-      preorder.products.every((p) =>
-        ['PREORDER', 'OUT_OF_STOCK'].includes(p.availability),
-      ),
-    );
+    assert.equal(preorder.total, 0);
+    assert.deepEqual(preorder.products, []);
   }
   for (const scope of [{ newArrival: true }, { status: 'nouveautes' }] as const)
-    assert.equal((await catalog({}, scope)).total, 4);
+    assert.equal((await catalog({}, scope)).total, 3);
   const inStock = await catalog({}, { status: 'en-stock' });
   assert.equal(inStock.total, 13);
   assert.ok(
@@ -221,7 +215,7 @@ test('facettes : comptes réels du périmètre, options vides masquées', async 
   assert.ok(all.languages.includes('JP'));
   assert.deepEqual(
     all.categories.find((c) => c.slug === 'scelles'),
-    { name: 'Produits scellés', slug: 'scelles', count: 14 },
+    { name: 'Produits scellés', slug: 'scelles', count: 12 },
   );
   assert.ok(all.categories.every((c) => c.count > 0));
   assert.ok(all.sets.every((s) => s.count > 0));
@@ -437,9 +431,9 @@ test('robots des listes : raffinement noindex self-canonical, pagination indexab
 
 test('hubs transverses : titres, chiffres et indexation issus des données', async () => {
   const expected = {
-    catalogue: 17,
-    nouveautes: 4,
-    precommandes: 2,
+    catalogue: 15,
+    nouveautes: 3,
+    precommandes: 0,
     'en-stock': 13,
   } as const;
   const listings = await getIndexableListings();
@@ -452,8 +446,16 @@ test('hubs transverses : titres, chiffres et indexation issus des données', asy
     });
     assert.equal(hub.stats.productCount, expected[listing], listing);
     assert.equal(load.total, hub.stats.productCount, listing);
-    assert.deepEqual(hub.decision, indexable(hub.config.path));
-    assert.equal(listings.get(listing), expected[listing]);
+    assert.deepEqual(
+      hub.decision,
+      listing === 'precommandes'
+        ? { index: false, reason: 'empty', canonicalPath: hub.config.path }
+        : indexable(hub.config.path),
+    );
+    assert.equal(
+      listings.get(listing),
+      listing === 'precommandes' ? undefined : expected[listing],
+    );
     assert.equal(
       hub.games.games.reduce((sum, game) => sum + game.count, 0) +
         hub.games.gamelessCount,
@@ -466,11 +468,7 @@ test('hubs transverses : titres, chiffres et indexation issus des données', asy
     assert.ok(hub.text.title.startsWith(hub.heading));
   }
   const precommandes = await getListingHub('precommandes');
-  assert.equal(precommandes.heading, 'Précommandes Pokémon');
-  assert.match(
-    precommandes.text.description,
-    /2 produits de 34,90\s€ à 39,90\s€/,
-  );
+  assert.equal(precommandes.heading, 'Précommandes');
   assert.doesNotMatch(precommandes.text.description, /en précommande/);
   const stock = await getListingHub('en-stock');
   assert.equal(stock.heading, 'Pokémon en stock');
@@ -481,7 +479,7 @@ test('hubs transverses : titres, chiffres et indexation issus des données', asy
       game.slug,
       count,
     ]),
-    [['pokemon', 16]],
+    [['pokemon', 14]],
   );
 
   // Most specific families only, most products first.

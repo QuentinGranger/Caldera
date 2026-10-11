@@ -140,7 +140,7 @@ test('accueil : description des seuls produits Pokémon, la promesse tant que ri
     families: [{ name: 'Boosters' }, { name: 'ETB' }],
   });
   assert.match(description, /^Cartes Pokémon : 14 produits de 5,90/);
-  assert.match(description, /dont 11 en stock et 3 en précommande\./);
+  assert.match(description, /dont 11 en stock\./);
   assert.ok(description.includes('Boosters et ETB.'));
   assert.ok(description.length <= 160);
   assert.doesNotMatch(description, /Magic|One Piece|Yu-Gi-Oh|JCC/);

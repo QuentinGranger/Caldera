@@ -114,24 +114,7 @@ test('HTTP : rupture indexable avec alternatives, précommande, sans extension e
     offersOf(sold).map((offer) => offer.availability),
     ['https://schema.org/OutOfStock'],
   );
-  const preorder = await page('dev-coffret-aurores?variant=DEV-COF-AURORES-EN');
-  assert.ok(text(preorder).includes('Précommander'));
-  assert.ok(text(preorder).includes('Sortie prévue le'));
-  assert.match(preorder, /<input[^>]*type="number"[^>]*max="3"/);
-  // Open preorder variants are PreOrder with their date; an exhausted one is OutOfStock.
-  assert.ok(
-    offersOf(preorder).some(
-      (offer) => offer.availability === 'https://schema.org/PreOrder',
-    ),
-  );
-  assert.ok(
-    offersOf(preorder).every((offer) =>
-      offer.availability === 'https://schema.org/PreOrder'
-        ? typeof offer.availabilityStarts === 'string'
-        : offer.availability === 'https://schema.org/OutOfStock' &&
-          offer.availabilityStarts === undefined,
-    ),
-  );
+  await page('dev-coffret-aurores?variant=DEV-COF-AURORES-EN', 404);
   assert.ok(
     !text(await page('dev-classeur-foret')).includes('Dans l’extension'),
   );
