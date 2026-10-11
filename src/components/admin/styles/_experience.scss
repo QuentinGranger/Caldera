@@ -19,7 +19,7 @@
   }
 }
 
-.quickAccessDialog {
+.dialog.quickAccessDialog {
   width: min(92vw, 40rem);
   padding: 0;
   border-radius: 10px;
@@ -483,4 +483,114 @@
       flex: 1;
     }
   }
+}
+
+.reportSection {
+  margin-block: 1rem;
+  border: 1px solid t.$border;
+  border-radius: 12px;
+  background: t.$surface;
+  > summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    list-style: none;
+    margin: 0 !important;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    h2 {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    small {
+      font-size: 0.76rem;
+      font-weight: 400;
+      margin-top: 0.25rem;
+    }
+    > svg {
+      flex: none;
+      color: t.$muted;
+    }
+    &:hover {
+      background: #f2f6ef;
+      border-radius: 12px;
+    }
+  }
+  &[open] > summary {
+    border-bottom: 1px solid t.$border;
+  }
+  &[open] > summary > svg {
+    transform: rotate(180deg);
+  }
+}
+.reportBody {
+  padding: 1.5rem;
+  min-width: 0;
+  > h2,
+  > h3 {
+    margin-top: 1.5rem;
+  }
+  > p {
+    margin-block: 0.8rem;
+    font-size: 0.81rem;
+    color: t.$muted;
+  }
+  > ul {
+    padding-left: 1.1rem;
+  }
+}
+.metricExplanation {
+  margin-bottom: 1rem;
+  color: t.$muted;
+  font-size: 0.78rem;
+  summary {
+    width: fit-content;
+    font-weight: 550;
+  }
+  > p {
+    max-width: 65rem;
+    padding: 1rem;
+    background: t.$surface;
+    border: 1px solid t.$border;
+    border-radius: 8px;
+  }
+}
+@media (max-width: 47.99rem) {
+  .reportSection > summary,
+  .reportBody {
+    padding: 1rem;
+  }
+}
+
+.reportResources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  list-style: none;
+  padding: 0 !important;
+  margin-block: 1rem;
+  a {
+    display: block;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid t.$border;
+    border-radius: 7px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: t.$purple-dark;
+    &:hover {
+      background: t.$lavender;
+      text-decoration: none;
+    }
+  }
+}
+.adminEmpty {
+  padding: 1.5rem;
+  background: #f5f7f1;
+  border: 1px dashed t.$border;
+  border-radius: 8px;
+  color: t.$muted;
+  font-size: 0.82rem;
 }

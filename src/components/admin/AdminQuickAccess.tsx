@@ -15,12 +15,17 @@ const shortcuts = new Set([
   '/admin/commandes',
   '/admin/produits',
   '/admin/stocks',
-  '/admin/jeux',
-  '/admin/categories',
-  '/admin/fournisseurs',
-  '/admin/securite',
+  '/admin/newsletter',
+  '/admin/mesures',
 ]);
 const aliases: Record<string, string> = {
+  '/admin/mesures':
+    'analytics google ga4 seo trafic acquisition conversion statistiques campagnes email clic ouvertures',
+  '/admin/newsletter':
+    'email campagnes bienvenue panier abandonne fidelisation marketing',
+  '/admin/pilotage':
+    'marge chiffre affaires ca tresorerie finance rotation rentabilite',
+  '/admin/factures': 'comptabilite documents',
   '/admin/jeux': 'pokemon faq questions jeux',
   '/admin/categories': 'familles faq questions',
   '/admin/produits': 'catalogue articles fiches',
@@ -90,7 +95,7 @@ export function AdminQuickAccess() {
         onClick={show}
       >
         <Search size={17} aria-hidden="true" />
-        <span>Rechercher une page</span>
+        <span>Rechercher un outil…</span>
         <kbd>⌘ K</kbd>
       </button>
       <dialog

@@ -10,10 +10,10 @@
 .pilotageKpi {
   min-width: 0;
   padding: 1rem;
-  border: 1px solid t.$ink;
-  border-radius: 4px;
+  border: 1px solid t.$border;
+  border-radius: 10px;
   background: t.$surface;
-  box-shadow: 3px 3px 0 t.$ink;
+  box-shadow: none;
 
   > span {
     display: flex;
@@ -34,7 +34,7 @@
   strong {
     display: block;
     margin: 0.65rem 0 0.35rem;
-    font: 700 clamp(1.35rem, 2vw, 2rem) t.$mono;
+    font: 750 clamp(1.35rem, 2vw, 2rem) t.$body;
     letter-spacing: -0.06em;
   }
 
@@ -76,7 +76,7 @@
   margin-top: 1.25rem !important;
   padding: 1rem !important;
   border: 1px solid t.$border !important;
-  border-radius: 4px;
+  border-radius: 10px;
 
   legend {
     padding-inline: 0.35rem;
@@ -97,7 +97,7 @@
   gap: 0.7rem;
   padding: 0.75rem;
   border: 1px solid t.$border;
-  border-radius: 4px;
+  border-radius: 10px;
   background: t.$surface;
   cursor: pointer;
 
@@ -158,5 +158,14 @@
   .pilotageKpis,
   .launchProductGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 24rem) and (max-width: 47.99rem) {
+  .pilotageKpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pilotageKpi strong {
+    overflow-wrap: anywhere;
   }
 }

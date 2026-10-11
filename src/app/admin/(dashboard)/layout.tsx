@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Gamepad2, LogOut } from 'lucide-react';
+import { Compass, LogOut } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin/auth';
 import { logoutAction } from '@/lib/admin/actions';
 import { countOrdersToHandle } from '@/lib/admin/queries';
@@ -8,6 +8,7 @@ import { countOpenReturns } from '@/lib/returns/admin';
 import { countOpenMessages } from '@/lib/admin/messages';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
 import { AdminBreadcrumbs } from '@/components/admin/AdminBreadcrumbs';
+import { AdminAccountMenu } from '@/components/admin/AdminAccountMenu';
 import { AdminQuickAccess } from '@/components/admin/AdminQuickAccess';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardLayout({
@@ -27,13 +28,6 @@ export default async function DashboardLayout({
     '/admin/retours': returns,
     '/admin/messages': messages,
   };
-  const initials = admin.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -43,11 +37,11 @@ export default async function DashboardLayout({
           aria-label="Caldera — Tableau de bord"
         >
           <span className={styles.brandIcon}>
-            <Gamepad2 size={27} strokeWidth={1.8} aria-hidden="true" />
+            <Compass size={27} strokeWidth={1.8} aria-hidden="true" />
           </span>
           <span>
             <strong>CALDERA</strong>
-            <small>CONTROL ROOM</small>
+            <small>Administration</small>
           </span>
         </Link>
         <AdminNavigation counts={counts} />
@@ -63,33 +57,14 @@ export default async function DashboardLayout({
             <AdminBreadcrumbs />
           </div>
           <AdminQuickAccess />
-          <div className={styles.userMenu}>
-            <Link
-              href="/"
-              className={`${styles.button} ${styles.secondaryButton}`}
-              aria-label="Voir la boutique"
-            >
-              <ExternalLink size={16} aria-hidden="true" />
-              <span className={styles.buttonLabel}>Voir la boutique</span>
-            </Link>
-            <span className={styles.avatar} aria-hidden="true">
-              {initials}
-            </span>
-            <div className={styles.userInfo}>
-              <strong>{admin.name}</strong>
-              <small>{admin.email}</small>
-            </div>
+          <AdminAccountMenu name={admin.name} email={admin.email}>
             <form action={logoutAction}>
-              <button
-                type="submit"
-                className={styles.quietButton}
-                aria-label="Se déconnecter"
-                title="Se déconnecter"
-              >
-                <LogOut size={17} aria-hidden="true" />
+              <button type="submit" className={styles.quietButton}>
+                <LogOut size={16} aria-hidden="true" />
+                Se déconnecter
               </button>
             </form>
-          </div>
+          </AdminAccountMenu>
         </header>
         <main id="contenu" className={styles.content}>
           {children}

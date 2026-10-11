@@ -4,7 +4,11 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import styles from './Admin.module.scss';
 const sections: Record<string, string> = {
-  mesures: 'Mesures & acquisition',
+  mesures: 'Trafic & conversions',
+  messages: 'Messages',
+  clients: 'Clients',
+  livraison: 'Livraison',
+  discord: 'Discord',
   pilotage: 'Pilotage économique',
   produits: 'Produits',
   commandes: 'Commandes',
@@ -51,7 +55,7 @@ export function AdminBreadcrumbs() {
                         : null;
   return (
     <nav aria-label="Fil d’Ariane" className={styles.breadcrumb}>
-      <Link href="/admin">Console</Link>
+      <Link href="/admin">Vue d’ensemble</Link>
       <ChevronRight size={12} aria-hidden="true" />
       {section ? (
         <>

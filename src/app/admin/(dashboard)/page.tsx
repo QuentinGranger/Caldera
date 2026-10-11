@@ -4,8 +4,8 @@ import {
   Boxes,
   CheckCheck,
   ClipboardList,
-  FolderTree,
-  MessageCircleQuestion,
+  BarChart3,
+  Landmark,
   PackageCheck,
   PackagePlus,
   Truck,
@@ -108,26 +108,15 @@ export default async function DashboardPage() {
   const toHandle =
     fulfillment.unfulfilled + fulfillment.preparing + fulfillment.ready;
   const alerts = attention.length
-    ? `${attention.length} alerte${attention.length > 1 ? 's' : ''} à surveiller : ${attention
-        .map(({ count, words }) => `${count} ${words[count > 1 ? 1 : 0]}`)
-        .join(', ')}.`
-    : 'Aucune alerte sur les paiements, les retours, les emails ou le stock.';
+    ? `${attention.length} point${attention.length > 1 ? 's' : ''} à surveiller. Retrouvez les détails ci-dessous.`
+    : 'Aucune action urgente. Vous pouvez vous concentrer sur la suite.';
   return (
     <>
-      <span className={styles.eyebrow}>Votre centre de contrôle</span>
+      <span className={styles.eyebrow}>Votre boutique, au quotidien</span>
       <PageHeader
         title="Tableau de bord"
-        description="Un aperçu clair des commandes, du stock et des actions à mener."
+        description="Les priorités du jour, puis les informations utiles pour décider."
       />
-      <p>
-        <Link href="/admin/mesures">
-          Mesures : trafic, conversion, produits et e-mails →
-        </Link>
-        {' · '}
-        <Link href="/admin/pilotage">
-          Pilotage : marge, stock et trésorerie →
-        </Link>
-      </p>
       <section className={styles.dashboardHero} aria-label="Priorités du jour">
         <div>
           <span>AUJOURD’HUI SUR CALDERA</span>
@@ -162,7 +151,7 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </section>
-      <h2 className={styles.quickHeading}>Accès rapides</h2>
+      <h2 className={styles.quickHeading}>Passer à l’action</h2>
       <nav className={styles.quickGrid} aria-label="Actions rapides">
         <Link className={styles.quickLink} href="/admin/produits/nouveau">
           <PackagePlus size={21} aria-hidden="true" />
@@ -182,17 +171,29 @@ export default async function DashboardPage() {
           Préparer les expéditions
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
-        <Link className={styles.quickLink} href="/admin/jeux">
-          <MessageCircleQuestion size={21} aria-hidden="true" />
-          Modifier les FAQ des jeux
-          <ArrowUpRight size={15} aria-hidden="true" />
-        </Link>
-        <Link className={styles.quickLink} href="/admin/categories">
-          <FolderTree size={21} aria-hidden="true" />
-          Gérer les familles
-          <ArrowUpRight size={15} aria-hidden="true" />
-        </Link>
       </nav>
+      <section className={styles.reportLinks} aria-label="Rapports et analyses">
+        <Link href="/admin/mesures">
+          <span className={styles.reportIcon}>
+            <BarChart3 size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Comprendre les performances</strong>
+            <small>Trafic, conversions et campagnes email</small>
+          </span>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </Link>
+        <Link href="/admin/pilotage">
+          <span className={styles.reportIcon}>
+            <Landmark size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Piloter la rentabilité</strong>
+            <small>Marge, rotation du stock et trésorerie</small>
+          </span>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </Link>
+      </section>
       <div className={styles.dashboardGrid}>
         <div>
           <section className={styles.card}>
@@ -227,9 +228,13 @@ export default async function DashboardPage() {
               </p>
             )}
           </section>
-          <section className={styles.card}>
+          <details className={`${styles.card} ${styles.activityDisclosure}`}>
+            <summary>
+              Journal d’activité{' '}
+              <span>{data.logs.length} dernières actions</span>
+            </summary>
             <div className={styles.panelHeader}>
-              <h2>Journal d’activité</h2>
+              <h2 className={styles.visuallyHidden}>Journal d’activité</h2>
               {data.logs.length > 1 && (
                 <span className={styles.badge}>
                   {data.logs.length} dernières actions
@@ -277,7 +282,7 @@ export default async function DashboardPage() {
               )}
             </div>
             <small>Dates affichées à l’heure de Paris.</small>
-          </section>
+          </details>
         </div>
         <div>
           <section className={styles.card}>
