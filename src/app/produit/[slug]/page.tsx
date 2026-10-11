@@ -62,6 +62,15 @@ async function ProductContent({
   const alternatives = purchasable
     ? []
     : page.related.filter((item) => item.availability !== 'OUT_OF_STOCK');
+  const suggestions = [
+    ...page.complementary,
+    ...page.related.filter(
+      (item) =>
+        item.availability !== 'OUT_OF_STOCK' &&
+        item.availability !== 'PREORDER' &&
+        !page.complementary.some((accessory) => accessory.id === item.id),
+    ),
+  ].slice(0, 4);
   return (
     <main id="contenu" tabIndex={-1} className={styles.main} data-product-world>
       <div className={styles.landscape} aria-hidden="true">
@@ -190,7 +199,21 @@ async function ProductContent({
           guides={page.guides}
         />
         {!alternatives.length && (
-          <RelatedProducts products={page.related} tone="night" />
+          <RelatedProducts
+            products={suggestions}
+            tone="night"
+            title="Vous pourriez aussi aimer"
+            eyebrow={
+              page.complementary.length
+                ? 'Pour compléter votre sélection'
+                : 'Poursuivre l’exploration'
+            }
+            description={
+              page.complementary.length
+                ? 'Des accessoires de protection et des produits à découvrir. Vérifiez le format et les dimensions sur chaque fiche avant de choisir.'
+                : undefined
+            }
+          />
         )}
       </Container>
     </main>
