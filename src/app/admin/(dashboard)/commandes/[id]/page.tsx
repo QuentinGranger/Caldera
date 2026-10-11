@@ -1,4 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { DetailOverview } from '@/components/admin/DetailOverview';
+import { ReceiptText } from 'lucide-react';
+import { fulfillmentLabels } from '@/lib/fulfillment/carriers';
 import {
   FulfillmentPanel,
   OrderEmailsPanel,
@@ -101,6 +104,40 @@ export default async function OrderAdminPage({
           <Link href="/admin/commandes">Retour aux commandes</Link>
         </div>
       </PageHeader>
+      <DetailOverview
+        visual={<ReceiptText size={30} aria-hidden="true" />}
+        entries={[
+          {
+            label: 'Total commande',
+            value: euros(order.totalAmount),
+            detail: 'Livraison et remises comprises',
+          },
+          {
+            label: 'Articles',
+            value: order.items.reduce((sum, item) => sum + item.quantity, 0),
+            detail: `${order.items.length} ligne${order.items.length > 1 ? 's' : ''}`,
+          },
+          {
+            label: 'Paiement',
+            value: payment ? <Badge value={payment.status} /> : 'Non associé',
+            detail: payment ? payment.provider : undefined,
+          },
+          {
+            label: 'Préparation',
+            value: fulfillmentLabels[order.fulfillmentStatus],
+            detail: order.shippingMethodName,
+          },
+        ]}
+      />
+      <nav
+        className={styles.orderShortcuts}
+        aria-label="Accès rapides de la commande"
+      >
+        <a href="#paiement">Paiement</a>
+        <a href="#factures">Factures</a>
+        <a href="#client">Client et adresses</a>
+        <a href="#emails">Emails</a>
+      </nav>
       {inconsistent && (
         <IntegrityWarning>
           Commande payée avec un paiement ou des réservations incohérents.
@@ -161,26 +198,55 @@ export default async function OrderAdminPage({
                 </tr>
               ))}
             </AdminTable>
-            <p>
-              Sous-total : {euros(order.subtotalAmount)} ·{' '}
-              {order.promotionCode && (
-                <>
-                  Code <code>{order.promotionCode}</code> : −
-                  {euros(
-                    order.discountAmount.plus(order.shippingDiscountAmount),
-                  )}{' '}
-                  ·{' '}
-                </>
+            <dl className={styles.orderTotals}>
+              <div>
+                <dt>Sous-total</dt>
+                <dd>{euros(order.subtotalAmount)}</dd>
+              </div>
+              {(order.discountAmount.greaterThan(0) ||
+                order.shippingDiscountAmount.greaterThan(0)) && (
+                <div>
+                  <dt>
+                    Remise
+                    {order.promotionCode && (
+                      <>
+                        {' '}
+                        · <code>{order.promotionCode}</code>
+                      </>
+                    )}
+                  </dt>
+                  <dd>
+                    −
+                    {euros(
+                      order.discountAmount.plus(order.shippingDiscountAmount),
+                    )}
+                  </dd>
+                </div>
               )}
-              Livraison : {euros(order.shippingAmount)} ·{' '}
-              <strong>Total : {euros(order.totalAmount)}</strong>
-            </p>
+              <div>
+                <dt>
+                  Livraison
+                  {order.shippingDiscountAmount.greaterThan(0)
+                    ? ' avant remise'
+                    : ''}
+                </dt>
+                <dd>
+                  {euros(
+                    order.shippingAmount.plus(order.shippingDiscountAmount),
+                  )}
+                </dd>
+              </div>
+              <div className={styles.totalLine}>
+                <dt>Total commande</dt>
+                <dd>{euros(order.totalAmount)}</dd>
+              </div>
+            </dl>
             <small>
               Les informations ci-dessus sont celles enregistrées au moment de
               la commande.
             </small>
           </section>
-          <section className={styles.card}>
+          <section className={styles.card} id="paiement">
             <h2>Paiement</h2>
             {payment ? (
               <>
@@ -208,6 +274,7 @@ export default async function OrderAdminPage({
               order.status === 'PAYMENT_FAILED') && (
               <AdminForm
                 action={cancelOrderAction}
+                tone="danger"
                 submit="Annuler la commande impayée"
                 confirm="Annuler cette commande ? Le service de paiement vérifiera Stripe avant de libérer les réservations."
               >
@@ -320,8 +387,8 @@ export default async function OrderAdminPage({
               </AdminForm>
             )}
             {refundable && refunds && (
-              <details open={!order.refunds.length}>
-                <summary>Rembourser</summary>
+              <details className={styles.sensitiveOperation}>
+                <summary>Effectuer un remboursement</summary>
                 <RefundForm
                   key={order.updatedAt.toISOString()}
                   orderId={order.id}
@@ -416,8 +483,10 @@ export default async function OrderAdminPage({
               </p>
             )}
           </section>
-          <section className={styles.card}>
-            <h2>Réservations de stock</h2>
+          <details className={styles.card} open={inconsistent}>
+            <summary>
+              Réservations de stock · {order.reservations.length}
+            </summary>
             <AdminTable
               caption="Réservations"
               headings={['SKU', 'Quantité', 'Statut', 'Échéance']}
@@ -433,21 +502,27 @@ export default async function OrderAdminPage({
                 </tr>
               ))}
             </AdminTable>
-          </section>
+          </details>
           <OrderEmailsPanel order={order} />
         </div>
         <aside aria-label="Client et suivi">
-          <section className={styles.card}>
+          <section className={styles.card} id="client">
             <h2>Client</h2>
             <p>
               {order.email}
               {order.phone ? ` · ${order.phone}` : ''}
             </p>
-            <small>Identifiant public</small>
-            <div className={styles.inline}>
-              <code>{order.publicId}</code>
-              <CopyButton value={order.publicId} label="l’identifiant public" />
-            </div>
+            <CopyButton value={order.email} label="l’adresse email du client" />
+            <details className={styles.technicalDetails}>
+              <summary>Identifiant public</summary>
+              <div className={styles.inline}>
+                <code>{order.publicId}</code>
+                <CopyButton
+                  value={order.publicId}
+                  label="l’identifiant public"
+                />
+              </div>
+            </details>
           </section>
           {order.addresses.map((address) => (
             <section className={styles.card} key={address.id}>
@@ -512,8 +587,11 @@ export default async function OrderAdminPage({
               />
             </AdminForm>
           </section>
-          <section className={styles.card}>
-            <h2>Chronologie</h2>
+          <details className={styles.card}>
+            <summary>
+              Chronologie · {timeline.length} événement
+              {timeline.length > 1 ? 's' : ''}
+            </summary>
             <ol className={styles.audit}>
               {timeline.map((event, index) => (
                 <li key={index}>
@@ -526,7 +604,7 @@ export default async function OrderAdminPage({
               Vue basée sur les dates enregistrées ; ne représente pas un
               journal exhaustif des événements Stripe.
             </small>
-          </section>
+          </details>
         </aside>
       </div>
     </>
