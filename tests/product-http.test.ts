@@ -2,11 +2,28 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { getPrisma } from '../src/lib/db/prisma';
 import assert from 'node:assert/strict';
-import { after, test } from 'node:test';
+import { after, before, test } from 'node:test';
 if (process.env.NODE_ENV === 'production')
   throw new Error('Tests réservés à une base de développement.');
 const db = getPrisma();
-after(() => db.$disconnect());
+const shippingCode = `product-http-${randomUUID()}`;
+before(async () => {
+  await db.shippingMethod.create({
+    data: {
+      code: shippingCode,
+      name: 'QA livraison fiche produit',
+      price: '5.90',
+      freeFromAmount: '100.00',
+      estimatedMinDays: 2,
+      estimatedMaxDays: 4,
+      countries: { connect: { code: 'FR' } },
+    },
+  });
+});
+after(async () => {
+  await db.shippingMethod.deleteMany({ where: { code: shippingCode } });
+  await db.$disconnect();
+});
 const base = process.env.TEST_BASE_URL ?? 'http://localhost:3000';
 async function page(slug: string, status = 200) {
   const res = await fetch(`${base}/produit/${slug}`);

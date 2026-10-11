@@ -18,6 +18,8 @@ import {
   DELIVERY_ZONE_LABEL,
   HANDLING_HEADLINE,
   PREORDER_HANDLING_LABEL,
+  RETURN_POLICY_PATH,
+  RETURN_LABEL,
   type ShippingOptionView,
 } from '@/lib/product/services';
 import { formatPrice } from '@/utils/formatPrice';
@@ -178,6 +180,10 @@ function SelectedVariant({
           )}
         </div>
       </div>
+      <p className={styles.returnNote}>
+        <Link href={RETURN_POLICY_PATH}>Retours : conditions et procédure</Link>
+        <span>{RETURN_LABEL}</span>
+      </p>
     </div>
   );
 }

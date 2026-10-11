@@ -188,3 +188,17 @@
     color: #c7d4c3;
   }
 }
+
+.returnNote {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  span {
+    color: v.$color-text-muted;
+  }
+}
