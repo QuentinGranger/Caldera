@@ -140,7 +140,7 @@ test('accueil : description des seuls produits Pokémon, la promesse tant que ri
     families: [{ name: 'Boosters' }, { name: 'ETB' }],
   });
   assert.match(description, /^Cartes Pokémon : 14 produits de 5,90/);
-  assert.match(description, /dont 11 en stock et 3 en précommande\./);
+  assert.match(description, /dont 11 en stock\./);
   assert.ok(description.includes('Boosters et ETB.'));
   assert.ok(description.length <= 160);
   assert.doesNotMatch(description, /Magic|One Piece|Yu-Gi-Oh|JCC/);
@@ -151,4 +151,22 @@ test('accueil : lectures Pokémon ou sans licence, jamais celles d’un autre je
   assert.equal(isShopGame([]), true);
   assert.equal(isShopGame(['jeu-test']), false);
   assert.equal(isShopGame(['magic', 'pokemon']), true);
+});
+
+test('accueil : un candidat non affiché ne prive pas le rayon suivant de sa place', () => {
+  const [weekly, lowStock] = distinctSections(
+    [
+      [product('a'), product('b'), product('c')],
+      [product('b'), product('c'), product('d')],
+    ],
+    [1, 2],
+  );
+  assert.deepEqual(
+    weekly.map((p) => p.id),
+    ['a'],
+  );
+  assert.deepEqual(
+    lowStock.map((p) => p.id),
+    ['b', 'c'],
+  );
 });

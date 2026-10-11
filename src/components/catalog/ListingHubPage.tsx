@@ -1,3 +1,5 @@
+import { ShoppingGuide } from './ShoppingGuide/ShoppingGuide';
+import { getShoppingIntentLinks } from '@/lib/catalog/queries';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { preordersEnabled } from '@/lib/catalog/preorders';
@@ -96,7 +98,10 @@ export async function ListingHubPage({
   ]);
   if (!hub.stats.productCount)
     redirect(listing === 'catalogue' ? '/' : await catalogFallback());
-  const links = await getListingHubLinks(hub);
+  const [links, intents] = await Promise.all([
+    getListingHubLinks(hub),
+    listing === 'catalogue' ? getShoppingIntentLinks() : Promise.resolve([]),
+  ]);
   const text = listingPageText(hub.text, load.page);
   const breadcrumb = [
     { label: 'Accueil', href: '/' },
@@ -140,6 +145,11 @@ export async function ListingHubPage({
       )}
     >
       <CatalogResults
+        above={
+          listing === 'catalogue' && !load.hasRefinements && load.page === 1 ? (
+            <ShoppingGuide intents={intents} compact />
+          ) : undefined
+        }
         load={load}
         path={config.path}
         emptyState={

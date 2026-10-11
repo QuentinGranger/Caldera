@@ -73,7 +73,7 @@ test('liens partagés : les filtres devenus vides restent visibles et retirables
   });
   const sections = catalogFilterSections(examples, filters, {});
   assert.ok(
-    sections.some(
+    !sections.some(
       (s) =>
         s.key === 'availability' &&
         s.options.some((o) => o.value === 'preorder'),

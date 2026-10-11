@@ -49,6 +49,7 @@ async function invalidateCatalog(productId?: string, previousSlug?: string) {
   invalidateCatalogCache();
   revalidatePath('/');
   revalidatePath('/catalogue');
+  revalidatePath('/selections/[slug]', 'page');
   revalidatePath('/categorie/[slug]', 'page');
   revalidatePath('/extensions/[slug]', 'page');
   revalidatePath('/[game]', 'page');

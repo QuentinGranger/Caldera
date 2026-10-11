@@ -72,7 +72,8 @@ test('contenu réel : chaque fichier est valide, trié par titre et bien relié'
     (total, section) => total + markdownFiles(section).length,
     0,
   );
-  assert.equal(entries.length, files);
+  // The two preorder editorial files stay unpublished at launch.
+  assert.equal(entries.length, files - 2);
   assert.ok(
     ['glossaire', 'guides', 'questions'].every(
       (section) => markdownFiles(section).length > 0,
@@ -115,7 +116,7 @@ test('contenu réel : chaque fichier est valide, trié par titre et bien relié'
   const first = entries[0];
   assert.ok(first && Object.isFrozen(first) && Object.isFrozen(first.games));
   entries.pop();
-  assert.equal((await getAllContent()).length, files);
+  assert.equal((await getAllContent()).length, files - 2);
 });
 
 test('page de contenu : HTML, sommaire, liens relatifs et section vérifiée', async () => {

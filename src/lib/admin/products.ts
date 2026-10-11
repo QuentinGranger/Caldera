@@ -1,4 +1,6 @@
 import 'server-only';
+import { SHOPPING_INTENTS, isIntentTag } from '@/lib/catalog/merchandising';
+import { isSealedProduct } from '@/lib/product/services';
 import { preordersEnabled } from '@/lib/catalog/preorders';
 import {
   Prisma,
@@ -74,6 +76,8 @@ export async function saveProduct(adminId: string, form: FormData) {
     'seoDescription',
     'tags',
     'version',
+    'merchandisingConfigured',
+    ...SHOPPING_INTENTS.map((intent) => intent.slug),
   ]);
   const productId = id(form, 'id', true);
   const name = text(form, 'name');
@@ -93,7 +97,7 @@ export async function saveProduct(adminId: string, form: FormData) {
     ...seoMetaFields(form),
   };
   const requestedGameId = id(form, 'gameId', true) || null;
-  const tags = [
+  let tags = [
     ...new Set(
       text(form, 'tags', 500, false)
         .split(',')
@@ -101,6 +105,19 @@ export async function saveProduct(adminId: string, form: FormData) {
         .filter(Boolean),
     ),
   ];
+  if (checked(form, 'merchandisingConfigured')) {
+    tags = tags.filter((tag) => !isIntentTag(createSlug(tag)));
+    for (const intent of SHOPPING_INTENTS) {
+      if (checked(form, intent.slug)) tags.push(intent.title);
+    }
+  }
+  if (
+    tags.some((tag) => createSlug(tag) === 'a-garder-scelle') &&
+    !isSealedProduct(data.productType)
+  )
+    throw new AdminError(
+      '« À garder scellé » est réservé aux produits scellés.',
+    );
   if (tags.length > 12 || tags.some((tag) => tag.length > 50))
     throw new AdminError('Maximum 12 tags de 50 caractères.');
   return adminTransaction(adminId, async (tx) => {

@@ -105,7 +105,7 @@ test('seed : identités uniques et relations conservées après plusieurs exécu
 });
 test('lecture : statuts, variantes, DTO public, prix minimum et listes spécialisées', async () => {
   const products = await getProducts();
-  assert.equal(products.filter((p) => p.slug.startsWith('dev-')).length, 17);
+  assert.equal(products.filter((p) => p.slug.startsWith('dev-')).length, 15);
   for (const slug of ['dev-brouillon', 'dev-archive', 'inexistant'])
     assert.equal(await getProductBySlug(slug), null);
   const product = await getProductBySlug('dev-etb-terres-de-braise');
@@ -123,7 +123,7 @@ test('lecture : statuts, variantes, DTO public, prix minimum et listes spéciali
     assert.deepEqual(JSON.parse(json), value);
   }
   assert.equal((await getFeaturedProducts(2)).length, 2);
-  assert.equal((await getNewProducts(4)).length, 4);
+  assert.equal((await getNewProducts(4)).length, 3);
   assert.ok(
     (await getProductsByCategory('scelles')).some(
       (p) => p.slug === 'dev-etb-terres-de-braise',
@@ -133,7 +133,8 @@ test('lecture : statuts, variantes, DTO public, prix minimum et listes spéciali
   assert.equal((await getProductsBySet('dev-terres-de-braise')).length, 2);
   assert.deepEqual(await getProductsByCategory('inexistant'), []);
   assert.deepEqual(await getProductsBySet('inexistant'), []);
-  assert.equal((await getRestockedProducts()).length, 3);
+  // The seed’s reassort tag is not evidence of a real restock.
+  assert.equal((await getRestockedProducts()).length, 0);
   await assert.rejects(getFeaturedProducts(0), RangeError);
 });
 test('lecture : dernières pièces, comptées comme sur la fiche produit', async () => {

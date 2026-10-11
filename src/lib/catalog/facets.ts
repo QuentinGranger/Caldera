@@ -15,7 +15,7 @@ export async function getCatalogFacets(scope: CatalogScope) {
   const db = getPrisma();
   const demonstration = process.env.CATALOG_DEMO_MODE === '1';
   const categories = await getCategories();
-  const { where, variant } = buildCatalogWhere(
+  const { where, variant } = await buildCatalogWhere(
     parseCatalogParams({}),
     scope,
     categories,
@@ -40,7 +40,7 @@ export async function getCatalogFacets(scope: CatalogScope) {
             (['in-stock', 'low-stock', 'out-of-stock', 'preorder'] as const)
               .filter((value) => value !== 'preorder' || preordersEnabled())
               .map(async (value) => {
-                const filtered = buildCatalogWhere(
+                const filtered = await buildCatalogWhere(
                   parseCatalogParams({ availability: value }),
                   scope,
                   categories,

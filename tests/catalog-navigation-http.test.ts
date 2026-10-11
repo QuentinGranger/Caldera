@@ -70,7 +70,6 @@ test('HTTP : routes, hiérarchie, extensions et 404', async () => {
     '/categorie/scelles',
     '/categorie/etb?language=FR&sort=price-asc',
     '/nouveautes',
-    '/precommandes',
     '/en-stock',
   ])
     assert.equal(h1Count((await page(path)).html), 1, path);
@@ -140,14 +139,17 @@ test('HTTP : filtre FR cohérent, cases synchronisées, URL nettoyée et SEO', a
 test('HTTP : pagination crawlable, indexable et bornée', async () => {
   const first = await page('/catalogue?language=FR&sort=price-asc');
   assert.equal(articles(first.html).length, 12);
+  // Twelve French products remain after hiding the two preorders: one page.
   assert.ok(
-    first.html.includes(
+    !first.html.includes(
       'language=FR&amp;sort=price-asc&amp;page=2#catalogue-resultats',
     ),
   );
-  const second = await page('/catalogue?language=FR&sort=price-asc&page=2');
-  assert.ok(articles(second.html).length > 0);
-  assert.ok(noindex(second.html));
+  assert.ok(noindex(first.html));
+  await redirects(
+    '/catalogue?language=FR&sort=price-asc&page=2',
+    '/catalogue?language=FR&sort=price-asc',
+  );
 
   const catalogue = await page('/catalogue');
   assert.match(
@@ -163,12 +165,7 @@ test('HTTP : pagination crawlable, indexable et bornée', async () => {
 });
 
 test('HTTP : hubs transverses indexables, chiffres réels et maillage', async () => {
-  for (const path of [
-    '/catalogue',
-    '/nouveautes',
-    '/precommandes',
-    '/en-stock',
-  ]) {
+  for (const path of ['/catalogue', '/nouveautes', '/en-stock']) {
     const { html } = await page(path);
     assert.equal(h1Count(html), 1, path);
     assert.ok(!noindex(html), path);
@@ -187,7 +184,7 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
   const description =
     /<meta name="description" content="([^"]*)"/.exec(catalogue)?.[1] ?? '';
   assert.match(description, /\d+ produits de [\d,]+\s€ à [\d,]+\s€/);
-  for (const href of ['/nouveautes', '/precommandes', '/en-stock', '/pokemon'])
+  for (const href of ['/nouveautes', '/en-stock', '/pokemon'])
     assert.ok(catalogue.includes(`href="${href}"`), href);
   // Launch filters expose product types, not a redundant category tree.
   assert.match(catalogue, /<summary>Type de produit/);
@@ -207,23 +204,20 @@ test('HTTP : hubs transverses indexables, chiffres réels et maillage', async ()
     ),
   );
 
-  const preorders = (await page('/precommandes')).html;
-  // Every preorder is a Pokémon one: the game's page defers to the listing.
-  assert.ok(!preorders.includes('href="/pokemon/precommandes"'));
-  assert.equal(
-    canonical((await page('/pokemon/precommandes')).html),
-    '/precommandes',
-  );
-  assert.ok(preorders.includes('href="/catalogue"'));
-  // Every preorder is shown as such, or as sold out once its quota is used up.
-  assert.ok(articles(preorders).some((a) => a.includes('Précommande')));
-  assert.ok(
-    articles(preorders).every(
-      (a) => a.includes('Précommande') || a.includes('Épuisé'),
-    ),
-  );
-  // The stock filter cannot narrow a preorder listing: it is not offered.
-  assert.doesNotMatch(preorders, /<summary>Disponibilité/);
+  for (const [path, target] of [
+    ['/precommandes', '/catalogue'],
+    ['/pokemon/precommandes', '/pokemon'],
+  ]) {
+    const response = await fetch(`${base}${path}`, { redirect: 'manual' });
+    const html = await response.text();
+    assert.ok(
+      (response.status === 307 &&
+        response.headers.get('location') === target) ||
+        (response.status === 200 &&
+          html.includes(`NEXT_REDIRECT;replace;${target};307;`)),
+      path,
+    );
+  }
 
   const stock = (await page('/en-stock')).html;
   // The figures: in the bar and the search snippet, not told in prose.
@@ -294,11 +288,7 @@ test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () =
   assert.ok(isCurrentAisle(aisles, '/pokemon'));
   assert.ok(aisles.includes('href="/pokemon/boosters"'));
   const explorer = html.slice(at('id="explorer"'), at('id="guides"'));
-  for (const href of [
-    '/pokemon/francais',
-    '/pokemon/en-stock',
-    '/precommandes',
-  ])
+  for (const href of ['/pokemon/francais', '/pokemon/en-stock'])
     assert.ok(explorer.includes(`href="${href}"`), href);
   for (const href of [
     '/pokemon/boosters',
@@ -317,7 +307,6 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
     '/pokemon/displays',
     '/pokemon/coffrets',
     '/nouveautes',
-    '/precommandes',
     '/en-stock',
     '/categorie/accessoires',
   ];
@@ -443,14 +432,6 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   );
   const boxes = (await page('/pokemon/coffrets')).html;
   const latestStart = boxes.indexOf('aria-labelledby="derniers-ajouts"');
-  assert.ok(latestStart > 0 && latestStart < boxes.indexOf('role="status"'));
-  const latest = boxes.slice(latestStart, boxes.indexOf('role="status"'));
-  assert.ok(strip(latest).includes('Derniers coffrets ajoutés'));
-  // « Voir tous les coffrets »: the full list right below, no sort URL.
-  assert.ok(latest.includes('href="#liste-complete"'));
-  assert.ok(
-    boxes.indexOf('id="liste-complete"') < boxes.indexOf('role="status"'),
-  );
   const slugs = (html: string) =>
     [...html.matchAll(/<h3><a href="\/produit\/([^"]+)"/g)].map(
       ([, slug]) => slug,
@@ -458,9 +439,22 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
   const newest = slugs(
     articles((await page('/pokemon/coffrets?sort=newest')).html).join(''),
   );
-  const shown = slugs(latest);
-  assert.ok(shown.length >= 4 && shown.length < newest.length);
-  assert.deepEqual(shown, newest.slice(0, shown.length));
+  // A preview is useful only when the full list has more than four boxes.
+  // Preorders are absent at launch, leaving three ordinary seed products.
+  if (newest.length > 4) {
+    assert.ok(latestStart > 0 && latestStart < boxes.indexOf('role="status"'));
+    const latest = boxes.slice(latestStart, boxes.indexOf('role="status"'));
+    assert.ok(strip(latest).includes('Derniers coffrets ajoutés'));
+    assert.ok(latest.includes('href="#liste-complete"'));
+    const shown = slugs(latest);
+    assert.ok(shown.length >= 4 && shown.length < newest.length);
+    assert.deepEqual(shown, newest.slice(0, shown.length));
+  } else {
+    assert.equal(latestStart, -1);
+  }
+  assert.ok(
+    boxes.indexOf('id="liste-complete"') < boxes.indexOf('role="status"'),
+  );
   // Other aisles keep their page as it was.
   assert.ok(!boosters.includes('derniers-ajouts'));
 

@@ -332,15 +332,21 @@ async function getHomeJournal(limit: number): Promise<HomeJournal | null> {
  */
 export function distinctSections<
   const Sections extends readonly (readonly CatalogProduct[])[],
->(sections: Sections): { [Index in keyof Sections]: CatalogProduct[] } {
+>(
+  sections: Sections,
+  limits?: readonly number[],
+): { [Index in keyof Sections]: CatalogProduct[] } {
   const seen = new Set<string>();
-  return sections.map((products) =>
-    products.filter((product) => {
+  return sections.map((products, index) => {
+    let accepted = 0;
+    return products.filter((product) => {
+      if (accepted >= (limits?.[index] ?? Infinity)) return false;
       if (seen.has(product.id)) return false;
       seen.add(product.id);
+      accepted++;
       return true;
-    }),
-  ) as { [Index in keyof Sections]: CatalogProduct[] };
+    });
+  }) as { [Index in keyof Sections]: CatalogProduct[] };
 }
 
 /** Demonstration data is named « [Démo] … » by the development seed. */

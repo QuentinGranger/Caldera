@@ -83,19 +83,16 @@ test('HTTP : un changement de prix et de stock apparaît au rafraîchissement', 
       where: { sku },
       data: { price: '6.37', stockQuantity: 0 },
     });
-    for (const path of [
-      '/',
-      '/catalogue?search=dev-booster-terres-de-braise',
-    ]) {
-      const matches = cards(await page(path), slug);
-      assert.equal(
-        matches.length,
-        1,
-        'Le produit en rupture quitte les réassorts',
-      );
-      assert.ok(text(matches[0]!).includes(text(formatPrice('6.37'))));
-      assert.ok(text(matches[0]!).includes('Épuisé'));
-    }
+    // A sold-out, non-editorial product leaves the stock-backed homepage shelves.
+    assert.equal(cards(await page('/'), slug).length, 0);
+    // It remains discoverable in the catalogue, with its current price and state.
+    const matches = cards(
+      await page('/catalogue?search=dev-booster-terres-de-braise'),
+      slug,
+    );
+    assert.equal(matches.length, 1);
+    assert.ok(text(matches[0]!).includes(text(formatPrice('6.37'))));
+    assert.ok(text(matches[0]!).includes('Épuisé'));
     const detail = text(await page(`/produit/${slug}`));
     assert.ok(detail.includes(text(formatPrice('6.37'))));
     assert.ok(detail.includes('Rupture'));

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/product/ProductCard/ProductCard';
 import type { CatalogProduct } from '@/types/product';
-import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
+import { merchandisingPath } from '@/lib/catalog/merchandising';
 import styles from './Showcase.module.scss';
 
 /**
@@ -32,7 +32,7 @@ export function Showcase({
             <div>
               <p className={styles.eyebrow}>Le regard du collectionneur</p>
               <h2 id="selection-title">
-                Sélection <em>Caldera.</em>
+                Sélection <em>du moment.</em>
               </h2>
             </div>
             <div className={styles.intro}>
@@ -45,8 +45,11 @@ export function Showcase({
                   : 'Mises en avant par l’équipe, avec leur prix et leur disponibilité du jour.'}
               </p>
               {catalogue && (
-                <Link href={catalogue} className={styles.link}>
-                  {ALL_PRODUCTS_LABEL}{' '}
+                <Link
+                  href={merchandisingPath('du-moment')}
+                  className={styles.link}
+                >
+                  Voir toute la sélection{' '}
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               )}

@@ -1,3 +1,5 @@
+import { isStockMerchandising } from './merchandising';
+import { merchandisingWhere } from './merchandisingQueries';
 import { descendantIds } from './categoryTree';
 import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
@@ -16,7 +18,7 @@ import {
   type CatalogSort,
 } from './params';
 
-export function buildCatalogWhere(
+export async function buildCatalogWhere(
   filters: CatalogFilters,
   scope: CatalogScope,
   categories: CatalogCategory[],
@@ -33,7 +35,10 @@ export function buildCatalogWhere(
     ...(languages.length || scope.language
       ? { language: { in: languages } }
       : {}),
-    ...(scope.status === 'en-stock' ? { availableQuantity: { gt: 0 } } : {}),
+    ...(scope.status === 'en-stock' ||
+    (scope.merchandising && isStockMerchandising(scope.merchandising))
+      ? { availableQuantity: { gt: 0 } }
+      : {}),
     ...(filters.minPrice || filters.maxPrice
       ? {
           price: {
@@ -43,6 +48,12 @@ export function buildCatalogWhere(
         }
       : {}),
   };
+  if (scope.merchandising && isStockMerchandising(scope.merchandising)) {
+    variant.price = {
+      gt: 0,
+      ...(typeof variant.price === 'object' ? variant.price : {}),
+    };
+  }
   if (filters.availability.length) {
     const stockedVariant: Prisma.ProductVariantWhereInput = {
       ...variant,
@@ -66,6 +77,8 @@ export function buildCatalogWhere(
     );
   }
   const conditions: Prisma.ProductWhereInput[] = [visibleProductWhere];
+  if (scope.merchandising)
+    conditions.push(await merchandisingWhere(scope.merchandising));
   if (scope.game) conditions.push({ game: { slug: scope.game } });
   if (scope.category)
     conditions.push({
@@ -140,7 +153,11 @@ export async function getCatalogProducts(
     categories: new Set(categories.map((category) => category.slug)),
     sets: new Set(knownSets.map((set) => set.slug)),
   });
-  const { where, variant } = buildCatalogWhere(filters, scope, categories);
+  const { where, variant } = await buildCatalogWhere(
+    filters,
+    scope,
+    categories,
+  );
   const select = {
     ...catalogProductSelect,
     tags: false,

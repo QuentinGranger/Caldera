@@ -632,7 +632,7 @@ test('metadata des landings : faits réels, longueurs, aucune formule creuse', (
   assert.equal(hub.title, 'Pokémon : boosters, ETB et coffrets');
   assert.equal(
     hub.description,
-    `Pokémon : 12 produits de 5,90${NBSP}€ à 189,90${NBSP}€. 9 en stock, 3 en précommande. Langues : français et japonais.`,
+    `Pokémon : 12 produits de 5,90${NBSP}€ à 189,90${NBSP}€. 9 en stock. Langues : français et japonais.`,
   );
 
   const cases: [LandingScope, string][] = [

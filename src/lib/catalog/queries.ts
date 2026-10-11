@@ -1,3 +1,11 @@
+import { shopProductWhere } from './shopGame';
+import { merchandisingWhere } from './merchandisingQueries';
+import {
+  SHOPPING_INTENTS,
+  isStockMerchandising,
+  merchandisingPath,
+  type MerchandisingKey,
+} from './merchandising';
 import { availableQuantity } from '@/lib/inventory/availability';
 import 'server-only';
 import { descendantIds } from './categoryTree';
@@ -173,10 +181,17 @@ const listOrder = [
 async function list(
   where: Prisma.ProductWhereInput,
   limit: number,
+  variantWhere?: Prisma.ProductVariantWhereInput,
 ): Promise<CatalogProduct[]> {
   const rows = await getPrisma().product.findMany({
     where: { AND: [visibleProductWhere, where] },
-    select: catalogProductSelect,
+    select: {
+      ...catalogProductSelect,
+      variants: {
+        ...catalogProductSelect.variants,
+        where: { isActive: true, ...variantWhere },
+      },
+    },
     orderBy: listOrder,
     take: boundedLimit(limit),
   });
@@ -209,52 +224,38 @@ export async function getProductsByCategory(slug: string, limit = 100) {
   });
   return list({ categoryId: { in: descendantIds(categories, [slug]) } }, limit);
 }
-// Sélection éditoriale, pas un historique de mouvements de stock.
+/** Bounded previews of the same selections exposed by /selections/[slug]. */
+export async function getMerchandisingProducts(
+  key: MerchandisingKey,
+  limit = 4,
+  where: Prisma.ProductWhereInput = {},
+) {
+  const selection = { AND: [await merchandisingWhere(key), where] };
+  return key === 'du-moment' ||
+    SHOPPING_INTENTS.some((intent) => intent.slug === key)
+    ? listProductsAvailableFirst(selection, limit)
+    : list(
+        selection,
+        limit,
+        isStockMerchandising(key)
+          ? {
+              price: { gt: 0 },
+              availableQuantity: { gt: 0 },
+            }
+          : undefined,
+      );
+}
 export function getRestockedProducts(
   limit = 3,
   where: Prisma.ProductWhereInput = {},
 ) {
-  return list(
-    {
-      AND: [
-        {
-          preorder: false,
-          tags: { some: { slug: 'reassort' } },
-          variants: { some: { isActive: true, availableQuantity: { gt: 0 } } },
-        },
-        where,
-      ],
-    },
-    limit,
-  );
+  return getMerchandisingProducts('retour-en-stock', limit, where);
 }
-/**
- * Last pieces (LOW_STOCK, as getAvailability decides it): some active
- * variant still has a few, none has more than its threshold.
- */
 export function getLastPiecesProducts(
   limit = 4,
   where: Prisma.ProductWhereInput = {},
 ) {
-  const threshold = getPrisma().productVariant.fields.lowStockThreshold;
-  return list(
-    {
-      AND: [
-        {
-          preorder: false,
-          variants: {
-            some: {
-              isActive: true,
-              availableQuantity: { gt: 0, lte: threshold },
-            },
-            none: { isActive: true, availableQuantity: { gt: threshold } },
-          },
-        },
-        where,
-      ],
-    },
-    limit,
-  );
+  return getMerchandisingProducts('derniers-exemplaires', limit, where);
 }
 const productOrder = [
   { featured: 'desc' },
@@ -525,4 +526,24 @@ export async function getHomeCategories(where: Prisma.ProductWhereInput = {}) {
       imageUrl: getCategoryImage(category.slug, category.imageUrl),
     }));
 }
-/** Latest active sets with visible products, newest release first. */
+/** Only link to a curated selection when it really contains published products. */
+export const getShoppingIntentLinks = cache(async () => {
+  return Promise.all(
+    SHOPPING_INTENTS.map(async (intent) => {
+      const count = await getPrisma().product.count({
+        where: {
+          AND: [
+            visibleProductWhere,
+            shopProductWhere,
+            await merchandisingWhere(intent.slug),
+          ],
+        },
+      });
+      return {
+        ...intent,
+        count,
+        href: count ? merchandisingPath(intent.slug) : null,
+      };
+    }),
+  );
+});

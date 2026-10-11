@@ -12,6 +12,7 @@ import { Families } from '@/components/home/Families/Families';
 import { Showcase } from '@/components/home/Showcase/Showcase';
 import { Territories } from '@/components/home/Territories/Territories';
 import { Collections } from '@/components/home/Collections/Collections';
+import { ShoppingGuide } from '@/components/catalog/ShoppingGuide/ShoppingGuide';
 import { HomeShop } from '@/components/home/HomeShop/HomeShop';
 import { Reflection } from '@/components/home/Reflection/Reflection';
 import { Assurances } from '@/components/home/Assurances/Assurances';
@@ -21,14 +22,14 @@ import {
   distinctSections,
   getHomeData,
   getHomeDescription,
-  isDemoCatalogue,
 } from '@/components/home/homeData';
 import { DEFAULT_TITLE } from '@/components/layout/siteMetadata';
 import { JsonLd } from '@/components/seo/JsonLd';
 import {
+  getMerchandisingProducts,
+  getShoppingIntentLinks,
   getLastPiecesProducts,
   getRestockedProducts,
-  listProductsAvailableFirst,
 } from '@/lib/catalog/queries';
 import { shopProductWhere } from '@/lib/catalog/shopGame';
 import { graph, organizationNode, websiteNode } from '@/lib/seo/jsonld';
@@ -55,34 +56,36 @@ const SELECTION = 2;
 
 export default async function HomePage() {
   await connection();
-  // What can be bought now first (in stock or preorder), a sold-out one
-  // only to fill a place; more read than shown, so that each shelf stays
-  // full once the products are spread out.
-  const [home, featuredProducts, newProducts, restockProducts, lastProducts] =
-    await Promise.all([
-      getHomeData(),
-      listProductsAvailableFirst(
-        { AND: [{ featured: true }, shopProductWhere] },
-        SELECTION,
-      ),
-      listProductsAvailableFirst(
-        { AND: [{ newArrival: true }, shopProductWhere] },
-        SHELF * 2,
-      ),
-      getRestockedProducts(SHELF * 2, shopProductWhere),
-      getLastPiecesProducts(SHELF * 2, shopProductWhere),
-    ]);
-  // The team's selection is kept whole; the shelves share the rest without
-  // ever repeating a card.
-  const [selected, newShelf, restockShelf, lastShelf] = distinctSections([
+  // Editorial choices stay separate from timed, stock-backed shelves.
+  // Read extra candidates to avoid repeating cards between shelves.
+  const [
+    home,
+    intents,
     featuredProducts,
     newProducts,
     restockProducts,
     lastProducts,
+  ] = await Promise.all([
+    getHomeData(),
+    getShoppingIntentLinks(),
+    getMerchandisingProducts('du-moment', SELECTION, shopProductWhere),
+    getMerchandisingProducts(
+      'nouveaute-de-la-semaine',
+      SHELF * 2,
+      shopProductWhere,
+    ),
+    getRestockedProducts(SHELF * 2, shopProductWhere),
+    getLastPiecesProducts(SHELF * 2, shopProductWhere),
   ]);
-  const latest = newShelf.slice(0, SHELF),
-    restocked = restockShelf.slice(0, SHELF),
-    lastPieces = lastShelf.slice(0, SHELF);
+  // The team's selection is kept whole; the shelves share the rest without
+  // ever repeating a card.
+  const [selected, newShelf, restockShelf, lastShelf] = distinctSections(
+    [featuredProducts, newProducts, restockProducts, lastProducts],
+    [SELECTION, SHELF, SHELF, SHELF],
+  );
+  const latest = newShelf,
+    restocked = restockShelf,
+    lastPieces = lastShelf;
   const onSale = [latest, restocked, lastPieces].some((list) => list.length);
   // The story of the card ends on the first section after it.
   const cardSkip = home.collections.length
@@ -110,6 +113,13 @@ export default async function HomePage() {
       end: night,
     },
   ];
+  if (home.families.length)
+    chapters.push({
+      key: 'choices',
+      content: <ShoppingGuide intents={intents} />,
+      start: night,
+      end: forest,
+    });
   if (onSale)
     chapters.push({
       key: 'shop',
@@ -118,17 +128,6 @@ export default async function HomePage() {
           latest={latest}
           restocked={restocked}
           lastPieces={lastPieces}
-          links={{
-            nouveautes: home.links.nouveautes,
-            enStock: home.links['en-stock'],
-            catalogue: home.links.catalogue,
-          }}
-          demo={isDemoCatalogue([
-            ...selected,
-            ...latest,
-            ...restocked,
-            ...lastPieces,
-          ])}
         />
       ),
       start: night,
