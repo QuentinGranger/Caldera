@@ -31,6 +31,12 @@ export function DetailNavigation({ sections }: { sections: Section[] }) {
         if (target && target.getBoundingClientRect().top <= threshold)
           current = section.id;
       }
+      // Short final sections cannot always reach the top of the viewport.
+      if (
+        window.scrollY + window.innerHeight >=
+        document.documentElement.scrollHeight - 4
+      )
+        current = sections.at(-1)?.id;
       setActive(current);
     }
     function schedule() {
