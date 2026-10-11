@@ -22,6 +22,7 @@ const COPY: Record<
     subject: 'Confirmez votre adresse e-mail',
     title: 'Bienvenue aux Terres de Caldera',
     body: [
+      'Caldera vous accompagne dans le choix de vos produits du JCC Pokémon. Votre compte vous permettra de retrouver vos favoris, vos alertes stock et vos commandes.',
       'Votre compte est presque prêt. Confirmez votre adresse e-mail pour vous connecter et retrouver vos commandes.',
     ],
     button: 'Confirmer mon adresse',

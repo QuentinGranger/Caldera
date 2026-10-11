@@ -1,3 +1,4 @@
+import { LifecycleEmailStatus } from '@/components/admin/LifecycleEmailStatus';
 import { NewsletterStatus } from '@/generated/prisma/client';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
@@ -50,6 +51,7 @@ export default async function AdminNewsletterPage({
           · <strong>{data.counts.UNSUBSCRIBED ?? 0}</strong> désinscrites
         </p>
       </section>
+      <LifecycleEmailStatus />
       <section aria-labelledby="campagnes-newsletter">
         <div className={styles.panelHeader}>
           <h2 id="campagnes-newsletter">Campagnes</h2>

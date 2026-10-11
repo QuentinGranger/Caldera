@@ -93,6 +93,28 @@ async function claim() {
       });
       return null;
     }
+    await tx.$queryRaw`SELECT id FROM "NewsletterSubscriber" WHERE id=${current.subscriberId}::uuid FOR UPDATE`;
+    if (!current.firstAttemptAt) {
+      const recentAutomation = await tx.lifecycleDelivery.findFirst({
+        where: {
+          subscriberId: current.subscriberId,
+          firstAttemptAt: { gte: new Date(Date.now() - 3 * 86400000) },
+        },
+        orderBy: { firstAttemptAt: 'desc' },
+        select: { firstAttemptAt: true },
+      });
+      if (recentAutomation?.firstAttemptAt) {
+        await tx.newsletterCampaignDelivery.update({
+          where: { id: current.id },
+          data: {
+            nextAttemptAt: new Date(
+              recentAutomation.firstAttemptAt.getTime() + 3 * 86400000,
+            ),
+          },
+        });
+        return null;
+      }
+    }
     const leaseToken = randomUUID();
     const delivery = await tx.newsletterCampaignDelivery.update({
       where: { id: current.id },

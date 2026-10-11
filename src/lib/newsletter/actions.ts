@@ -1,4 +1,6 @@
 'use server';
+import { deliverAfterResponse } from '@/lib/auth/deliver';
+import { runLifecycle } from '@/lib/lifecycle/run';
 import { revalidatePath } from 'next/cache';
 import { accountEmail } from '@/lib/account/validation';
 import { allowAccountAttempt } from '@/lib/account/limits';
@@ -70,6 +72,10 @@ export async function subscribeNewsletterAction(
     const token = newNewsletterConfirmationToken();
     const data = {
       status: 'PENDING' as const,
+      personalizedEmails: form.get('personalized') === 'on',
+      personalizedConsentAt: form.get('personalized') === 'on' ? now : null,
+      personalizedConsentVersion:
+        form.get('personalized') === 'on' ? '2026-10-11-v1' : null,
       consentAt: now,
       consentSource: 'homepage',
       consentVersion: NEWSLETTER_CONSENT_VERSION,
@@ -121,6 +127,9 @@ export async function confirmNewsletterAction(
         'Ce lien a expiré ou a déjà servi. Vous pouvez vous réinscrire depuis la page d’accueil.',
       );
     revalidatePath('/admin/newsletter');
+    await deliverAfterResponse(async () => {
+      await runLifecycle();
+    });
     return {
       success: true,
       message: 'Votre inscription est confirmée. Bienvenue dans l’expédition !',
@@ -142,6 +151,8 @@ export async function unsubscribeNewsletterAction(
       where: { id },
       data: {
         status: 'UNSUBSCRIBED',
+        personalizedEmails: false,
+        personalizedConsentAt: null,
         unsubscribedAt: new Date(),
         confirmationTokenHash: null,
         confirmationExpiresAt: null,
@@ -151,7 +162,7 @@ export async function unsubscribeNewsletterAction(
     return {
       success: true,
       message:
-        'Votre désinscription est enregistrée. Vous ne recevrez plus la newsletter.',
+        'Votre désinscription est enregistrée. Vous ne recevrez plus les e-mails commerciaux de Caldera.',
     };
   } catch {
     logUnexpected('unsubscribe_failed');

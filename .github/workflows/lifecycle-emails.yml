@@ -1,0 +1,25 @@
+name: E-mails automatiques Caldera
+on:
+  schedule:
+    - cron: '15 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: caldera-lifecycle-emails-production
+  cancel-in-progress: false
+jobs:
+  process:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Traiter les événements éligibles
+        env:
+          LIFECYCLE_CRON_SECRET: ${{ secrets.LIFECYCLE_CRON_SECRET }}
+        run: |
+          if [ -z "$LIFECYCLE_CRON_SECRET" ]; then
+            echo 'Secret de planification manquant.'
+            exit 1
+          fi
+          curl --fail --silent --show-error --max-time 45 \
+            --header "Authorization: Bearer $LIFECYCLE_CRON_SECRET" \
+            https://lesterresdecaldera.fr/api/cron/lifecycle

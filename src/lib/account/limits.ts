@@ -9,6 +9,7 @@ export type AccountAttemptScope =
   | 'verify'
   | 'newsletter'
   | 'stock-alert'
+  | 'cart-recovery'
   | 'promotion'
   | 'return'
   | 'discord-publish'
@@ -27,6 +28,7 @@ const RULES: Record<AccountAttemptScope, { maximum: number; seconds: number }> =
     newsletter: { maximum: 3, seconds: 3600 },
     'stock-alert': { maximum: 5, seconds: 3600 },
     // Per cart: codes cannot be found by trying them one after another.
+    'cart-recovery': { maximum: 5, seconds: 3600 },
     promotion: { maximum: 10, seconds: 3600 },
     return: { maximum: 5, seconds: 3600 },
     'discord-publish': { maximum: 30, seconds: 900 },

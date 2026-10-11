@@ -1,3 +1,4 @@
+import { CommunicationsPreferences } from '@/components/account/CommunicationsPreferences';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronDown, Lock, MessagesSquare } from 'lucide-react';
@@ -84,6 +85,7 @@ export default async function AccountProfile({
         </AccountForm>
       </section>
 
+      <CommunicationsPreferences email={customer.email} />
       <section className={styles.panel} aria-labelledby="mot-de-passe">
         <h2 id="mot-de-passe">Mot de passe</h2>
         <p className={styles.panelLead}>
