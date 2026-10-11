@@ -62,7 +62,7 @@ export default function ConfidentialitePage() {
           <h1>Politique de confidentialité</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
           <p className={styles.version}>
-            Dernière mise à jour : 10 octobre 2026
+            Dernière mise à jour : 11 octobre 2026
           </p>
         </Container>
       </section>
@@ -491,6 +491,32 @@ export default function ConfidentialitePage() {
               <p>
                 Le consentement à la newsletter n’est pas une condition
                 permettant de passer une commande.
+              </p>
+              <p>
+                Une option distincte, facultative et décochée par défaut permet
+                de recevoir des rappels de panier, des nouvelles de vos favoris,
+                des recommandations après achat et une sélection après une
+                période d’inactivité. Elle utilise les articles de votre panier,
+                vos favoris et vos achats enregistrés, sans historique de
+                navigation ni pixel de suivi des ouvertures. Les nouveautés
+                peuvent être adaptées à ces mêmes informations uniquement si
+                vous avez choisi cette option.
+              </p>
+              <p>
+                Vous pouvez modifier cette option depuis votre compte, dans «
+                Profil et sécurité », rubrique « Vos e-mails Caldera ». La
+                désinscription commerciale arrête également ces automatismes.
+                Les messages nécessaires aux commandes, à la sécurité du compte
+                et les alertes stock que vous avez demandées restent
+                indépendants.
+              </p>
+              <p>
+                Le contenu des e-mails automatiques est effacé de la file
+                d’envoi après trente jours. Des identifiants d’événements
+                restent associés à l’abonnement pour éviter les doublons. Les
+                liens de reprise de sélection expirent après sept jours au
+                maximum et ne permettent pas d’accéder au compte ni aux
+                informations de paiement.
               </p>
               <p>L’utilisateur peut retirer son consentement à tout moment :</p>
               <ul>

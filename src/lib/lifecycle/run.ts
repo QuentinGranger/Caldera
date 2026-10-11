@@ -19,7 +19,6 @@ export async function runLifecycle() {
     await getPrisma().lifecycleDelivery.updateMany({
       where: {
         createdAt: { lt: new Date(Date.now() - 30 * DAY) },
-        status: { in: ['SENT', 'SKIPPED'] },
       },
       data: {
         envelope: (await import('@/generated/prisma/client')).Prisma.DbNull,
