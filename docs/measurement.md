@@ -13,7 +13,7 @@
 
 ## Consentement et sécurité
 
-Aucun script GA4 ni cookie de mesure avant accord. Accepter et Refuser sont accessibles au même niveau. Le choix expire après 180 jours. Le retrait désactive la collecte, efface les cookies Google et la session interne courante. La session interne utilise un cookie signé HttpOnly/SameSite=Lax/Secure en production, renouvelé après 30 minutes d’activité. Les sessions et attributions sont supprimées après 90 jours par la maintenance existante.
+Aucun script GA4 ni cookie de mesure avant accord. Accepter et Refuser sont accessibles au même niveau. Le choix expire après 180 jours. Le retrait désactive la collecte, efface les cookies Google et la session interne courante. La session interne utilise un cookie signé HttpOnly/SameSite=Lax/Secure en production, renouvelé après 30 minutes d’activité. Dans GA4, données utilisateur et événements sont conservés deux mois, sans prolongation automatique à chaque activité. Les sessions et attributions internes sont supprimées après 90 jours par la maintenance existante.
 
 Les espaces privés, liens de commande et paiement, recherches et fragments sont exclus des pages vues. Les UTM autorisés sont publics et ne contiennent pas d’identifiant de destinataire. Les mesures automatiques enrichies GA4 sont désactivées ; publicités et Google Signals sont désactivés dans la configuration du tag. Le serveur refuse les origines étrangères, les payloads invalides et impose une limite distincte des limites d’authentification.
 

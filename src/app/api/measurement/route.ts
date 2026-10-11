@@ -46,7 +46,9 @@ export async function POST(request: Request) {
       data.consent !== true ||
       !MEASUREMENT_EVENTS.includes(data.event) ||
       typeof data.visitor !== 'string' ||
-      !/^[a-f0-9-]{36}$/.test(data.visitor)
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
+        data.visitor,
+      )
     )
       return reply(400);
     const db = getPrisma();

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   analyticsAllowed,
   trackCommerce,
@@ -21,10 +21,18 @@ export function CommerceEvent({
   shipping?: number;
   tax?: number;
 }) {
+  const sentEvent = useRef<string | null>(null);
+  const eventKey = JSON.stringify({
+    name,
+    items,
+    value,
+    transactionId,
+    shipping,
+    tax,
+  });
   useEffect(() => {
-    let sent = false;
     function send() {
-      if (sent || !analyticsAllowed()) return;
+      if (sentEvent.current === eventKey || !analyticsAllowed()) return;
       const target = window as unknown as { gtag?: unknown };
       if (!target.gtag) return;
       const key = transactionId
@@ -40,7 +48,7 @@ export function CommerceEvent({
           ? { transaction_id: transactionId, shipping, tax }
           : {}),
       });
-      sent = true;
+      sentEvent.current = eventKey;
       try {
         if (key) sessionStorage.setItem(key, '1');
       } catch {}
@@ -48,6 +56,6 @@ export function CommerceEvent({
     send();
     window.addEventListener('caldera:analytics-ready', send);
     return () => window.removeEventListener('caldera:analytics-ready', send);
-  }, [name, items, value, transactionId, shipping, tax]);
+  }, [eventKey, name, items, value, transactionId, shipping, tax]);
   return null;
 }

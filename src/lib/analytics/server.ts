@@ -21,7 +21,9 @@ export function measurementId(value: string | undefined) {
   if (
     extra.length ||
     !id ||
-    !/^[a-f0-9-]{36}$/.test(id) ||
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
+      id,
+    ) ||
     !signature ||
     !/^[a-f0-9]{64}$/.test(signature) ||
     !stamp ||
@@ -61,8 +63,6 @@ export async function attributePreparedOrder(orderId: string) {
 }
 
 export async function purgeMeasurement() {
-  if (process.env.MEASUREMENT_ENABLED !== 'true')
-    return { measurementPurged: 0 };
   const deleted = await getPrisma().measurementSession.deleteMany({
     where: { startedAt: { lt: new Date(Date.now() - 90 * 86400000) } },
   });
