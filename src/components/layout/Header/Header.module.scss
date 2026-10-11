@@ -130,3 +130,13 @@
     display: inline-grid;
   }
 }
+
+// Keep favorites one tap away without crowding search and cart.
+.mobileActions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  @include m.from(v.$breakpoint-desktop) {
+    display: none;
+  }
+}

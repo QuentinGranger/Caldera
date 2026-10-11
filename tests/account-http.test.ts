@@ -269,6 +269,10 @@ test('compte client HTTP : pages privées, connexion, historique, adresse, suppr
         );
         assert.ok(html.includes(email));
         assert.ok(html.includes(guestOrder.orderNumber));
+        for (const href of ['/favoris', '/compte/alertes', '/compte/adresse']) {
+          assert.ok(html.includes('href="' + href + '"'), href);
+        }
+        assert.ok(html.includes('Voir le détail et le suivi'));
         const href = /href="(\/commande\/[a-f0-9]{64}\?access=[^"]+)"/
           .exec(html)?.[1]
           ?.replaceAll('&amp;', '&');

@@ -19,10 +19,13 @@ export async function Header() {
   return (
     <header className={styles.header}>
       <Container className={styles.inner}>
-        <MobileNavigation
-          navigation={navigation}
-          signedIn={Boolean(customer)}
-        />
+        <div className={styles.mobileActions}>
+          <MobileNavigation
+            navigation={navigation}
+            signedIn={Boolean(customer)}
+          />
+          <HeaderWishlistLink />
+        </div>
         <Link
           href="/"
           className={styles.brand}

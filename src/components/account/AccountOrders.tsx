@@ -121,7 +121,7 @@ export function OrderCard({
         </p>
         {order.href ? (
           <Link href={order.href} className={styles.orderLink}>
-            Voir le détail
+            Voir le détail et le suivi
             <span className={styles.srOnly}>
               {' '}
               de la commande {order.orderNumber}

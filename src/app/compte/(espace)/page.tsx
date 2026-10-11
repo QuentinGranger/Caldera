@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, MapPin, Package, Truck } from 'lucide-react';
+import { ArrowRight, BellRing, MapPin, Package, Truck } from 'lucide-react';
+import { AccountWishlistTile } from '@/components/account/AccountWishlistTile';
+import { getCustomerStockAlerts } from '@/lib/stock-alerts/service';
 import { OrderCard } from '@/components/account/AccountOrders';
 import { requireCustomer } from '@/lib/account/guard';
 import { isOpenOrder } from '@/lib/account/orderStatus';
@@ -23,9 +25,10 @@ type Props = {
 
 export default async function AccountDashboard({ searchParams }: Props) {
   const customer = await requireCustomer('/compte');
-  const [orders, address, params] = await Promise.all([
+  const [orders, address, alerts, params] = await Promise.all([
     getCustomerOrders(customer),
     getCustomerAddress(customer.id),
+    getCustomerStockAlerts(customer),
     searchParams,
   ]);
   const open = orders.filter((order) => isOpenOrder(order.tone));
@@ -43,11 +46,26 @@ export default async function AccountDashboard({ searchParams }: Props) {
         <p className={styles.eyebrow}>Tableau de bord</p>
         <h1 className={styles.title}>Bonjour {firstName}</h1>
         <p className={styles.lead}>
-          Vos commandes, votre adresse et vos réglages, au même endroit.
+          Vos favoris, commandes, alertes et coordonnées, au même endroit.
         </p>
       </header>
 
       <ul className={styles.tiles} aria-label="En un coup d’œil">
+        <li>
+          <AccountWishlistTile />
+        </li>
+        <li>
+          <Link href="/compte/alertes" className={styles.tile}>
+            <BellRing size={20} aria-hidden="true" />
+            <span className={styles.tileLabel}>Alertes de stock</span>
+            <strong className={styles.tileValue}>{alerts.length}</strong>
+            <span className={styles.tileHint}>
+              {alerts.length
+                ? 'Voir les produits suivis'
+                : 'Un e-mail au retour en stock'}
+            </span>
+          </Link>
+        </li>
         <li>
           <Link href="/compte/commandes" className={styles.tile}>
             <Package size={20} aria-hidden="true" />
@@ -61,7 +79,10 @@ export default async function AccountDashboard({ searchParams }: Props) {
           </Link>
         </li>
         <li>
-          <Link href="/compte/commandes" className={styles.tile}>
+          <Link
+            href={featured?.href ?? '/compte/commandes'}
+            className={styles.tile}
+          >
             <Truck size={20} aria-hidden="true" />
             <span className={styles.tileLabel}>En cours</span>
             <strong className={styles.tileValue}>{open.length}</strong>

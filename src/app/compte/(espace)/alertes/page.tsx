@@ -58,8 +58,8 @@ export default async function AccountStockAlerts() {
         <section className={styles.empty} aria-labelledby="vide">
           <h2 id="vide">Aucune alerte en cours</h2>
           <p>
-            Sur la page d’un produit épuisé, choisissez « M’avertir du retour »
-            : l’alerte apparaîtra ici.
+            Sur la page d’un produit épuisé, choisissez « M’avertir du retour en
+            stock » : l’alerte apparaîtra ici.
           </p>
           <div className={styles.emptyActions}>
             <Link href="/catalogue" className={styles.submit}>
