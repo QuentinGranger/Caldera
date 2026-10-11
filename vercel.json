@@ -3,6 +3,6 @@
   "regions": ["fra1"],
   "crons": [
     { "path": "/api/cron/maintenance", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/lifecycle", "schedule": "15 * * * *" }
+    { "path": "/api/cron/lifecycle", "schedule": "15 5 * * *" }
   ]
 }

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 export async function GET(request: Request) {
   const headers = { 'Cache-Control': 'no-store' };
-  const secret = cronSecret();
+  const secret = cronSecret(process.env.LIFECYCLE_CRON_SECRET) ?? cronSecret();
   if (!secret)
     return Response.json(
       { error: 'Planificateur indisponible' },
