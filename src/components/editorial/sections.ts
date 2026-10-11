@@ -100,7 +100,10 @@ export const getSectionPage = cache(
     if (!entry) return null;
     const [related, shop] = await Promise.all([
       getRelatedContent(entry, RELATED_LIMIT),
-      getContentLinks(entry, { limit: PRODUCT_LIMIT }),
+      getContentLinks(entry, {
+        limit: PRODUCT_LIMIT,
+        funnel: section === 'actualites',
+      }),
     ]);
     return { entry, related, shop };
   },

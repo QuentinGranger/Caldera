@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/Button/Button';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
@@ -61,7 +62,13 @@ export default async function GuidePage({ params }: Props) {
           title={entry.title}
           lead={entry.description}
           updated={entry.updated}
-        />
+        >
+          {shop.browse && (
+            <div className={styles.headerCta}>
+              <Button href={shop.browse.href}>{shop.browse.label}</Button>
+            </div>
+          )}
+        </EditorialHeader>
         <ArticleLayout
           headings={entry.headings}
           extra={
@@ -73,7 +80,15 @@ export default async function GuidePage({ params }: Props) {
         </ArticleLayout>
         <ShopSection
           products={shop.products}
-          landings={shop.landings}
+          landings={shop.browse ? [] : shop.landings}
+          browse={shop.browse}
+          intro={
+            shop.browse?.demonstration
+              ? 'Des exemples de produits correspondant à ce guide.'
+              : shop.products.length
+                ? 'Des produits en stock sélectionnés selon le sujet de ce guide.'
+                : undefined
+          }
           id="guide-boutique-titre"
         />
         <ContentSection

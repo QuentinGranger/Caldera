@@ -4,7 +4,11 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 import type { Prisma } from '@/generated/prisma/client';
-import { listProductsAvailableFirst } from '@/lib/catalog/queries';
+import {
+  listProductsAvailableFirst,
+  listInStockProducts,
+} from '@/lib/catalog/queries';
+import { catalogQuery, parseCatalogParams } from '@/lib/catalog/params';
 import { SHOP_GAME } from '@/lib/catalog/shopGame';
 import {
   getCategories,
@@ -670,12 +674,14 @@ export interface ContentLinks {
   products: CatalogProduct[];
   /** Indexable landings of these facets. */
   landings: SeoLink[];
+  /** Guide conversion target, present only when matching products exist. */
+  browse?: { href: string; label: string; demonstration: boolean };
 }
 
 /** Guides and glossary terms: products and landings matching the front-matter. */
 export async function getContentLinks(
   facets: ContentFacets,
-  { limit = 8 }: { limit?: number } = {},
+  { limit = 8, funnel = false }: { limit?: number; funnel?: boolean } = {},
 ): Promise<ContentLinks> {
   const wanted = {
     games: new Set(facets.games ?? []),
@@ -734,10 +740,35 @@ export async function getContentLinks(
         ],
       },
     });
+  const demonstration = process.env.CATALOG_DEMO_MODE === '1';
+  const matching = { AND: conditions };
   const products =
     conditions.length && !unresolved
-      ? await listProductsAvailableFirst({ AND: conditions }, limit)
+      ? funnel && !demonstration
+        ? await listInStockProducts(matching, limit)
+        : await listProductsAvailableFirst(
+            funnel ? { AND: [matching, { isDemonstration: true }] } : matching,
+            limit,
+          )
       : [];
+  const browse =
+    funnel && products.length
+      ? {
+          href: `${gameList.length === 1 ? `/${gameList[0]!.slug}` : '/catalogue'}?${catalogQuery(
+            parseCatalogParams({
+              category: categoryList.map((category) => category.slug).join(','),
+              set: setList.map((set) => set.slug).join(','),
+              ...(demonstration
+                ? {}
+                : { availability: 'in-stock', minPrice: '0.01' }),
+            }),
+          )}`,
+          label: demonstration
+            ? 'Voir les produits d’exemple'
+            : 'Voir les produits disponibles',
+          demonstration,
+        }
+      : undefined;
 
   const landings: SeoLink[] = [];
   const push = (
@@ -781,7 +812,11 @@ export async function getContentLinks(
   }
   for (const game of gameList)
     push(find(game, {}), `Tous les produits ${game.name}`);
-  return { products, landings };
+  return {
+    products,
+    landings: funnel ? [] : landings,
+    ...(browse ? { browse } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------

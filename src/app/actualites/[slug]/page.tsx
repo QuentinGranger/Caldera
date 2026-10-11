@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/Button/Button';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
@@ -63,6 +64,11 @@ export default async function NewsItemPage({ params }: Props) {
           updated={edited ? entry.updated : null}
         >
           <UpdatedOn date={entry.published} prefix="Publié le" />
+          {shop.browse && (
+            <div className={styles.headerCta}>
+              <Button href={shop.browse.href}>{shop.browse.label}</Button>
+            </div>
+          )}
         </EditorialHeader>
         <ArticleLayout
           headings={entry.headings}
@@ -76,6 +82,7 @@ export default async function NewsItemPage({ params }: Props) {
         <ShopSection
           products={shop.products}
           landings={shop.landings}
+          browse={shop.browse}
           id="actualite-boutique-titre"
         />
         <ContentSection
