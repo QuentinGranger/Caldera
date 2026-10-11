@@ -15,6 +15,34 @@ export function StorefrontPanel({
   checks: StorefrontCheck[];
   href: string;
 }) {
+  const attention = checks.filter((check) => check.state !== 'ok');
+  const passed = checks.filter((check) => check.state === 'ok');
+  function checkList(items: StorefrontCheck[]) {
+    return (
+      <ul className={styles.storefrontChecks}>
+        {items.map((check) => {
+          const Icon = ICONS[check.state];
+          return (
+            <li key={check.label} data-state={check.state}>
+              <Icon size={18} aria-hidden="true" />
+              <span>
+                <strong>{check.label}</strong> · {check.text}
+              </span>
+              {check.href && check.state !== 'ok' && (
+                <Link href={check.href}>
+                  Corriger
+                  <span className={styles.srOnly}>
+                    {' '}
+                    : {check.label.toLowerCase()}
+                  </span>
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
   return (
     <section
       className={`${styles.card} ${styles.storefront}`}
@@ -29,6 +57,7 @@ export function StorefrontPanel({
           <Link
             href={href}
             target="_blank"
+            rel="noopener noreferrer"
             className={`${styles.button} ${styles.secondaryButton}`}
           >
             <ExternalLink size={16} aria-hidden="true" />
@@ -36,25 +65,27 @@ export function StorefrontPanel({
           </Link>
         )}
       </div>
-      <ul className={styles.storefrontChecks}>
-        {checks.map((check) => {
-          const Icon = ICONS[check.state];
-          return (
-            <li key={check.label} data-state={check.state}>
-              <Icon size={18} aria-hidden="true" />
-              <span>
-                <strong>{check.label}</strong> · {check.text}
-                {check.href && check.state !== 'ok' && (
-                  <>
-                    {' '}
-                    <Link href={check.href}>Corriger</Link>
-                  </>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      {attention.length > 0 ? (
+        <>
+          <p className={styles.storefrontHint}>
+            {attention.length} point{attention.length > 1 ? 's' : ''} à vérifier
+          </p>
+          {checkList(attention)}
+        </>
+      ) : (
+        <p className={styles.storefrontHint}>
+          Les contrôles de visibilité sont validés.
+        </p>
+      )}
+      {passed.length > 0 && (
+        <details className={styles.passedChecks}>
+          <summary>
+            {passed.length} contrôle{passed.length > 1 ? 's' : ''} validé
+            {passed.length > 1 ? 's' : ''}
+          </summary>
+          {checkList(passed)}
+        </details>
+      )}
     </section>
   );
 }

@@ -1,4 +1,8 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { ChevronDown, Package } from 'lucide-react';
+import { DetailNavigation } from '@/components/admin/DetailNavigation';
+import { DetailOverview } from '@/components/admin/DetailOverview';
 import { notFound } from 'next/navigation';
 import { getAdminProduct, getAdminOptions } from '@/lib/admin/queries';
 import { getProductSupplierOffers } from '@/lib/supplier-import/admin';
@@ -27,8 +31,18 @@ export default async function ProductAdminPage({
     getProductSupplierOffers(product.id),
     getStorefrontStatus(product.id),
   ]);
+  const activeVariants = product.variants.filter((variant) => variant.isActive);
+  const available = activeVariants.reduce(
+    (sum, variant) => sum + variant.availableQuantity,
+    0,
+  );
+  const lowestPrice = activeVariants.length
+    ? Math.min(...activeVariants.map((variant) => variant.price.toNumber()))
+    : null;
+  const image =
+    product.images.find((item) => item.isPrimary) ?? product.images[0];
   return (
-    <>
+    <div className={styles.detailPage}>
       <PageHeader
         title={product.name}
         description={`Mis à jour le ${formatDate(product.updatedAt)} · heure de Paris`}
@@ -38,14 +52,58 @@ export default async function ProductAdminPage({
           <Link href="/admin/produits">Retour aux produits</Link>
         </div>
       </PageHeader>
+      <DetailOverview
+        visual={
+          image ? (
+            <Image src={image.url} alt="" width={88} height={88} />
+          ) : (
+            <Package size={30} aria-hidden="true" />
+          )
+        }
+        entries={[
+          {
+            label: 'Prix de vente',
+            value: lowestPrice === null ? '—' : euros(lowestPrice),
+            detail:
+              activeVariants.length > 1
+                ? 'À partir de · variantes actives'
+                : activeVariants.length
+                  ? 'Variante active'
+                  : 'Aucune variante active',
+          },
+          {
+            label: 'Stock disponible',
+            value: available,
+            detail: 'Sur les variantes actives',
+          },
+          {
+            label: 'Organisation',
+            value:
+              options.categories.find((item) => item.id === product.categoryId)
+                ?.name ?? '—',
+            detail: label(product.productType),
+          },
+          {
+            label: 'Visibilité boutique',
+            value: storefront.listed ? 'En ligne' : 'Masqué',
+            detail: `${product.images.length} visuel${product.images.length > 1 ? 's' : ''}`,
+          },
+        ]}
+      />
       <StorefrontPanel {...storefront} href={`/produit/${product.slug}`} />
-      <nav className={styles.tabs} aria-label="Sections produit">
-        <a href="#informations">Informations & organisation</a>
-        <a href="#variantes">Variantes</a>
-        <a href="#images">Images</a>
-        <a href="#fournisseurs">Fournisseurs</a>
-        <a href="#publication">Publication</a>
-      </nav>
+      <DetailNavigation
+        sections={[
+          { id: 'informations', label: 'Informations' },
+          {
+            id: 'variantes',
+            label: 'Variantes',
+            count: product.variants.length,
+          },
+          { id: 'images', label: 'Images', count: product.images.length },
+          { id: 'fournisseurs', label: 'Fournisseurs', count: offers.length },
+          { id: 'publication', label: 'Publication' },
+        ]}
+      />
       <details className={styles.card} id="informations" open>
         <summary>Informations & organisation</summary>
         <ProductInformationForm
@@ -57,12 +115,24 @@ export default async function ProductAdminPage({
       <section className={styles.card} id="variantes">
         <h2>Variantes · {product.variants.length}</h2>
         {product.variants.map((variant) => (
-          <details key={variant.id} className={styles.card}>
+          <details key={variant.id} className={styles.variantCard}>
             <summary>
-              {variant.sku} · {label(variant.language)} · {euros(variant.price)}{' '}
-              · {variant.availableQuantity} disponible(s)
-              {variant.isDefault ? ' · Par défaut' : ''}
-              {!variant.isActive ? ' · Inactive' : ''}
+              <span className={styles.variantIdentity}>
+                <strong>{variant.sku}</strong>
+                <small>
+                  {label(variant.language)}
+                  {variant.isDefault ? ' · Variante par défaut' : ''}
+                </small>
+              </span>
+              <span className={styles.variantPrice}>
+                {euros(variant.price)}
+              </span>
+              <span className={styles.variantAvailability}>
+                {variant.isActive
+                  ? `${variant.availableQuantity} disponible(s)`
+                  : 'Inactive'}
+              </span>
+              <ChevronDown size={18} aria-hidden="true" />
             </summary>
             <VariantEditor
               key={variant.updatedAt.toISOString()}
@@ -111,7 +181,10 @@ export default async function ProductAdminPage({
           </p>
         )}
       </section>
-      <section className={styles.card} id="publication">
+      <section
+        className={`${styles.card} ${styles.publicationPanel}`}
+        id="publication"
+      >
         <h2>Publication</h2>
         <p>
           Les brouillons et produits archivés sont masqués sur la boutique. Les
@@ -131,6 +204,7 @@ export default async function ProductAdminPage({
               <AdminForm
                 key={status}
                 action={publicationAction}
+                tone={status === 'ARCHIVED' ? 'danger' : undefined}
                 submit={
                   status === 'ACTIVE'
                     ? 'Publier'
@@ -150,6 +224,6 @@ export default async function ProductAdminPage({
             ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

@@ -249,7 +249,7 @@ export function FulfillmentPanel({ order }: { order: Order }) {
 }
 export function OrderEmailsPanel({ order }: { order: Order }) {
   return (
-    <section className={styles.card}>
+    <section className={styles.card} id="emails">
       <h2>Emails transactionnels</h2>
       {process.env.EMAILS_ENABLED !== 'true' && (
         <p className={styles.warning}>
