@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { adminListHref } from '@/lib/admin/list-url';
 import { FilterPanel } from '@/components/admin/FilterPanel';
 import {
   getAdminStocks,
@@ -43,11 +44,9 @@ export default async function StocksPage({
         {views.map((view) => (
           <Link
             key={view.label}
-            href={
-              view.value
-                ? `/admin/stocks?availability=${view.value}`
-                : '/admin/stocks'
-            }
+            href={adminListHref('/admin/stocks', params, {
+              availability: view.value,
+            })}
             aria-current={availability === view.value ? 'page' : undefined}
           >
             {view.label}
@@ -62,6 +61,7 @@ export default async function StocksPage({
         search={param(params, 'search')}
         placeholder="Produit ou SKU"
         keep={{ availability }}
+        params={params}
       />
       {data.variants.length ? (
         <AdminTable

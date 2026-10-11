@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import {
   ArrowUpRight,
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  CircleAlert,
+  ShoppingBag,
+  Plus,
   Boxes,
   CheckCheck,
   ClipboardList,
@@ -112,22 +118,44 @@ export default async function DashboardPage() {
     : 'Aucune action urgente. Vous pouvez vous concentrer sur la suite.';
   return (
     <>
-      <span className={styles.eyebrow}>Votre boutique, au quotidien</span>
+      <span className={styles.dashboardDate}>
+        <CalendarDays size={14} aria-hidden="true" />
+        {new Intl.DateTimeFormat('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'Europe/Paris',
+        }).format(new Date())}
+        <span>Vue d’ensemble</span>
+      </span>
       <PageHeader
         title="Tableau de bord"
-        description="Les priorités du jour, puis les informations utiles pour décider."
-      />
+        description="Un point clair sur votre activité et les prochaines actions."
+      >
+        <Link className={styles.button} href="/admin/produits/nouveau">
+          <Plus size={17} aria-hidden="true" /> Créer un produit
+        </Link>
+      </PageHeader>
       <section className={styles.dashboardHero} aria-label="Priorités du jour">
-        <div>
-          <span>AUJOURD’HUI SUR CALDERA</span>
-          <h2>
-            {toHandle
-              ? `${toHandle} commande${toHandle > 1 ? 's' : ''} à traiter`
-              : attention.length
-                ? 'Aucune commande à traiter'
-                : 'Tout est à jour'}
-          </h2>
-          <p>{alerts}</p>
+        <div className={styles.priorityContent}>
+          <span className={styles.priorityIcon}>
+            {toHandle || attention.length ? (
+              <CircleAlert size={25} aria-hidden="true" />
+            ) : (
+              <CheckCircle2 size={25} aria-hidden="true" />
+            )}
+          </span>
+          <div>
+            <span>VOTRE POINT DU JOUR</span>
+            <h2>
+              {toHandle
+                ? `${toHandle} commande${toHandle > 1 ? 's' : ''} à traiter`
+                : attention.length
+                  ? 'Aucune commande à traiter'
+                  : 'Tout est à jour'}
+            </h2>
+            <p>{alerts}</p>
+          </div>
         </div>
         <Link
           href={toHandle ? '/admin/commandes?view=todo' : '/admin/commandes'}
@@ -136,6 +164,12 @@ export default async function DashboardPage() {
           <ArrowUpRight size={17} aria-hidden="true" />
         </Link>
       </section>
+      <div className={styles.sectionHeading}>
+        <h2>Préparation & expédition</h2>
+        <Link href="/admin/commandes">
+          Toutes les commandes <ArrowRight size={14} aria-hidden="true" />
+        </Link>
+      </div>
       <section
         aria-label="Préparation et expédition"
         className={styles.statGrid}
@@ -144,31 +178,51 @@ export default async function DashboardPage() {
           <Link href={href} key={title} className={`${styles.stat} ${tone}`}>
             <span className={styles.statLabel}>
               {title}
-              <Icon size={19} strokeWidth={1.7} aria-hidden="true" />
+              <span className={styles.statIcon}>
+                <Icon size={19} strokeWidth={1.7} aria-hidden="true" />
+              </span>
             </span>
             <strong>{value}</strong>
-            <small>{caption} ↗</small>
+            <small>
+              {caption}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </small>
           </Link>
         ))}
       </section>
       <h2 className={styles.quickHeading}>Passer à l’action</h2>
       <nav className={styles.quickGrid} aria-label="Actions rapides">
         <Link className={styles.quickLink} href="/admin/produits/nouveau">
-          <PackagePlus size={21} aria-hidden="true" />
-          Créer un produit
+          <span className={styles.quickIcon}>
+            <PackagePlus size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Enrichir le catalogue</strong>
+            <small>Créer une nouvelle fiche produit</small>
+          </span>
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
         <Link className={styles.quickLink} href="/admin/stocks">
-          <Boxes size={21} aria-hidden="true" />
-          Mettre à jour les stocks
+          <span className={styles.quickIcon}>
+            <Boxes size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Mettre à jour les stocks</strong>
+            <small>Quantités, ruptures et demandes</small>
+          </span>
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
         <Link
           className={styles.quickLink}
           href="/admin/commandes?fulfillment=READY_TO_SHIP"
         >
-          <Truck size={21} aria-hidden="true" />
-          Préparer les expéditions
+          <span className={styles.quickIcon}>
+            <Truck size={21} aria-hidden="true" />
+          </span>
+          <span>
+            <strong>Préparer les expéditions</strong>
+            <small>Retrouver les colis prêts à partir</small>
+          </span>
           <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
       </nav>
@@ -201,9 +255,16 @@ export default async function DashboardPage() {
                 ))}
               </AdminTable>
             ) : (
-              <p className={styles.muted}>
-                Aucune commande pour le moment. Les prochaines apparaîtront ici.
-              </p>
+              <div className={styles.dashboardEmpty}>
+                <span>
+                  <ShoppingBag size={25} strokeWidth={1.5} aria-hidden="true" />
+                </span>
+                <strong>Vos prochaines commandes, ici</strong>
+                <p>
+                  Montant, paiement et préparation : les dernières commandes
+                  seront réunies dans cette vue.
+                </p>
+              </div>
             )}
           </section>
           <details className={`${styles.card} ${styles.activityDisclosure}`}>
@@ -280,11 +341,16 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className={styles.inline}>
-                <CheckCheck size={22} aria-hidden="true" />
-                Aucune alerte sur les paiements à vérifier, les emails ou le
-                stock.
-              </p>
+              <div className={styles.allClear}>
+                <CheckCheck size={21} aria-hidden="true" />
+                <div>
+                  <strong>Aucun point bloquant</strong>
+                  <p>
+                    Les paiements à vérifier, les emails et le stock ne
+                    nécessitent aucune action.
+                  </p>
+                </div>
+              </div>
             )}
             {data.failed > 0 && (
               <p className={styles.warning}>

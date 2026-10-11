@@ -50,12 +50,12 @@
     min-height: 2.75rem;
     padding: 0.65rem 1rem;
     border: 1px solid t.$purple;
-    border-radius: 6px;
+    border-radius: 9px;
     background: t.$purple;
     color: #fff;
     box-shadow: none;
     font: inherit;
-    font-weight: 700;
+    font-weight: 650;
     cursor: pointer;
     transition:
       background 140ms ease,
@@ -116,8 +116,8 @@
     width: 100%;
     min-height: 2.75rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid #9cae9d;
-    border-radius: 5px;
+    border: 1px solid #b8c7bc;
+    border-radius: 8px;
     background: #fff;
     color: t.$ink;
     font: inherit;
@@ -130,6 +130,7 @@
     }
     &:focus {
       border-color: t.$purple;
+      box-shadow: 0 0 0 3px #1c654b12;
     }
   }
   input[type='hidden'] {

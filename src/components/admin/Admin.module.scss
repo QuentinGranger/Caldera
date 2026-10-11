@@ -20,14 +20,16 @@
   .statGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .dashboardGrid {
-    grid-template-columns: 1fr;
-  }
   .quickGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .userInfo small {
     display: none;
+  }
+}
+@media (max-width: 64rem) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 47.99rem) {
@@ -47,9 +49,23 @@
     padding: 0.75rem 1rem;
     gap: 0.5rem;
   }
-  .breadcrumb,
   .userInfo {
     display: none;
+  }
+  .breadcrumb {
+    display: block;
+    min-width: 0;
+    font-size: 0.78rem;
+    > a,
+    > svg {
+      display: none;
+    }
+    > span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
   .userMenu {
     gap: 0.5rem;
@@ -115,7 +131,7 @@
     tbody tr {
       background: t.$surface;
       border: 1px solid t.$border;
-      border-radius: 4px;
+      border-radius: 12px;
       padding-block: 0.25rem;
       & + tr {
         margin-top: 0.75rem;
@@ -137,9 +153,8 @@
         left: 0.9rem;
         width: 7.6rem;
         color: #365648;
-        font: 600 0.62rem/1.3 t.$mono;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        font: 600 0.69rem/1.3 t.$body;
+        letter-spacing: 0;
       }
       &:last-child {
         border-bottom: 0;
