@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import {
   BarChart3,
+  ChevronDown,
   Boxes,
   Dices,
   FileText,
@@ -28,62 +29,61 @@ import styles from './Admin.module.scss';
 
 export const adminNavGroups = [
   {
-    label: 'Pilotage',
+    label: 'Au quotidien',
     links: [
-      {
-        href: '/admin/mesures',
-        label: 'Mesures & acquisition',
-        icon: BarChart3,
-      },
-      { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
-      {
-        href: '/admin/pilotage',
-        label: 'Pilotage économique',
-        icon: BarChart3,
-      },
-    ],
-  },
-  {
-    label: 'Ventes',
-    links: [
+      { href: '/admin', label: 'Vue d’ensemble', icon: LayoutDashboard },
       { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
-      { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
-      { href: '/admin/clients', label: 'Clients', icon: Users },
+      { href: '/admin/produits', label: 'Produits', icon: Package },
+      { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
       { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
-      { href: '/admin/livraison', label: 'Livraison', icon: Truck },
     ],
   },
   {
     label: 'Catalogue',
     links: [
-      { href: '/admin/produits', label: 'Produits', icon: Package },
-      { href: '/admin/jeux', label: 'Jeux', icon: Dices },
-      { href: '/admin/categories', label: 'Catégories', icon: FolderTree },
+      {
+        href: '/admin/categories',
+        label: 'Familles & catégories',
+        icon: FolderTree,
+      },
       { href: '/admin/extensions', label: 'Extensions', icon: Layers3 },
+      { href: '/admin/jeux', label: 'Jeux & FAQ', icon: Dices },
+      {
+        href: '/admin/fournisseurs',
+        label: 'Fournisseurs & imports',
+        icon: Warehouse,
+      },
     ],
   },
   {
-    label: 'Approvisionnement',
+    label: 'Ventes & clients',
     links: [
-      { href: '/admin/stocks', label: 'Stocks', icon: Boxes },
-      { href: '/admin/fournisseurs', label: 'Fournisseurs', icon: Warehouse },
+      { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
+      { href: '/admin/clients', label: 'Clients', icon: Users },
+      { href: '/admin/livraison', label: 'Livraison', icon: Truck },
     ],
   },
   {
-    label: 'Marketing',
+    label: 'Communication',
+    links: [
+      { href: '/admin/newsletter', label: 'Emails & newsletter', icon: Mail },
+      { href: '/admin/discord', label: 'Discord', icon: MessageSquare },
+      { href: '/admin/promotions', label: 'Codes promo', icon: TicketPercent },
+    ],
+  },
+  {
+    label: 'Analyses & finances',
     links: [
       {
-        href: '/admin/promotions',
-        label: 'Codes promo',
-        icon: TicketPercent,
+        href: '/admin/mesures',
+        label: 'Trafic & conversions',
+        icon: BarChart3,
       },
-      { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
-      { href: '/admin/discord', label: 'Discord', icon: MessageSquare },
-    ],
-  },
-  {
-    label: 'Comptabilité',
-    links: [
+      {
+        href: '/admin/pilotage',
+        label: 'Pilotage économique',
+        icon: BarChart3,
+      },
       { href: '/admin/factures', label: 'Factures', icon: FileText },
       { href: '/admin/fiscalite', label: 'Fiscalité', icon: Landmark },
     ],
@@ -121,46 +121,82 @@ export function AdminNavigation({
   const id = useId();
   const [open, setOpen] = useState(false);
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`));
+
+  function entry({
+    href,
+    label,
+    icon: Icon,
+  }: (typeof adminNavGroups)[number]['links'][number]) {
+    const count = counts[href] ?? 0;
+    const [one, many] = COUNT_LABELS[href] ?? ['en attente', 'en attente'];
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={styles.navLink}
+        aria-current={isActive(href) ? 'page' : undefined}
+        onClick={() => dialog.current?.close()}
+      >
+        <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
+        <span>{label}</span>
+        {count > 0 && (
+          <b className={styles.navCount}>
+            {count > 99 ? '99+' : count}
+            <span
+              className={styles.visuallyHidden}
+            >{` ${count > 1 ? many : one}`}</span>
+          </b>
+        )}
+      </Link>
+    );
+  }
+
   const navigation = (
     <nav aria-label="Administration" className={styles.navigation}>
-      {adminNavGroups.map((group) => (
-        <div key={group.label} className={styles.navGroup}>
-          <p>{group.label}</p>
-          {group.links.map(({ href, label, icon: Icon }) => {
-            const active =
-              pathname === href ||
-              (href !== '/admin' && pathname.startsWith(`${href}/`));
-            const count = counts[href] ?? 0;
-            const [one, many] = COUNT_LABELS[href] ?? [
-              'en attente',
-              'en attente',
-            ];
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={styles.navLink}
-                aria-current={active ? 'page' : undefined}
-                onClick={() => dialog.current?.close()}
-              >
+      <div className={styles.navGroup}>
+        <p>Au quotidien</p>
+        {adminNavGroups[0].links.map(entry)}
+      </div>
+      <div className={styles.navGroup}>
+        <p>Vos espaces</p>
+        {adminNavGroups.slice(1, -1).map((group) => {
+          const active = group.links.some(({ href }) => isActive(href));
+          const count = group.links.reduce(
+            (n, { href }) => n + (counts[href] ?? 0),
+            0,
+          );
+          const Icon = group.links[0].icon;
+          return (
+            <details
+              key={`${group.label}-${active}`}
+              open={active}
+              className={styles.navDisclosure}
+              data-active={active || undefined}
+            >
+              <summary>
                 <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
-                <span>{label}</span>
+                <span>{group.label}</span>
                 {count > 0 && (
                   <b className={styles.navCount}>
                     {count > 99 ? '99+' : count}
                     <span className={styles.visuallyHidden}>
-                      {` ${count > 1 ? many : one}`}
+                      {' '}
+                      éléments à traiter
                     </span>
                   </b>
                 )}
-                {active && (
-                  <i className={styles.navActive} aria-hidden="true" />
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+                <ChevronDown size={14} aria-hidden="true" />
+              </summary>
+              <div className={styles.navChildren}>{group.links.map(entry)}</div>
+            </details>
+          );
+        })}
+      </div>
+      <div className={styles.navSettings}>
+        {adminNavGroups[5].links.map(entry)}
+      </div>
     </nav>
   );
 

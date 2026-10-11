@@ -4,10 +4,10 @@
   min-height: 100dvh;
   color-scheme: light;
   background-color: t.$background;
-  background-image: linear-gradient(120deg, #f7f5e8 0%, transparent 40%);
+  background-image: none;
   color: t.$ink;
   font-family: t.$body;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   line-height: 1.6;
   ::selection {
     background: t.$lavender;
@@ -21,9 +21,9 @@
     font-weight: 700;
   }
   h1 {
-    font-family: var(--font-cormorant), Georgia, serif;
-    font-size: clamp(2.2rem, 3vw, 3.2rem);
-    font-weight: 600;
+    font-family: t.$body;
+    font-size: clamp(1.65rem, 2.3vw, 2.2rem);
+    font-weight: 750;
     letter-spacing: -0.035em;
   }
   h2 {
@@ -49,11 +49,11 @@
     gap: 0.55rem;
     min-height: 2.75rem;
     padding: 0.65rem 1rem;
-    border: 1px solid t.$ink;
+    border: 1px solid t.$purple;
     border-radius: 6px;
     background: t.$purple;
     color: #fff;
-    box-shadow: 2px 2px 0 t.$ink;
+    box-shadow: none;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
@@ -67,8 +67,8 @@
       text-decoration: none;
     }
     &:active {
-      transform: translate(1px, 1px);
-      box-shadow: 1px 1px 0 t.$ink;
+      transform: translateY(1px);
+      box-shadow: none;
     }
     &:disabled {
       opacity: 0.55;

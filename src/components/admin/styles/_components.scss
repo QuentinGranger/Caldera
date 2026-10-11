@@ -34,7 +34,7 @@
 .card {
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   min-width: 0;
@@ -112,7 +112,7 @@
   padding: 1.25rem;
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 4px;
+  border-radius: 9px;
   > a {
     font-size: 0.8rem;
     padding-block: 0.6rem;
@@ -124,7 +124,7 @@
   padding: 1.25rem;
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 4px;
+  border-radius: 9px;
   details {
     margin-top: 1rem;
     border-top: 1px dashed t.$border;
@@ -157,7 +157,7 @@
   overflow-x: auto;
   background: t.$surface;
   border: 1px solid t.$border;
-  border-radius: 4px;
+  border-radius: 9px;
   margin-block: 1rem;
 }
 .table {
@@ -168,17 +168,15 @@
   th,
   td {
     text-align: left;
-    padding: 1rem 0.9rem;
+    padding: 1.05rem 1rem;
     border-bottom: 1px solid #e4e9df;
     vertical-align: middle;
   }
   th {
     white-space: nowrap;
-    background: #e9f0e7;
+    background: #f1f4ee;
     color: #365648;
-    font: 600 0.66rem t.$mono;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font: 650 0.75rem t.$body;
   }
   tr:last-child td {
     border-bottom: 0;

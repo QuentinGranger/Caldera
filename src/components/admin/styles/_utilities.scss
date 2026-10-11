@@ -1,8 +1,8 @@
 @use '../tokens' as t;
 
 .dialog {
-  border: 2px solid t.$ink;
-  border-radius: 4px;
+  border: 1px solid t.$border;
+  border-radius: 12px;
   padding: 1.5rem;
   color: t.$ink;
   background: t.$surface;
@@ -10,12 +10,12 @@
   max-height: 85dvh;
   overflow-y: auto;
   margin: auto;
-  box-shadow: 6px 6px 0 t.$ink;
+  box-shadow: 0 20px 70px #102c2040;
   &::backdrop {
     background: #112c20a6;
   }
   h2 {
-    font-family: t.$mono;
+    font-family: t.$body;
   }
   p {
     margin-block: 1rem;

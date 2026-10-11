@@ -27,10 +27,7 @@
   h2 {
     margin: 0.45rem 0;
     color: #fff9e8;
-    font:
-      600 clamp(2rem, 3vw, 3rem)/1 var(--font-cormorant),
-      Georgia,
-      serif;
+    font: 650 clamp(1.5rem, 2.2vw, 2.2rem)/1.2 t.$body;
   }
 
   p {
@@ -77,10 +74,10 @@
   display: block;
   position: relative;
   padding: 1.25rem;
-  border: 1px solid t.$ink;
-  border-radius: 3px;
+  border: 1px solid t.$border;
+  border-radius: 10px;
   background: t.$surface;
-  box-shadow: 3px 3px 0 t.$ink;
+  box-shadow: 0 2px 5px #173b2d04;
   color: t.$ink;
   transition:
     transform 140ms ease,
@@ -88,12 +85,12 @@
   &:hover {
     text-decoration: none !important;
     transform: translateY(-2px);
-    box-shadow: 3px 5px 0 t.$ink;
+    box-shadow: 0 5px 14px #173b2d0c;
   }
   strong {
     display: block;
-    font: 700 clamp(2rem, 3vw, 2.8rem) t.$mono;
-    letter-spacing: -0.08em;
+    font: 750 clamp(1.8rem, 3vw, 2.5rem) t.$body;
+    letter-spacing: -0.04em;
     margin-block: 0.6rem;
   }
   small {
@@ -112,16 +109,16 @@
   }
 }
 .lavender {
-  background: t.$lavender;
+  background: t.$surface;
 }
 .cyan {
-  background: t.$cyan;
+  background: t.$surface;
 }
 .lime {
-  background: t.$lime;
+  background: t.$surface;
 }
 .peach {
-  background: t.$peach;
+  background: t.$surface;
 }
 .quickGrid {
   display: grid;
@@ -174,7 +171,7 @@
     gap: 1rem;
     padding: 0.75rem;
     border: 1px solid t.$border;
-    border-radius: 3px;
+    border-radius: 10px;
     font-size: 0.78rem;
     &:hover {
       background: t.$lavender;
@@ -210,4 +207,73 @@
   font: 700 clamp(1.5rem, 2.5vw, 2rem) t.$mono;
   letter-spacing: -0.045em;
   margin-bottom: 0.5rem;
+}
+
+.statLabel svg {
+  color: t.$purple;
+}
+.reportLinks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0 0 1.75rem;
+  > a {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem;
+    background: t.$surface;
+    border: 1px solid t.$border;
+    border-radius: 10px;
+    color: t.$ink;
+    > span:nth-child(2) {
+      min-width: 0;
+      flex: 1;
+    }
+    strong {
+      display: block;
+      font-size: 0.84rem;
+    }
+    small {
+      margin-top: 0.15rem;
+      font-size: 0.73rem;
+    }
+    > svg {
+      flex: none;
+      color: t.$muted;
+    }
+    &:hover {
+      border-color: t.$purple;
+      text-decoration: none;
+    }
+  }
+}
+.reportIcon {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: none;
+  background: t.$lavender;
+  color: t.$purple;
+  border-radius: 9px;
+}
+.activityDisclosure {
+  > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.9rem;
+    span {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: t.$muted;
+    }
+  }
+}
+@media (max-width: 47.99rem) {
+  .reportLinks {
+    grid-template-columns: 1fr;
+  }
 }
