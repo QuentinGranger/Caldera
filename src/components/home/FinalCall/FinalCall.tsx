@@ -4,13 +4,15 @@ import { ArrowRight } from 'lucide-react';
 import { NewsletterForm } from '@/components/home/Newsletter/NewsletterForm';
 import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
+import { getUpdateLinks } from '@/lib/community/updates';
 import styles from './FinalCall.module.scss';
 
 /**
  * The last word of the page, over the Route des Cinq at dusk: the letter
  * that brings the Pokémon releases, and the shop when it is open.
  */
-export function FinalCall({ catalogue }: { catalogue?: string }) {
+export async function FinalCall({ catalogue }: { catalogue?: string }) {
+  const links = await getUpdateLinks();
   return (
     <section
       id="newsletter"
@@ -33,9 +35,21 @@ export function FinalCall({ catalogue }: { catalogue?: string }) {
             Les sorties Pokémon, <em>sans avoir à les guetter.</em>
           </h2>
           <p className={styles.lead}>
-            Nouvelles extensions, réassorts et sélections de la boutique, par
-            e-mail.
+            Dates de sorties confirmées, réassorts disponibles et sélections
+            expliquées, avec des liens directs vers les produits concernés.
           </p>
+          {links.length > 0 && (
+            <nav
+              className={styles.updates}
+              aria-label="Suivre les nouveautés de Caldera"
+            >
+              {links.map((link) => (
+                <Link key={link.href} href={link.href}>
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
           {catalogue && (
             <Link href={catalogue} className={styles.catalogue}>
               {ALL_PRODUCTS_LABEL} <ArrowRight size={16} aria-hidden="true" />

@@ -83,7 +83,7 @@ export async function Footer() {
             <div className={styles.letter}>
               <p className={styles.label}>La lettre de Caldera</p>
               <p>Réassorts, nouvelles extensions et sélections, par e-mail.</p>
-              <Link href="/#newsletter" className={styles.link}>
+              <Link href="/newsletter" className={styles.link}>
                 S’inscrire <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>

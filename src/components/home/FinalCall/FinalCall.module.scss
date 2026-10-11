@@ -117,3 +117,17 @@ $dusk: 0rem;
     line-height: 1.6;
   }
 }
+
+.updates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: v.$color-gold-light;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+}
