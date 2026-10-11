@@ -318,6 +318,9 @@ test('destination en stock : ni exemple ni variante sans prix achetable', async 
       [`real-${key}`],
     );
   } finally {
+    await db.productVariant.deleteMany({
+      where: { product: { categoryId: category.id } },
+    });
     await db.product.deleteMany({ where: { categoryId: category.id } });
     await db.category.delete({ where: { id: category.id } });
   }
