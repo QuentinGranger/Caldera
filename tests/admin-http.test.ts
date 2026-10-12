@@ -1,4 +1,8 @@
 import 'dotenv/config';
+import {
+  serializeNewsletterDocument,
+  parseNewsletterDocument,
+} from '../src/lib/newsletter/document';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -149,6 +153,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
     selectedCookie = cookie,
     requestOrigin = origin,
     noArgs = false,
+    formOnly = false,
   ) {
     const actionId = Object.entries(manifest.node).find(
       ([, value]) => value.exportedName === name,
@@ -159,7 +164,13 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       data.set(`_1_${name}`, value);
     data.set(
       '0',
-      JSON.stringify(noArgs ? [] : [{ success: false, message: '' }, '$K1']),
+      JSON.stringify(
+        noArgs
+          ? []
+          : formOnly
+            ? ['$K1']
+            : [{ success: false, message: '' }, '$K1'],
+      ),
     );
     const route =
       name === 'verifyMfaEnrollmentAction' ||
@@ -447,6 +458,130 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         }
         const search = await page(`/admin/produits?search=${variant.sku}`);
         assert.ok(search.html.includes(product.name));
+      },
+    );
+    await t.test(
+      'studio newsletter : sauvegarde HTTP et sérialisation intacte après CRLF multipart',
+      async () => {
+        const pixels = await sharp({
+          create: { width: 32, height: 32, channels: 3, background: '#173e32' },
+        })
+          .png()
+          .toBuffer();
+        const image = new File([new Uint8Array(pixels)], 'studio.png', {
+          type: 'image/png',
+        });
+        const refusedUpload = await action(
+          'uploadNewsletterImageAction',
+          { file: image },
+          '',
+          origin,
+          false,
+          true,
+        );
+        assert.ok(
+          (
+            refusedUpload.response.headers.get('x-action-redirect') ??
+            refusedUpload.body
+          ).includes('/admin/login'),
+        );
+        const uploaded = await action(
+          'uploadNewsletterImageAction',
+          { file: image },
+          cookie,
+          origin,
+          false,
+          true,
+        );
+        const imageUrl = uploaded.body.match(/\/media\/[a-f0-9-]+\.webp/)?.[0];
+        assert.ok(imageUrl, uploaded.body.slice(0, 400));
+        uploadedUrls.push(imageUrl);
+        const imageResponse = await fetch(`${base}${imageUrl}`);
+        assert.equal(imageResponse.status, 200);
+        assert.match(
+          imageResponse.headers.get('content-type') ?? '',
+          /image\/webp/,
+        );
+        const internalName = `Newsletter HTTP ${key}`;
+        const bodyMarkdown = serializeNewsletterDocument({
+          version: 1,
+          theme: 'journal',
+          blocks: [
+            {
+              id: 'message',
+              type: 'text',
+              text: 'Bonjour **vous**.\n\nUne actualité utile.',
+            },
+          ],
+        });
+        const values = {
+          internalName,
+          subject: 'Objet HTTP',
+          heading: 'Journal HTTP',
+          bodyMarkdown,
+        };
+        const unauthorized = await action(
+          'saveNewsletterCampaignAction',
+          values,
+          '',
+        );
+        assert.ok(
+          (
+            unauthorized.response.headers.get('x-action-redirect') ??
+            unauthorized.body
+          ).includes('/admin/login'),
+        );
+        try {
+          const saved = await action('saveNewsletterCampaignAction', values);
+          assert.ok(
+            saved.body.includes('Brouillon enregistré'),
+            saved.body.slice(0, 400),
+          );
+          const campaign = await db.newsletterCampaign.findFirstOrThrow({
+            where: { internalName },
+          });
+          assert.deepEqual(
+            parseNewsletterDocument(campaign.bodyMarkdown),
+            parseNewsletterDocument(bodyMarkdown),
+          );
+          const refusedSchedule = await action(
+            'queueNewsletterCampaignAction',
+            {
+              id: campaign.id,
+              sendMode: 'later',
+              scheduledAt: '',
+              scheduledLocal: '2026-10-13T10:30',
+              timeZone: 'Europe/Paris',
+            },
+          );
+          assert.ok(
+            refusedSchedule.body.includes(
+              'Choisissez une date et une heure valides',
+            ),
+          );
+          assert.equal(
+            (
+              await db.newsletterCampaign.findUniqueOrThrow({
+                where: { id: campaign.id },
+              })
+            ).status,
+            'DRAFT',
+          );
+          const campaignPage = await page(
+            `/admin/newsletter/campagnes/${campaign.id}`,
+          );
+          assert.equal(campaignPage.response.status, 200);
+          assert.ok(campaignPage.html.includes('Composez'));
+        } finally {
+          const campaigns = await db.newsletterCampaign.findMany({
+            where: { internalName },
+            select: { id: true },
+          });
+          await db.adminAuditLog.deleteMany({
+            where: { entityId: { in: campaigns.map((c) => c.id) } },
+          });
+          await db.newsletterCampaign.deleteMany({ where: { internalName } });
+        }
       },
     );
     await t.test(

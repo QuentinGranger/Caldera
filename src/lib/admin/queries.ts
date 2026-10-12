@@ -121,10 +121,15 @@ export async function getAdminNewsletterCampaigns() {
         by: ['campaignId', 'status'],
         where: { campaignId: { in: campaigns.map((campaign) => campaign.id) } },
         _count: { _all: true },
+        _min: { nextAttemptAt: true },
       })
     : [];
   return campaigns.map((campaign) => ({
     ...campaign,
+    nextPendingAt:
+      grouped.find(
+        (row) => row.campaignId === campaign.id && row.status === 'PENDING',
+      )?._min.nextAttemptAt ?? null,
     deliveryCounts: Object.fromEntries(
       grouped
         .filter((row) => row.campaignId === campaign.id)

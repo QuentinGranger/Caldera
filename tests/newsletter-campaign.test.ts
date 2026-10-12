@@ -49,3 +49,249 @@ test('campagne newsletter : un test ne contient pas de faux lien de désinscript
   assert.match(email.html, /aucun abonné ne l’a reçu/);
   assert.doesNotMatch(email.html, /newsletter\/desinscription/);
 });
+
+// The visual editor and delivery queue share this validated document format.
+import {
+  DOCUMENT_PREFIX,
+  documentFromLegacy,
+  parseNewsletterDocument,
+  serializeNewsletterDocument,
+  newsletterIssues,
+  type NewsletterDocument,
+} from '../src/lib/newsletter/document';
+import { assertCampaignReady } from '../src/lib/newsletter/campaigns';
+import {
+  campaignSchedule,
+  validatedCampaignSchedule,
+  audienceWhere,
+} from '../src/lib/newsletter/studio';
+const blocks: NewsletterDocument = {
+  version: 1,
+  theme: 'selection',
+  blocks: [
+    {
+      id: 'text',
+      type: 'text',
+      text: '## Un conseil\n\nProtégez **vos cartes**.',
+    },
+    {
+      id: 'image',
+      type: 'image',
+      src: '/assets/brand/logo-header-no-bg.png',
+      alt: 'Une image <sûre>',
+      caption: 'Légende <script>',
+      href: '/pokemon',
+    },
+    {
+      id: 'button',
+      type: 'button',
+      label: 'Découvrir <Caldera>',
+      href: '/catalogue',
+    },
+    {
+      id: 'product',
+      type: 'product',
+      productId: '12345678-1234-4234-8234-123456789012',
+      name: 'Produit <test>',
+      image: '/assets/brand/logo-header-no-bg.png',
+      price: '59,90 €',
+      href: '/produit/test',
+      description: 'Description <img onerror="alert(1)">',
+    },
+    { id: 'divider', type: 'divider' },
+    { id: 'spacer', type: 'spacer', height: 32 },
+  ],
+};
+test('studio : compatibilité Markdown et aller-retour de tous les blocs', () => {
+  assert.equal(parseNewsletterDocument('Bonjour **vous**'), null);
+  assert.equal(documentFromLegacy('Bonjour **vous**').blocks[0]?.type, 'text');
+  assert.deepEqual(
+    parseNewsletterDocument(serializeNewsletterDocument(blocks)),
+    blocks,
+  );
+  assert.deepEqual(
+    parseNewsletterDocument(
+      'CALDERA_NEWSLETTER_V1\r\n' + JSON.stringify(blocks),
+    ),
+    blocks,
+  );
+  assert.deepEqual(newsletterIssues(blocks), []);
+  const email = renderNewsletterCampaignEmail(
+    {
+      subject: 'La sélection',
+      preheader: null,
+      heading: 'Caldera',
+      bodyMarkdown: serializeNewsletterDocument(blocks),
+      ctaLabel: null,
+      ctaUrl: null,
+      campaignId: 'campaign-test',
+    },
+    { logo: '/logo.png' },
+  );
+  assert.match(email.html, /background:#f5f1e7/);
+  assert.match(email.html, /src="https:\/\/lesterresdecaldera.fr\/assets/);
+  assert.match(email.html, /utm_campaign=campaign_campaign-test/);
+  assert.match(email.html, /Une image &lt;sûre&gt;/);
+  assert.match(email.html, /Description &lt;img/);
+  assert.doesNotMatch(email.html, /<script|<img onerror/);
+  assert.match(email.text, /59,90 €/);
+  assert.match(email.text, /https:\/\/lesterresdecaldera.fr\/produit\/test/);
+  assert.doesNotMatch(email.text, /CALDERA_NEWSLETTER_V1|"blocks"/);
+});
+test('studio : refuse injections, ressources externes et documents ambigus', () => {
+  for (const href of [
+    'javascript:alert(1)',
+    'data:text/html,a',
+    'http://example.com',
+    'https://user:secret@example.com',
+    '/\\evil.example',
+  ]) {
+    assert.throws(
+      () =>
+        parseNewsletterDocument(
+          serializeNewsletterDocument({
+            ...blocks,
+            blocks: [{ id: 'bad', type: 'button', label: 'Piège', href }],
+          }),
+        ),
+      /HTTPS/,
+    );
+  }
+  for (const src of [
+    'https://tracking.example/pixel',
+    '/assets/../secret',
+    '/api/private',
+    'data:image/png;base64,a',
+  ]) {
+    assert.throws(
+      () =>
+        parseNewsletterDocument(
+          serializeNewsletterDocument({
+            ...blocks,
+            blocks: [
+              {
+                id: 'bad',
+                type: 'image',
+                src,
+                alt: 'Image',
+                caption: '',
+                href: '',
+              },
+            ],
+          }),
+        ),
+      /image/,
+    );
+  }
+  assert.throws(
+    () =>
+      parseNewsletterDocument(
+        serializeNewsletterDocument({
+          ...blocks,
+          blocks: [blocks.blocks[0]!, blocks.blocks[0]!],
+        }),
+      ),
+    /dupliqué/,
+  );
+  assert.throws(
+    () => parseNewsletterDocument(DOCUMENT_PREFIX + '{broken'),
+    /illisible/,
+  );
+  assert.throws(
+    () =>
+      parseNewsletterDocument(
+        DOCUMENT_PREFIX +
+          JSON.stringify({ version: 99, theme: 'journal', blocks: [] }),
+      ),
+    /Format/,
+  );
+  assert.throws(
+    () =>
+      parseNewsletterDocument(
+        serializeNewsletterDocument({
+          ...blocks,
+          blocks: Array.from({ length: 41 }, (_, i) => ({
+            id: `d${i}`,
+            type: 'divider',
+          })),
+        }),
+      ),
+    /40 maximum/,
+  );
+});
+test('studio : lien en cours de saisie ne casse pas l’aperçu, mais bloque l’envoi', () => {
+  const source = serializeNewsletterDocument({
+    ...blocks,
+    blocks: [{ id: 'button', type: 'button', label: 'Voir', href: 'https://' }],
+  });
+  assert.throws(() => parseNewsletterDocument(source));
+  assert.equal(
+    parseNewsletterDocument(source, true)?.blocks[0]?.type,
+    'button',
+  );
+  const incomplete = serializeNewsletterDocument({
+    ...blocks,
+    blocks: [
+      { id: 'image', type: 'image', src: '', alt: '', caption: '', href: '' },
+    ],
+  });
+  assert.throws(
+    () =>
+      assertCampaignReady({
+        bodyMarkdown: incomplete,
+        ctaLabel: null,
+        ctaUrl: null,
+      }),
+    /Ajoutez un texte/,
+  );
+});
+test('studio : programmation bornée et segments limités aux consentements actifs', () => {
+  const now = new Date('2026-10-12T12:00:00.000Z');
+  assert.equal(campaignSchedule('', now), now);
+  assert.equal(
+    campaignSchedule('2026-10-13T12:00:00.000Z', now).toISOString(),
+    '2026-10-13T12:00:00.000Z',
+  );
+  for (const value of [
+    'invalid',
+    '2026-10-12T11:00:00.000Z',
+    '2027-10-13T12:00:00.000Z',
+    '2026-10-13T12:00',
+  ])
+    assert.throws(() => campaignSchedule(value, now));
+  assert.equal(audienceWhere('all', now).status, 'ACTIVE');
+  assert.equal(audienceWhere('recent', now).status, 'ACTIVE');
+  assert.equal(audienceWhere('established', now).status, 'ACTIVE');
+  assert.throws(() => audienceWhere('all-users'));
+});
+
+test('studio : une programmation incomplète ne peut jamais devenir un envoi immédiat', () => {
+  const now = new Date('2026-10-12T12:00:00.000Z');
+  const input = {
+    mode: 'later',
+    scheduledAt: '2026-10-13T08:30:00.000Z',
+    local: '2026-10-13T10:30',
+    timeZone: 'Europe/Paris',
+  };
+  assert.equal(
+    validatedCampaignSchedule(input, now).toISOString(),
+    input.scheduledAt,
+  );
+  assert.throws(
+    () => validatedCampaignSchedule({ ...input, scheduledAt: '' }, now),
+    /date et une heure/,
+  );
+  assert.throws(
+    () =>
+      validatedCampaignSchedule({ ...input, local: '2026-10-13T09:30' }, now),
+    /n’a pas été confirmée/,
+  );
+  assert.throws(
+    () => validatedCampaignSchedule({ ...input, timeZone: 'invalid' }, now),
+    /n’a pas été confirmée/,
+  );
+  assert.throws(
+    () => validatedCampaignSchedule({ ...input, mode: 'now' }, now),
+    /incohérent/,
+  );
+});

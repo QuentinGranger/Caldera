@@ -1,3 +1,4 @@
+import { getNewsletterStudioData } from '@/lib/newsletter/studio';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { PageHeader } from '@/components/admin/AdminUI';
@@ -5,7 +6,8 @@ import { NewsletterCampaignEditor } from '@/components/admin/NewsletterCampaignE
 import { saveNewsletterCampaignAction } from '@/lib/newsletter/admin-actions';
 import styles from '@/components/admin/Admin.module.scss';
 
-export default function NewNewsletterCampaignPage() {
+export default async function NewNewsletterCampaignPage() {
+  const studio = await getNewsletterStudioData();
   return (
     <>
       <PageHeader
@@ -22,6 +24,7 @@ export default function NewNewsletterCampaignPage() {
       </PageHeader>
       <NewsletterCampaignEditor
         action={saveNewsletterCampaignAction}
+        products={studio.products}
         value={{
           internalName: '',
           subject: '',

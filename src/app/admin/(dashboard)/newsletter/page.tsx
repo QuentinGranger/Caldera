@@ -51,7 +51,10 @@ export default async function AdminNewsletterPage({
           · <strong>{data.counts.UNSUBSCRIBED ?? 0}</strong> désinscrites
         </p>
       </section>
-      <LifecycleEmailStatus />
+      <details className={styles.card}>
+        <summary>Automatisations et état du service d’envoi</summary>
+        <LifecycleEmailStatus />
+      </details>
       <section aria-labelledby="campagnes-newsletter">
         <div className={styles.panelHeader}>
           <h2 id="campagnes-newsletter">Campagnes</h2>
@@ -81,6 +84,11 @@ export default async function AdminNewsletterPage({
                   </td>
                   <td>
                     <Badge value={campaign.status} />
+                    {campaign.status === 'QUEUED' && campaign.nextPendingAt && (
+                      <small>
+                        Début éligible : {formatDate(campaign.nextPendingAt)}
+                      </small>
+                    )}
                   </td>
                   <td>{campaign.recipientCount}</td>
                   <td>{sent}</td>
