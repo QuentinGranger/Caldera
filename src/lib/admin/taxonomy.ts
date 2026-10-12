@@ -1,4 +1,5 @@
 import 'server-only';
+import { imageStorage } from '@/lib/storage/images';
 import { recordSlugChange } from '@/lib/seo/redirects';
 import { adminTransaction, audit } from './common';
 import {
@@ -27,11 +28,20 @@ export async function saveGame(adminId: string, form: FormData) {
     'description',
     ...editorialKeys,
     'logoUrl',
+    'logoFile',
     'sortOrder',
     'isActive',
   ]);
   const gameId = id(form, 'id', true);
   const name = text(form, 'name');
+  const file = form.get('logoFile');
+  if (file !== null && !(file instanceof File))
+    throw new AdminError(
+      'Sélectionnez le fichier du logo depuis votre ordinateur.',
+    );
+  const upload = file instanceof File && file.size > 0 ? file : null;
+  if (upload && process.env.VERCEL && upload.size > 4 * 1024 * 1024)
+    throw new AdminError('Logo trop lourd : 4 Mo maximum.');
   const data = {
     name,
     slug: slug(form, name),
@@ -40,31 +50,59 @@ export async function saveGame(adminId: string, form: FormData) {
     description:
       text(form, 'description', GAME_DESCRIPTION_MAX_LENGTH, false) || null,
     ...editorialFields(form),
-    logoUrl: localImage(form, 'logoUrl'),
+    logoUrl: upload ? null : localImage(form, 'logoUrl'),
     sortOrder: integer(form, 'sortOrder'),
     isActive: checked(form, 'isActive'),
   };
-  return adminTransaction(adminId, async (tx) => {
-    const previous = gameId
-      ? await tx.game.findUnique({
+  let uploadedUrl: string | null = null;
+  if (upload) {
+    // Validate permission and target before creating a blob, then recheck on save.
+    await adminTransaction(adminId, async (tx) => {
+      if (
+        gameId &&
+        !(await tx.game.findUnique({
           where: { id: gameId },
-          select: { slug: true },
-        })
-      : null;
-    if (gameId && !previous) throw new AdminError('Jeu introuvable.');
-    await assertGameSlug(tx, data.slug, gameId);
-    const game = gameId
-      ? await tx.game.update({ where: { id: gameId }, data })
-      : await tx.game.create({ data });
-    if (previous)
-      await recordSlugChange(tx, 'GAME', game.id, previous.slug, game.slug);
-    await audit(tx, adminId, 'GAME_SAVED', 'Game', game.id, {
-      isActive: data.isActive,
-      previousSlug: previous?.slug ?? null,
-      nextSlug: game.slug,
+          select: { id: true },
+        }))
+      )
+        throw new AdminError('Jeu introuvable.');
+      await assertGameSlug(tx, data.slug, gameId);
     });
-    return { game, previousSlug: previous?.slug };
-  });
+    uploadedUrl = await imageStorage.upload(upload);
+    data.logoUrl = uploadedUrl;
+  }
+  try {
+    return await adminTransaction(adminId, async (tx) => {
+      const previous = gameId
+        ? await tx.game.findUnique({
+            where: { id: gameId },
+            select: { slug: true },
+          })
+        : null;
+      if (gameId && !previous) throw new AdminError('Jeu introuvable.');
+      await assertGameSlug(tx, data.slug, gameId);
+      const game = gameId
+        ? await tx.game.update({ where: { id: gameId }, data })
+        : await tx.game.create({ data });
+      if (previous)
+        await recordSlugChange(tx, 'GAME', game.id, previous.slug, game.slug);
+      await audit(tx, adminId, 'GAME_SAVED', 'Game', game.id, {
+        isActive: data.isActive,
+        previousSlug: previous?.slug ?? null,
+        nextSlug: game.slug,
+      });
+      return { game, previousSlug: previous?.slug };
+    });
+  } catch (error) {
+    if (uploadedUrl) {
+      await imageStorage.delete(uploadedUrl).catch(() => {
+        console.error('Game logo cleanup failed', {
+          code: 'GAME_LOGO_CLEANUP_FAILED',
+        });
+      });
+    }
+    throw error;
+  }
 }
 export async function saveCategory(adminId: string, form: FormData) {
   whitelist(form, [
