@@ -65,8 +65,13 @@ export function AdminForm({
   confirmWhen = 'always',
   tone,
   fieldsKey,
+  requireSaved = false,
+  submitDisabled = false,
 }: {
   action: AdminAction;
+  /** Test/queue actions must not use an older draft while another form is edited. */
+  requireSaved?: boolean;
+  submitDisabled?: boolean;
   /** Refresh saved field values without discarding the action feedback. */
   fieldsKey?: string;
   children: ReactNode;
@@ -80,6 +85,7 @@ export function AdminForm({
   /** `danger`: an irreversible way out (refund, cancellation). */
   tone?: 'danger';
 }) {
+  const [saveWarning, setSaveWarning] = useState('');
   const [state, formAction, pending] = useActionState(action, {
     success: false,
     message: '',
@@ -128,6 +134,14 @@ export function AdminForm({
         action={formAction}
         onChange={guard ? () => setEditedAt(state) : undefined}
         onSubmit={(event) => {
+          if (requireSaved && [...unsaved].some((item) => item !== key)) {
+            event.preventDefault();
+            setSaveWarning(
+              'Enregistrez les modifications du brouillon avant de tester ou de programmer son envoi.',
+            );
+            return;
+          }
+          setSaveWarning('');
           const data = new FormData(event.currentTarget);
           const needsConfirmation =
             confirm &&
@@ -140,6 +154,11 @@ export function AdminForm({
           } else approved.current = false;
         }}
       >
+        {saveWarning && (
+          <p role="alert" className={`${styles.message} ${styles.error}`}>
+            {saveWarning}
+          </p>
+        )}
         {state.message && (
           <p
             ref={feedback}
@@ -165,6 +184,7 @@ export function AdminForm({
             )}
             <button
               type="submit"
+              disabled={submitDisabled}
               className={tone === 'danger' ? styles.dangerButton : undefined}
             >
               {pending ? pendingLabel : submit}
