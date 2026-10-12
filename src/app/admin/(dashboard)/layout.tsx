@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Compass, LogOut, Store } from 'lucide-react';
+import { ArrowUpRight, LogOut, Store } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin/auth';
 import { logoutAction } from '@/lib/admin/actions';
 import { countOrdersToHandle } from '@/lib/admin/queries';
@@ -10,6 +10,7 @@ import { AdminNavigation } from '@/components/admin/AdminNavigation';
 import { AdminBreadcrumbs } from '@/components/admin/AdminBreadcrumbs';
 import { AdminAccountMenu } from '@/components/admin/AdminAccountMenu';
 import { AdminQuickAccess } from '@/components/admin/AdminQuickAccess';
+import { AdminLogo } from '@/components/admin/AdminLogo';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardLayout({
   children,
@@ -36,13 +37,7 @@ export default async function DashboardLayout({
           className={styles.brand}
           aria-label="Caldera — Tableau de bord"
         >
-          <span className={styles.brandIcon}>
-            <Compass size={27} strokeWidth={1.8} aria-hidden="true" />
-          </span>
-          <span>
-            <strong>CALDERA</strong>
-            <small>Administration</small>
-          </span>
+          <AdminLogo />
         </Link>
         <AdminNavigation counts={counts} />
         <div className={styles.sidebarFoot}>

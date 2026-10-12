@@ -41,8 +41,8 @@
   margin: 0 auto;
   padding: 3rem 1.25rem;
   .brand {
-    justify-content: center;
-    margin-bottom: 2.25rem;
+    max-width: 22rem;
+    margin: 0 auto 2rem;
   }
   .card {
     border: 1px solid t.$border;

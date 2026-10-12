@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Gamepad2 } from 'lucide-react';
+import { AdminLogo } from '@/components/admin/AdminLogo';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { Field } from '@/components/admin/AdminFields';
 import { LinkTokenInput } from '@/components/auth/LinkTokenInput';
@@ -10,13 +10,7 @@ export default function AdminResetPasswordPage() {
   return (
     <main id="contenu" className={styles.login}>
       <div className={styles.brand}>
-        <span className={styles.brandIcon}>
-          <Gamepad2 size={28} aria-hidden="true" />
-        </span>
-        <span>
-          <strong>CALDERA</strong>
-          <small>CONTROL ROOM</small>
-        </span>
+        <AdminLogo />
       </div>
       <div className={styles.card}>
         <span className={styles.eyebrow}>Récupération sécurisée</span>
