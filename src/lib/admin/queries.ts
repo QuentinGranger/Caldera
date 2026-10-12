@@ -409,7 +409,12 @@ export async function getAdminStocks(params: SearchParams) {
       where,
       take: pageSize,
       skip: (page - 1) * pageSize,
-      orderBy: sorts[param(params, 'sort')] ?? sorts.stock_asc,
+      orderBy:
+        param(params, 'sort') === 'stock_desc'
+          ? sorts.stock_desc
+          : param(params, 'sort') === 'name'
+            ? sorts.name
+            : sorts.stock_asc,
       select: adminStockSelect,
     }),
     db.productVariant.count({ where }),

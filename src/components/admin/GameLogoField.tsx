@@ -60,7 +60,10 @@ export function GameLogoField({
   }
   const source =
     preview ??
-    (/^\/(assets\/|media\/)/.test(path) && !path.includes('..') ? path : null);
+    (/^\/(?:assets\/[a-zA-Z0-9_./-]+|media\/[a-f0-9-]+\.webp)$/.test(path) &&
+    !path.includes('..')
+      ? path
+      : null);
   return (
     <section className={styles.gameLogoField} aria-labelledby={`${id}-title`}>
       <header>
