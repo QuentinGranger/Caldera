@@ -98,6 +98,7 @@ export default async function AdminNewsletterPage({
         <h2>Abonnés et consentements</h2>
       </div>
       <FilterPanel
+        params={params}
         action="/admin/newsletter"
         search={param(params, 'search')}
         placeholder="Adresse e-mail"

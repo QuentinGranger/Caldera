@@ -24,6 +24,7 @@ export function ProductInformationForm({
   return (
     <AdminForm
       action={saveProductAction}
+      fieldsKey={product?.updatedAt.toISOString()}
       submit={product ? 'Enregistrer les informations' : 'Créer le brouillon'}
     >
       {product && (

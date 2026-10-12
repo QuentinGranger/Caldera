@@ -45,7 +45,11 @@ export default async function GamesPage({
       >
         <Link href="/admin/jeux#edition">Créer un jeu</Link>
       </PageHeader>
-      <form className={styles.filters} action="/admin/jeux">
+      <form
+        key={JSON.stringify(params)}
+        className={styles.filters}
+        action="/admin/jeux"
+      >
         <label>
           Nom
           <input
@@ -112,7 +116,8 @@ export default async function GamesPage({
           )}
         </div>
         <AdminForm
-          key={game ? `${game.id}-${game.updatedAt.toISOString()}` : 'new'}
+          key={game?.id ?? 'new'}
+          fieldsKey={game?.updatedAt.toISOString()}
           action={saveGameAction}
           confirm={
             game?.isActive

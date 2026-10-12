@@ -194,10 +194,16 @@ export async function saveCategoryAction(
 ): Promise<AdminActionState> {
   const admin = await requireAdmin();
   try {
-    await saveCategory(admin.id, form);
+    const category = await saveCategory(admin.id, form);
     await invalidateCatalog();
     revalidatePath('/admin/categories');
-    return { success: true, message: 'Catégorie enregistrée.' };
+    return {
+      success: true,
+      message: 'Catégorie enregistrée.',
+      ...(!form.get('id')
+        ? { redirectTo: `/admin/categories?edit=${category.id}#edition` }
+        : {}),
+    };
   } catch (error) {
     return failure(error);
   }
@@ -228,10 +234,16 @@ export async function saveSetAction(
 ): Promise<AdminActionState> {
   const admin = await requireAdmin();
   try {
-    await saveSet(admin.id, form);
+    const set = await saveSet(admin.id, form);
     await invalidateCatalog();
     revalidatePath('/admin/extensions');
-    return { success: true, message: 'Extension enregistrée.' };
+    return {
+      success: true,
+      message: 'Extension enregistrée.',
+      ...(!form.get('id')
+        ? { redirectTo: `/admin/extensions?edit=${set.id}#edition` }
+        : {}),
+    };
   } catch (error) {
     return failure(error);
   }

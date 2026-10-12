@@ -1,5 +1,7 @@
 'use client';
 import {
+  createContext,
+  useContext,
   useActionState,
   useEffect,
   useId,
@@ -16,6 +18,19 @@ const LEAVE_WARNING =
   'Des modifications ne sont pas enregistrées. Quitter cette page sans les enregistrer ?';
 /** The forms of the page holding changes not saved yet. */
 const unsaved = new Set<symbol>();
+const FormChangeContext = createContext<(() => void) | null>(null);
+
+/** Editors with buttons that change form data must mark those changes too. */
+export function useAdminFormChange() {
+  return useContext(FormChangeContext);
+}
+
+export function confirmAdminNavigation() {
+  if (!unsaved.size) return true;
+  if (!window.confirm(LEAVE_WARNING)) return false;
+  unsaved.clear();
+  return true;
+}
 let guards = 0;
 function warnOnUnload(event: BeforeUnloadEvent) {
   if (unsaved.size) event.preventDefault();
@@ -32,8 +47,7 @@ function warnOnLink(event: MouseEvent) {
   if (url.origin !== location.origin) return;
   if (url.pathname === location.pathname && url.search === location.search)
     return;
-  if (window.confirm(LEAVE_WARNING)) unsaved.clear();
-  else {
+  if (!confirmAdminNavigation()) {
     event.preventDefault();
     event.stopPropagation();
   }
@@ -50,8 +64,11 @@ export function AdminForm({
   confirm,
   confirmWhen = 'always',
   tone,
+  fieldsKey,
 }: {
   action: AdminAction;
+  /** Refresh saved field values without discarding the action feedback. */
+  fieldsKey?: string;
   children: ReactNode;
   submit?: string;
   /** The button's words while the action runs. */
@@ -104,7 +121,7 @@ export function AdminForm({
     if (state.message && !state.success) feedback.current?.focus();
   }, [state]);
   return (
-    <>
+    <FormChangeContext.Provider value={guard ? () => setEditedAt(state) : null}>
       <form
         ref={form}
         aria-busy={pending}
@@ -138,7 +155,7 @@ export function AdminForm({
             {state.message}
           </p>
         )}
-        <fieldset disabled={pending}>
+        <fieldset key={fieldsKey} disabled={pending}>
           {children}
           <div className={styles.formActions}>
             {dirty && !pending && (
@@ -185,6 +202,6 @@ export function AdminForm({
           </div>
         </dialog>
       )}
-    </>
+    </FormChangeContext.Provider>
   );
 }

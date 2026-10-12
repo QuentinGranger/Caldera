@@ -20,7 +20,7 @@ export function FilterPanel({
   activeCount?: number;
   /** The current view (a tab), kept through a new search. */
   keep?: Record<string, string>;
-  params?: SearchParams;
+  params: SearchParams;
   /** Human-readable names for the selected criteria, excluding the view tabs. */
   criteria?: { name: string; label: string }[];
   /** The filters; none: the search alone. */
@@ -32,7 +32,7 @@ export function FilterPanel({
   ];
   return (
     <form
-      key={JSON.stringify(params ?? { search, activeCount, keep })}
+      key={JSON.stringify(params)}
       action={action}
       className={styles.filterPanel}
     >

@@ -107,7 +107,7 @@ export default async function ProductAdminPage({
       <details className={styles.card} id="informations" open>
         <summary>Informations & organisation</summary>
         <ProductInformationForm
-          key={product.updatedAt.toISOString()}
+          key={product.id}
           product={product}
           options={options}
         />
@@ -135,7 +135,7 @@ export default async function ProductAdminPage({
               <ChevronDown size={18} aria-hidden="true" />
             </summary>
             <VariantEditor
-              key={variant.updatedAt.toISOString()}
+              key={variant.id}
               productId={product.id}
               variant={variant}
             />

@@ -9,6 +9,7 @@ import { messageHandledAction } from '@/lib/admin/actions';
 import { formatDate } from '@/lib/admin/format';
 import { getAdminMessages } from '@/lib/admin/messages';
 import { param, type SearchParams } from '@/lib/admin/queries';
+import { adminListHref } from '@/lib/admin/list-url';
 import styles from '@/components/admin/Admin.module.scss';
 
 export default async function MessagesPage({
@@ -33,11 +34,9 @@ export default async function MessagesPage({
         {tabs.map((tab) => (
           <Link
             key={tab.value}
-            href={
-              tab.value === 'open'
-                ? '/admin/messages'
-                : `/admin/messages?view=${tab.value}`
-            }
+            href={adminListHref('/admin/messages', params, {
+              view: tab.value === 'open' ? undefined : tab.value,
+            })}
             aria-current={data.view === tab.value ? 'page' : undefined}
           >
             {tab.label}
@@ -48,6 +47,7 @@ export default async function MessagesPage({
         ))}
       </nav>
       <FilterPanel
+        params={params}
         action="/admin/messages"
         search={param(params, 'search')}
         placeholder="Nom, e-mail ou n° de commande"

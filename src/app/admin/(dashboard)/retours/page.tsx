@@ -10,6 +10,7 @@ import {
 } from '@/components/admin/AdminUI';
 import { formatDate, label } from '@/lib/admin/format';
 import { param, type SearchParams } from '@/lib/admin/queries';
+import { adminListHref } from '@/lib/admin/list-url';
 import { getAdminReturns } from '@/lib/returns/admin';
 import { returnReasonLabels } from '@/lib/returns/rules';
 import styles from '@/components/admin/Admin.module.scss';
@@ -75,7 +76,12 @@ export default async function AdminReturnsPage({
         {tabs.map((tab) => (
           <Link
             key={tab.label}
-            href={`/admin/retours${tab.query}`}
+            href={adminListHref('/admin/retours', params, {
+              open: tab.query === '?open=1' ? '1' : undefined,
+              status: tab.query.startsWith('?status=')
+                ? tab.query.slice('?status='.length)
+                : undefined,
+            })}
             aria-current={tab === currentTab ? 'page' : undefined}
           >
             {tab.label}
@@ -86,6 +92,7 @@ export default async function AdminReturnsPage({
         ))}
       </nav>
       <FilterPanel
+        params={params}
         action="/admin/retours"
         search={param(params, 'search')}
         placeholder="N° de retour, de commande ou e-mail"

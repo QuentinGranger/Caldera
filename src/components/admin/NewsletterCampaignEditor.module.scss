@@ -104,8 +104,9 @@
 
 .emailBody {
   padding: 1.4rem;
+  overflow-wrap: anywhere;
 
-  h1 {
+  .emailHeading {
     margin: 0 0 1rem;
     color: #173e32;
     font-family: Georgia, serif;

@@ -66,7 +66,7 @@ export function DetailNavigation({ sections }: { sections: Section[] }) {
     <nav
       ref={nav}
       className={styles.detailNavigation}
-      aria-label="Sections de la fiche produit"
+      aria-label="Sections de la fiche"
     >
       {sections.map((section) => (
         <a
