@@ -208,10 +208,16 @@ export async function saveGameAction(
 ): Promise<AdminActionState> {
   const admin = await requireAdmin();
   try {
-    await saveGame(admin.id, form);
+    const { game } = await saveGame(admin.id, form);
     await invalidateCatalog();
     revalidatePath('/admin/jeux');
-    return { success: true, message: 'Jeu enregistré.' };
+    return {
+      success: true,
+      message: 'Jeu enregistré.',
+      ...(!form.get('id')
+        ? { redirectTo: `/admin/jeux?edit=${game.id}#edition` }
+        : {}),
+    };
   } catch (error) {
     return failure(error);
   }

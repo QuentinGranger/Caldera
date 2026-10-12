@@ -734,6 +734,84 @@ test('administration : intégrité du catalogue, des stocks, des images et des c
       },
     );
     await t.test(
+      'logo de jeu : import validé, accès contrôlé et nettoyage en cas de conflit',
+      async () => {
+        const makeForm = (suffix: string) =>
+          form({
+            name: 'Jeu avec logo',
+            slug: `logo-${suffix}-${key}`,
+            sortOrder: 0,
+            isActive: true,
+          });
+        const buffer = await sharp({
+          create: { width: 32, height: 16, channels: 4, background: '#c99b3f' },
+        })
+          .png()
+          .toBuffer();
+        const pngFile = () =>
+          new File([new Uint8Array(buffer)], 'logo.png', { type: 'image/png' });
+        const data = makeForm('valid');
+        data.set('logoFile', pngFile());
+        const { game } = await saveGame(admin.id, data);
+        games.push(game.id);
+        urls.push(game.logoUrl!);
+        assert.match(game.logoUrl!, /^\/media\/[a-f0-9-]+\.webp$/);
+        const bytes = await readUploadedImage(game.logoUrl!.split('/').pop()!);
+        assert.equal((await sharp(bytes!).metadata()).format, 'webp');
+        const bad = makeForm('invalid');
+        bad.set(
+          'logoFile',
+          new File(['<svg onload="alert(1)"></svg>'], 'logo.png', {
+            type: 'image/png',
+          }),
+        );
+        await assert.rejects(saveGame(admin.id, bad), /image valide/);
+        assert.equal(
+          await db.game.count({ where: { slug: `logo-invalid-${key}` } }),
+          0,
+        );
+        const localPath = makeForm('path');
+        localPath.set('logoUrl', '/Users/personne/secret.png');
+        await assert.rejects(saveGame(admin.id, localPath), /image locale/);
+        const originalUpload = imageStorage.upload;
+        let attempts = 0;
+        try {
+          imageStorage.upload = async function (file) {
+            attempts++;
+            return originalUpload.call(this, file);
+          };
+          const denied = makeForm('denied');
+          denied.set('logoFile', pngFile());
+          await assert.rejects(
+            saveGame(randomUUID(), denied),
+            /Session administrateur invalide/,
+          );
+          assert.equal(attempts, 0);
+        } finally {
+          imageStorage.upload = originalUpload;
+        }
+        let orphan: string | undefined;
+        try {
+          imageStorage.upload = async function (file) {
+            orphan = await originalUpload.call(this, file);
+            urls.push(orphan);
+            const collision = await db.game.create({
+              data: { name: 'Création concurrente', slug: `logo-race-${key}` },
+            });
+            games.push(collision.id);
+            return orphan;
+          };
+          const conflict = makeForm('race');
+          conflict.set('logoFile', pngFile());
+          await assert.rejects(saveGame(admin.id, conflict), /déjà utilisé/);
+          assert.ok(orphan);
+          assert.equal(await readUploadedImage(orphan.split('/').pop()!), null);
+        } finally {
+          imageStorage.upload = originalUpload;
+        }
+      },
+    );
+    await t.test(
       'extensions et catégories : filtres réservés, collisions et redirections',
       async () => {
         await assert.rejects(

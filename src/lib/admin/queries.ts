@@ -345,12 +345,42 @@ export async function getProductStatusCounts() {
   for (const group of groups) counts[group.status] = group._count._all;
   return counts;
 }
+const adminStockSelect = {
+  id: true,
+  productId: true,
+  sku: true,
+  language: true,
+  stockQuantity: true,
+  reservedQuantity: true,
+  availableQuantity: true,
+  lowStockThreshold: true,
+  isActive: true,
+  product: {
+    select: {
+      name: true,
+      status: true,
+      images: {
+        take: 1,
+        orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+        select: { url: true },
+      },
+    },
+  },
+  _count: {
+    select: {
+      reservations: { where: { status: 'ACTIVE' } },
+      stockAlerts: { where: { status: 'ACTIVE' } },
+    },
+  },
+} satisfies Prisma.ProductVariantSelect;
+
 export async function getAdminStocks(params: SearchParams) {
   await requireAdmin();
   const db = getPrisma();
   const page = pageNumber(params);
   const search = param(params, 'search');
   const availability = param(params, 'availability');
+  const status = param(params, 'status');
   const where: Prisma.ProductVariantWhereInput = {
     ...(search
       ? {
@@ -361,36 +391,36 @@ export async function getAdminStocks(params: SearchParams) {
         }
       : {}),
     ...(isStockView(availability) ? stockViews()[availability] : {}),
+    ...(status === 'active'
+      ? { isActive: true }
+      : status === 'inactive'
+        ? { isActive: false }
+        : {}),
   };
-  const [variants, total] = await Promise.all([
+  const sorts: Record<string, Prisma.ProductVariantOrderByWithRelationInput[]> =
+    {
+      stock_asc: [{ availableQuantity: 'asc' }, { id: 'asc' }],
+      stock_desc: [{ availableQuantity: 'desc' }, { id: 'asc' }],
+      name: [{ product: { name: 'asc' } }, { sku: 'asc' }, { id: 'asc' }],
+    };
+  const editingId = validId(param(params, 'adjust'));
+  const [variants, total, editing] = await Promise.all([
     db.productVariant.findMany({
       where,
       take: pageSize,
       skip: (page - 1) * pageSize,
-      orderBy: [{ availableQuantity: 'asc' }, { id: 'asc' }],
-      select: {
-        id: true,
-        productId: true,
-        sku: true,
-        language: true,
-        stockQuantity: true,
-        reservedQuantity: true,
-        availableQuantity: true,
-        lowStockThreshold: true,
-        isActive: true,
-        product: { select: { name: true } },
-        _count: {
-          select: {
-            reservations: { where: { status: 'ACTIVE' } },
-            // Confirmed back-in-stock requests: demand to restock first.
-            stockAlerts: { where: { status: 'ACTIVE' } },
-          },
-        },
-      },
+      orderBy: sorts[param(params, 'sort')] ?? sorts.stock_asc,
+      select: adminStockSelect,
     }),
     db.productVariant.count({ where }),
+    editingId
+      ? db.productVariant.findUnique({
+          where: { id: editingId },
+          select: adminStockSelect,
+        })
+      : Promise.resolve(null),
   ]);
-  return { variants, total, page };
+  return { variants, total, page, editing };
 }
 /** Customer accounts opened in the shop, with what they bought. */
 export async function getAdminCustomers(params: SearchParams) {

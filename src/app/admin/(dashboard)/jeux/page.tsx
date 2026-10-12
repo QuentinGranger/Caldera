@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { GameLogoField } from '@/components/admin/GameLogoField';
 import Link from 'next/link';
 import {
   getAdminTaxonomy,
@@ -138,19 +139,20 @@ export default async function GamesPage({
               max={1000000}
               defaultValue={game?.sortOrder ?? 0}
             />
-            <Field
-              label="Logo (chemin local)"
-              name="logoUrl"
-              defaultValue={game?.logoUrl ?? ''}
-              placeholder="/assets/images/..."
-              maxLength={500}
-            />
             <TextField
               label="Accroche courte"
               name="description"
               maxLength={GAME_DESCRIPTION_MAX_LENGTH}
               defaultValue={game?.description}
             />
+          </div>
+
+          <GameLogoField
+            currentUrl={game?.logoUrl ?? ''}
+            maxBytes={(process.env.VERCEL ? 4 : 5) * 1024 * 1024}
+            maxLabel={process.env.VERCEL ? '4 Mo' : '5 Mo'}
+          />
+          <div className={styles.fields}>
             <SeoFields
               seoTitle={game?.seoTitle}
               seoDescription={game?.seoDescription}
