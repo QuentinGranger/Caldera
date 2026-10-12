@@ -70,6 +70,7 @@ export default async function AdminInvoicesPage({
         </p>
       </section>
       <FilterPanel
+        params={params}
         action="/admin/factures"
         search={param(params, 'search')}
         placeholder="N° de facture, de commande ou e-mail"

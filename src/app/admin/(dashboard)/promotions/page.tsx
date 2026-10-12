@@ -45,6 +45,7 @@ export default async function AdminPromotionsPage({
         </Link>
       </PageHeader>
       <FilterPanel
+        params={params}
         action="/admin/promotions"
         search={param(params, 'search')}
         placeholder="Code ou libellé"
@@ -113,7 +114,9 @@ export default async function AdminPromotionsPage({
                 {promotion.maxRedemptions !== null &&
                   ` / ${promotion.maxRedemptions}`}
                 {promotion.uses.reserved > 0 && (
-                  <small>+ {promotion.uses.reserved} en cours de paiement</small>
+                  <small>
+                    + {promotion.uses.reserved} en cours de paiement
+                  </small>
                 )}
               </td>
               <td>{euros(promotion.uses.discount)}</td>

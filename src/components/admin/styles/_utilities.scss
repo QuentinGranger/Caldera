@@ -182,10 +182,11 @@
     text-decoration: underline;
   }
 }
-.visuallyHidden {
+.admin .visuallyHidden {
   position: absolute;
   width: 1px;
   height: 1px;
+  min-height: 0;
   padding: 0;
   margin: -1px;
   overflow: hidden;

@@ -184,7 +184,7 @@ export function AdminNavigation({
                     {count > 99 ? '99+' : count}
                     <span className={styles.visuallyHidden}>
                       {' '}
-                      éléments à traiter
+                      {count === 1 ? 'élément à traiter' : 'éléments à traiter'}
                     </span>
                   </b>
                 )}

@@ -1,6 +1,6 @@
 'use client';
-import { useMemo, useRef, useState } from 'react';
-import { AdminForm } from './AdminForm';
+import { useId, useMemo, useRef, useState } from 'react';
+import { AdminForm, useAdminFormChange } from './AdminForm';
 import type { AdminAction } from '@/lib/admin/action-types';
 import { linkTarget, renderMarkdown } from '@/lib/content/markdown';
 import styles from './NewsletterCampaignEditor.module.scss';
@@ -15,6 +15,45 @@ export type CampaignEditorValue = {
   ctaLabel: string;
   ctaUrl: string;
 };
+
+function MessageToolbar({
+  insert,
+}: {
+  insert: (before: string, after?: string, placeholder?: string) => void;
+}) {
+  const markChanged = useAdminFormChange();
+  const tools = [
+    { label: 'Gras', before: '**', after: '**', placeholder: 'texte en gras' },
+    { label: 'Titre', before: '## ', placeholder: 'Intertitre' },
+    { label: 'Liste', before: '- ', placeholder: 'Élément de liste' },
+    {
+      label: 'Lien',
+      before: '[',
+      after: '](https://)',
+      placeholder: 'texte du lien',
+    },
+  ];
+  return (
+    <div
+      className={styles.toolbar}
+      role="group"
+      aria-label="Mise en forme du message"
+    >
+      {tools.map((tool) => (
+        <button
+          key={tool.label}
+          type="button"
+          onClick={() => {
+            insert(tool.before, tool.after, tool.placeholder);
+            markChanged?.();
+          }}
+        >
+          {tool.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function NewsletterCampaignPreview({
   value,
@@ -42,14 +81,21 @@ export function NewsletterCampaignPreview({
       <div className={styles.email}>
         <div className={styles.emailHeader}>LES TERRES DE CALDERA</div>
         <div className={styles.emailBody}>
-          <h1>{value.heading || 'Titre de la newsletter'}</h1>
+          <h2 className={styles.emailHeading}>
+            {value.heading || 'Titre de la newsletter'}
+          </h2>
           {body ? (
             <div dangerouslySetInnerHTML={{ __html: body }} />
           ) : (
             <p>Le contenu apparaîtra ici.</p>
           )}
           {value.ctaLabel && ctaTarget && (
-            <a className={styles.cta} href={ctaTarget}>
+            <a
+              className={styles.cta}
+              href={ctaTarget}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {value.ctaLabel}
             </a>
           )}
@@ -73,6 +119,7 @@ export function NewsletterCampaignEditor({
   readOnly?: boolean;
 }) {
   const [value, setValue] = useState(initial);
+  const messageId = useId();
   const body = useRef<HTMLTextAreaElement>(null);
   function field<K extends keyof CampaignEditorValue>(
     key: K,
@@ -174,38 +221,12 @@ export function NewsletterCampaignEditor({
                 placeholder="Une nouvelle expédition se prépare"
               />
             </label>
-            <label className={styles.full}>
-              Message
-              <span
-                className={styles.toolbar}
-                aria-label="Mise en forme du message"
-              >
-                <button
-                  type="button"
-                  onClick={() => insert('**', '**', 'texte en gras')}
-                >
-                  Gras
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insert('## ', '', 'Intertitre')}
-                >
-                  Titre
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insert('- ', '', 'Élément de liste')}
-                >
-                  Liste
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insert('[', '](https://)', 'texte du lien')}
-                >
-                  Lien
-                </button>
-              </span>
+            <div className={styles.full}>
+              <label htmlFor={messageId}>Message</label>
+              <MessageToolbar insert={insert} />
               <textarea
+                id={messageId}
+                aria-describedby={`${messageId}-help`}
                 ref={body}
                 name="bodyMarkdown"
                 maxLength={20000}
@@ -216,10 +237,10 @@ export function NewsletterCampaignEditor({
                   'Bonjour,\n\nPrésentez ici les nouveautés, conseils ou réassorts.'
                 }
               />
-              <small>
+              <small id={`${messageId}-help`}>
                 Mise en forme simple : titres, gras, listes et liens.
               </small>
-            </label>
+            </div>
             <label>
               Texte du bouton
               <input

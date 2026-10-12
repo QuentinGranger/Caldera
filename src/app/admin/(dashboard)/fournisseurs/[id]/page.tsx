@@ -68,6 +68,7 @@ export default async function SupplierPage({
       <section className={styles.card} id="offres">
         <h2>Offres · {data.total}</h2>
         <FilterPanel
+          params={query}
           action={path}
           search={param(query, 'search')}
           placeholder="Nom, référence ou EAN"

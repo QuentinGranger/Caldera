@@ -33,6 +33,7 @@ export function VariantEditor({
     <>
       <AdminForm
         action={saveVariantAction}
+        fieldsKey={variant?.updatedAt.toISOString()}
         submit={variant ? 'Enregistrer la variante' : 'Créer la variante'}
         confirm={
           variant?.isActive
@@ -143,9 +144,14 @@ export function VariantEditor({
           d’approvisionnement.
           {currentLandedCost && (
             <>
-              {' '}Actuel : <strong>{euros(currentLandedCost)}</strong>
+              {' '}
+              Actuel : <strong>{euros(currentLandedCost)}</strong>
               {currentMarginRate && (
-                <> · marge brute théorique : <strong>{currentMarginRate.toFixed(1)} %</strong></>
+                <>
+                  {' '}
+                  · marge brute théorique :{' '}
+                  <strong>{currentMarginRate.toFixed(1)} %</strong>
+                </>
               )}
             </>
           )}

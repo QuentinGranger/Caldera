@@ -33,6 +33,7 @@ export default async function SupplierWatchPage({
         description="Ce que chaque import validé a changé : baisses et hausses de prix, retours en stock, ruptures, nouvelles références, références disparues, dates de sortie."
       />
       <FilterPanel
+        params={params}
         action="/admin/fournisseurs/veille"
         search={param(params, 'search')}
         placeholder="Nom, référence ou EAN"

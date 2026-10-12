@@ -39,6 +39,7 @@ export default async function SupplierImportsPage({
         description="Chaque fichier déposé : fournisseur, auteur, lignes, résultat, durée et état. Le dernier import appliqué d’un fournisseur peut être défait depuis sa page."
       />
       <FilterPanel
+        params={params}
         action="/admin/fournisseurs/imports"
         search={param(params, 'search')}
         placeholder="Nom du fichier"

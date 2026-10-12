@@ -44,7 +44,11 @@ export default async function CategoriesPage({
       >
         <Link href="/admin/categories#edition">Créer une catégorie</Link>
       </PageHeader>
-      <form className={styles.filters} action="/admin/categories">
+      <form
+        key={JSON.stringify(params)}
+        className={styles.filters}
+        action="/admin/categories"
+      >
         <label>
           Nom
           <input
@@ -99,11 +103,8 @@ export default async function CategoriesPage({
           {category ? `Modifier : ${category.name}` : 'Nouvelle catégorie'}
         </h2>
         <AdminForm
-          key={
-            category
-              ? `${category.id}-${category.updatedAt.toISOString()}`
-              : 'new'
-          }
+          key={category?.id ?? 'new'}
+          fieldsKey={category?.updatedAt.toISOString()}
           action={saveCategoryAction}
           confirm={
             category?.isActive

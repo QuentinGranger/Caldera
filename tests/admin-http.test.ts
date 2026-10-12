@@ -402,6 +402,26 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/categories',
           '/admin/extensions',
           '/admin/jeux',
+          '/admin/commandes',
+          '/admin/clients',
+          '/admin/messages',
+          '/admin/retours',
+          `/admin/retours/nouveau?commande=${order.id}`,
+          '/admin/livraison',
+          '/admin/fournisseurs',
+          '/admin/fournisseurs/imports',
+          '/admin/fournisseurs/imports/nouveau',
+          '/admin/fournisseurs/veille',
+          '/admin/discord',
+          '/admin/newsletter',
+          '/admin/newsletter/campagnes/nouvelle',
+          '/admin/promotions',
+          '/admin/promotions/nouvelle',
+          '/admin/factures',
+          '/admin/factures/reglages',
+          '/admin/fiscalite',
+          '/admin/pilotage',
+          '/admin/securite',
         ]) {
           const result = await page(path);
           assert.equal(result.response.status, 200);
@@ -707,6 +727,46 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       },
     );
     await t.test(
+      'catégories et extensions : création puis édition sans doublon',
+      async () => {
+        for (const [name, path, slug] of [
+          ['saveCategoryAction', 'categories', `http-category-${key}`],
+          ['saveSetAction', 'extensions', `http-set-${key}`],
+        ] as const) {
+          const fields = {
+            name: 'Taxonomie HTTP',
+            slug,
+            ...(path === 'categories' ? { sortOrder: '0' } : {}),
+            isActive: 'on',
+          };
+          const created = await action(name, fields);
+          assert.ok(created.body.includes('"success":true'), created.body);
+          const row =
+            path === 'categories'
+              ? await db.category.findUniqueOrThrow({ where: { slug } })
+              : await db.tcgSet.findUniqueOrThrow({ where: { slug } });
+          assert.ok(
+            created.body.includes(`/admin/${path}?edit=${row.id}#edition`),
+          );
+          const updated = await action(name, {
+            ...fields,
+            id: row.id,
+            name: 'Taxonomie HTTP modifiée',
+          });
+          assert.ok(updated.body.includes('"success":true'), updated.body);
+          assert.ok(!updated.body.includes('"redirectTo"'));
+          assert.equal(
+            path === 'categories'
+              ? await db.category.count({ where: { slug } })
+              : await db.tcgSet.count({ where: { slug } }),
+            1,
+          );
+          const edit = await page(`/admin/${path}?edit=${row.id}`);
+          assert.ok(edit.html.includes('Taxonomie HTTP modifiée'));
+        }
+      },
+    );
+    await t.test(
       'upload HTTP, image publique réencodée, optimisation Next et suppression de galerie',
       async () => {
         const png = await sharp({
@@ -907,6 +967,8 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
     await db.product.delete({ where: { id: product.id } });
     await db.category.delete({ where: { id: category.id } });
     await db.game.deleteMany({ where: { slug: `http-jeu-${key}` } });
+    await db.category.deleteMany({ where: { slug: `http-category-${key}` } });
+    await db.tcgSet.deleteMany({ where: { slug: `http-set-${key}` } });
     await db.adminUser.delete({ where: { id: admin.id } });
     for (const url of uploadedUrls) await imageStorage.delete(url);
     await db.$disconnect();

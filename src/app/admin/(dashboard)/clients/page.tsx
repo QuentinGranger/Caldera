@@ -28,6 +28,7 @@ export default async function CustomersPage({
         description="Comptes ouverts sur la boutique. Les commandes passées sans compte restent dans Commandes."
       />
       <FilterPanel
+        params={params}
         action="/admin/clients"
         search={param(params, 'search')}
         placeholder="Nom ou e-mail"

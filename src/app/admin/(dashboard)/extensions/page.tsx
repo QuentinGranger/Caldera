@@ -46,7 +46,11 @@ export default async function SetsPage({
       >
         <Link href="/admin/extensions#edition">Créer une extension</Link>
       </PageHeader>
-      <form className={styles.filters} action="/admin/extensions">
+      <form
+        key={JSON.stringify(params)}
+        className={styles.filters}
+        action="/admin/extensions"
+      >
         <label>
           Nom
           <input
@@ -114,7 +118,8 @@ export default async function SetsPage({
       <section className={styles.card} id="edition">
         <h2>{set ? `Modifier : ${set.name}` : 'Nouvelle extension'}</h2>
         <AdminForm
-          key={set ? `${set.id}-${set.updatedAt.toISOString()}` : 'new'}
+          key={set?.id ?? 'new'}
+          fieldsKey={set?.updatedAt.toISOString()}
           action={saveSetAction}
           confirm={
             set?.isActive

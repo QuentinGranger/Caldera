@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowRight, Search, X } from 'lucide-react';
 import { adminNavGroups } from './AdminNavigation';
+import { confirmAdminNavigation } from './AdminForm';
 import styles from './Admin.module.scss';
 
 const entries = adminNavGroups.flatMap((group) =>
@@ -147,6 +148,7 @@ export function AdminQuickAccess() {
                   );
                 } else if (event.key === 'Enter' && results[selected]) {
                   event.preventDefault();
+                  if (!confirmAdminNavigation()) return;
                   dialog.current?.close();
                   router.push(results[selected].href);
                 }

@@ -14,8 +14,10 @@ import {
   type FaqDraft,
 } from '@/lib/admin/faq-editor';
 import styles from './Admin.module.scss';
+import { useAdminFormChange } from './AdminForm';
 
 export function FaqEditor({ initialValue }: { initialValue: string }) {
+  const markChanged = useAdminFormChange();
   const [drafts, setDrafts] = useState<FaqDraft[]>(() =>
     parseFaqDrafts(initialValue),
   );
@@ -38,6 +40,7 @@ export function FaqEditor({ initialValue }: { initialValue: string }) {
   }
 
   function move(index: number, direction: -1 | 1) {
+    markChanged?.();
     setDrafts((current) => {
       const target = index + direction;
       if (target < 0 || target >= current.length) return current;
@@ -93,11 +96,12 @@ export function FaqEditor({ initialValue }: { initialValue: string }) {
                   type="button"
                   className={`${styles.quietButton} ${styles.faqRemove}`}
                   aria-label={`Retirer la question ${index + 1}`}
-                  onClick={() =>
+                  onClick={() => {
+                    markChanged?.();
                     setDrafts((current) =>
                       current.filter((entry) => entry.id !== draft.id),
-                    )
-                  }
+                    );
+                  }}
                 >
                   <Trash2 size={16} aria-hidden="true" />
                   <span>Retirer</span>
@@ -141,6 +145,7 @@ export function FaqEditor({ initialValue }: { initialValue: string }) {
           className={styles.secondaryButton}
           disabled={drafts.length >= FAQ_MAX_ENTRIES}
           onClick={() => {
+            markChanged?.();
             const id = nextId.current++;
             setFocusId(id);
             setDrafts((current) => [
