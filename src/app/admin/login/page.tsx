@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Gamepad2 } from 'lucide-react';
+import { AdminLogo } from '@/components/admin/AdminLogo';
 import { redirect } from 'next/navigation';
 import { currentAdmin } from '@/lib/admin/auth';
 import { loginAction } from '@/lib/admin/actions';
@@ -16,13 +16,7 @@ export default async function LoginPage({
   return (
     <main id="contenu" className={styles.login}>
       <div className={styles.brand}>
-        <span className={styles.brandIcon}>
-          <Gamepad2 size={28} aria-hidden="true" />
-        </span>
-        <span>
-          <strong>CALDERA</strong>
-          <small>CONTROL ROOM</small>
-        </span>
+        <AdminLogo />
       </div>
       <div className={styles.card}>
         <span className={styles.eyebrow}>Accès équipe</span>

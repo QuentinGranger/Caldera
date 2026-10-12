@@ -25,6 +25,7 @@ import {
   Warehouse,
   X,
 } from 'lucide-react';
+import { AdminLogo } from './AdminLogo';
 import styles from './Admin.module.scss';
 
 export const adminNavGroups = [
@@ -230,7 +231,9 @@ export function AdminNavigation({
         }}
       >
         <div className={styles.panelHeader}>
-          <strong>CALDERA / ADMIN</strong>
+          <div className={styles.mobileBrand}>
+            <AdminLogo />
+          </div>
           <button
             type="button"
             className={styles.quietButton}
