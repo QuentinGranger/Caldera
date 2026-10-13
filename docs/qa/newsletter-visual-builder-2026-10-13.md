@@ -20,6 +20,7 @@ Il reste intégré à l’authentification MFA et à la file Caldera.
   restent à personnaliser et ne prétendent pas à une disponibilité commerciale.
 - Export/import JSON de compositions réutilisables, validation stricte et
   confirmation avant remplacement ; identifiants de blocs renouvelés à l’import.
+  Les modèles longs accentués et indentés restent réimportables.
   Aucun destinataire, secret ou choix de programmation dans ces exports.
 - Liste des destinations par bloc pour relire les liens avant envoi.
 - Copie de secours automatique dans `sessionStorage`, propre à l’onglet,
@@ -44,7 +45,7 @@ ses contrôles d’édition. Les versions des trois paquets directs sont fixées
 
 ## Vérifications
 
-- `npm run test:newsletter` : 12 tests réussis, dont rendu des layouts, version
+- `npm run test:newsletter` : 13 tests réussis, dont rendu des layouts, version
   texte, rejet du CSS injecté, colonnes malformées, liens et copies expirées.
 - `tests/newsletter-db.test.ts` : 2 tests réussis.
 - `tests/admin-http.test.ts` : 16 tests réussis, incluant MFA, Server Actions,

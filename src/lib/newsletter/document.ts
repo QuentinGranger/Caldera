@@ -311,6 +311,24 @@ export function parseNewsletterDocument(
 export function serializeNewsletterDocument(doc: NewsletterDocument) {
   return DOCUMENT_PREFIX + JSON.stringify(doc);
 }
+/** Normalize pretty JSON before applying the document's character limit. */
+export function importNewsletterTemplate(source: string): NewsletterDocument {
+  if (source.length > MAX_DOCUMENT_LENGTH * 4)
+    throw new NewsletterDocumentError(
+      'Le fichier de modèle est trop volumineux.',
+    );
+  let raw: unknown;
+  try {
+    raw = JSON.parse(source);
+  } catch {
+    throw new NewsletterDocumentError(
+      'Le fichier ne contient pas un modèle JSON valide.',
+    );
+  }
+  const doc = parseNewsletterDocument(DOCUMENT_PREFIX + JSON.stringify(raw));
+  if (!doc) throw new NewsletterDocumentError('Modèle invalide.');
+  return doc;
+}
 export function documentFromLegacy(source: string): NewsletterDocument {
   return (
     parseNewsletterDocument(source) ?? {

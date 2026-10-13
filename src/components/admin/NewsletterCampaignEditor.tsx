@@ -33,6 +33,8 @@ import { renderNewsletterCampaignEmail } from '@/emails/newsletter-campaign';
 import {
   BLOCK_LABELS,
   safeNewsletterLink,
+  importNewsletterTemplate,
+  MAX_DOCUMENT_LENGTH,
   parseNewsletterDocument,
   documentFromLegacy,
   MAX_BLOCKS,
@@ -530,11 +532,9 @@ function Studio({
   async function importTemplate(file?: File) {
     if (!file) return;
     try {
-      if (file.size > 60000)
-        throw new Error('Le modèle dépasse 60 000 octets.');
-      const parsed = parseNewsletterDocument(
-        'CALDERA_NEWSLETTER_V1:' + (await file.text()),
-      );
+      if (file.size > MAX_DOCUMENT_LENGTH * 4)
+        throw new Error('Le fichier de modèle dépasse 240 000 octets.');
+      const parsed = importNewsletterTemplate(await file.text());
       if (!parsed) throw new Error('Modèle invalide.');
       // Fresh identities avoid accidental ID collisions when templates are reused.
       const next = {

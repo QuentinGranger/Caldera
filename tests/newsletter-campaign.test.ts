@@ -502,3 +502,36 @@ test('studio : la copie de secours expire, valide le document et ne restaure que
     /invalid/,
   );
 });
+
+import {
+  importNewsletterTemplate,
+  MAX_DOCUMENT_LENGTH,
+} from '../src/lib/newsletter/document';
+test('studio : réimporte ses propres modèles longs accentués malgré le poids UTF-8 et l’indentation', () => {
+  const document: NewsletterDocument = {
+    version: 1,
+    theme: 'journal',
+    blocks: [
+      { id: 'one', type: 'text', text: 'é'.repeat(20000) },
+      { id: 'two', type: 'text', text: 'é'.repeat(20000) },
+      { id: 'three', type: 'text', text: '' },
+    ],
+  };
+  const remaining =
+    MAX_DOCUMENT_LENGTH - serializeNewsletterDocument(document).length - 10;
+  document.blocks[2] = {
+    id: 'three',
+    type: 'text',
+    text: 'é'.repeat(remaining),
+  };
+  assert.ok(parseNewsletterDocument(serializeNewsletterDocument(document)));
+  const exported = JSON.stringify(document, null, 2);
+  assert.ok(Buffer.byteLength(exported) > 60000);
+  assert.ok(exported.length > MAX_DOCUMENT_LENGTH);
+  assert.deepEqual(importNewsletterTemplate(exported), document);
+  assert.throws(() => importNewsletterTemplate('{broken'), /JSON valide/);
+  assert.throws(
+    () => importNewsletterTemplate(' '.repeat(MAX_DOCUMENT_LENGTH * 4 + 1)),
+    /volumineux/,
+  );
+});
