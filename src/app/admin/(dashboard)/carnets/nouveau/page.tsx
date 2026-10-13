@@ -19,6 +19,12 @@ export default async function NewCarnetPage() {
         >
           Tous les Carnets
         </Link>
+        <Link
+          className={`${styles.button} ${styles.secondaryButton}`}
+          href="/admin/newsletter"
+        >
+          Newsletter
+        </Link>
       </PageHeader>
       <CarnetEditor
         action={saveCarnetChapterAction}

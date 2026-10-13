@@ -229,6 +229,9 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/jeux',
           '/admin/carnets',
           '/admin/carnets/nouveau',
+          '/admin/newsletter',
+          '/admin/newsletter/nouvelle',
+          '/admin/newsletter/campagnes/nouvelle',
           `/admin/commandes/${order.id}/bon-preparation`,
         ]) {
           const result = await page(path, 'caldera_cart=invalid');
@@ -342,6 +345,13 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
             restricted.response.headers.get('location') ?? restricted.html
           ).includes('/admin/securite'),
         );
+        const editionWithoutMfa = await page('/admin/newsletter/nouvelle');
+        assert.ok(
+          (
+            editionWithoutMfa.response.headers.get('location') ??
+            editionWithoutMfa.html
+          ).includes('/admin/securite'),
+        );
         const enrollment = await getAdminAuth().api.enableTwoFactor({
           body: { password, method: 'totp' },
           headers: new Headers({ Cookie: cookie, Origin: origin }),
@@ -428,6 +438,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/fournisseurs/veille',
           '/admin/discord',
           '/admin/newsletter',
+          '/admin/newsletter/nouvelle',
           '/admin/newsletter/campagnes/nouvelle',
           '/admin/promotions',
           '/admin/promotions/nouvelle',
@@ -588,6 +599,60 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       },
     );
     await t.test(
+      'Nouvelle édition : deux parcours protégés, retours et visites sans création',
+      async () => {
+        const before = {
+          chapters: await db.carnetChapter.count(),
+          campaigns: await db.newsletterCampaign.count(),
+        };
+        const newsletter = await page('/admin/newsletter');
+        assert.match(newsletter.html, /href="\/admin\/newsletter\/nouvelle"/);
+        assert.match(newsletter.html, /Nouvelle édition/);
+        assert.doesNotMatch(
+          newsletter.html,
+          /href="\/admin\/newsletter\/campagnes\/nouvelle"/,
+        );
+        const choice = await page('/admin/newsletter/nouvelle');
+        assert.equal(choice.response.status, 200);
+        assert.match(choice.html, /<h1>Nouvelle édition<\/h1>/);
+        assert.equal(
+          [
+            ...choice.html.matchAll(
+              /aria-labelledby="(?:carnet|commercial)-edition-title"/g,
+            ),
+          ].length,
+          2,
+        );
+        assert.match(choice.html, /href="\/admin\/carnets\/nouveau"/);
+        assert.match(
+          choice.html,
+          /href="\/admin\/newsletter\/campagnes\/nouvelle"/,
+        );
+        assert.match(choice.html, /Créer un Carnet/);
+        assert.match(choice.html, /Créer une campagne commerciale/);
+        assert.match(choice.html, /Le Comptoir · à venir/);
+        const carnet = await page('/admin/carnets/nouveau');
+        assert.equal(carnet.response.status, 200);
+        assert.ok(
+          carnet.html.includes('Le récit complet'),
+          'Le parcours ouvre l’éditeur narratif',
+        );
+        assert.doesNotMatch(carnet.html, /CAMPAIGN STUDIO/);
+        const commercial = await page('/admin/newsletter/campagnes/nouvelle');
+        assert.equal(commercial.response.status, 200);
+        assert.match(commercial.html, /CAMPAIGN STUDIO/);
+        for (const result of [choice, carnet, commercial])
+          assert.match(result.html, /href="\/admin\/newsletter"/);
+        assert.deepEqual(
+          {
+            chapters: await db.carnetChapter.count(),
+            campaigns: await db.newsletterCampaign.count(),
+          },
+          before,
+        );
+      },
+    );
+    await t.test(
       'Carnets HTTP : source unique, MFA requis, validation, conflit et archivage réversible',
       async () => {
         const content = JSON.stringify({
@@ -612,6 +677,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
             ],
           },
         });
+        const campaignsBeforeCarnet = await db.newsletterCampaign.count();
         const values = {
           revision: '0',
           number: '543209',
@@ -656,6 +722,11 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         assert.equal(detail.response.status, 200);
         assert.ok(detail.html.includes('Le récit complet'));
         assert.equal(chapter.location, 'Cœurlac');
+        assert.equal(
+          await db.newsletterCampaign.count(),
+          campaignsBeforeCarnet,
+          'Créer un Carnet ne crée pas une campagne vide',
+        );
         assert.equal(
           chapter.earlyAccessAt?.toISOString(),
           '2026-10-20T07:00:00.000Z',
