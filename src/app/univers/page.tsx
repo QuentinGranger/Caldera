@@ -1,3 +1,5 @@
+import { connection } from 'next/server';
+import { listPublicCarnets } from '@/lib/carnets/public';
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -24,7 +26,9 @@ import styles from './page.module.scss';
 
 export const metadata = universeIndexMetadata();
 
-export default function UniversePage() {
+export default async function UniversePage() {
+  await connection();
+  const carnets = await listPublicCarnets();
   const hero = universeImage(universeIndex.hero.src, universeIndex.hero.alt);
   return (
     <main id="contenu" className={styles.main}>
@@ -147,6 +151,16 @@ export default function UniversePage() {
             boutique. Les univers et marques des produits proposés restent la
             propriété de leurs ayants droit respectifs.
           </p>
+          {carnets.length > 0 && (
+            <Link
+              className={styles.primaryCta}
+              href="/univers/carnets"
+              prefetch={false}
+            >
+              Lire les Carnets de Caldera{' '}
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          )}
           <NewsletterCta
             eyebrow="Carnet d’exploration"
             title="Recevez la suite des chroniques"

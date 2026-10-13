@@ -1,5 +1,9 @@
 import 'server-only';
 import {
+  planCarnetRelease,
+  renderCarnetCampaign,
+} from '@/lib/carnets/campaign';
+import {
   parseNewsletterDocument,
   serializeNewsletterDocument,
   newsletterIssues,
@@ -37,8 +41,8 @@ function campaignData(form: FormData) {
   const internalName = text(form, 'internalName', 120);
   const subject = text(form, 'subject', 160);
   const preheader = text(form, 'preheader', 180, false) || null;
-  const heading = text(form, 'heading', 160);
-  let bodyMarkdown = text(form, 'bodyMarkdown', 60000);
+  const heading = text(form, 'heading', 200);
+  let bodyMarkdown = text(form, 'bodyMarkdown', 60000, false);
   try {
     const document = parseNewsletterDocument(bodyMarkdown);
     if (document) bodyMarkdown = serializeNewsletterDocument(document);
@@ -157,7 +161,15 @@ export async function queueNewsletterCampaign(adminId: string, form: FormData) {
     if (!campaign) throw new AdminError('Campagne introuvable.');
     if (campaign.status !== 'DRAFT')
       throw new AdminError('Cette campagne a déjà été mise en file.');
-    assertCampaignReady(campaign);
+    const chapter = await planCarnetRelease(tx, campaign, scheduledAt);
+    if (!chapter) assertCampaignReady(campaign);
+    else {
+      const rendered = renderCarnetCampaign(campaign, chapter, { logo: '' });
+      if (Buffer.byteLength(rendered.html) > 95000)
+        throw new AdminError(
+          'L’extrait dépasse 95 000 octets HTML. Réduisez-le avant l’envoi.',
+        );
+    }
     const subscribers = await tx.newsletterSubscriber.findMany({
       where,
       select: { id: true, email: true },
@@ -181,6 +193,8 @@ export async function queueNewsletterCampaign(adminId: string, form: FormData) {
         status: 'QUEUED',
         recipientCount: subscribers.length,
         queuedAt: new Date(),
+        scheduledAt,
+        sendImmediately: text(form, 'sendMode', 10, false) === 'now',
       },
     });
     await audit(
@@ -214,12 +228,18 @@ export async function sendNewsletterCampaignTest(
     throw new AdminError('Les e-mails sont désactivés dans cet environnement.');
   try {
     const settings = emailSettings();
-    const rendered = renderNewsletterCampaignEmail(
-      { ...campaign, campaignId: campaign.id },
-      {
-        logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
-      },
-    );
+    const urls = { logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png` };
+    const chapter = campaign.chapterId
+      ? await getPrisma().carnetChapter.findUniqueOrThrow({
+          where: { id: campaign.chapterId },
+        })
+      : null;
+    const rendered = chapter
+      ? renderCarnetCampaign(campaign, chapter, urls)
+      : renderNewsletterCampaignEmail(
+          { ...campaign, campaignId: campaign.id },
+          urls,
+        );
     await resendProvider().send(
       {
         from: settings.from,
@@ -334,10 +354,44 @@ export async function cancelNewsletterCampaign(
       throw new AdminError(
         'L’envoi a déjà commencé : il ne peut plus être remis en brouillon.',
       );
+    if (campaign.chapterId) {
+      await tx.$queryRaw`SELECT id FROM "CarnetChapter" WHERE id=${campaign.chapterId}::uuid FOR UPDATE`;
+      const chapter = await tx.carnetChapter.findUnique({
+        where: { id: campaign.chapterId },
+        select: { releaseCampaignId: true, publicAt: true },
+      });
+      if (
+        chapter?.releaseCampaignId === campaignId &&
+        chapter.publicAt &&
+        chapter.publicAt <= new Date()
+      )
+        throw new AdminError(
+          'Ce Carnet est déjà public : son calendrier ne peut plus être annulé.',
+        );
+      await tx.carnetChapter.updateMany({
+        where: {
+          id: campaign.chapterId,
+          releaseCampaignId: campaignId,
+          publishedAt: null,
+        },
+        data: {
+          releaseCampaignId: null,
+          earlyAccessAt: null,
+          publicAt: null,
+          revision: { increment: 1 },
+        },
+      });
+    }
     await tx.newsletterCampaignDelivery.deleteMany({ where: { campaignId } });
     await tx.newsletterCampaign.update({
       where: { id: campaignId },
-      data: { status: 'DRAFT', queuedAt: null, recipientCount: 0 },
+      data: {
+        status: 'DRAFT',
+        queuedAt: null,
+        recipientCount: 0,
+        scheduledAt: null,
+        sendImmediately: false,
+      },
     });
     await audit(
       tx,

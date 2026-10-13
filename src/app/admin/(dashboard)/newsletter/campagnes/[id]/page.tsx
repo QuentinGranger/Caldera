@@ -1,3 +1,5 @@
+import { parseCarnetContent, deriveCarnet } from '@/lib/carnets/content';
+import { CarnetDiffusion } from '@/components/admin/carnets/CarnetDiffusion';
 import { getNewsletterStudioData } from '@/lib/newsletter/studio';
 import {
   documentFromLegacy,
@@ -63,7 +65,14 @@ export default async function NewsletterCampaignPage({
         },
       }),
     ]);
-  const issues = newsletterIssues(documentFromLegacy(campaign.bodyMarkdown));
+  const issues = campaign.chapter
+    ? ['READY', 'EARLY_ACCESS', 'PUBLIC'].includes(campaign.chapter.status)
+      ? []
+      : ['Le Carnet doit être prêt éditorialement.']
+    : newsletterIssues(documentFromLegacy(campaign.bodyMarkdown));
+  const excerpt = campaign.chapter
+    ? deriveCarnet(parseCarnetContent(campaign.chapter.content)).excerpt
+    : null;
   const value = {
     id: campaign.id,
     internalName: campaign.internalName,
@@ -74,6 +83,17 @@ export default async function NewsletterCampaignPage({
     ctaLabel: campaign.ctaLabel ?? '',
     ctaUrl: campaign.ctaUrl ?? '',
     chapterId: campaign.chapterId ?? '',
+    ...(campaign.chapter && excerpt
+      ? {
+          carnetSource: {
+            id: campaign.chapter.id,
+            title: campaign.chapter.title,
+            slug: campaign.chapter.slug,
+            html: excerpt.html,
+            text: excerpt.text,
+          },
+        }
+      : {}),
   };
   return (
     <>
@@ -125,9 +145,18 @@ export default async function NewsletterCampaignPage({
             {campaign.chapter.title}
           </Link>
           <p>
-            Le récit reste géré dans les Carnets. Cette référence ne remplace
-            pas le contenu de l’email et n’active pas sa publication.
+            Le titre, l’extrait et le bouton de l’email proviennent du Carnet
+            enregistré. La programmation active l’avant-première et la
+            publication publique automatique.
           </p>
+          {(campaign.status !== 'DRAFT' || campaign.chapter.publishedAt) && (
+            <CarnetDiffusion
+              early={campaign.chapter.earlyAccessAt?.toISOString()}
+              publicAt={campaign.chapter.publicAt?.toISOString()}
+              frozen={Boolean(campaign.chapter.publishedAt)}
+              campaignId={campaign.chapter.releaseCampaignId ?? undefined}
+            />
+          )}
         </section>
       )}
       <section className={styles.card} aria-labelledby="verifications-campagne">
@@ -161,6 +190,8 @@ export default async function NewsletterCampaignPage({
           id={campaign.id}
           audiences={studio.audiences}
           issues={issues}
+          carnet={Boolean(campaign.chapter)}
+          calendarFrozen={Boolean(campaign.chapter?.publishedAt)}
         />
       ) : (
         <section className={styles.card}>

@@ -1,3 +1,4 @@
+import { parseCarnetContent, deriveCarnet } from '@/lib/carnets/content';
 import { getNewsletterStudioData } from '@/lib/newsletter/studio';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
@@ -59,6 +60,20 @@ export default async function NewNewsletterCampaignPage({
           ctaLabel: '',
           ctaUrl: '',
           chapterId: chapter?.id ?? '',
+          ...(chapter &&
+          deriveCarnet(parseCarnetContent(chapter.content)).excerpt
+            ? {
+                carnetSource: {
+                  id: chapter.id,
+                  title: chapter.title,
+                  slug: chapter.slug,
+                  html: deriveCarnet(parseCarnetContent(chapter.content))
+                    .excerpt!.html,
+                  text: deriveCarnet(parseCarnetContent(chapter.content))
+                    .excerpt!.text,
+                },
+              }
+            : {}),
         }}
       />
     </>

@@ -456,3 +456,45 @@
     scroll-behavior: auto !important;
   }
 }
+
+.diffusion {
+  margin: 1.5rem 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: #f3f5ed;
+  border: 1px solid #ccd6c4;
+  border-radius: 12px;
+  color: #173e32;
+  > span {
+    letter-spacing: 0.12em;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+  h2 {
+    font:
+      500 1.9rem Georgia,
+      serif;
+    margin: 0.6rem 0 1.3rem;
+  }
+  > div {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  p {
+    line-height: 1.6;
+  }
+  strong,
+  small {
+    display: block;
+  }
+  strong {
+    font-size: 1.15rem;
+    margin: 0.3rem 0;
+  }
+  a {
+    color: #173e32;
+    text-underline-offset: 4px;
+    font-weight: 600;
+  }
+}

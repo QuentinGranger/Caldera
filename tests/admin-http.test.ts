@@ -665,7 +665,11 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         );
         assert.equal(newCampaign.response.status, 200);
         assert.ok(newCampaign.html.includes(chapter.id));
-        assert.ok(!newCampaign.html.includes('Le lac avait reculé.'));
+        assert.ok(newCampaign.html.includes('Le lac avait reculé.'));
+        assert.ok(
+          !newCampaign.html.includes('Le lendemain matin, la route reparut.'),
+        );
+        assert.ok(newCampaign.html.includes('Continuer l’expédition'));
         const campaignFields = {
           internalName: `Carnet relation HTTP ${key}`,
           subject: 'Expédition',

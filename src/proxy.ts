@@ -244,6 +244,11 @@ export async function proxy(request: NextRequest) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   const { pathname } = request.nextUrl;
   if (
+    pathname === '/univers/carnets' ||
+    pathname.startsWith('/univers/carnets/')
+  )
+    response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+  if (
     ['/admin', '/compte', '/newsletter', '/alertes'].some(
       (area) => pathname === area || pathname.startsWith(`${area}/`),
     )

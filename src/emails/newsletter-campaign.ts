@@ -20,6 +20,8 @@ export type NewsletterCampaignContent = {
   ctaUrl: string | null;
   /** Stable public campaign ID (never a recipient ID). */
   campaignId?: string;
+  /** Server-derived, escaped canonical Carnet excerpt; never an editable email copy. */
+  carnetExcerpt?: { html: string; text: string };
 };
 
 function absoluteUrl(value: string) {
@@ -79,14 +81,16 @@ export function renderNewsletterCampaignEmail(
         `href="${escapeHtml(campaignUrl(decodeEntities(url), code))}"`,
     );
   const campaignLink = (value: string) => campaignUrl(absoluteUrl(value), code);
-  const content = document
-    ? renderNewsletterBlocks(
-        document,
-        decorate,
-        campaignLink,
-        PRODUCTION_SITE_URL,
-      )
-    : decorate(campaign.bodyMarkdown);
+  const content =
+    campaign.carnetExcerpt?.html ??
+    (document
+      ? renderNewsletterBlocks(
+          document,
+          decorate,
+          campaignLink,
+          PRODUCTION_SITE_URL,
+        )
+      : decorate(campaign.bodyMarkdown));
   const cta =
     campaign.ctaLabel && campaign.ctaUrl
       ? `<p style="margin:24px 0"><a href="${escapeHtml(absoluteUrl(campaign.ctaUrl))}" style="display:inline-block;padding:14px 22px;background:#003c2d;color:#fff;text-decoration:none;border-radius:4px;font-weight:700">${escapeHtml(campaign.ctaLabel)}</a></p>`
@@ -106,9 +110,10 @@ export function renderNewsletterCampaignEmail(
   });
   const text = [
     campaign.heading,
-    document
-      ? newsletterPlainText(document, plainMarkdown, campaignLink)
-      : plainMarkdown(campaign.bodyMarkdown),
+    campaign.carnetExcerpt?.text ??
+      (document
+        ? newsletterPlainText(document, plainMarkdown, campaignLink)
+        : plainMarkdown(campaign.bodyMarkdown)),
     ...(campaign.ctaLabel && campaign.ctaUrl
       ? [`${campaign.ctaLabel} : ${absoluteUrl(campaign.ctaUrl)}`]
       : []),

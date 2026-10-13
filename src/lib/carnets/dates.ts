@@ -1,4 +1,4 @@
-import { AdminError } from '@/lib/admin/validation';
+import { AdminError } from '@/lib/admin/errors';
 const parisFormatter = new Intl.DateTimeFormat('sv-SE', {
   timeZone: 'Europe/Paris',
   year: 'numeric',
@@ -50,4 +50,29 @@ export function assertCarnetCalendar(
     throw new AdminError(
       'La publication publique doit être postérieure à l’accès anticipé.',
     );
+}
+
+/** Fourteen Paris calendar days, preserving seconds/milliseconds of the server instant. */
+export function carnetPublicDate(early: Date): Date {
+  const civil = new Date(`${formatCarnetDate(early)}:00Z`);
+  civil.setUTCDate(civil.getUTCDate() + 14);
+  const target = parseCarnetDate(
+    civil.toISOString().slice(0, 16),
+    'Publication publique',
+  )!;
+  return new Date(
+    target.getTime() +
+      early.getUTCSeconds() * 1000 +
+      early.getUTCMilliseconds(),
+  );
+}
+export function carnetPublicLocal(early: string): string {
+  if (!early) return '';
+  try {
+    return formatCarnetDate(
+      carnetPublicDate(parseCarnetDate(early, 'Accès anticipé')!),
+    );
+  } catch {
+    return '';
+  }
 }

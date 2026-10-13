@@ -1,7 +1,8 @@
 import { Prisma } from '@/generated/prisma/client';
 import { createSlug } from '@/lib/catalog/createSlug';
 import { SLUG_MAX_LENGTH } from './limits';
-export class AdminError extends Error {}
+import { AdminError } from './errors';
+export { AdminError } from './errors';
 export function text(form: FormData, key: string, max = 200, required = true) {
   const value = form.get(key);
   if (value !== null && typeof value !== 'string')
