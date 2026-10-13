@@ -749,7 +749,15 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           id: chapter.id,
           revision: '2',
         });
-        assert.ok(restored.body.includes('restauré en brouillon'));
+        assert.ok(restored.body.includes('"success":true'));
+        assert.equal(
+          (
+            await db.carnetChapter.findUniqueOrThrow({
+              where: { id: chapter.id },
+            })
+          ).status,
+          'DRAFT',
+        );
         assert.equal(
           (
             await db.carnetChapter.findUniqueOrThrow({

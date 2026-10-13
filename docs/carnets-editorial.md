@@ -1,5 +1,7 @@
 # Les Carnets de Caldera — fondation éditoriale
 
+> Ce document décrit les étapes de fondation. Pour le fonctionnement actuel de diffusion, les accès et le calendrier automatique, consultez [le cycle de publication](carnets-release-cycle.md).
+
 ## Source unique
 
 `CarnetChapter` est indépendant de `NewsletterCampaign`. Le seul champ narratif persistant est `content Json`. Aucun texte complet ou extrait n'est stocké séparément. Le titre, le numéro, le slug et l'arc sont des métadonnées.
