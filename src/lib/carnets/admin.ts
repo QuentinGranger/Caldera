@@ -158,7 +158,17 @@ export async function archiveCarnetChapter(
       );
     if (restore ? current.status !== 'ARCHIVED' : current.status === 'ARCHIVED')
       throw new AdminError('Cet état est déjà appliqué.');
-    if (!restore && current.releaseCampaignId && !current.publishedAt)
+    const becamePublic = Boolean(
+      current.releaseCampaignId &&
+      current.publicAt &&
+      current.publicAt <= new Date(),
+    );
+    if (
+      !restore &&
+      current.releaseCampaignId &&
+      !current.publishedAt &&
+      !becamePublic
+    )
       throw new AdminError(
         'Annulez la campagne programmée avant d’archiver le Carnet.',
       );
@@ -170,6 +180,9 @@ export async function archiveCarnetChapter(
             ? 'READY'
             : 'DRAFT'
           : 'ARCHIVED',
+        ...(!restore && becamePublic && !current.publishedAt
+          ? { publishedAt: current.publicAt }
+          : {}),
         revision: { increment: 1 },
       },
     });

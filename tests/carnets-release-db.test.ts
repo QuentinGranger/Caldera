@@ -16,7 +16,10 @@ import {
 } from '../src/lib/carnets/access';
 import { readCarnet, listPublicCarnets } from '../src/lib/carnets/public';
 import { getContentUrls } from '../src/app/sitemaps/_lib/data';
-import { saveCarnetChapter } from '../src/lib/carnets/admin';
+import {
+  saveCarnetChapter,
+  archiveCarnetChapter,
+} from '../src/lib/carnets/admin';
 import {
   EmailProviderError,
   type EmailEnvelope,
@@ -288,6 +291,49 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion réelle simul�
       data: { status: 'ARCHIVED' },
     });
     assert.equal(await readCarnet(chapter.slug, token), null);
+    // Publication and reversible archiving must work even if the mail worker never ran.
+    const delayed = await saveCarnetChapter(
+      admin.id,
+      form({ ...fields, number: '678906', slug: `delayed-${key}` }),
+    );
+    const delayedCampaign = await saveNewsletterCampaign(
+      admin.id,
+      form({
+        internalName: 'Retard worker',
+        subject: 'Retard',
+        heading: 'Retard',
+        bodyMarkdown: '',
+        chapterId: delayed.id,
+      }),
+    );
+    await queueNewsletterCampaign(
+      admin.id,
+      form({ id: delayedCampaign.id, scheduledAt: schedule.toISOString() }),
+    );
+    const delayedStart = new Date(Date.now() - 30 * 86400000);
+    const delayedPublic = carnetPublicDate(delayedStart);
+    const active = await db.carnetChapter.update({
+      where: { id: delayed.id },
+      data: { earlyAccessAt: delayedStart, publicAt: delayedPublic },
+    });
+    assert.ok((await readCarnet(delayed.slug, undefined))!.content);
+    await assert.rejects(
+      cancelNewsletterCampaign(admin.id, form({ id: delayedCampaign.id })),
+      /déjà public/,
+    );
+    const withdrawn = await archiveCarnetChapter(
+      admin.id,
+      form({ id: delayed.id, revision: String(active.revision) }),
+    );
+    assert.equal(await readCarnet(delayed.slug, undefined), null);
+    assert.equal(withdrawn.publishedAt!.getTime(), delayedPublic.getTime());
+    const restored = await archiveCarnetChapter(
+      admin.id,
+      form({ id: delayed.id, revision: String(withdrawn.revision) }),
+      true,
+    );
+    assert.equal(restored.status, 'READY');
+    assert.ok((await readCarnet(delayed.slug, undefined))!.content);
   } finally {
     await db.newsletterCampaignDelivery.deleteMany({
       where: { campaign: { createdById: admin.id } },
