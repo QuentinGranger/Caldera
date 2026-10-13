@@ -43,7 +43,12 @@ const nextConfig: NextConfig = {
   // OAuth codes and server action arguments must not enter development logs.
   logging: {
     serverFunctions: false,
-    incomingRequests: { ignore: [/\/api\/discord\/callback(?:\?|$)/] },
+    incomingRequests: {
+      ignore: [
+        /\/api\/discord\/callback(?:\?|$)/,
+        /\/univers\/carnets(?:\/|\?|$)/,
+      ],
+    },
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

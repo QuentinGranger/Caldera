@@ -46,7 +46,7 @@ import {
 } from '@/lib/newsletter/document';
 import type { NewsletterProductOption } from '@/lib/newsletter/studio';
 import styles from './NewsletterCampaignEditor.module.scss';
-import { CARNET_STATUS_LABELS } from '@/lib/carnets/content';
+import { CARNET_STATUS_LABELS, carnetUrl } from '@/lib/carnets/content';
 export type CampaignChapterOption = {
   id: string;
   number: number;
@@ -64,6 +64,13 @@ export type CampaignEditorValue = {
   ctaLabel: string;
   ctaUrl: string;
   chapterId?: string;
+  carnetSource?: {
+    id: string;
+    title: string;
+    slug: string;
+    html: string;
+    text: string;
+  };
 };
 const STEP_LABELS = ['Paramètres', 'Composition', 'Vérification'];
 const TEMPLATES = [
@@ -154,6 +161,20 @@ function freshBlock(type: NewsletterBlock['type']): NewsletterBlock {
 }
 
 function renderPreview(value: Omit<CampaignEditorValue, 'id'>) {
+  if (value.chapterId && value.carnetSource?.id === value.chapterId)
+    return renderNewsletterCampaignEmail(
+      {
+        ...value,
+        heading: value.carnetSource.title,
+        carnetExcerpt: {
+          html: value.carnetSource.html,
+          text: value.carnetSource.text,
+        },
+        ctaLabel: 'Continuer l’expédition',
+        ctaUrl: carnetUrl(value.carnetSource.slug),
+      },
+      { logo: '/assets/brand/logo-header-no-bg.png' },
+    );
   let bodyMarkdown = value.bodyMarkdown;
   try {
     const document = parseNewsletterDocument(bodyMarkdown, true);
@@ -628,11 +649,12 @@ function Studio({
             : 'Copie de secours automatique dans cet onglet · conservée 24 h · aucun envoi automatique.'}
       </p>
       <nav className={styles.steps} aria-label="Étapes de création">
-        {STEP_LABELS.map((label, index) => (
+        {STEP_LABELS.slice(0, value.chapterId ? 1 : 3).map((label, index) => (
           <button
             type="button"
             key={label}
             aria-current={step === index ? 'step' : undefined}
+            disabled={Boolean(value.chapterId) && index !== 0}
             onClick={() => setStep(index)}
           >
             <span>{index + 1}</span>
@@ -661,7 +683,16 @@ function Studio({
                 <select
                   name="chapterId"
                   value={value.chapterId ?? ''}
-                  onChange={(e) => field('chapterId', e.target.value)}
+                  onChange={(e) => {
+                    field('chapterId', e.target.value);
+                    if (e.target.value) {
+                      const selected = chapters.find(
+                        (c) => c.id === e.target.value,
+                      );
+                      if (selected) field('heading', selected.title);
+                      setStep(0);
+                    }
+                  }}
                 >
                   <option value="">Aucun Carnet — campagne classique</option>
                   {chapters.map((chapter) => (
@@ -672,8 +703,10 @@ function Studio({
                   ))}
                 </select>
                 <small>
-                  Cette référence relie la campagne au récit original. L’extrait
-                  n’est pas encore inséré automatiquement dans l’email.
+                  Avec un Carnet, le titre, l’extrait et le bouton sont dérivés
+                  du récit enregistré. Enregistrez après une nouvelle sélection
+                  pour actualiser l’aperçu. Les blocs classiques ne sont pas
+                  envoyés.
                 </small>
                 {value.chapterId && (
                   <a
@@ -732,20 +765,23 @@ function Studio({
                 <input
                   name="heading"
                   required
-                  maxLength={160}
+                  maxLength={200}
+                  readOnly={Boolean(value.chapterId)}
                   value={value.heading}
                   onChange={(e) => field('heading', e.target.value)}
                   placeholder="Votre prochaine exploration"
                 />
               </label>
             </div>
-            <button
-              type="button"
-              className={styles.continueButton}
-              onClick={() => setStep(1)}
-            >
-              Composer le message <ChevronRight size={16} />
-            </button>
+            {!value.chapterId && (
+              <button
+                type="button"
+                className={styles.continueButton}
+                onClick={() => setStep(1)}
+              >
+                Composer le message <ChevronRight size={16} />
+              </button>
+            )}
           </section>
           <section
             data-step="1"
@@ -1237,7 +1273,14 @@ function Studio({
             </p>
           </section>
         </div>
-        <NewsletterCampaignPreview value={previewValue} />
+        {value.chapterId && value.carnetSource?.id !== value.chapterId ? (
+          <aside className={styles.notice}>
+            Enregistrez la campagne pour charger l’extrait du Carnet
+            sélectionné. Le récit complet reste dans les Carnets.
+          </aside>
+        ) : (
+          <NewsletterCampaignPreview value={previewValue} />
+        )}
       </div>
       <p className={styles.srOnly} role="status">
         {announcement}

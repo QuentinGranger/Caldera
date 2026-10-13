@@ -19,6 +19,8 @@ import {
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from './CarnetEditor.module.scss';
 import Image from 'next/image';
+import { carnetPublicLocal } from '@/lib/carnets/dates';
+import { CarnetDiffusion } from './CarnetDiffusion';
 import { GameLogoField } from '../GameLogoField';
 const Narrative = dynamic(() => import('./CarnetNarrativeEditor'), {
   ssr: false,
@@ -115,7 +117,8 @@ export function CarnetPreview({ value }: { value: CarnetEditorValue }) {
               {cta.label} <ArrowRight size={16} />
             </button>
             <small>
-              Adresse réservée · lecture publique non activée dans cette étape.
+              Le lien de lecture anticipée sera signé automatiquement lors de la
+              diffusion.
             </small>
           </>
         )}
@@ -334,16 +337,17 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
               type="datetime-local"
               min="2000-01-01T00:00"
               max="2099-12-31T23:59"
-              value={value.publicAt ?? ''}
+              value={carnetPublicLocal(value.earlyAccessAt ?? '')}
+              readOnly
               onChange={(e) =>
                 setValue((v) => ({ ...v, publicAt: e.target.value }))
               }
             />
           </label>
           <p className={styles.wide}>
-            Ces dates préparent le calendrier. Elles ne déclenchent aucune
-            publication ni aucun envoi. La première publication effective sera
-            enregistrée automatiquement par le futur service de publication.
+            Prévision uniquement : la programmation de la campagne liée devient
+            la référence. La publication suit automatiquement quatorze jours
+            plus tard.
           </p>
           {value.publishedAt && (
             <p className={styles.wide}>
@@ -383,6 +387,10 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
           </label>
         </div>
       </details>
+      <CarnetDiffusion
+        early={value.earlyAccessAt}
+        publicAt={carnetPublicLocal(value.earlyAccessAt ?? '')}
+      />
       <div className={styles.counters} aria-live="polite">
         <div>
           <BookOpen size={20} />
@@ -479,8 +487,8 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
                 : 'Renseignez le titre et le numéro pour proposer l’adresse.'}
             </code>
             <small>
-              Cette adresse est préparée pour le futur chapitre. Aucun accès
-              public ou privé n’est activé ici.
+              Une seule adresse, en avant-première puis en accès public. Le lien
+              newsletter reçoit une autorisation temporaire automatiquement.
             </small>
           </section>
         </div>
@@ -500,7 +508,18 @@ export function CarnetEditor({
   revision?: string;
   readOnly?: boolean;
 }) {
-  if (readOnly) return <CarnetPreview value={value} />;
+  if (readOnly)
+    return (
+      <>
+        <CarnetDiffusion
+          early={value.earlyAccessAt}
+          publicAt={value.publicAt}
+          frozen={Boolean(value.publishedAt)}
+          campaignId={value.releaseCampaignId}
+        />
+        <CarnetPreview value={value} />
+      </>
+    );
   if (!action) return null;
   return (
     <div className={styles.editor}>

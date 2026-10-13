@@ -4,6 +4,11 @@ import {
   trackingTags,
 } from '@/lib/email/engagement';
 import 'server-only';
+import {
+  freezeCarnetRelease,
+  renderCarnetCampaign,
+} from '@/lib/carnets/campaign';
+import { AdminError } from '@/lib/admin/validation';
 import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@/generated/prisma/client';
 import { renderNewsletterCampaignEmail } from '@/emails/newsletter-campaign';
@@ -44,35 +49,38 @@ async function skipInactiveRecipients() {
 
 async function claim() {
   const db = getPrisma();
+  // Expiration commits before claim locks campaign → delivery → subscriber → chapter.
+  // Holding old delivery locks while waiting for a campaign could deadlock cancellation.
+  await db.newsletterCampaignDelivery.updateMany({
+    where: {
+      status: { in: ['PENDING', 'SENDING', 'FAILED'] },
+      firstAttemptAt: { lt: new Date(Date.now() - IDEMPOTENCY_WINDOW_MS) },
+      retryBlocked: false,
+    },
+    data: {
+      status: 'FAILED',
+      retryBlocked: true,
+      lastError: 'DELAI_IDEMPOTENCE_DEPASSE_VERIFICATION_FOURNISSEUR_REQUISE',
+      leaseUntil: null,
+      leaseToken: null,
+    },
+  });
+  await db.newsletterCampaignDelivery.updateMany({
+    where: {
+      status: 'SENDING',
+      leaseUntil: { lt: new Date() },
+      attemptCount: { gte: MAX_NEWSLETTER_ATTEMPTS },
+    },
+    data: {
+      status: 'FAILED',
+      retryBlocked: true,
+      lastError: 'TENTATIVES_EPUISEES_VERIFICATION_FOURNISSEUR_REQUISE',
+      leaseUntil: null,
+      leaseToken: null,
+    },
+  });
   return db.$transaction(async (tx) => {
-    await tx.newsletterCampaignDelivery.updateMany({
-      where: {
-        status: { in: ['PENDING', 'SENDING', 'FAILED'] },
-        firstAttemptAt: { lt: new Date(Date.now() - IDEMPOTENCY_WINDOW_MS) },
-        retryBlocked: false,
-      },
-      data: {
-        status: 'FAILED',
-        retryBlocked: true,
-        lastError: 'DELAI_IDEMPOTENCE_DEPASSE_VERIFICATION_FOURNISSEUR_REQUISE',
-        leaseUntil: null,
-        leaseToken: null,
-      },
-    });
-    await tx.newsletterCampaignDelivery.updateMany({
-      where: {
-        status: 'SENDING',
-        leaseUntil: { lt: new Date() },
-        attemptCount: { gte: MAX_NEWSLETTER_ATTEMPTS },
-      },
-      data: {
-        status: 'FAILED',
-        retryBlocked: true,
-        lastError: 'TENTATIVES_EPUISEES_VERIFICATION_FOURNISSEUR_REQUISE',
-        leaseUntil: null,
-        leaseToken: null,
-      },
-    });
+    const claimTime = new Date();
     const candidates = await tx.$queryRaw<{ id: string }[]>`
       SELECT delivery.id
       FROM "NewsletterCampaignDelivery" AS delivery
@@ -80,13 +88,14 @@ async function claim() {
       WHERE campaign.status IN ('QUEUED'::"NewsletterCampaignStatus", 'SENDING'::"NewsletterCampaignStatus")
         AND delivery."retryBlocked" = false
         AND delivery."attemptCount" < ${MAX_NEWSLETTER_ATTEMPTS}
-        AND ((delivery.status IN ('PENDING'::"NewsletterDeliveryStatus", 'FAILED'::"NewsletterDeliveryStatus") AND delivery."nextAttemptAt" <= NOW())
-          OR (delivery.status = 'SENDING'::"NewsletterDeliveryStatus" AND delivery."leaseUntil" < NOW()))
+        AND ((delivery.status IN ('PENDING'::"NewsletterDeliveryStatus", 'FAILED'::"NewsletterDeliveryStatus") AND delivery."nextAttemptAt" <= ${claimTime})
+          OR (delivery.status = 'SENDING'::"NewsletterDeliveryStatus" AND delivery."leaseUntil" < ${claimTime}))
       ORDER BY delivery."createdAt", delivery.id
-      FOR UPDATE OF delivery SKIP LOCKED
+      FOR UPDATE OF campaign SKIP LOCKED
       LIMIT 1
     `;
     if (!candidates[0]) return null;
+    await tx.$queryRaw`SELECT id FROM "NewsletterCampaignDelivery" WHERE id=${candidates[0].id}::uuid FOR UPDATE`;
     const current = await tx.newsletterCampaignDelivery.findUniqueOrThrow({
       where: { id: candidates[0].id },
       include: { campaign: true, subscriber: { select: { status: true } } },
@@ -120,6 +129,23 @@ async function claim() {
         return null;
       }
     }
+    const startedAt = new Date();
+    try {
+      await freezeCarnetRelease(tx, current.campaign, startedAt);
+    } catch (error) {
+      if (!(error instanceof AdminError)) throw error;
+      await tx.newsletterCampaignDelivery.update({
+        where: { id: current.id },
+        data: {
+          status: 'FAILED',
+          retryBlocked: true,
+          leaseUntil: null,
+          leaseToken: null,
+          lastError: 'CARNET_INDISPONIBLE_VERIFICATION_ADMIN_REQUISE',
+        },
+      });
+      return null;
+    }
     const leaseToken = randomUUID();
     const delivery = await tx.newsletterCampaignDelivery.update({
       where: { id: current.id },
@@ -128,7 +154,7 @@ async function claim() {
         attemptCount: { increment: 1 },
         leaseUntil: new Date(Date.now() + LEASE_MS),
         leaseToken,
-        firstAttemptAt: current.firstAttemptAt ?? new Date(),
+        firstAttemptAt: current.firstAttemptAt ?? startedAt,
         lastError: null,
       },
       include: { campaign: true, subscriber: true },
@@ -216,13 +242,21 @@ export async function processNewsletterDeliveries(
       let envelope: EmailEnvelope;
       if (delivery.envelope) envelope = parseEnvelope(delivery.envelope);
       else {
-        const rendered = renderNewsletterCampaignEmail(
-          { ...delivery.campaign, campaignId: delivery.campaign.id },
-          {
-            logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
-            unsubscribe: newsletterUnsubscribeUrl(delivery.subscriberId),
-          },
-        );
+        const urls = {
+          logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
+          unsubscribe: newsletterUnsubscribeUrl(delivery.subscriberId),
+        };
+        const chapter = delivery.campaign.chapterId
+          ? await getPrisma().carnetChapter.findUniqueOrThrow({
+              where: { id: delivery.campaign.chapterId },
+            })
+          : null;
+        const rendered = chapter
+          ? renderCarnetCampaign(delivery.campaign, chapter, urls)
+          : renderNewsletterCampaignEmail(
+              { ...delivery.campaign, campaignId: delivery.campaign.id },
+              urls,
+            );
         const sender = marketingSender(delivery.subscriber, settings.from);
         frozenTrackingConsentAt = sender.tracked
           ? delivery.subscriber.emailTrackingConsentAt

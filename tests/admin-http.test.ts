@@ -665,7 +665,11 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         );
         assert.equal(newCampaign.response.status, 200);
         assert.ok(newCampaign.html.includes(chapter.id));
-        assert.ok(!newCampaign.html.includes('Le lac avait reculé.'));
+        assert.ok(newCampaign.html.includes('Le lac avait reculé.'));
+        assert.ok(
+          !newCampaign.html.includes('Le lendemain matin, la route reparut.'),
+        );
+        assert.ok(newCampaign.html.includes('Continuer l’expédition'));
         const campaignFields = {
           internalName: `Carnet relation HTTP ${key}`,
           subject: 'Expédition',
@@ -745,7 +749,15 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           id: chapter.id,
           revision: '2',
         });
-        assert.ok(restored.body.includes('restauré en brouillon'));
+        assert.ok(restored.body.includes('"success":true'));
+        assert.equal(
+          (
+            await db.carnetChapter.findUniqueOrThrow({
+              where: { id: chapter.id },
+            })
+          ).status,
+          'DRAFT',
+        );
         assert.equal(
           (
             await db.carnetChapter.findUniqueOrThrow({

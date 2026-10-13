@@ -42,7 +42,8 @@ export async function saveCarnetChapterAction(
     revalidatePath(`/admin/carnets/${chapter.id}`);
     return {
       success: true,
-      message: 'Carnet enregistré. Aucun contenu n’a été publié ou envoyé.',
+      message:
+        'Carnet enregistré. La diffusion s’active depuis sa campagne liée.',
       redirectTo: `/admin/carnets/${chapter.id}`,
     };
   } catch (error) {
@@ -78,7 +79,7 @@ export async function restoreCarnetChapterAction(
     revalidatePath(`/admin/carnets/${chapter.id}`);
     return {
       success: true,
-      message: 'Carnet restauré en brouillon.',
+      message: 'Carnet restauré. Son calendrier existant est conservé.',
       redirectTo: `/admin/carnets/${chapter.id}`,
     };
   } catch (error) {

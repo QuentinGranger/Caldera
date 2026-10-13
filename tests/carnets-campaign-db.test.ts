@@ -247,6 +247,7 @@ test('Carnet canonique : métadonnées, campagnes facultatives, duplication et i
       true,
     );
     assert.ok(restored.publishedAt);
+    assert.equal(restored.status, 'READY');
     await assert.rejects(
       saveCarnetChapter(
         admin.id,

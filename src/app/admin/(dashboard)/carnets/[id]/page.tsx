@@ -57,19 +57,21 @@ export default async function EditCarnetPage({
           {chapter.createdBy.name} · révision {chapter.revision}
         </p>
         <small>
-          Aucune publication ni diffusion automatique dans cette étape.
+          Les dates déterminent automatiquement l’accès anticipé et public.
         </small>
       </section>
       <CarnetEditor
         action={saveCarnetChapterAction}
         readOnly={
           archived ||
+          Boolean(chapter.releaseCampaignId || chapter.publishedAt) ||
           chapter.status === 'PUBLIC' ||
           chapter.status === 'EARLY_ACCESS'
         }
         revision={String(chapter.revision)}
         value={{
           id: chapter.id,
+          releaseCampaignId: chapter.releaseCampaignId ?? '',
           revision: chapter.revision,
           number: chapter.number,
           title: chapter.title,
@@ -93,7 +95,9 @@ export default async function EditCarnetPage({
         <h2>{archived ? 'Restaurer ce Carnet' : 'Archiver ce Carnet'}</h2>
         <p>
           {archived
-            ? 'Restaurez le récit pour reprendre son écriture. Il retrouvera le statut brouillon.'
+            ? chapter.publishedAt
+              ? 'Restaurez ce Carnet avec son adresse et son calendrier d’origine.'
+              : 'Restaurez le récit pour reprendre son écriture. Il retrouvera le statut brouillon.'
             : 'L’archivage retire le Carnet de la liste courante et conserve le récit. Cette action est réversible.'}
         </p>
         <AdminForm
@@ -103,7 +107,13 @@ export default async function EditCarnetPage({
           guard={false}
           requireSaved={!archived}
           savedWarning="Enregistrez les modifications du Carnet avant de l’archiver."
-          submit={archived ? 'Restaurer en brouillon' : 'Archiver le Carnet'}
+          submit={
+            archived
+              ? chapter.publishedAt
+                ? 'Restaurer le Carnet'
+                : 'Restaurer en brouillon'
+              : 'Archiver le Carnet'
+          }
           confirm={
             archived
               ? undefined

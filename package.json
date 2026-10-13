@@ -83,8 +83,9 @@
     "test:editorial:db": "node --conditions=react-server --import tsx --test tests/editorial-db.test.ts",
     "images:optimize": "node --import tsx scripts/optimize-images.ts",
     "test:discord:account:db": "node --conditions=react-server --import tsx --test tests/discord-account-db.test.ts",
-    "test:carnets": "node --conditions=react-server --import tsx --test tests/carnets.test.ts",
-    "test:carnets:db": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/carnets-db.test.ts tests/carnets-campaign-db.test.ts"
+    "test:carnets": "node --conditions=react-server --import tsx --test tests/carnets.test.ts tests/carnets-release.test.ts",
+    "test:carnets:db": "node --conditions=react-server --import tsx --test --test-concurrency=1 tests/carnets-db.test.ts tests/carnets-campaign-db.test.ts tests/carnets-release-db.test.ts",
+    "test:carnets:http": "node --conditions=react-server --import tsx --test tests/carnets-release-http.test.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.0.9",

@@ -1045,6 +1045,9 @@ model NewsletterCampaign {
   createdAt      DateTime                     @default(now())
   updatedAt      DateTime                     @updatedAt
   deliveries     NewsletterCampaignDelivery[]
+  scheduledAt    DateTime?
+  sendImmediately Boolean @default(false)
+  releaseChapter CarnetChapter? @relation("CarnetRelease")
   chapterId      String?                      @db.Uuid
   chapter        CarnetChapter?               @relation(fields: [chapterId], references: [id], onDelete: SetNull)
 
@@ -1887,8 +1890,10 @@ model CarnetChapter {
   location        String?               @db.VarChar(200)
   earlyAccessAt   DateTime?
   publicAt        DateTime?
-  /// First actual release, set only by the future publication service.
+  /// Calendar frozen by the first delivery claim, before any provider request.
   publishedAt     DateTime?
+  releaseCampaignId String? @unique @db.Uuid
+  releaseCampaign NewsletterCampaign? @relation("CarnetRelease", fields: [releaseCampaignId], references: [id], onDelete: SetNull)
   campaigns       NewsletterCampaign[]
   status          CarnetChapterStatus   @default(DRAFT)
   revision        Int                   @default(0)

@@ -240,9 +240,15 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  if (process.env.CATALOG_DEMO_MODE === '1')
-    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   const { pathname } = request.nextUrl;
+  const isCarnet =
+    pathname === '/univers/carnets' || pathname.startsWith('/univers/carnets/');
+  // The demo catalogue is not indexable. Real editorial Carnets determine
+  // their own robots metadata from the release date, independently of stock.
+  if (process.env.CATALOG_DEMO_MODE === '1' && !isCarnet)
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  if (isCarnet)
+    response.headers.set('Cache-Control', 'private, no-store, max-age=0');
   if (
     ['/admin', '/compte', '/newsletter', '/alertes'].some(
       (area) => pathname === area || pathname.startsWith(`${area}/`),

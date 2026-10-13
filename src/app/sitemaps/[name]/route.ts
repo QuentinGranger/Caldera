@@ -16,5 +16,9 @@ export async function GET(
   const name = parseSitemapName((await context.params).name);
   if (!name) return sitemapNotFound();
   const urls = await getSitemapUrls(name);
-  return urls ? xmlResponse(buildUrlset(urls)) : sitemapNotFound();
+  if (!urls) return sitemapNotFound();
+  const response = xmlResponse(buildUrlset(urls));
+  if (name.kind === 'content')
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+  return response;
 }

@@ -145,9 +145,7 @@ export async function getAdminNewsletterCampaign(id: string) {
     where: { id },
     include: {
       createdBy: { select: { name: true, email: true } },
-      chapter: {
-        select: { id: true, number: true, title: true, status: true },
-      },
+      chapter: true,
     },
   });
   if (!campaign) return null;

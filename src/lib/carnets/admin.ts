@@ -13,7 +13,7 @@ import {
 import { param, type SearchParams } from '@/lib/admin/queries';
 import { CARNET_STATUSES, type CarnetContent } from './content';
 import { carnetInput } from './input';
-import { assertCarnetCalendar } from './dates';
+import { assertCarnetCalendar, carnetPublicDate } from './dates';
 import { imageStorage } from '@/lib/storage/images';
 
 export async function saveCarnetChapter(adminId: string, form: FormData) {
@@ -50,6 +50,13 @@ export async function saveCarnetChapter(adminId: string, form: FormData) {
     return await adminTransaction(adminId, async (tx) => {
       const data = {
         ...input.data,
+        ...(input.data.earlyAccessAt !== undefined
+          ? {
+              publicAt: input.data.earlyAccessAt
+                ? carnetPublicDate(input.data.earlyAccessAt)
+                : null,
+            }
+          : {}),
         content: input.data.content as unknown as Prisma.InputJsonValue,
       };
       if (input.id) {
@@ -64,14 +71,24 @@ export async function saveCarnetChapter(adminId: string, form: FormData) {
           throw new AdminError(
             'Les modifications des chapitres publiés seront disponibles avec le service de publication.',
           );
-        if (current.revision !== input.revision)
-          throw new AdminError(
-            'Ce Carnet a été modifié dans un autre onglet. Conservez votre texte, puis rechargez pour consulter la version enregistrée.',
-          );
         if (current.publishedAt && data.slug !== current.slug)
           throw new AdminError(
             'L’adresse d’un Carnet déjà publié doit rester stable.',
           );
+        if (current.releaseCampaignId || current.publishedAt)
+          throw new AdminError(
+            'Le Carnet est engagé dans une diffusion. Annulez la programmation avant le premier envoi pour le modifier ; après le début d’envoi, le calendrier et le récit sont figés.',
+          );
+        if (current.revision !== input.revision)
+          throw new AdminError(
+            'Ce Carnet a été modifié dans un autre onglet. Conservez votre texte, puis rechargez pour consulter la version enregistrée.',
+          );
+        validateMetadata({ ...current, ...input.data });
+        const early =
+          data.earlyAccessAt === undefined
+            ? current.earlyAccessAt
+            : data.earlyAccessAt;
+        data.publicAt = early ? carnetPublicDate(early) : null;
         validateMetadata({ ...current, ...data });
         const chapter = await tx.carnetChapter.update({
           where: { id: current.id },
@@ -120,7 +137,7 @@ function validateMetadata(data: {
     );
   assertCarnetCalendar(data.earlyAccessAt ?? null, data.publicAt ?? null);
 }
-/** Reversible deletion: no narrative is permanently removed. Restoring always returns to draft. */
+/** Reversible archive. Released chapters retain their stable URL and frozen calendar on restore. */
 export async function archiveCarnetChapter(
   adminId: string,
   form: FormData,
@@ -141,10 +158,31 @@ export async function archiveCarnetChapter(
       );
     if (restore ? current.status !== 'ARCHIVED' : current.status === 'ARCHIVED')
       throw new AdminError('Cet état est déjà appliqué.');
+    const becamePublic = Boolean(
+      current.releaseCampaignId &&
+      current.publicAt &&
+      current.publicAt <= new Date(),
+    );
+    if (
+      !restore &&
+      current.releaseCampaignId &&
+      !current.publishedAt &&
+      !becamePublic
+    )
+      throw new AdminError(
+        'Annulez la campagne programmée avant d’archiver le Carnet.',
+      );
     const chapter = await tx.carnetChapter.update({
       where: { id: chapterId },
       data: {
-        status: restore ? 'DRAFT' : 'ARCHIVED',
+        status: restore
+          ? current.publishedAt
+            ? 'READY'
+            : 'DRAFT'
+          : 'ARCHIVED',
+        ...(!restore && becamePublic && !current.publishedAt
+          ? { publishedAt: current.publicAt }
+          : {}),
         revision: { increment: 1 },
       },
     });
@@ -242,4 +280,5 @@ export type CarnetEditorValue = {
   earlyAccessAt?: string;
   publicAt?: string;
   publishedAt?: string;
+  releaseCampaignId?: string;
 };

@@ -1,4 +1,6 @@
 'use client';
+import { parseCarnetDate, carnetPublicLocal } from '@/lib/carnets/dates';
+import { CarnetDiffusion } from './carnets/CarnetDiffusion';
 import { useState } from 'react';
 import { CalendarClock, Send, Users } from 'lucide-react';
 import { AdminForm } from './AdminForm';
@@ -14,19 +16,40 @@ export function NewsletterCampaignDelivery({
   id,
   audiences,
   issues,
+  carnet = false,
+  calendarFrozen = false,
 }: {
   id: string;
   audiences: { value: CampaignAudience; count: number }[];
   issues: string[];
+  carnet?: boolean;
+  calendarFrozen?: boolean;
 }) {
   const [audience, setAudience] = useState<CampaignAudience>('all');
   const [mode, setMode] = useState('now');
   const [date, setDate] = useState('');
   const count = audiences.find((a) => a.value === audience)?.count ?? 0;
-  const validDate = date && Number.isFinite(new Date(date).getTime());
+  let parsed: Date | null = null;
+  let dateError = '';
+  try {
+    parsed = date
+      ? carnet
+        ? (parseCarnetDate(date, 'Envoi abonnés') ?? null)
+        : new Date(date)
+      : null;
+    if (carnet && parsed && !carnetPublicLocal(date))
+      throw new Error(
+        'Heure publique ambiguë ou inexistante : choisissez une autre heure.',
+      );
+  } catch (error) {
+    dateError = error instanceof Error ? error.message : 'Date invalide';
+  }
+  const validDate = !dateError && parsed && Number.isFinite(parsed.getTime());
   const scheduledAt =
-    mode === 'later' && validDate ? new Date(date).toISOString() : '';
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    mode === 'later' && validDate ? parsed!.toISOString() : '';
+  const timezone = carnet
+    ? 'Europe/Paris'
+    : Intl.DateTimeFormat().resolvedOptions().timeZone;
   return (
     <div className={styles.deliveryPanel}>
       <div className={styles.sectionHeading}>
@@ -34,6 +57,24 @@ export function NewsletterCampaignDelivery({
         <h3>Le bon message, au bon moment.</h3>
         <p>L’audience et le contenu seront figés à la confirmation.</p>
       </div>
+      {calendarFrozen && (
+        <p className={styles.notice}>
+          Ce Carnet a déjà été diffusé. Cet envoi conservera son calendrier
+          public d’origine.
+        </p>
+      )}
+      {carnet &&
+        !calendarFrozen &&
+        (mode === 'later' ? (
+          <CarnetDiffusion early={date} publicAt={carnetPublicLocal(date)} />
+        ) : (
+          <p className={styles.notice}>
+            L’heure serveur du premier traitement fixe l’avant-première. La
+            publication publique suit automatiquement 14 jours calendaires plus
+            tard, à la même heure de Paris.
+          </p>
+        ))}
+      {dateError && <p role="alert">{dateError}</p>}
       {issues.length > 0 ? (
         <div className={styles.issueList}>
           <strong>Complétez le brouillon avant l’envoi</strong>
@@ -54,7 +95,7 @@ export function NewsletterCampaignDelivery({
               ? 'Programmer la campagne'
               : `Mettre en file pour ${count} abonné${count > 1 ? 's' : ''}`
           }
-          confirm={`${mode === 'later' ? `Programmer le début de l’envoi le ${validDate ? new Date(date).toLocaleString('fr-FR') : ''}` : 'Commencer l’envoi'} pour l’audience « ${LABELS[audience]} » (actuellement ${count} abonnés) ? Le contenu ne pourra plus être modifié. Le nombre définitif est recalculé au moment de la confirmation.`}
+          confirm={`${mode === 'later' ? `Programmer le début de l’envoi le ${validDate ? parsed!.toLocaleString('fr-FR', { timeZone: timezone }) : ''}` : 'Commencer l’envoi'} pour l’audience « ${LABELS[audience]} » (actuellement ${count} abonnés) ? Le contenu ne pourra plus être modifié. Le nombre définitif est recalculé au moment de la confirmation.`}
         >
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="scheduledAt" value={scheduledAt} />
@@ -116,7 +157,7 @@ export function NewsletterCampaignDelivery({
                     onChange={(e) => setDate(e.target.value)}
                   />
                   <small>
-                    Heure de votre navigateur :{' '}
+                    Fuseau de programmation :{' '}
                     <span suppressHydrationWarning>{timezone}</span>. Entre une
                     minute et 180 jours dans le futur.
                   </small>

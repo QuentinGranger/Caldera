@@ -1,6 +1,8 @@
 // Indexable URLs of each child sitemap (docs/seo-architecture.md §8): the pages'
 // own indexation decisions, real modification dates only.
 import 'server-only';
+import { listPublicCarnets } from '@/lib/carnets/public';
+import { carnetUrl } from '@/lib/carnets/content';
 import type { Prisma } from '@/generated/prisma/client';
 import {
   LISTING_HUBS,
@@ -145,14 +147,31 @@ export async function getLandingUrls(): Promise<SitemapUrl[]> {
 
 /** Guides, glossary terms and their two index pages. */
 export async function getContentUrls(): Promise<SitemapUrl[]> {
-  const [entries, guides, glossary, questions, news] = await Promise.all([
-    getAllContent(),
-    getGuidesIndex(),
-    getGlossaryIndex(),
-    getQuestionsIndex(),
-    getNewsIndex(),
-  ]);
+  const [entries, guides, glossary, questions, news, carnets] =
+    await Promise.all([
+      getAllContent(),
+      getGuidesIndex(),
+      getGlossaryIndex(),
+      getQuestionsIndex(),
+      getNewsIndex(),
+      listPublicCarnets(),
+    ]);
   return [
+    ...(carnets.length
+      ? [
+          {
+            loc: absoluteUrl('/univers/carnets'),
+            lastModified: carnets[0]!.publicAt,
+          },
+        ]
+      : []),
+    ...carnets.map((chapter) => ({
+      loc: absoluteUrl(carnetUrl(chapter.slug)),
+      lastModified:
+        chapter.updatedAt > chapter.publicAt!
+          ? chapter.updatedAt
+          : chapter.publicAt,
+    })),
     ...decided(guides.decision, guides.updated),
     ...decided(glossary.decision, glossary.updated),
     ...decided(questions.decision, questions.updated),
