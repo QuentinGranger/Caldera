@@ -17,6 +17,7 @@ const sections: Record<string, string> = {
   categories: 'Catégories',
   extensions: 'Extensions',
   newsletter: 'Newsletter',
+  carnets: 'Carnets de Caldera',
   promotions: 'Codes promo',
   retours: 'Retours',
   factures: 'Factures',
@@ -28,31 +29,35 @@ export function AdminBreadcrumbs() {
   const parts = usePathname().split('/').filter(Boolean);
   const section = sections[parts[1] ?? ''];
   const detail =
-    parts[1] === 'fournisseurs' && parts[2] === 'imports'
-      ? parts[3] === 'nouveau'
-        ? 'Nouvel import'
-        : parts[3]
-          ? 'Import'
-          : 'Historique des imports'
-      : parts[1] === 'fournisseurs' && parts[2] === 'veille'
-        ? 'Veille'
-        : parts[3] === 'bon-preparation'
-          ? 'Bon de préparation'
-          : parts[1] === 'promotions' && parts[2] === 'nouvelle'
-            ? 'Nouveau code'
-            : parts[1] === 'retours' && parts[2] === 'nouveau'
-              ? 'Nouveau retour'
-              : parts[1] === 'factures' && parts[2] === 'reglages'
-                ? 'Mentions légales'
-                : parts[3] === 'nouvelle'
-                  ? 'Nouvelle campagne'
-                  : parts[2] === 'nouveau'
-                    ? 'Nouveau produit'
-                    : parts[2] === 'campagnes' && parts[3]
-                      ? 'Campagne'
-                      : parts[2]
-                        ? 'Détail'
-                        : null;
+    parts[1] === 'carnets' && parts[2]
+      ? parts[2] === 'nouveau'
+        ? 'Nouveau Carnet'
+        : 'Carnet'
+      : parts[1] === 'fournisseurs' && parts[2] === 'imports'
+        ? parts[3] === 'nouveau'
+          ? 'Nouvel import'
+          : parts[3]
+            ? 'Import'
+            : 'Historique des imports'
+        : parts[1] === 'fournisseurs' && parts[2] === 'veille'
+          ? 'Veille'
+          : parts[3] === 'bon-preparation'
+            ? 'Bon de préparation'
+            : parts[1] === 'promotions' && parts[2] === 'nouvelle'
+              ? 'Nouveau code'
+              : parts[1] === 'retours' && parts[2] === 'nouveau'
+                ? 'Nouveau retour'
+                : parts[1] === 'factures' && parts[2] === 'reglages'
+                  ? 'Mentions légales'
+                  : parts[3] === 'nouvelle'
+                    ? 'Nouvelle campagne'
+                    : parts[2] === 'nouveau'
+                      ? 'Nouveau produit'
+                      : parts[2] === 'campagnes' && parts[3]
+                        ? 'Campagne'
+                        : parts[2]
+                          ? 'Détail'
+                          : null;
   return (
     <nav aria-label="Fil d’Ariane" className={styles.breadcrumb}>
       <Link href="/admin">Vue d’ensemble</Link>

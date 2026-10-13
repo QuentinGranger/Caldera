@@ -66,11 +66,13 @@ export function AdminForm({
   tone,
   fieldsKey,
   requireSaved = false,
+  savedWarning,
   submitDisabled = false,
 }: {
   action: AdminAction;
   /** Test/queue actions must not use an older draft while another form is edited. */
   requireSaved?: boolean;
+  savedWarning?: string;
   submitDisabled?: boolean;
   /** Refresh saved field values without discarding the action feedback. */
   fieldsKey?: string;
@@ -137,7 +139,8 @@ export function AdminForm({
           if (requireSaved && [...unsaved].some((item) => item !== key)) {
             event.preventDefault();
             setSaveWarning(
-              'Enregistrez les modifications du brouillon avant de tester ou de programmer son envoi.',
+              savedWarning ??
+                'Enregistrez les modifications du brouillon avant de tester ou de programmer son envoi.',
             );
             return;
           }

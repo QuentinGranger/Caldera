@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { deriveCarnet, parseCarnetContent } from '../src/lib/carnets/content';
 import {
   serializeNewsletterDocument,
   parseNewsletterDocument,
@@ -226,6 +227,8 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/categories',
           '/admin/extensions',
           '/admin/jeux',
+          '/admin/carnets',
+          '/admin/carnets/nouveau',
           `/admin/commandes/${order.id}/bon-preparation`,
         ]) {
           const result = await page(path, 'caldera_cart=invalid');
@@ -582,6 +585,110 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           });
           await db.newsletterCampaign.deleteMany({ where: { internalName } });
         }
+      },
+    );
+    await t.test(
+      'Carnets HTTP : source unique, MFA requis, validation, conflit et archivage réversible',
+      async () => {
+        const content = JSON.stringify({
+          version: 1,
+          document: {
+            type: 'doc',
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Le lac avait reculé.' }],
+              },
+              { type: 'newsletterCut' },
+              {
+                type: 'paragraph',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Le lendemain matin, la route reparut.',
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        const values = {
+          revision: '0',
+          number: '543209',
+          title: `Carnet HTTP ${key}`,
+          slug: `carnet-http-${key}`,
+          content,
+          status: 'DRAFT',
+        };
+        const refused = await action('saveCarnetChapterAction', values, '');
+        assert.ok(
+          (
+            refused.response.headers.get('x-action-redirect') ?? refused.body
+          ).includes('/admin/login'),
+        );
+        const forged = await action(
+          'saveCarnetChapterAction',
+          values,
+          cookie,
+          'https://foreign.example',
+        );
+        assert.equal(forged.response.status, 500);
+        const saved = await action('saveCarnetChapterAction', values);
+        assert.ok(
+          saved.body.includes('Carnet enregistré'),
+          saved.body.slice(0, 400),
+        );
+        const chapter = await db.carnetChapter.findUniqueOrThrow({
+          where: { slug: values.slug },
+        });
+        assert.deepEqual(
+          parseCarnetContent(chapter.content),
+          parseCarnetContent(content),
+        );
+        assert.equal(
+          deriveCarnet(parseCarnetContent(chapter.content)).excerpt?.text,
+          'Le lac avait reculé.',
+        );
+        const detail = await page(`/admin/carnets/${chapter.id}`);
+        assert.equal(detail.response.status, 200);
+        assert.ok(detail.html.includes('Le récit complet'));
+        const publicPage = await page(`/univers/carnets/${chapter.slug}`, '');
+        assert.ok(!publicPage.html.includes('Le lac avait reculé.'));
+        const invalid = await action('saveCarnetChapterAction', {
+          ...values,
+          id: chapter.id,
+          newsletterExcerpt: 'copie interdite',
+        });
+        assert.ok(invalid.body.includes('Champ non autorisé'));
+        const ready = await action('saveCarnetChapterAction', {
+          ...values,
+          id: chapter.id,
+          status: 'READY',
+        });
+        assert.ok(ready.body.includes('Carnet enregistré'));
+        const stale = await action('saveCarnetChapterAction', {
+          ...values,
+          id: chapter.id,
+        });
+        assert.ok(stale.body.includes('autre onglet'));
+        const archived = await action('archiveCarnetChapterAction', {
+          id: chapter.id,
+          revision: '1',
+        });
+        assert.ok(archived.body.includes('Carnet archivé'));
+        const restored = await action('restoreCarnetChapterAction', {
+          id: chapter.id,
+          revision: '2',
+        });
+        assert.ok(restored.body.includes('restauré en brouillon'));
+        assert.equal(
+          (
+            await db.carnetChapter.findUniqueOrThrow({
+              where: { id: chapter.id },
+            })
+          ).revision,
+          3,
+        );
       },
     );
     await t.test(
@@ -1097,6 +1204,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
     await db.inventoryAdjustment.deleteMany({
       where: { adminUserId: admin.id },
     });
+    await db.carnetChapter.deleteMany({ where: { createdById: admin.id } });
     await db.adminAuditLog.deleteMany({ where: { adminUserId: admin.id } });
     await db.productVariant.deleteMany({ where: { productId: product.id } });
     await db.product.delete({ where: { id: product.id } });

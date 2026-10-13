@@ -20,6 +20,8 @@ const shortcuts = new Set([
   '/admin/mesures',
 ]);
 const aliases: Record<string, string> = {
+  '/admin/carnets':
+    'chapitres récit narration arc extrait coupure newsletter carnets',
   '/admin/mesures':
     'analytics google ga4 seo trafic acquisition conversion statistiques campagnes email clic ouvertures',
   '/admin/newsletter':

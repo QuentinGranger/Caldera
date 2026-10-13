@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
 import {
   BarChart3,
+  BookOpen,
   ChevronDown,
   Boxes,
   Dices,
@@ -68,6 +69,7 @@ export const adminNavGroups = [
     label: 'Communication',
     links: [
       { href: '/admin/newsletter', label: 'Emails & newsletter', icon: Mail },
+      { href: '/admin/carnets', label: 'Carnets de Caldera', icon: BookOpen },
       { href: '/admin/discord', label: 'Discord', icon: MessageSquare },
       { href: '/admin/promotions', label: 'Codes promo', icon: TicketPercent },
     ],
