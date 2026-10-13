@@ -4,6 +4,7 @@ import { PageHeader, Badge } from '@/components/admin/AdminUI';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { Hidden } from '@/components/admin/AdminFields';
 import { CarnetEditor } from '@/components/admin/carnets/CarnetEditor';
+import { getCarnetProducts } from '@/lib/carnets/comptoir';
 import { getAdminCarnet } from '@/lib/carnets/admin';
 import {
   saveCarnetChapterAction,
@@ -26,20 +27,16 @@ export default async function EditCarnetPage({
   const chapter = await getAdminCarnet(id);
   if (!chapter) notFound();
   const archived = chapter.status === 'ARCHIVED';
+  const products = await getCarnetProducts(
+    chapter.comptoir.map((p) => p.productId),
+  );
+  const campaign = chapter.editionCampaign;
   return (
     <>
       <PageHeader
         title={`Carnet #${String(chapter.number).padStart(3, '0')} · ${chapter.title}`}
         description="La newsletter et le chapitre utilisent une seule source narrative."
       >
-        {!archived && (
-          <Link
-            className={styles.button}
-            href={`/admin/newsletter/campagnes/nouvelle?chapterId=${chapter.id}`}
-          >
-            Préparer une campagne liée
-          </Link>
-        )}
         <Link
           className={`${styles.button} ${styles.secondaryButton}`}
           href="/admin/carnets"
@@ -72,11 +69,33 @@ export default async function EditCarnetPage({
           archived ||
           Boolean(chapter.releaseCampaignId || chapter.publishedAt) ||
           chapter.status === 'PUBLIC' ||
-          chapter.status === 'EARLY_ACCESS'
+          chapter.status === 'EARLY_ACCESS' ||
+          Boolean(campaign && campaign.status !== 'DRAFT')
         }
-        revision={String(chapter.revision)}
+        revision={`${chapter.revision}:${campaign?.updatedAt.toISOString() ?? ''}`}
+        products={products}
         value={{
           id: chapter.id,
+          productIds: chapter.comptoir.map((p) => p.productId),
+          emailSubject: campaign?.subject ?? '',
+          emailPreheader: campaign?.preheader ?? '',
+          ...(campaign
+            ? {
+                campaign: {
+                  id: campaign.id,
+                  status: campaign.status,
+                  updatedAt: campaign.updatedAt.toISOString(),
+                  customized: campaign.carnetCustomized,
+                  heading: campaign.heading,
+                  bodyMarkdown: campaign.bodyMarkdown,
+                  ctaLabel: campaign.ctaLabel ?? '',
+                  ctaUrl: campaign.ctaUrl ?? '',
+                  products: Array.isArray(campaign.carnetProducts)
+                    ? (campaign.carnetProducts as unknown as import('@/lib/carnets/comptoir').CarnetProduct[])
+                    : [],
+                },
+              }
+            : {}),
           releaseCampaignId: chapter.releaseCampaignId ?? '',
           revision: chapter.revision,
           number: chapter.number,

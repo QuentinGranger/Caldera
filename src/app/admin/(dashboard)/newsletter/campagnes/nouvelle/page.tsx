@@ -1,5 +1,7 @@
+import { chapterComptoir } from '@/lib/carnets/comptoir';
 import { parseCarnetContent, deriveCarnet } from '@/lib/carnets/content';
 import { getNewsletterStudioData } from '@/lib/newsletter/studio';
+import { getPrisma } from '@/lib/db/prisma';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { PageHeader } from '@/components/admin/AdminUI';
@@ -19,6 +21,9 @@ export default async function NewNewsletterCampaignPage({
   if (raw && typeof raw !== 'string') notFound();
   const chapter = raw ? await getAdminCarnet(raw) : null;
   if (raw && !chapter) notFound();
+  const carnetProducts = chapter
+    ? await chapterComptoir(getPrisma(), chapter.id, false)
+    : [];
   const chapters =
     chapter && !studio.chapters.some((c) => c.id === chapter.id)
       ? [
@@ -64,6 +69,13 @@ export default async function NewNewsletterCampaignPage({
           deriveCarnet(parseCarnetContent(chapter.content)).excerpt
             ? {
                 carnetSource: {
+                  products: carnetProducts,
+                  illustration: chapter.illustrationUrl
+                    ? {
+                        src: chapter.illustrationUrl,
+                        alt: chapter.illustrationAlt ?? '',
+                      }
+                    : undefined,
                   id: chapter.id,
                   title: chapter.title,
                   slug: chapter.slug,

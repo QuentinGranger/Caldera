@@ -1,6 +1,12 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { useId, useState } from 'react';
+import {
+  useId,
+  useState,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { BookOpen, Scissors, ArrowRight, WandSparkles } from 'lucide-react';
 import { AdminForm, useAdminFormChange } from '../AdminForm';
 import type { AdminAction } from '@/lib/admin/action-types';
@@ -19,8 +25,15 @@ import {
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from './CarnetEditor.module.scss';
 import Image from 'next/image';
-import { carnetPublicLocal } from '@/lib/carnets/dates';
-import { CarnetDiffusion } from './CarnetDiffusion';
+import { CarnetComptoir } from './CarnetComptoir';
+import {
+  CarnetEmailPanel,
+  CarnetSchedulePanel,
+  CarnetVerification,
+  type PreviewDevice,
+} from './CarnetEditionPanels';
+import { useCarnetRecovery } from './useCarnetRecovery';
+import type { CarnetProduct } from '@/lib/carnets/comptoir';
 import { GameLogoField } from '../GameLogoField';
 const Narrative = dynamic(() => import('./CarnetNarrativeEditor'), {
   ssr: false,
@@ -126,9 +139,26 @@ export function CarnetPreview({ value }: { value: CarnetEditorValue }) {
     </aside>
   );
 }
-function Fields({ initial }: { initial: CarnetEditorValue }) {
-  const [value, setValue] = useState(initial),
-    [manualSlug, setManualSlug] = useState(Boolean(initial.id || initial.slug)),
+function Fields({
+  initial,
+  value,
+  setValue,
+  products,
+  onProducts,
+  device,
+  onDevice,
+}: {
+  initial: CarnetEditorValue;
+  value: CarnetEditorValue;
+  setValue: Dispatch<SetStateAction<CarnetEditorValue>>;
+  products: CarnetProduct[];
+  onProducts: (products: CarnetProduct[]) => void;
+  device: PreviewDevice;
+  onDevice: (device: PreviewDevice) => void;
+}) {
+  const [manualSlug, setManualSlug] = useState(
+      Boolean(initial.id || initial.slug),
+    ),
     [placement, setPlacement] = useState(() =>
       String(Math.max(0, deriveCarnet(initial.content).cutIndex - 1)),
     );
@@ -148,6 +178,20 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
     setValue((v) => ({
       ...v,
       title: next,
+      ...(!v.emailSubject ||
+      v.emailSubject ===
+        `${v.title} — Carnet #${String(v.number).padStart(3, '0')}`.slice(
+          0,
+          160,
+        )
+        ? {
+            emailSubject:
+              `${next} — Carnet #${String(v.number).padStart(3, '0')}`.slice(
+                0,
+                160,
+              ),
+          }
+        : {}),
       ...(!manualSlug ? { slug: suggestCarnetSlug(v.number, next) } : {}),
     }));
   }
@@ -170,18 +214,23 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
       <input type="hidden" name="revision" value={value.revision} />
       <input
         type="hidden"
+        name="campaignUpdatedAt"
+        value={value.campaign?.updatedAt ?? ''}
+      />
+      <input
+        type="hidden"
         name="content"
         value={JSON.stringify(value.content)}
       />
-      <section className={styles.intro}>
-        <span>LES CARNETS DE CALDERA</span>
+      <section id="carnet-recit" className={styles.intro}>
+        <span>01 / RÉCIT</span>
         <h2>Un récit. Deux façons de le découvrir.</h2>
         <p>
           Écrivez le chapitre une seule fois. La coupure détermine son ouverture
           dans la newsletter.
         </p>
       </section>
-      <details className={styles.metadata} open={!initial.id}>
+      <details className={styles.metadata} open>
         <summary>
           Repères du Carnet · #{String(value.number || 1).padStart(3, '0')}
           {value.title ? ` · ${value.title}` : ''}
@@ -317,38 +366,6 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
               placeholder="Nom du lieu du récit"
             />
           </label>
-          <label>
-            Accès anticipé prévu · Paris
-            <input
-              name="earlyAccessAt"
-              type="datetime-local"
-              min="2000-01-01T00:00"
-              max="2099-12-31T23:59"
-              value={value.earlyAccessAt ?? ''}
-              onChange={(e) =>
-                setValue((v) => ({ ...v, earlyAccessAt: e.target.value }))
-              }
-            />
-          </label>
-          <label>
-            Publication publique prévue · Paris
-            <input
-              name="publicAt"
-              type="datetime-local"
-              min="2000-01-01T00:00"
-              max="2099-12-31T23:59"
-              value={carnetPublicLocal(value.earlyAccessAt ?? '')}
-              readOnly
-              onChange={(e) =>
-                setValue((v) => ({ ...v, publicAt: e.target.value }))
-              }
-            />
-          </label>
-          <p className={styles.wide}>
-            Prévision uniquement : la programmation de la campagne liée devient
-            la référence. La publication suit automatiquement quatorze jours
-            plus tard.
-          </p>
           {value.publishedAt && (
             <p className={styles.wide}>
               Première publication effective : {value.publishedAt} (Paris).
@@ -387,10 +404,6 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
           </label>
         </div>
       </details>
-      <CarnetDiffusion
-        early={value.earlyAccessAt}
-        publicAt={carnetPublicLocal(value.earlyAccessAt ?? '')}
-      />
       <div className={styles.counters} aria-live="polite">
         <div>
           <BookOpen size={20} />
@@ -492,8 +505,193 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
             </small>
           </section>
         </div>
-        <CarnetPreview value={value} />
+        <details className={styles.webPreview}>
+          <summary>Aperçu du chapitre web</summary>
+          <CarnetPreview value={value} />
+        </details>
       </div>
+      <CarnetComptoir
+        ids={value.productIds ?? []}
+        products={products}
+        onChange={(productIds, nextProducts) => {
+          if (nextProducts) onProducts(nextProducts);
+          setValue((v) => ({ ...v, productIds }));
+          mark?.();
+        }}
+      />
+      <CarnetEmailPanel
+        value={value}
+        products={products}
+        device={device}
+        onDevice={onDevice}
+        onChange={(key, next) => setValue((v) => ({ ...v, [key]: next }))}
+      />
+      <CarnetSchedulePanel
+        value={value}
+        onChange={(earlyAccessAt) => setValue((v) => ({ ...v, earlyAccessAt }))}
+      />
+    </div>
+  );
+}
+
+function Edition({
+  value: initial,
+  action,
+  products,
+  readOnly,
+}: {
+  value: CarnetEditorValue;
+  action?: AdminAction;
+  products: CarnetProduct[];
+  readOnly: boolean;
+}) {
+  const normalized = useMemo(
+    () => ({
+      ...initial,
+      productIds: initial.productIds ?? [],
+      emailSubject: initial.emailSubject ?? '',
+      emailPreheader: initial.emailPreheader ?? '',
+    }),
+    [initial],
+  );
+  const [value, setValue] = useState<CarnetEditorValue>(normalized);
+  const [productOptions, setProductOptions] = useState(products);
+  const [device, setDevice] = useState<PreviewDevice>('desktop');
+  const [views, setViews] = useState<{ desktop?: string; mobile?: string }>({});
+  const rescue = useCarnetRecovery(normalized, value);
+  const fingerprint = JSON.stringify(value);
+  const dirty =
+    JSON.stringify({
+      ...initial,
+      productIds: initial.productIds ?? [],
+      emailSubject: initial.emailSubject ?? '',
+      emailPreheader: initial.emailPreheader ?? '',
+    }) !== fingerprint;
+  function preview(next: PreviewDevice) {
+    setDevice(next);
+    if (next !== 'text') setViews((v) => ({ ...v, [next]: fingerprint }));
+  }
+  function openPreview(next: PreviewDevice) {
+    preview(next);
+    document.getElementById('carnet-email')?.scrollIntoView({ block: 'start' });
+  }
+  return (
+    <div className={styles.editor}>
+      <nav className={styles.workflowNav} aria-label="Étapes du Carnet">
+        {[
+          ['recit', 'Récit'],
+          ['comptoir', 'Le Comptoir'],
+          ['email', 'Email'],
+          ['diffusion', 'Diffusion'],
+          ['verification', 'Vérification'],
+        ].map(([anchor, label], i) => (
+          <a key={anchor} href={`#carnet-${anchor}`}>
+            <span>{i + 1}</span>
+            {label}
+          </a>
+        ))}
+      </nav>
+      {readOnly ? (
+        <>
+          <section id="carnet-recit">
+            <CarnetPreview value={value} />
+          </section>
+          <section id="carnet-comptoir" className={styles.workflowSection}>
+            <h2>Le Comptoir</h2>
+            <ul>
+              {(value.productIds ?? []).map((id) => (
+                <li key={id}>
+                  {productOptions.find((p) => p.id === id)?.name ??
+                    'Produit indisponible'}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <CarnetEmailPanel
+            value={value}
+            products={productOptions}
+            readOnly
+            device={device}
+            onDevice={preview}
+          />
+          <CarnetSchedulePanel value={value} readOnly />
+        </>
+      ) : (
+        action && (
+          <AdminForm action={action} submit="Enregistrer l’édition">
+            <Recovery
+              initial={initial}
+              value={value}
+              setValue={setValue}
+              rescue={rescue}
+            />
+            <Fields
+              initial={initial}
+              value={value}
+              setValue={setValue}
+              products={productOptions}
+              onProducts={setProductOptions}
+              device={device}
+              onDevice={preview}
+            />
+          </AdminForm>
+        )
+      )}
+      <CarnetVerification
+        value={value}
+        products={productOptions}
+        dirty={!readOnly && dirty}
+        viewed={{
+          desktop: views.desktop === fingerprint,
+          mobile: views.mobile === fingerprint,
+        }}
+        onPreview={openPreview}
+        readOnly={readOnly}
+      />
+    </div>
+  );
+}
+function Recovery({
+  setValue,
+  rescue,
+}: {
+  initial: CarnetEditorValue;
+  value: CarnetEditorValue;
+  setValue: Dispatch<SetStateAction<CarnetEditorValue>>;
+  rescue: ReturnType<typeof useCarnetRecovery>;
+}) {
+  const mark = useAdminFormChange();
+  return (
+    <div className={styles.recovery}>
+      {rescue.recovery && (
+        <>
+          <p>
+            Une copie de secours non enregistrée est disponible dans cet onglet.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setValue(rescue.recovery!);
+              mark?.();
+              rescue.dismiss();
+            }}
+          >
+            Restaurer la copie
+          </button>
+          <button type="button" onClick={rescue.dismiss}>
+            Ignorer
+          </button>
+        </>
+      )}
+      <small>
+        {rescue.unavailable
+          ? 'Copie de secours indisponible : enregistrez régulièrement.'
+          : rescue.saved
+            ? 'Copie de secours locale actualisée · enregistrez pour sauvegarder dans Caldera.'
+            : 'Copie de secours dans cet onglet · 24 h · aucun envoi automatique.'}{' '}
+        Les fichiers à importer doivent être sélectionnés à nouveau après
+        rechargement.
+      </small>
     </div>
   );
 }
@@ -502,34 +700,21 @@ export function CarnetEditor({
   action,
   revision,
   readOnly = false,
+  products = [],
 }: {
   value: CarnetEditorValue;
   action?: AdminAction;
   revision?: string;
   readOnly?: boolean;
+  products?: CarnetProduct[];
 }) {
-  if (readOnly)
-    return (
-      <>
-        <CarnetDiffusion
-          early={value.earlyAccessAt}
-          publicAt={value.publicAt}
-          frozen={Boolean(value.publishedAt)}
-          campaignId={value.releaseCampaignId}
-        />
-        <CarnetPreview value={value} />
-      </>
-    );
-  if (!action) return null;
   return (
-    <div className={styles.editor}>
-      <AdminForm
-        action={action}
-        fieldsKey={revision}
-        submit="Enregistrer le Carnet"
-      >
-        <Fields initial={value} />
-      </AdminForm>
-    </div>
+    <Edition
+      key={revision ?? 'new'}
+      value={value}
+      action={action}
+      products={products}
+      readOnly={readOnly}
+    />
   );
 }

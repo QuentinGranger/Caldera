@@ -7,6 +7,7 @@ import {
   whitelist,
   localImage,
 } from '@/lib/admin/validation';
+import { comptoirIds } from './comptoir';
 import { parseCarnetDate } from './dates';
 import {
   deriveCarnet,
@@ -32,6 +33,10 @@ export function carnetInput(form: FormData) {
     'location',
     'earlyAccessAt',
     'publicAt',
+    'productIds',
+    'emailSubject',
+    'emailPreheader',
+    'campaignUpdatedAt',
   ]);
   const chapterId = id(form, 'id', true);
   const revision = integer(form, 'revision', 0, 2147483647);
@@ -77,6 +82,18 @@ export function carnetInput(form: FormData) {
   return {
     id: chapterId,
     revision,
+    campaignUpdatedAt: form.has('campaignUpdatedAt')
+      ? text(form, 'campaignUpdatedAt', 30, false)
+      : undefined,
+    productIds: form.has('productIds')
+      ? comptoirIds(text(form, 'productIds', 300))
+      : undefined,
+    email: form.has('emailSubject')
+      ? {
+          subject: text(form, 'emailSubject', 160, false),
+          preheader: text(form, 'emailPreheader', 180, false) || null,
+        }
+      : undefined,
     data: {
       number,
       title,

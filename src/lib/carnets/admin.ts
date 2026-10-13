@@ -14,6 +14,8 @@ import { param, type SearchParams } from '@/lib/admin/queries';
 import { CARNET_STATUSES, type CarnetContent } from './content';
 import { carnetInput } from './input';
 import { assertCarnetCalendar, carnetPublicDate } from './dates';
+import { lockCarnetEdition, saveCarnetEdition } from './edition';
+import type { CarnetProduct } from './comptoir';
 import { imageStorage } from '@/lib/storage/images';
 
 export async function saveCarnetChapter(adminId: string, form: FormData) {
@@ -60,11 +62,17 @@ export async function saveCarnetChapter(adminId: string, form: FormData) {
         content: input.data.content as unknown as Prisma.InputJsonValue,
       };
       if (input.id) {
-        await tx.$queryRaw`SELECT id FROM "CarnetChapter" WHERE id = ${input.id}::uuid FOR UPDATE`;
-        const current = await tx.carnetChapter.findUnique({
-          where: { id: input.id },
-        });
+        const current = await lockCarnetEdition(tx, input.id);
         if (!current) throw new AdminError('Carnet introuvable.');
+        if (input.campaignUpdatedAt && current.editionCampaignId) {
+          const campaign = await tx.newsletterCampaign.findUniqueOrThrow({
+            where: { id: current.editionCampaignId },
+          });
+          if (campaign.updatedAt.toISOString() !== input.campaignUpdatedAt)
+            throw new AdminError(
+              'La campagne a été modifiée dans un autre onglet. Rechargez avant d’enregistrer.',
+            );
+        }
         if (current.status === 'ARCHIVED')
           throw new AdminError('Restaurez le Carnet avant de le modifier.');
         if (current.status === 'PUBLIC' || current.status === 'EARLY_ACCESS')
@@ -104,14 +112,14 @@ export async function saveCarnetChapter(adminId: string, form: FormData) {
             revision: chapter.revision,
           },
         );
-        return chapter;
+        return saveCarnetEdition(tx, adminId, chapter, input);
       }
       validateMetadata(data);
       const chapter = await tx.carnetChapter.create({
         data: { ...data, createdById: adminId },
       });
       await audit(tx, adminId, 'CARNET_CREATED', 'CarnetChapter', chapter.id);
-      return chapter;
+      return saveCarnetEdition(tx, adminId, chapter, input);
     });
   } catch (error) {
     if (uploadedUrl)
@@ -206,7 +214,11 @@ export async function getAdminCarnet(id: string) {
   }
   return getPrisma().carnetChapter.findUnique({
     where: { id },
-    include: { createdBy: { select: { name: true } } },
+    include: {
+      createdBy: { select: { name: true } },
+      editionCampaign: true,
+      comptoir: { orderBy: { position: 'asc' } },
+    },
   });
 }
 export async function getAdminCarnets(params: SearchParams) {
@@ -281,4 +293,18 @@ export type CarnetEditorValue = {
   publicAt?: string;
   publishedAt?: string;
   releaseCampaignId?: string;
+  productIds?: string[];
+  emailSubject?: string;
+  emailPreheader?: string;
+  campaign?: {
+    id: string;
+    status: string;
+    updatedAt: string;
+    customized: boolean;
+    heading: string;
+    bodyMarkdown: string;
+    ctaLabel: string;
+    ctaUrl: string;
+    products: CarnetProduct[];
+  };
 };

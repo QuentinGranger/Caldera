@@ -22,6 +22,8 @@ import {
   EmailProviderError,
   resendProvider,
 } from '@/lib/email/provider';
+import { chapterComptoir } from '@/lib/carnets/comptoir';
+import { assertEditionComplete } from '@/lib/carnets/edition';
 import { appOrigin } from '@/lib/orders/access';
 
 const CAMPAIGN_FIELDS = [
@@ -107,6 +109,25 @@ export async function saveNewsletterCampaign(adminId: string, form: FormData) {
         throw new AdminError(
           'Une campagne déjà mise en file ne peut plus être modifiée.',
         );
+      const owner = await tx.carnetChapter.findUnique({
+        where: { editionCampaignId: campaignId },
+      });
+      if (owner) {
+        if (data.chapterId !== undefined && data.chapterId !== owner.id)
+          throw new AdminError(
+            'La campagne principale doit rester associée à son Carnet.',
+          );
+        if (
+          !current.carnetCustomized &&
+          (data.bodyMarkdown !== current.bodyMarkdown ||
+            data.heading !== current.heading ||
+            data.ctaLabel !== current.ctaLabel ||
+            data.ctaUrl !== current.ctaUrl)
+        )
+          throw new AdminError(
+            'Activez le Mode avancé depuis le Carnet avant de personnaliser sa composition.',
+          );
+      }
       const campaign = await tx.newsletterCampaign.update({
         where: { id: campaignId },
         data,
@@ -142,6 +163,8 @@ export async function queueNewsletterCampaign(adminId: string, form: FormData) {
     'sendMode',
     'scheduledLocal',
     'timeZone',
+    'chapterRevision',
+    'campaignUpdatedAt',
   ]);
   const audience = text(form, 'audience', 30, false) || 'all';
   const where = audienceWhere(audience);
@@ -155,12 +178,46 @@ export async function queueNewsletterCampaign(adminId: string, form: FormData) {
   if (!campaignId) throw new AdminError('Campagne introuvable.');
   return adminTransaction(adminId, async (tx) => {
     await tx.$queryRaw`SELECT id FROM "NewsletterCampaign" WHERE id = ${campaignId}::uuid FOR UPDATE`;
-    const campaign = await tx.newsletterCampaign.findUnique({
+    let campaign = await tx.newsletterCampaign.findUnique({
       where: { id: campaignId },
     });
     if (!campaign) throw new AdminError('Campagne introuvable.');
+    if (
+      form.has('campaignUpdatedAt') &&
+      campaign.updatedAt.toISOString() !== text(form, 'campaignUpdatedAt', 30)
+    )
+      throw new AdminError('La campagne a changé. Rechargez la page.');
     if (campaign.status !== 'DRAFT')
       throw new AdminError('Cette campagne a déjà été mise en file.');
+    if (campaign.chapterId) {
+      await tx.$queryRaw`SELECT id FROM "CarnetChapter" WHERE id=${campaign.chapterId}::uuid FOR UPDATE`;
+      const saved = await tx.carnetChapter.findUniqueOrThrow({
+        where: { id: campaign.chapterId },
+      });
+      if (
+        form.has('chapterRevision') &&
+        String(saved.revision) !== text(form, 'chapterRevision', 10)
+      )
+        throw new AdminError('Le Carnet a changé. Rechargez la page.');
+      if (
+        saved.editionCampaignId &&
+        saved.editionCampaignId !== campaign.id &&
+        !saved.publishedAt
+      )
+        throw new AdminError(
+          'La première diffusion doit utiliser la campagne principale du Carnet.',
+        );
+      if (saved.editionCampaignId) assertEditionComplete(saved, campaign);
+      const products = await chapterComptoir(tx, saved.id);
+      campaign = await tx.newsletterCampaign.update({
+        where: { id: campaign.id },
+        data: {
+          carnetProducts:
+            products as unknown as import('@/generated/prisma/client').Prisma.InputJsonValue,
+        },
+      });
+      if (campaign.carnetCustomized) assertCampaignReady(campaign);
+    }
     const chapter = await planCarnetRelease(tx, campaign, scheduledAt);
     if (!chapter) assertCampaignReady(campaign);
     else {
@@ -217,13 +274,18 @@ export async function sendNewsletterCampaignTest(
   admin: { id: string; email: string },
   form: FormData,
 ) {
-  whitelist(form, ['id']);
+  whitelist(form, ['id', 'chapterRevision', 'campaignUpdatedAt']);
   const campaignId = id(form);
   if (!campaignId) throw new AdminError('Campagne introuvable.');
   const campaign = await getPrisma().newsletterCampaign.findUnique({
     where: { id: campaignId },
   });
   if (!campaign) throw new AdminError('Campagne introuvable.');
+  if (
+    form.has('campaignUpdatedAt') &&
+    campaign.updatedAt.toISOString() !== text(form, 'campaignUpdatedAt', 30)
+  )
+    throw new AdminError('La campagne a changé. Rechargez la page.');
   if (process.env.EMAILS_ENABLED !== 'true')
     throw new AdminError('Les e-mails sont désactivés dans cet environnement.');
   try {
@@ -234,8 +296,32 @@ export async function sendNewsletterCampaignTest(
           where: { id: campaign.chapterId },
         })
       : null;
+    if (
+      chapter &&
+      form.has('chapterRevision') &&
+      String(chapter.revision) !== text(form, 'chapterRevision', 10)
+    )
+      throw new AdminError('Le Carnet a changé. Rechargez la page.');
+    if (chapter?.editionCampaignId === campaign.id)
+      assertEditionComplete(chapter, campaign);
+    const products =
+      chapter && campaign.status === 'DRAFT'
+        ? await chapterComptoir(getPrisma(), chapter.id)
+        : null;
     const rendered = chapter
-      ? renderCarnetCampaign(campaign, chapter, urls)
+      ? renderCarnetCampaign(
+          {
+            ...campaign,
+            ...(products
+              ? {
+                  carnetProducts:
+                    products as unknown as import('@/generated/prisma/client').Prisma.JsonValue,
+                }
+              : {}),
+          },
+          chapter,
+          urls,
+        )
       : renderNewsletterCampaignEmail(
           { ...campaign, campaignId: campaign.id },
           urls,
@@ -318,6 +404,7 @@ export async function duplicateNewsletterCampaign(
         ctaLabel: source.ctaLabel,
         ctaUrl: source.ctaUrl,
         chapterId: source.chapterId,
+        carnetCustomized: source.carnetCustomized,
         createdById: adminId,
       },
     });
