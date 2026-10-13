@@ -829,3 +829,328 @@
   overflow: hidden;
   position: relative;
 }
+
+.richEditor {
+  border: 1px solid t.$border;
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+  :global(.tiptap) {
+    min-height: 180px;
+    padding: 18px;
+    outline: none;
+    font-size: 15px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+    &:focus {
+      box-shadow: inset 0 0 0 2px #789f88;
+    }
+    p {
+      margin: 0 0 12px;
+    }
+    h2 {
+      font-size: 24px;
+      margin: 20px 0 10px;
+    }
+    h3 {
+      font-size: 19px;
+      margin: 16px 0 8px;
+    }
+    ul,
+    ol {
+      padding-left: 24px;
+    }
+    blockquote {
+      padding-left: 16px;
+      border-left: 3px solid #d7ba70;
+      margin: 16px 0;
+    }
+    a {
+      text-decoration: underline;
+      color: #165640;
+    }
+  }
+  .toolbar {
+    border-radius: 0;
+    padding: 8px;
+    border-width: 1px 0;
+    margin: 0;
+    background: #f8faf7;
+  }
+  > small {
+    display: block;
+    padding: 8px 12px;
+    border-top: 1px solid t.$border;
+  }
+  > textarea {
+    border: 0;
+    border-radius: 0;
+    padding: 16px;
+    font-family: t.$mono;
+  }
+  > p[role='alert'] {
+    margin: 8px 12px;
+    color: #9d352a;
+  }
+}
+.richTop,
+.inspectorTabs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f8faf6;
+  font-size: 12px;
+  button {
+    font-size: 11px;
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    color: #51685a;
+    &[aria-pressed='true'] {
+      background: #e5ede1;
+      color: #123d31;
+    }
+  }
+}
+.inspectorTabs {
+  justify-content: flex-start;
+  margin: -4px -4px 16px;
+  border-radius: 8px;
+}
+.linkEditor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+  padding: 12px;
+  background: #fff8e8;
+  label {
+    flex: 1;
+    min-width: 140px;
+  }
+  button {
+    font-size: 11px;
+  }
+}
+.columnEditors {
+  display: grid;
+  gap: 16px;
+  > section {
+    padding: 14px;
+    border: 1px solid t.$border;
+    border-radius: 10px;
+    display: grid;
+    gap: 12px;
+    h4 {
+      margin: 0;
+      font-size: 13px;
+    }
+  }
+}
+.styleSample {
+  grid-column: 1/-1;
+  border: 1px dashed #c6d3c6;
+  font-size: 14px;
+  min-height: 60px;
+}
+.designPanel,
+.outline {
+  border: 1px solid t.$border;
+  border-radius: 10px;
+  margin: 12px 0;
+  overflow: hidden;
+  > summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 14px;
+    background: #f8faf6;
+    min-height: 44px;
+  }
+  > div {
+    padding: 14px;
+  }
+  > small {
+    display: block;
+    padding: 0 14px 14px;
+  }
+  > p {
+    padding: 0 14px;
+    color: #9d352a;
+  }
+}
+.templateTools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  button {
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  label {
+    font-size: 11px;
+    input {
+      margin-top: 4px;
+      max-width: 220px;
+    }
+  }
+}
+.outline ol {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  max-height: 240px;
+  overflow: auto;
+  button {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+    font-size: 12px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: #344c42;
+    min-height: 40px;
+    span {
+      font: 11px t.$mono;
+      margin-right: 10px;
+      color: #758175;
+    }
+    &[aria-current] {
+      background: #e8f0e9;
+    }
+  }
+}
+.blockMini {
+  position: relative;
+  cursor: pointer;
+  background: #fffcf5;
+  padding: 16px;
+  outline-offset: -3px;
+  > div {
+    max-height: 180px;
+    overflow: hidden;
+    pointer-events: none;
+    font-size: 13px;
+    line-height: 1.6;
+    h2,
+    h3 {
+      margin: 8px 0;
+    }
+    p {
+      margin: 0 0 10px;
+    }
+    img {
+      max-height: 150px;
+      object-fit: contain;
+    }
+    table {
+      width: 100%;
+    }
+  }
+  &:hover .editHint,
+  &:focus .editHint {
+    opacity: 1;
+  }
+}
+.editHint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: #173e32;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.toolbar button[aria-pressed='true'] {
+  background: #dfead8;
+  color: #123d31;
+}
+@media (max-width: 600px) {
+  .richTop {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .linkEditor {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .blockMini {
+    padding: 12px;
+  }
+}
+.linkReview {
+  margin: 18px 0;
+  border: 1px solid t.$border;
+  border-radius: 10px;
+  overflow: hidden;
+  summary {
+    padding: 14px;
+    background: #f8faf6;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+  }
+  li {
+    display: grid;
+    gap: 4px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    span {
+      font: 10px t.$mono;
+      color: #617466;
+    }
+  }
+  > small,
+  > p {
+    display: block;
+    padding: 0 14px 14px;
+  }
+}
+.rescueStatus {
+  margin: 0;
+  padding: 8px 16px;
+  background: #f0f4ec;
+  color: #51634f;
+  font-size: 10px;
+  line-height: 1.6;
+  border-inline: 1px solid t.$border;
+}
+.recovery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  background: #fff7df;
+  border: 1px solid #d7c68f;
+  padding: 16px;
+  font-size: 12px;
+  > div {
+    flex: 1;
+    min-width: 180px;
+  }
+  p {
+    margin: 6px 0 0;
+    line-height: 1.6;
+  }
+  button {
+    font-size: 12px;
+  }
+}

@@ -15,22 +15,26 @@ import {
   Copy,
   Download,
   GripVertical,
-  ImagePlus,
   LayoutTemplate,
   Mail,
   Monitor,
   Plus,
   Redo2,
-  Search,
   Smartphone,
   Trash2,
   Undo2,
 } from 'lucide-react';
+import { BlockInspector, BlockMiniPreview } from './NewsletterBlocks';
+import { useNewsletterRecovery } from './useNewsletterRecovery';
+import { renderDocument } from '@/lib/content/markdown';
 import { AdminForm, useAdminFormChange } from './AdminForm';
 import type { AdminAction } from '@/lib/admin/action-types';
 import { renderNewsletterCampaignEmail } from '@/emails/newsletter-campaign';
 import {
   BLOCK_LABELS,
+  safeNewsletterLink,
+  importNewsletterTemplate,
+  MAX_DOCUMENT_LENGTH,
   parseNewsletterDocument,
   documentFromLegacy,
   MAX_BLOCKS,
@@ -41,7 +45,6 @@ import {
   type NewsletterDocument,
 } from '@/lib/newsletter/document';
 import type { NewsletterProductOption } from '@/lib/newsletter/studio';
-import { uploadNewsletterImageAction } from '@/lib/newsletter/admin-actions';
 import styles from './NewsletterCampaignEditor.module.scss';
 
 export type CampaignEditorValue = {
@@ -95,6 +98,29 @@ const TEMPLATES = [
 function freshBlock(type: NewsletterBlock['type']): NewsletterBlock {
   const id = crypto.randomUUID();
   switch (type) {
+    case 'heading':
+      return { id, type, text: '', level: 2 };
+    case 'feature':
+      return {
+        id,
+        type,
+        src: '',
+        alt: '',
+        title: '',
+        text: '',
+        label: '',
+        href: '',
+        placement: 'left',
+      };
+    case 'columns':
+      return {
+        id,
+        type,
+        columns: [
+          { title: '', text: '', label: '', href: '' },
+          { title: '', text: '', label: '', href: '' },
+        ],
+      };
     case 'text':
       return { id, type, text: '' };
     case 'image':
@@ -308,318 +334,6 @@ export function NewsletterCampaignPreview({
     </aside>
   );
 }
-function ImageUpload({ onUpload }: { onUpload: (url: string) => void }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const mark = useAdminFormChange();
-  async function upload(file?: File) {
-    if (!file || busy) return;
-    if (
-      file.size > 4 * 1024 * 1024 ||
-      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-    ) {
-      setError('JPEG, PNG ou WebP · 4 Mo maximum.');
-      return;
-    }
-    setBusy(true);
-    setError('');
-    try {
-      const data = new FormData();
-      data.set('file', file);
-      const result = await uploadNewsletterImageAction(data);
-      if (result.url) {
-        onUpload(result.url);
-        mark?.();
-      } else setError(result.error ?? 'Téléversement impossible.');
-    } catch {
-      setError('Téléversement impossible. Réessayez.');
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div
-      className={styles.dropzone}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        void upload(e.dataTransfer.files[0]);
-      }}
-      aria-busy={busy}
-    >
-      <ImagePlus size={22} />
-      <strong>{busy ? 'Téléversement…' : 'Déposez votre image ici'}</strong>
-      <label>
-        Ou choisir un fichier
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          disabled={busy}
-          onChange={(e) => {
-            void upload(e.target.files?.[0]);
-            e.currentTarget.value = '';
-          }}
-        />
-      </label>
-      <small>JPEG, PNG ou WebP · 4 Mo · optimisée en WebP</small>
-      {error && <p role="alert">{error}</p>}
-    </div>
-  );
-}
-function BlockFields({
-  block,
-  onChange,
-  products,
-}: {
-  block: NewsletterBlock;
-  onChange: (block: NewsletterBlock) => void;
-  products: NewsletterProductOption[];
-}) {
-  const id = useId();
-  const area = useRef<HTMLTextAreaElement>(null);
-  const [search, setSearch] = useState('');
-  const mark = useAdminFormChange();
-  const patch = (values: Record<string, string | number>) =>
-    onChange({ ...block, ...values } as NewsletterBlock);
-  function insert(before: string, after = '', placeholder = 'texte') {
-    if (block.type !== 'text' || !area.current) return;
-    const start = area.current.selectionStart,
-      end = area.current.selectionEnd;
-    const selected = block.text.slice(start, end) || placeholder;
-    patch({
-      text:
-        block.text.slice(0, start) +
-        before +
-        selected +
-        after +
-        block.text.slice(end),
-    });
-    mark?.();
-    requestAnimationFrame(() => {
-      area.current?.focus();
-      area.current?.setSelectionRange(
-        start + before.length,
-        start + before.length + selected.length,
-      );
-    });
-  }
-  if (block.type === 'text')
-    return (
-      <>
-        <label htmlFor={id}>Message</label>
-        <div
-          className={styles.toolbar}
-          role="group"
-          aria-label="Mise en forme du message"
-        >
-          <button
-            type="button"
-            onClick={() => insert('**', '**', 'texte en gras')}
-          >
-            <b>Gras</b>
-          </button>
-          <button
-            type="button"
-            onClick={() => insert('*', '*', 'texte en italique')}
-          >
-            <i>Italique</i>
-          </button>
-          <button
-            type="button"
-            onClick={() => insert('\n\n## ', '', 'Intertitre')}
-          >
-            Titre
-          </button>
-          <button type="button" onClick={() => insert('\n- ', '', 'Élément')}>
-            Liste
-          </button>
-          <button
-            type="button"
-            onClick={() => insert('[', '](/catalogue)', 'texte du lien')}
-          >
-            Lien
-          </button>
-        </div>
-        <textarea
-          id={id}
-          ref={area}
-          value={block.text}
-          maxLength={20000}
-          onChange={(e) => patch({ text: e.target.value })}
-          placeholder="Votre message. Sélectionnez du texte pour le mettre en forme."
-          rows={8}
-        />
-        <small>
-          Gras, italique, titres, listes et liens. Le HTML brut est neutralisé.
-        </small>
-      </>
-    );
-  if (block.type === 'image')
-    return (
-      <div className={styles.fields}>
-        <div className={styles.full}>
-          <ImageUpload onUpload={(src) => patch({ src })} />
-        </div>
-        <label className={styles.full}>
-          Chemin de l’image
-          <input
-            value={block.src}
-            maxLength={500}
-            placeholder="/media/… ou /assets/…"
-            onChange={(e) => patch({ src: e.target.value })}
-          />
-        </label>
-        <label className={styles.full}>
-          Texte alternatif
-          <input
-            value={block.alt}
-            maxLength={300}
-            onChange={(e) => patch({ alt: e.target.value })}
-            placeholder="Décrivez l’image pour les lecteurs d’écran"
-          />
-        </label>
-        <label>
-          Légende
-          <input
-            value={block.caption}
-            maxLength={500}
-            onChange={(e) => patch({ caption: e.target.value })}
-          />
-        </label>
-        <label>
-          Lien au clic (facultatif)
-          <input
-            value={block.href}
-            maxLength={500}
-            onChange={(e) => patch({ href: e.target.value })}
-            placeholder="/catalogue"
-          />
-        </label>
-      </div>
-    );
-  if (block.type === 'button')
-    return (
-      <div className={styles.fields}>
-        <label>
-          Texte du bouton
-          <input
-            value={block.label}
-            maxLength={80}
-            onChange={(e) => patch({ label: e.target.value })}
-          />
-        </label>
-        <label>
-          Lien du bouton
-          <input
-            value={block.href}
-            maxLength={500}
-            onChange={(e) => patch({ href: e.target.value })}
-            placeholder="/catalogue ou https://…"
-          />
-        </label>
-      </div>
-    );
-  if (block.type === 'product') {
-    const filtered = products.filter((p) =>
-      p.name.toLocaleLowerCase('fr').includes(search.toLocaleLowerCase('fr')),
-    );
-    return (
-      <>
-        <label>
-          Rechercher un produit
-          <div className={styles.search}>
-            <Search size={16} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Nom du produit"
-            />
-          </div>
-        </label>
-        <label>
-          Produit du catalogue
-          <select
-            value={block.productId}
-            onChange={(e) => {
-              const p = products.find((p) => p.id === e.target.value);
-              if (p) {
-                onChange({
-                  ...block,
-                  productId: p.id,
-                  name: p.name,
-                  image: p.image,
-                  price: p.price,
-                  href: p.href,
-                  description: p.description,
-                });
-                mark?.();
-              }
-            }}
-          >
-            <option value="">Choisir un produit publié</option>
-            {block.productId &&
-              !filtered.some((p) => p.id === block.productId) && (
-                <option value={block.productId}>
-                  {block.name} — sélection actuelle
-                </option>
-              )}
-            {filtered.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {!products.length && (
-          <p className={styles.notice}>
-            Aucun produit réel publié. Les produits de démonstration sont exclus
-            des campagnes.
-          </p>
-        )}
-        {block.productId && (
-          <div className={styles.productSummary}>
-            <strong>{block.name}</strong>
-            <span>{block.price}</span>
-            <small>
-              Prix copié lors de la sélection. Vérifiez-le avant l’envoi.
-            </small>
-          </div>
-        )}
-        <label>
-          Conseil ou description
-          <textarea
-            rows={3}
-            maxLength={500}
-            value={block.description}
-            onChange={(e) => patch({ description: e.target.value })}
-          />
-        </label>
-      </>
-    );
-  }
-  if (block.type === 'spacer')
-    return (
-      <label>
-        Hauteur
-        <select
-          value={block.height}
-          onChange={(e) => patch({ height: Number(e.target.value) })}
-        >
-          <option value={16}>16 px — léger</option>
-          <option value={32}>32 px — standard</option>
-          <option value={48}>48 px — aéré</option>
-        </select>
-      </label>
-    );
-  return (
-    <p className={styles.muted}>
-      Une ligne discrète sépare deux parties de votre message.
-    </p>
-  );
-}
 function Studio({
   initial,
   products,
@@ -647,12 +361,15 @@ function Studio({
   }, [initial]);
   const history = useDocumentHistory(initialDoc);
   const doc = history.doc;
+  const rescue = useNewsletterRecovery(initial, initialDoc, value, doc);
   const [step, setStep] = useState(0);
   const [active, setActive] = useState<string | null>(
     doc.blocks[0]?.id ?? null,
   );
   const [dragging, setDragging] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  const [imported, setImported] = useState<NewsletterDocument | null>(null);
+  const [importError, setImportError] = useState('');
   const [template, setTemplate] = useState<(typeof TEMPLATES)[number] | null>(
     null,
   );
@@ -667,6 +384,31 @@ function Studio({
     ctaUrl: '',
   };
   const issues = newsletterIssues(doc);
+  const links = doc.blocks.flatMap((block, index) => {
+    const direct =
+      block.type === 'button' ||
+      block.type === 'image' ||
+      block.type === 'product' ||
+      block.type === 'feature'
+        ? [block.href]
+        : block.type === 'columns'
+          ? block.columns.map((c) => c.href)
+          : [];
+    const texts =
+      block.type === 'text' || block.type === 'feature'
+        ? [block.text]
+        : block.type === 'columns'
+          ? block.columns.map((c) => c.text)
+          : [];
+    return [
+      ...new Set([
+        ...direct,
+        ...texts.flatMap((text) => renderDocument(text).links),
+      ]),
+    ]
+      .filter(Boolean)
+      .map((href) => ({ block: index + 1, href }));
+  });
   const bytes = new TextEncoder().encode(
     renderPreview(previewValue).html,
   ).length;
@@ -677,7 +419,12 @@ function Studio({
   function add(type: NewsletterBlock['type']) {
     if (doc.blocks.length >= MAX_BLOCKS) return;
     const b = freshBlock(type);
-    change({ ...doc, blocks: [...doc.blocks, b] });
+    const blocks = [...doc.blocks];
+    const at = active
+      ? blocks.findIndex((b) => b.id === active) + 1
+      : blocks.length;
+    blocks.splice(at, 0, b);
+    change({ ...doc, blocks });
     setActive(b.id);
     setAnnouncement(`${BLOCK_LABELS[type]} ajouté.`);
   }
@@ -702,6 +449,59 @@ function Studio({
           },
         ]
       : [];
+    if (t.id === 'journal')
+      blocks.splice(1, 0, {
+        id: crypto.randomUUID(),
+        type: 'columns',
+        columns: [
+          {
+            title: 'Le conseil Caldera',
+            text: 'Ajoutez un conseil pratique pour votre communauté.',
+            label: 'Lire les guides',
+            href: '/guides',
+          },
+          {
+            title: 'À explorer',
+            text: 'Présentez un univers ou une extension avec des informations vérifiées.',
+            label: 'Explorer Pokémon',
+            href: '/pokemon',
+          },
+        ],
+      });
+    if (t.id === 'release')
+      blocks.splice(1, 0, {
+        id: crypto.randomUUID(),
+        type: 'feature',
+        src: '',
+        alt: '',
+        title: 'L’extension en lumière',
+        text: 'Expliquez ce qui distingue cette extension, à partir des informations confirmées.',
+        label: 'Découvrir les extensions',
+        href: '/extensions',
+        placement: 'left',
+        style: { align: 'left', tone: 'sage', padding: 16, radius: 8 },
+      });
+    if (t.id === 'selection')
+      blocks.splice(1, 0, {
+        id: crypto.randomUUID(),
+        type: 'columns',
+        columns: [
+          {
+            title: 'Pour commencer',
+            text: 'Indiquez un format adapté et expliquez votre choix.',
+            label: 'Voir les produits',
+            href: '/catalogue',
+          },
+          {
+            title: 'Pour collectionner',
+            text: 'Donnez un repère concret pour choisir une référence disponible.',
+            label: 'Explorer la sélection',
+            href: '/catalogue',
+          },
+        ],
+        style: { align: 'left', tone: 'cream', padding: 16, radius: 8 },
+      });
+    if (t.id === 'restock') blocks.splice(1, 0, freshBlock('product'));
     change({
       version: 1,
       theme: t.id === 'selection' ? 'selection' : 'journal',
@@ -714,9 +514,48 @@ function Studio({
   }
   function chooseTemplate(t: (typeof TEMPLATES)[number]) {
     if (doc.blocks.length) {
+      setImported(null);
       setTemplate(t);
       templateDialog.current?.showModal();
     } else applyTemplate(t);
+  }
+  function exportTemplate() {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' }),
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'modele-newsletter-caldera.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  async function importTemplate(file?: File) {
+    if (!file) return;
+    try {
+      if (file.size > MAX_DOCUMENT_LENGTH * 4)
+        throw new Error('Le fichier de modèle dépasse 240 000 octets.');
+      const parsed = importNewsletterTemplate(await file.text());
+      if (!parsed) throw new Error('Modèle invalide.');
+      // Fresh identities avoid accidental ID collisions when templates are reused.
+      const next = {
+        ...parsed,
+        blocks: parsed.blocks.map((b) => ({ ...b, id: crypto.randomUUID() })),
+      };
+      if (doc.blocks.length) {
+        setImported(next);
+        setTemplate(null);
+        templateDialog.current?.showModal();
+      } else {
+        change(next);
+        setActive(next.blocks[0]?.id ?? null);
+        setStep(1);
+      }
+      setImportError('');
+    } catch (error) {
+      setImportError(
+        error instanceof Error ? error.message : 'Import impossible.',
+      );
+    }
   }
   const field = (key: keyof CampaignEditorValue, next: string) =>
     setValue((v) => ({ ...v, [key]: next }));
@@ -742,6 +581,42 @@ function Studio({
           <span /> Brouillon
         </span>
       </div>
+      {rescue.recovery && (
+        <div className={styles.recovery} role="status">
+          <div>
+            <strong>Une composition non enregistrée a été retrouvée.</strong>
+            <p>
+              Copie de secours de cet onglet, du{' '}
+              {new Date(rescue.recovery.savedAt).toLocaleString('fr-FR')}. Elle
+              ne remplace pas le brouillon enregistré sur Caldera.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (rescue.recovery) {
+                setValue((v) => ({ ...v, ...rescue.recovery!.value }));
+                change(rescue.recovery.doc);
+                setActive(rescue.recovery.doc.blocks[0]?.id ?? null);
+                setStep(1);
+                rescue.dismiss();
+              }
+            }}
+          >
+            Restaurer
+          </button>
+          <button type="button" onClick={rescue.dismiss}>
+            Ignorer
+          </button>
+        </div>
+      )}
+      <p className={styles.rescueStatus}>
+        {rescue.unavailable
+          ? 'Copie de secours indisponible dans ce navigateur. Enregistrez régulièrement votre brouillon.'
+          : rescue.savedAt
+            ? `Copie de secours dans cet onglet à ${new Date(rescue.savedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} · enregistrez pour synchroniser avec Caldera.`
+            : 'Copie de secours automatique dans cet onglet · conservée 24 h · aucun envoi automatique.'}
+      </p>
       <nav className={styles.steps} aria-label="Étapes de création">
         {STEP_LABELS.map((label, index) => (
           <button
@@ -936,6 +811,128 @@ function Studio({
               {doc.blocks.length}/{MAX_BLOCKS} blocs · flèches disponibles pour
               réordonner au clavier.
             </p>
+            <details className={styles.designPanel}>
+              <summary>Style global & modèles réutilisables</summary>
+              <div className={styles.fields}>
+                <label>
+                  Typographie du contenu
+                  <select
+                    value={doc.design?.font ?? 'sans'}
+                    onChange={(e) =>
+                      change({
+                        ...doc,
+                        design: {
+                          fontSize: 16,
+                          accent: 'forest',
+                          ...doc.design,
+                          font: e.target.value as 'sans' | 'serif',
+                        },
+                      })
+                    }
+                  >
+                    <option value="sans">Sans serif · Arial</option>
+                    <option value="serif">Éditoriale · Georgia</option>
+                  </select>
+                </label>
+                <label>
+                  Taille du texte
+                  <select
+                    value={doc.design?.fontSize ?? 16}
+                    onChange={(e) =>
+                      change({
+                        ...doc,
+                        design: {
+                          font: 'sans',
+                          accent: 'forest',
+                          ...doc.design,
+                          fontSize: Number(e.target.value) as 16 | 18,
+                        },
+                      })
+                    }
+                  >
+                    <option value={16}>16 px</option>
+                    <option value={18}>18 px · lecture confortable</option>
+                  </select>
+                </label>
+                <label>
+                  Couleur des boutons
+                  <select
+                    value={doc.design?.accent ?? 'forest'}
+                    onChange={(e) =>
+                      change({
+                        ...doc,
+                        design: {
+                          font: 'sans',
+                          fontSize: 16,
+                          ...doc.design,
+                          accent: e.target.value as
+                            'forest' | 'bronze' | 'plum',
+                        },
+                      })
+                    }
+                  >
+                    <option value="forest">Forêt</option>
+                    <option value="bronze">Bronze</option>
+                    <option value="plum">Prune</option>
+                  </select>
+                </label>
+              </div>
+              <div className={styles.templateTools}>
+                <button type="button" onClick={exportTemplate}>
+                  <Download size={16} /> Exporter le modèle
+                </button>
+                <label>
+                  Importer un modèle
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    onChange={(e) => {
+                      void importTemplate(e.target.files?.[0]);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+              <small>
+                Fichier Caldera réutilisable. Le modèle contient la composition
+                et son style, sans destinataires ni programmation.
+              </small>
+              {importError && <p role="alert">{importError}</p>}
+            </details>
+            {doc.blocks.length > 0 && (
+              <details className={styles.outline}>
+                <summary>Plan du message · {doc.blocks.length} blocs</summary>
+                <ol>
+                  {doc.blocks.map((b, i) => (
+                    <li key={b.id}>
+                      <button
+                        type="button"
+                        aria-current={active === b.id ? 'true' : undefined}
+                        onClick={() => {
+                          setActive(b.id);
+                          requestAnimationFrame(() =>
+                            document
+                              .getElementById(`${prefix}-${b.id}`)
+                              ?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center',
+                              }),
+                          );
+                        }}
+                      >
+                        <span>{String(i + 1).padStart(2, '0')}</span>
+                        {BLOCK_LABELS[b.type]}
+                        {b.type === 'heading'
+                          ? ` · ${b.text}`
+                          : b.type === 'product'
+                            ? ` · ${b.name}`
+                            : ''}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
             {!doc.blocks.length && (
               <div className={styles.emptyCanvas}>
                 <Mail size={32} />
@@ -1052,23 +1049,32 @@ function Studio({
                       </button>
                     </div>
                   </div>
+                  {active !== block.id && (
+                    <BlockMiniPreview
+                      block={block}
+                      doc={doc}
+                      onEdit={() => setActive(block.id)}
+                    />
+                  )}
                   <div
                     id={`${prefix}-${block.id}`}
                     hidden={active !== block.id}
                     className={styles.blockBody}
                   >
-                    <BlockFields
-                      block={block}
-                      products={products}
-                      onChange={(updated) =>
-                        change({
-                          ...doc,
-                          blocks: doc.blocks.map((b) =>
-                            b.id === block.id ? updated : b,
-                          ),
-                        })
-                      }
-                    />
+                    {active === block.id && (
+                      <BlockInspector
+                        block={block}
+                        products={products}
+                        onChange={(updated) =>
+                          change({
+                            ...doc,
+                            blocks: doc.blocks.map((b) =>
+                              b.id === block.id ? updated : b,
+                            ),
+                          })
+                        }
+                      />
+                    )}
                   </div>
                 </article>
               ))}
@@ -1155,6 +1161,36 @@ function Studio({
                 </button>
               </div>
             )}
+            <details className={styles.linkReview}>
+              <summary>
+                Vérifier les destinations · {links.length} lien(s)
+              </summary>
+              {links.length ? (
+                <ul>
+                  {links.map(({ block, href }) => (
+                    <li key={`${block}-${href}`}>
+                      <span>Bloc {block}</span>
+                      <a
+                        href={safeNewsletterLink(href) ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {href}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>
+                  Aucun lien dans le contenu. Ajoutez un bouton utile si votre
+                  campagne invite à découvrir un produit ou un guide.
+                </p>
+              )}
+              <small>
+                Contrôle de format uniquement. Ouvrez les liens pour vérifier la
+                page cible et les informations commerciales.
+              </small>
+            </details>
             <p className={styles.notice}>
               Les modèles contiennent des indications à personnaliser. Relisez
               les faits, prix et disponibilités : aucun envoi ne part depuis cet
@@ -1180,7 +1216,13 @@ function Studio({
           <button
             type="button"
             onClick={() => {
-              if (template) applyTemplate(template);
+              if (imported) {
+                change(imported);
+                setActive(imported.blocks[0]?.id ?? null);
+                setStep(1);
+                setAnnouncement('Modèle importé.');
+                setImported(null);
+              } else if (template) applyTemplate(template);
               templateDialog.current?.close();
             }}
           >
