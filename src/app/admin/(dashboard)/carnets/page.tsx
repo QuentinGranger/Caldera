@@ -4,7 +4,6 @@ import {
   AdminTable,
   Badge,
   EmptyState,
-  FilterSelect,
   PageHeader,
   Pagination,
 } from '@/components/admin/AdminUI';
@@ -38,24 +37,29 @@ export default async function CarnetsPage({
         placeholder="Titre, numéro ou arc"
         activeCount={param(params, 'status') ? 1 : 0}
       >
-        <FilterSelect
-          name="status"
-          label="Statut éditorial"
-          value={param(params, 'status')}
-          options={CARNET_STATUSES.map((value) => ({
-            value,
-            label: CARNET_STATUS_LABELS[value],
-          }))}
-        />
-        <FilterSelect
-          name="sort"
-          label="Ordre"
-          value={param(params, 'sort')}
-          options={[
-            { value: 'number', label: 'Numéro du Carnet' },
-            { value: 'modified', label: 'Dernière modification' },
-          ]}
-        />
+        <label>
+          Statut éditorial
+          <select name="status" defaultValue={param(params, 'status')}>
+            <option value="">Brouillons et prêts</option>
+            {CARNET_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {CARNET_STATUS_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Ordre
+          <select
+            name="sort"
+            defaultValue={
+              param(params, 'sort') === 'modified' ? 'modified' : 'number'
+            }
+          >
+            <option value="number">Numéro du Carnet</option>
+            <option value="modified">Dernière modification</option>
+          </select>
+        </label>
       </FilterPanel>
       {data.chapters.length ? (
         <AdminTable
