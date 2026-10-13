@@ -36,12 +36,9 @@ export default async function AdminNewsletterPage({
         title="Newsletter"
         description="Consultez les consentements confirmés et les désinscriptions. Seules les adresses actives peuvent recevoir une campagne."
       >
-        <Link
-          className={styles.button}
-          href="/admin/newsletter/campagnes/nouvelle"
-        >
+        <Link className={styles.button} href="/admin/newsletter/nouvelle">
           <Plus size={16} aria-hidden="true" />
-          Nouvelle campagne
+          Nouvelle édition
         </Link>
       </PageHeader>
       <section className={styles.card} aria-label="État des inscriptions">
