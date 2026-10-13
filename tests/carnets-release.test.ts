@@ -127,3 +127,40 @@ test('Paris : 14 jours calendaires, changement été/hiver, secondes, exemples �
     /ambiguë|inexistante/,
   );
 });
+
+test('SEO Carnets : le catalogue démo ne force pas noindex sur les vrais récits éditoriaux', async () => {
+  const { NextRequest } = await import('next/server');
+  const { proxy } = await import('../src/proxy');
+  const previousDemo = process.env.CATALOG_DEMO_MODE,
+    previousOpen = process.env.STORE_OPEN;
+  process.env.CATALOG_DEMO_MODE = '1';
+  process.env.STORE_OPEN = '1';
+  try {
+    const request = (path: string) =>
+      new NextRequest(`https://lesterresdecaldera.fr${path}`, {
+        headers: { host: 'lesterresdecaldera.fr' },
+      });
+    for (const path of ['/univers/carnets', '/univers/carnets/001-le-lac']) {
+      const response = await proxy(request(path));
+      assert.equal(response.headers.get('X-Robots-Tag'), null);
+      assert.match(
+        response.headers.get('Cache-Control') ?? '',
+        /private.*no-store/,
+      );
+    }
+    assert.match(
+      (await proxy(request('/catalogue'))).headers.get('X-Robots-Tag') ?? '',
+      /noindex/,
+    );
+    assert.match(
+      (await proxy(request('/admin/carnets'))).headers.get('X-Robots-Tag') ??
+        '',
+      /noindex/,
+    );
+  } finally {
+    if (previousDemo === undefined) delete process.env.CATALOG_DEMO_MODE;
+    else process.env.CATALOG_DEMO_MODE = previousDemo;
+    if (previousOpen === undefined) delete process.env.STORE_OPEN;
+    else process.env.STORE_OPEN = previousOpen;
+  }
+});

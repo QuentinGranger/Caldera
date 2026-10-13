@@ -124,6 +124,7 @@ test('HTTP Carnets : accès serveur HTML/RSC, metadata, archives, sitemap et bas
     const publicResponse = await fetch(base + path);
     const publicHtml = await publicResponse.text();
     assert.equal(publicResponse.status, 200);
+    assert.ok(!publicResponse.headers.get('x-robots-tag')?.includes('noindex'));
     assert.match(publicHtml, new RegExp(marker));
     assert.match(publicHtml, /<meta name="robots" content="index, follow/);
     const historical = await fetch(`${base}${path}?access=ancien-token`);
