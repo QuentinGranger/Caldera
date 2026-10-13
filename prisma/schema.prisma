@@ -608,6 +608,7 @@ model AdminUser {
   adjustments            InventoryAdjustment[]
   auditLogs              AdminAuditLog[]
   newsletterCampaigns    NewsletterCampaign[]
+  carnetChapters         CarnetChapter[]
   refunds                Refund[]
   promotions             Promotion[]
   returns                ReturnRequest[]
@@ -1857,4 +1858,32 @@ model MeasurementOrder {
   sessionId String @db.Uuid
   session MeasurementSession @relation(fields:[sessionId],references:[id],onDelete:Cascade)
   @@index([sessionId])
+}
+
+enum CarnetChapterStatus {
+  DRAFT
+  READY
+  ARCHIVED
+}
+
+/// Narrative source of truth. Newsletter excerpts are derived, never stored as editable text.
+model CarnetChapter {
+  id          String              @id @default(uuid()) @db.Uuid
+  number      Int                 @unique
+  title       String              @db.VarChar(200)
+  slug        String              @unique @db.VarChar(120)
+  arcTitle    String?             @db.VarChar(200)
+  arcPosition Int?
+  arcTotal    Int?
+  /// Versioned narrative document; the optional newsletterCut is a structural node.
+  content     Json
+  status      CarnetChapterStatus @default(DRAFT)
+  revision    Int                 @default(0)
+  createdById String              @db.Uuid
+  createdBy   AdminUser           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([createdById])
 }

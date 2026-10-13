@@ -82,7 +82,9 @@
     "test:sitemap": "node --conditions=react-server --import tsx --test tests/sitemap.test.ts",
     "test:editorial:db": "node --conditions=react-server --import tsx --test tests/editorial-db.test.ts",
     "images:optimize": "node --import tsx scripts/optimize-images.ts",
-    "test:discord:account:db": "node --conditions=react-server --import tsx --test tests/discord-account-db.test.ts"
+    "test:discord:account:db": "node --conditions=react-server --import tsx --test tests/discord-account-db.test.ts",
+    "test:carnets": "node --conditions=react-server --import tsx --test tests/carnets.test.ts",
+    "test:carnets:db": "node --conditions=react-server --import tsx --test tests/carnets-db.test.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.0.9",
@@ -94,6 +96,7 @@
     "@tesseract.js-data/eng": "1.0.0",
     "@tesseract.js-data/fra": "1.0.0",
     "@tiptap/markdown": "3.31.4",
+    "@tiptap/pm": "3.31.4",
     "@tiptap/react": "3.31.4",
     "@tiptap/starter-kit": "3.31.4",
     "@vercel/analytics": "2.0.1",
