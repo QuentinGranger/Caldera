@@ -5,7 +5,9 @@ import {
   integer,
   text,
   whitelist,
+  localImage,
 } from '@/lib/admin/validation';
+import { parseCarnetDate } from './dates';
 import {
   deriveCarnet,
   parseCarnetContent,
@@ -24,6 +26,12 @@ export function carnetInput(form: FormData) {
     'arcTotal',
     'content',
     'status',
+    'illustrationUrl',
+    'illustrationAlt',
+    'illustrationFile',
+    'location',
+    'earlyAccessAt',
+    'publicAt',
   ]);
   const chapterId = id(form, 'id', true);
   const revision = integer(form, 'revision', 0, 2147483647);
@@ -78,6 +86,31 @@ export function carnetInput(form: FormData) {
       arcTotal,
       status,
       content,
+      ...(form.has('illustrationUrl')
+        ? { illustrationUrl: localImage(form, 'illustrationUrl') }
+        : {}),
+      ...(form.has('illustrationAlt')
+        ? { illustrationAlt: text(form, 'illustrationAlt', 300, false) || null }
+        : {}),
+      ...(form.has('location')
+        ? { location: text(form, 'location', 200, false) || null }
+        : {}),
+      ...(form.has('earlyAccessAt')
+        ? {
+            earlyAccessAt: parseCarnetDate(
+              text(form, 'earlyAccessAt', 16, false),
+              'Accès anticipé',
+            ),
+          }
+        : {}),
+      ...(form.has('publicAt')
+        ? {
+            publicAt: parseCarnetDate(
+              text(form, 'publicAt', 16, false),
+              'Publication publique',
+            ),
+          }
+        : {}),
     },
   };
 }

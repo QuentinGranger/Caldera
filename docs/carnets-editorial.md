@@ -66,4 +66,27 @@ L'éditeur réutilise les dépendances Tiptap présentes. `@tiptap/pm` est décl
 
 ## Étapes suivantes, volontairement absentes
 
-Pas de route publique de lecture, accès abonné privé, publication J+14, transformation en campagne, envoi, segmentation, tracking, SEO final ni bloc Comptoir. Une future campagne pourra référencer le Carnet et consommer ses dérivés sans ajouter une deuxième source éditable.
+Pas de route publique de lecture, accès abonné privé, publication J+14, transformation en campagne, envoi, segmentation, tracking, SEO final ni bloc Comptoir. Une campagne peut désormais référencer un Carnet ; la consommation automatique de ses dérivés reste une prochaine étape.
+
+## Métadonnées éditoriales et référence newsletter
+
+Migration additive `20261013160000_extend_carnet_editorial_metadata` :
+
+- `CarnetChapter.illustrationUrl` (500), `illustrationAlt` (300), `location` (200), tous nullable.
+- `earlyAccessAt`, `publicAt`, `publishedAt` : `DateTime?`. Les dates prévues sont facultatives et indépendantes de la programmation d'un email. `publishedAt` est réservé à la première mise à disposition effective, anticipée ou publique, par le futur service de publication. Il n'est pas modifiable par les formulaires.
+- `EARLY_ACCESS` et `PUBLIC` sont prévus dans l'enum, mais aucune action actuelle ne permet de les activer. Leur consultation admin reste possible ; leur édition attend le service de publication. Une adresse ayant un `publishedAt` ne peut plus être changée par une sauvegarde de brouillon, y compris après archivage/restauration.
+- `NewsletterCampaign.chapterId String? @db.Uuid`, relation facultative vers le Carnet, `onDelete: SetNull`, `onUpdate: Cascade`, index `chapterId`.
+- Index Carnets `(status, earlyAccessAt)` et `(status, publicAt)`.
+- Contraintes PostgreSQL : dates ordonnées lorsqu'elles sont toutes deux renseignées, illustration et texte alternatif cohérents. Le lieu reste un texte libre ; l'arc conserve ses trois champs, sans modèles géographiques supplémentaires.
+
+L'admin accepte les heures civiles de Paris (2000–2099), les convertit en UTC et refuse les heures inexistantes ou doubles du changement d'heure. Le fuseau du navigateur ou du serveur ne change pas leur interprétation. Les dates restent préparatoires : aucun accès ou ordonnanceur n'est activé.
+
+Les illustrations passent par `GameLogoField`, désormais paramétrable (nom et libellé), et par `imageStorage` existant. JPEG/PNG/WebP, 4 Mo maximum ; normalisation WebP et route `/media` inchangées. Un fichier créé lors d'une sauvegarde échouée est nettoyé. Retirer une référence ne détruit pas son fichier, car une autre page peut le réutiliser.
+
+Dans les paramètres d'une campagne, le Carnet est une référence facultative. Le sélecteur présente les 200 derniers Carnets non archivés et conserve la référence déjà enregistrée, même archivée ou plus ancienne. Depuis n'importe quel Carnet, « Préparer une campagne liée » ouvre une campagne avec sa référence et ses titres préremplis, sans copier le récit. Ce chemin permet aussi de sélectionner un ancien Carnet au-delà des 200 derniers.
+
+La duplication d'une campagne conserve le même `chapterId` et ne crée aucun chapitre. Modifier ou supprimer une campagne ne modifie pas le récit. Les campagnes mises en file restent non modifiables ; la référence n'est pas consultée par le moteur d'envoi dans cette étape. Les enveloppes d'emails existantes restent indépendantes des corrections ultérieures du Carnet.
+
+Une valeur vide détache explicitement la campagne. Un ancien formulaire sans `chapterId` conserve la référence existante. De même, les anciens formulaires Carnets sans les nouveaux champs conservent les métadonnées déjà enregistrées. Les campagnes historiques obtiennent `chapterId = null`, sans réécriture du contenu.
+
+Tests complémentaires : dates/heure d'été, métadonnées, image normalisée et texte alternatif, relation facultative, copie et détachement, indépendance des suppressions, `SET NULL`, formulaires historiques et parcours HTTP réel. Aucune nouvelle dépendance.

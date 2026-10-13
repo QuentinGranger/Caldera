@@ -29,6 +29,7 @@ const CAMPAIGN_FIELDS = [
   'bodyMarkdown',
   'ctaLabel',
   'ctaUrl',
+  'chapterId',
 ] as const;
 
 function campaignData(form: FormData) {
@@ -65,6 +66,9 @@ function campaignData(form: FormData) {
       'Le bouton doit pointer vers une page du site ou une adresse HTTPS.',
     );
   return {
+    ...(form.has('chapterId')
+      ? { chapterId: id(form, 'chapterId', true) ?? null }
+      : {}),
     internalName,
     subject,
     preheader,
@@ -79,6 +83,16 @@ export async function saveNewsletterCampaign(adminId: string, form: FormData) {
   const campaignId = id(form, 'id', true);
   const data = campaignData(form);
   return adminTransaction(adminId, async (tx) => {
+    if (data.chapterId) {
+      const chapter = await tx.carnetChapter.findUnique({
+        where: { id: data.chapterId },
+        select: { id: true },
+      });
+      if (!chapter)
+        throw new AdminError(
+          'Carnet introuvable. Sélectionnez un chapitre existant.',
+        );
+    }
     if (campaignId) {
       await tx.$queryRaw`SELECT id FROM "NewsletterCampaign" WHERE id = ${campaignId}::uuid FOR UPDATE`;
       const current = await tx.newsletterCampaign.findUnique({
@@ -283,6 +297,7 @@ export async function duplicateNewsletterCampaign(
         bodyMarkdown: source.bodyMarkdown,
         ctaLabel: source.ctaLabel,
         ctaUrl: source.ctaUrl,
+        chapterId: source.chapterId,
         createdById: adminId,
       },
     });

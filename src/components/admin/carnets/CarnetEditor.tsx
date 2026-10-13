@@ -18,6 +18,8 @@ import {
 } from '@/lib/carnets/content';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from './CarnetEditor.module.scss';
+import Image from 'next/image';
+import { GameLogoField } from '../GameLogoField';
 const Narrative = dynamic(() => import('./CarnetNarrativeEditor'), {
   ssr: false,
   loading: () => <p>Chargement de l’espace d’écriture…</p>,
@@ -28,6 +30,14 @@ export function CarnetPreview({ value }: { value: CarnetEditorValue }) {
   const derived = deriveCarnet(value.content);
   const cta = carnetCta(value.slug);
   const rendered = mode === 'full' ? derived.full : derived.excerpt;
+  const illustration =
+    value.illustrationUrl &&
+    /^\/(?:assets\/[a-zA-Z0-9_./-]+|media\/[a-f0-9-]+\.webp)$/.test(
+      value.illustrationUrl,
+    ) &&
+    !value.illustrationUrl.includes('..')
+      ? value.illustrationUrl
+      : null;
   return (
     <aside className={styles.preview} aria-label="Aperçu du Carnet">
       <div className={styles.previewHeading}>
@@ -71,6 +81,23 @@ export function CarnetPreview({ value }: { value: CarnetEditorValue }) {
           </p>
         )}
         <h2>{value.title || 'Titre du Carnet'}</h2>
+        {value.location && (
+          <p className={styles.arc}>Lieu · {value.location}</p>
+        )}
+        {illustration && (
+          <Image
+            src={illustration}
+            alt={value.illustrationAlt ?? ''}
+            width={960}
+            height={540}
+            style={{
+              width: '100%',
+              height: 'auto',
+              borderRadius: 8,
+              marginBottom: 20,
+            }}
+          />
+        )}
         {rendered ? (
           <div
             className={styles.prose}
@@ -273,6 +300,85 @@ function Fields({ initial }: { initial: CarnetEditorValue }) {
             <small>
               « Prêt éditorialement » ne publie pas le chapitre et ne déclenche
               aucun email.
+            </small>
+          </label>
+          <label className={styles.wide}>
+            Lieu (facultatif)
+            <input
+              name="location"
+              maxLength={200}
+              value={value.location ?? ''}
+              onChange={(e) =>
+                setValue((v) => ({ ...v, location: e.target.value }))
+              }
+              placeholder="Nom du lieu du récit"
+            />
+          </label>
+          <label>
+            Accès anticipé prévu · Paris
+            <input
+              name="earlyAccessAt"
+              type="datetime-local"
+              min="2000-01-01T00:00"
+              max="2099-12-31T23:59"
+              value={value.earlyAccessAt ?? ''}
+              onChange={(e) =>
+                setValue((v) => ({ ...v, earlyAccessAt: e.target.value }))
+              }
+            />
+          </label>
+          <label>
+            Publication publique prévue · Paris
+            <input
+              name="publicAt"
+              type="datetime-local"
+              min="2000-01-01T00:00"
+              max="2099-12-31T23:59"
+              value={value.publicAt ?? ''}
+              onChange={(e) =>
+                setValue((v) => ({ ...v, publicAt: e.target.value }))
+              }
+            />
+          </label>
+          <p className={styles.wide}>
+            Ces dates préparent le calendrier. Elles ne déclenchent aucune
+            publication ni aucun envoi. La première publication effective sera
+            enregistrée automatiquement par le futur service de publication.
+          </p>
+          {value.publishedAt && (
+            <p className={styles.wide}>
+              Première publication effective : {value.publishedAt} (Paris).
+            </p>
+          )}
+          <div className={`${styles.wide} ${styles.media}`}>
+            <GameLogoField
+              name="illustration"
+              label="Illustration du Carnet"
+              currentUrl={value.illustrationUrl ?? ''}
+              maxBytes={4 * 1024 * 1024}
+              maxLabel="4 Mo"
+              onUrlChange={(illustrationUrl) =>
+                setValue((v) => ({
+                  ...v,
+                  illustrationUrl,
+                  ...(!illustrationUrl ? { illustrationAlt: '' } : {}),
+                }))
+              }
+            />
+          </div>
+          <label className={styles.wide}>
+            Texte alternatif de l’illustration
+            <input
+              name="illustrationAlt"
+              maxLength={300}
+              value={value.illustrationAlt ?? ''}
+              onChange={(e) =>
+                setValue((v) => ({ ...v, illustrationAlt: e.target.value }))
+              }
+            />
+            <small>
+              Décrivez l’image. Ce texte est requis lorsqu’une illustration est
+              renseignée.
             </small>
           </label>
         </div>
