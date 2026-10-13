@@ -73,6 +73,7 @@ export default async function NewsletterCampaignPage({
     bodyMarkdown: campaign.bodyMarkdown,
     ctaLabel: campaign.ctaLabel ?? '',
     ctaUrl: campaign.ctaUrl ?? '',
+    chapterId: campaign.chapterId ?? '',
   };
   return (
     <>
@@ -106,10 +107,29 @@ export default async function NewsletterCampaignPage({
       <NewsletterCampaignEditor
         revision={`${campaign.id}:${campaign.updatedAt.toISOString()}`}
         products={studio.products}
+        chapters={
+          campaign.chapter &&
+          !studio.chapters.some((c) => c.id === campaign.chapterId)
+            ? [campaign.chapter, ...studio.chapters]
+            : studio.chapters
+        }
         value={value}
         action={saveNewsletterCampaignAction}
         readOnly={campaign.status !== 'DRAFT'}
       />
+      {campaign.chapter && (
+        <section className={styles.card} aria-label="Source éditoriale">
+          <h2>Carnet associé</h2>
+          <Link href={`/admin/carnets/${campaign.chapter.id}`}>
+            #{String(campaign.chapter.number).padStart(3, '0')} ·{' '}
+            {campaign.chapter.title}
+          </Link>
+          <p>
+            Le récit reste géré dans les Carnets. Cette référence ne remplace
+            pas le contenu de l’email et n’active pas sa publication.
+          </p>
+        </section>
+      )}
       <section className={styles.card} aria-labelledby="verifications-campagne">
         <h2 id="verifications-campagne">Tester et réutiliser</h2>
         <p>

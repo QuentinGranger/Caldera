@@ -619,6 +619,9 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           slug: `carnet-http-${key}`,
           content,
           status: 'DRAFT',
+          location: 'Cœurlac',
+          earlyAccessAt: '2026-10-20T09:00',
+          publicAt: '2026-11-03T09:00',
         };
         const refused = await action('saveCarnetChapterAction', values, '');
         assert.ok(
@@ -652,6 +655,68 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         const detail = await page(`/admin/carnets/${chapter.id}`);
         assert.equal(detail.response.status, 200);
         assert.ok(detail.html.includes('Le récit complet'));
+        assert.equal(chapter.location, 'Cœurlac');
+        assert.equal(
+          chapter.earlyAccessAt?.toISOString(),
+          '2026-10-20T07:00:00.000Z',
+        );
+        const newCampaign = await page(
+          `/admin/newsletter/campagnes/nouvelle?chapterId=${chapter.id}`,
+        );
+        assert.equal(newCampaign.response.status, 200);
+        assert.ok(newCampaign.html.includes(chapter.id));
+        assert.ok(!newCampaign.html.includes('Le lac avait reculé.'));
+        const campaignFields = {
+          internalName: `Carnet relation HTTP ${key}`,
+          subject: 'Expédition',
+          heading: 'Expédition',
+          bodyMarkdown: 'Contenu marketing indépendant.',
+          chapterId: chapter.id,
+        };
+        try {
+          const linked = await action(
+            'saveNewsletterCampaignAction',
+            campaignFields,
+          );
+          assert.ok(linked.body.includes('"success":true'));
+          const campaign = await db.newsletterCampaign.findFirstOrThrow({
+            where: { internalName: campaignFields.internalName },
+          });
+          assert.equal(campaign.chapterId, chapter.id);
+          const { chapterId: _chapterId, ...legacyFields } = campaignFields;
+          void _chapterId;
+          await action('saveNewsletterCampaignAction', {
+            ...legacyFields,
+            id: campaign.id,
+            subject: 'Objet corrigé',
+          });
+          assert.equal(
+            (
+              await db.newsletterCampaign.findUniqueOrThrow({
+                where: { id: campaign.id },
+              })
+            ).chapterId,
+            chapter.id,
+          );
+          const bad = await action('saveNewsletterCampaignAction', {
+            ...campaignFields,
+            id: campaign.id,
+            chapterId: 'invalid',
+          });
+          assert.ok(bad.body.includes('Identifiant invalide'));
+        } finally {
+          await db.newsletterCampaign.deleteMany({
+            where: { internalName: campaignFields.internalName },
+          });
+        }
+        assert.deepEqual(
+          (
+            await db.carnetChapter.findUniqueOrThrow({
+              where: { id: chapter.id },
+            })
+          ).content,
+          parseCarnetContent(content),
+        );
         const publicPage = await page(`/univers/carnets/${chapter.slug}`, '');
         assert.ok(!publicPage.html.includes('Le lac avait reculé.'));
         const invalid = await action('saveCarnetChapterAction', {

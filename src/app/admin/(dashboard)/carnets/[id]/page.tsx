@@ -16,6 +16,7 @@ import {
 } from '@/lib/carnets/content';
 import { formatDate } from '@/lib/admin/format';
 import styles from '@/components/admin/Admin.module.scss';
+import { formatCarnetDate } from '@/lib/carnets/dates';
 export default async function EditCarnetPage({
   params,
 }: {
@@ -31,6 +32,14 @@ export default async function EditCarnetPage({
         title={`Carnet #${String(chapter.number).padStart(3, '0')} · ${chapter.title}`}
         description="La newsletter et le chapitre utilisent une seule source narrative."
       >
+        {!archived && (
+          <Link
+            className={styles.button}
+            href={`/admin/newsletter/campagnes/nouvelle?chapterId=${chapter.id}`}
+          >
+            Préparer une campagne liée
+          </Link>
+        )}
         <Link
           className={`${styles.button} ${styles.secondaryButton}`}
           href="/admin/carnets"
@@ -53,7 +62,11 @@ export default async function EditCarnetPage({
       </section>
       <CarnetEditor
         action={saveCarnetChapterAction}
-        readOnly={archived}
+        readOnly={
+          archived ||
+          chapter.status === 'PUBLIC' ||
+          chapter.status === 'EARLY_ACCESS'
+        }
         revision={String(chapter.revision)}
         value={{
           id: chapter.id,
@@ -66,6 +79,14 @@ export default async function EditCarnetPage({
           arcTotal: chapter.arcTotal?.toString() ?? '',
           status: chapter.status === 'READY' ? 'READY' : 'DRAFT',
           content: parseCarnetContent(chapter.content),
+          illustrationUrl: chapter.illustrationUrl ?? '',
+          illustrationAlt: chapter.illustrationAlt ?? '',
+          location: chapter.location ?? '',
+          earlyAccessAt: formatCarnetDate(chapter.earlyAccessAt),
+          publicAt: formatCarnetDate(chapter.publicAt),
+          publishedAt: chapter.publishedAt
+            ? formatDate(chapter.publishedAt)
+            : '',
         }}
       />
       <section className={styles.card} aria-label="Archivage du Carnet">

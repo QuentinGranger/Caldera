@@ -264,3 +264,43 @@ test('Carnets : HTML échappé, schéma borné et nœuds non narratifs interdits
     /500 blocs/,
   );
 });
+
+test('Carnets : dates éditoriales de Paris, ordre et transitions réservées', async () => {
+  const { parseCarnetDate, formatCarnetDate, assertCarnetCalendar } =
+    await import('../src/lib/carnets/dates');
+  const early = parseCarnetDate('2026-10-20T09:00', 'Accès anticipé')!;
+  const publicAt = parseCarnetDate('2026-11-03T09:00', 'Publication')!;
+  assert.equal(early.toISOString(), '2026-10-20T07:00:00.000Z');
+  assert.equal(publicAt.toISOString(), '2026-11-03T08:00:00.000Z');
+  assert.equal(formatCarnetDate(early), '2026-10-20T09:00');
+  assert.equal(parseCarnetDate('', 'Publication'), null);
+  assert.doesNotThrow(() => assertCarnetCalendar(early, publicAt));
+  assert.throws(() => assertCarnetCalendar(publicAt, early));
+  assert.throws(() => assertCarnetCalendar(early, early));
+  for (const date of [
+    '2026-02-30T10:00',
+    '2026-03-29T02:30',
+    '2026-10-25T02:30',
+    '2026-13-01T10:00',
+    '2026-01-01T25:00',
+  ])
+    assert.throws(() => parseCarnetDate(date, 'Date'));
+  for (const status of ['PUBLIC', 'EARLY_ACCESS'])
+    assert.throws(() => carnetInput(form({ status })));
+  assert.throws(
+    () => carnetInput(form({ publishedAt: '2026-10-20T09:00' })),
+    /non autorisé/,
+  );
+  assert.equal(
+    carnetInput(
+      form({ location: 'Cœurlac', earlyAccessAt: '2026-10-20T09:00' }),
+    ).data.location,
+    'Cœurlac',
+  );
+  for (const illustrationUrl of [
+    'https://attacker.example/a.png',
+    '/assets/../private.png',
+    'file:///Users/example/image.png',
+  ])
+    assert.throws(() => carnetInput(form({ illustrationUrl })));
+});

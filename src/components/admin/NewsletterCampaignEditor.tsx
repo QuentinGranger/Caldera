@@ -46,6 +46,13 @@ import {
 } from '@/lib/newsletter/document';
 import type { NewsletterProductOption } from '@/lib/newsletter/studio';
 import styles from './NewsletterCampaignEditor.module.scss';
+import { CARNET_STATUS_LABELS } from '@/lib/carnets/content';
+export type CampaignChapterOption = {
+  id: string;
+  number: number;
+  title: string;
+  status: keyof typeof CARNET_STATUS_LABELS;
+};
 
 export type CampaignEditorValue = {
   id?: string;
@@ -56,6 +63,7 @@ export type CampaignEditorValue = {
   bodyMarkdown: string;
   ctaLabel: string;
   ctaUrl: string;
+  chapterId?: string;
 };
 const STEP_LABELS = ['Paramètres', 'Composition', 'Vérification'];
 const TEMPLATES = [
@@ -337,9 +345,11 @@ export function NewsletterCampaignPreview({
 function Studio({
   initial,
   products,
+  chapters,
 }: {
   initial: CampaignEditorValue;
   products: NewsletterProductOption[];
+  chapters: CampaignChapterOption[];
 }) {
   const [value, setValue] = useState(initial);
   const initialDoc = useMemo(() => {
@@ -646,6 +656,35 @@ function Studio({
               <p>Un objet clair. Une promesse utile. Votre identité Caldera.</p>
             </div>
             <div className={styles.settingsFields}>
+              <label>
+                Carnet associé (facultatif)
+                <select
+                  name="chapterId"
+                  value={value.chapterId ?? ''}
+                  onChange={(e) => field('chapterId', e.target.value)}
+                >
+                  <option value="">Aucun Carnet — campagne classique</option>
+                  {chapters.map((chapter) => (
+                    <option key={chapter.id} value={chapter.id}>
+                      #{String(chapter.number).padStart(3, '0')} ·{' '}
+                      {chapter.title} · {CARNET_STATUS_LABELS[chapter.status]}
+                    </option>
+                  ))}
+                </select>
+                <small>
+                  Cette référence relie la campagne au récit original. L’extrait
+                  n’est pas encore inséré automatiquement dans l’email.
+                </small>
+                {value.chapterId && (
+                  <a
+                    href={`/admin/carnets/${value.chapterId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ouvrir le Carnet source
+                  </a>
+                )}
+              </label>
               <label>
                 Nom interne
                 <input
@@ -1238,6 +1277,7 @@ export function NewsletterCampaignEditor({
   action,
   readOnly = false,
   products = [],
+  chapters = [],
   revision,
 }: {
   value: CampaignEditorValue;
@@ -1245,6 +1285,7 @@ export function NewsletterCampaignEditor({
   action?: AdminAction;
   readOnly?: boolean;
   products?: NewsletterProductOption[];
+  chapters?: CampaignChapterOption[];
 }) {
   if (readOnly) return <NewsletterCampaignPreview value={value} />;
   if (!action) return null;
@@ -1255,7 +1296,7 @@ export function NewsletterCampaignEditor({
         fieldsKey={revision}
         submit="Enregistrer le brouillon"
       >
-        <Studio initial={value} products={products} />
+        <Studio initial={value} products={products} chapters={chapters} />
       </AdminForm>
     </div>
   );

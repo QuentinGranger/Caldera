@@ -13,41 +13,112 @@ import {
 import { param, type SearchParams } from '@/lib/admin/queries';
 import { CARNET_STATUSES, type CarnetContent } from './content';
 import { carnetInput } from './input';
+import { assertCarnetCalendar } from './dates';
+import { imageStorage } from '@/lib/storage/images';
 
 export async function saveCarnetChapter(adminId: string, form: FormData) {
   const input = carnetInput(form);
-  return adminTransaction(adminId, async (tx) => {
-    const data = {
-      ...input.data,
-      content: input.data.content as unknown as Prisma.InputJsonValue,
-    };
-    if (input.id) {
-      await tx.$queryRaw`SELECT id FROM "CarnetChapter" WHERE id = ${input.id}::uuid FOR UPDATE`;
-      const current = await tx.carnetChapter.findUnique({
-        where: { id: input.id },
-      });
-      if (!current) throw new AdminError('Carnet introuvable.');
-      if (current.status === 'ARCHIVED')
-        throw new AdminError('Restaurez le Carnet avant de le modifier.');
-      if (current.revision !== input.revision)
-        throw new AdminError(
-          'Ce Carnet a été modifié dans un autre onglet. Conservez votre texte, puis rechargez pour consulter la version enregistrée.',
-        );
-      const chapter = await tx.carnetChapter.update({
-        where: { id: current.id },
-        data: { ...data, revision: { increment: 1 } },
-      });
-      await audit(tx, adminId, 'CARNET_UPDATED', 'CarnetChapter', chapter.id, {
-        revision: chapter.revision,
-      });
-      return chapter;
-    }
-    const chapter = await tx.carnetChapter.create({
-      data: { ...data, createdById: adminId },
+  const file = form.get('illustrationFile');
+  if (file !== null && !(file instanceof File))
+    throw new AdminError('Fichier illustration invalide.');
+  const upload = file instanceof File && file.size > 0 ? file : null;
+  if (upload && upload.size > 4 * 1024 * 1024)
+    throw new AdminError('Illustration limitée à 4 Mo.');
+  let uploadedUrl: string | null = null;
+  if (upload) {
+    if (!input.data.illustrationAlt?.trim())
+      throw new AdminError('Ajoutez le texte alternatif de l’illustration.');
+    await adminTransaction(adminId, async (tx) => {
+      if (input.id) {
+        const current = await tx.carnetChapter.findUnique({
+          where: { id: input.id },
+        });
+        if (
+          !current ||
+          !['DRAFT', 'READY'].includes(current.status) ||
+          current.revision !== input.revision
+        )
+          throw new AdminError(
+            'Carnet non modifiable ou version périmée. Rechargez avant de téléverser.',
+          );
+      }
     });
-    await audit(tx, adminId, 'CARNET_CREATED', 'CarnetChapter', chapter.id);
-    return chapter;
-  });
+    uploadedUrl = await imageStorage.upload(upload);
+    input.data.illustrationUrl = uploadedUrl;
+  }
+  try {
+    return await adminTransaction(adminId, async (tx) => {
+      const data = {
+        ...input.data,
+        content: input.data.content as unknown as Prisma.InputJsonValue,
+      };
+      if (input.id) {
+        await tx.$queryRaw`SELECT id FROM "CarnetChapter" WHERE id = ${input.id}::uuid FOR UPDATE`;
+        const current = await tx.carnetChapter.findUnique({
+          where: { id: input.id },
+        });
+        if (!current) throw new AdminError('Carnet introuvable.');
+        if (current.status === 'ARCHIVED')
+          throw new AdminError('Restaurez le Carnet avant de le modifier.');
+        if (current.status === 'PUBLIC' || current.status === 'EARLY_ACCESS')
+          throw new AdminError(
+            'Les modifications des chapitres publiés seront disponibles avec le service de publication.',
+          );
+        if (current.revision !== input.revision)
+          throw new AdminError(
+            'Ce Carnet a été modifié dans un autre onglet. Conservez votre texte, puis rechargez pour consulter la version enregistrée.',
+          );
+        if (current.publishedAt && data.slug !== current.slug)
+          throw new AdminError(
+            'L’adresse d’un Carnet déjà publié doit rester stable.',
+          );
+        validateMetadata({ ...current, ...data });
+        const chapter = await tx.carnetChapter.update({
+          where: { id: current.id },
+          data: { ...data, revision: { increment: 1 } },
+        });
+        await audit(
+          tx,
+          adminId,
+          'CARNET_UPDATED',
+          'CarnetChapter',
+          chapter.id,
+          {
+            revision: chapter.revision,
+          },
+        );
+        return chapter;
+      }
+      validateMetadata(data);
+      const chapter = await tx.carnetChapter.create({
+        data: { ...data, createdById: adminId },
+      });
+      await audit(tx, adminId, 'CARNET_CREATED', 'CarnetChapter', chapter.id);
+      return chapter;
+    });
+  } catch (error) {
+    if (uploadedUrl)
+      await imageStorage.delete(uploadedUrl).catch(() =>
+        console.error('Carnet illustration cleanup failed', {
+          code: 'CARNET_IMAGE_CLEANUP_FAILED',
+        }),
+      );
+    throw error;
+  }
+}
+function validateMetadata(data: {
+  illustrationUrl?: string | null;
+  illustrationAlt?: string | null;
+  earlyAccessAt?: Date | null;
+  publicAt?: Date | null;
+}) {
+  if (data.illustrationUrl && !data.illustrationAlt?.trim())
+    throw new AdminError('Ajoutez le texte alternatif de l’illustration.');
+  if (!data.illustrationUrl && data.illustrationAlt)
+    throw new AdminError(
+      'Ajoutez une illustration ou retirez son texte alternatif.',
+    );
+  assertCarnetCalendar(data.earlyAccessAt ?? null, data.publicAt ?? null);
 }
 /** Reversible deletion: no narrative is permanently removed. Restoring always returns to draft. */
 export async function archiveCarnetChapter(
@@ -165,4 +236,10 @@ export type CarnetEditorValue = {
   arcTotal: string;
   status: 'DRAFT' | 'READY';
   content: CarnetContent;
+  illustrationUrl?: string;
+  illustrationAlt?: string;
+  location?: string;
+  earlyAccessAt?: string;
+  publicAt?: string;
+  publishedAt?: string;
 };

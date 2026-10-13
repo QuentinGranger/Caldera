@@ -4,10 +4,18 @@ import { createSlug } from '@/lib/catalog/createSlug';
 export const CARNET_CONTENT_LIMIT = 100000;
 export const CARNET_BLOCK_LIMIT = 500;
 export const CARNET_CTA_LABEL = 'Continuer l’expédition';
-export const CARNET_STATUSES = ['DRAFT', 'READY', 'ARCHIVED'] as const;
+export const CARNET_STATUSES = [
+  'DRAFT',
+  'READY',
+  'EARLY_ACCESS',
+  'PUBLIC',
+  'ARCHIVED',
+] as const;
 export const CARNET_STATUS_LABELS = {
   DRAFT: 'Brouillon',
   READY: 'Prêt éditorialement',
+  EARLY_ACCESS: 'Accès anticipé',
+  PUBLIC: 'Public',
   ARCHIVED: 'Archivé',
 } as const;
 export type CarnetMark = { type: 'bold' | 'italic' };

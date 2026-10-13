@@ -1045,9 +1045,12 @@ model NewsletterCampaign {
   createdAt      DateTime                     @default(now())
   updatedAt      DateTime                     @updatedAt
   deliveries     NewsletterCampaignDelivery[]
+  chapterId      String?                      @db.Uuid
+  chapter        CarnetChapter?               @relation(fields: [chapterId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([createdById])
+  @@index([chapterId])
 }
 
 model NewsletterCampaignDelivery {
@@ -1863,27 +1866,39 @@ model MeasurementOrder {
 enum CarnetChapterStatus {
   DRAFT
   READY
+  EARLY_ACCESS
+  PUBLIC
   ARCHIVED
 }
 
 /// Narrative source of truth. Newsletter excerpts are derived, never stored as editable text.
 model CarnetChapter {
-  id          String              @id @default(uuid()) @db.Uuid
-  number      Int                 @unique
-  title       String              @db.VarChar(200)
-  slug        String              @unique @db.VarChar(120)
-  arcTitle    String?             @db.VarChar(200)
-  arcPosition Int?
-  arcTotal    Int?
+  id              String                @id @default(uuid()) @db.Uuid
+  number          Int                   @unique
+  title           String                @db.VarChar(200)
+  slug            String                @unique @db.VarChar(120)
+  arcTitle        String?               @db.VarChar(200)
+  arcPosition     Int?
+  arcTotal        Int?
   /// Versioned narrative document; the optional newsletterCut is a structural node.
-  content     Json
-  status      CarnetChapterStatus @default(DRAFT)
-  revision    Int                 @default(0)
-  createdById String              @db.Uuid
-  createdBy   AdminUser           @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  content         Json
+  illustrationUrl String?               @db.VarChar(500)
+  illustrationAlt String?               @db.VarChar(300)
+  location        String?               @db.VarChar(200)
+  earlyAccessAt   DateTime?
+  publicAt        DateTime?
+  /// First actual release, set only by the future publication service.
+  publishedAt     DateTime?
+  campaigns       NewsletterCampaign[]
+  status          CarnetChapterStatus   @default(DRAFT)
+  revision        Int                   @default(0)
+  createdById     String                @db.Uuid
+  createdBy       AdminUser             @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
 
   @@index([status, updatedAt])
   @@index([createdById])
+  @@index([status, earlyAccessAt])
+  @@index([status, publicAt])
 }

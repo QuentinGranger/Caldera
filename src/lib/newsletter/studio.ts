@@ -47,7 +47,7 @@ export type NewsletterProductOption = {
 export async function getNewsletterStudioData() {
   await requireAdmin();
   const db = getPrisma();
-  const [counts, products] = await Promise.all([
+  const [counts, products, chapters] = await Promise.all([
     Promise.all(
       AUDIENCES.map(async (value) => ({
         value,
@@ -83,9 +83,16 @@ export async function getNewsletterStudioData() {
         },
       },
     }),
+    db.carnetChapter.findMany({
+      where: { status: { not: 'ARCHIVED' } },
+      take: 200,
+      orderBy: { number: 'desc' },
+      select: { id: true, number: true, title: true, status: true },
+    }),
   ]);
   return {
     audiences: counts,
+    chapters,
     products: products.map((p) => ({
       id: p.id,
       name: p.name,

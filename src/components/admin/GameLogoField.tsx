@@ -9,10 +9,16 @@ export function GameLogoField({
   currentUrl = '',
   maxBytes,
   maxLabel,
+  name = 'logo',
+  label = 'Logo du jeu',
+  onUrlChange,
 }: {
   currentUrl?: string;
   maxBytes: number;
   maxLabel: string;
+  name?: string;
+  label?: string;
+  onUrlChange?: (url: string) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const id = useId();
@@ -36,7 +42,7 @@ export function GameLogoField({
     const next = files?.[0];
     const message =
       files && files.length > 1
-        ? 'Déposez une seule image pour le logo.'
+        ? 'Déposez une seule image.'
         : next &&
             (!['image/jpeg', 'image/png', 'image/webp'].includes(next.type) ||
               !/\.(jpe?g|png|webp)$/i.test(next.name))
@@ -68,14 +74,14 @@ export function GameLogoField({
     <section className={styles.gameLogoField} aria-labelledby={`${id}-title`}>
       <header>
         <div>
-          <h3 id={`${id}-title`}>Logo du jeu</h3>
+          <h3 id={`${id}-title`}>{label}</h3>
           <p>
             Importez une image depuis votre ordinateur ou utilisez une image
             déjà présente sur le site.
           </p>
         </div>
       </header>
-      <div className={styles.logoModes} aria-label="Source du logo">
+      <div className={styles.logoModes} aria-label="Source de l’image">
         <button
           type="button"
           aria-pressed={mode === 'file'}
@@ -103,7 +109,7 @@ export function GameLogoField({
           {source && !previewFailed ? (
             <Image
               src={source}
-              alt="Aperçu du logo du jeu"
+              alt={`Aperçu : ${label}`}
               width={160}
               height={110}
               unoptimized
@@ -113,7 +119,7 @@ export function GameLogoField({
             <>
               <ImagePlus size={30} aria-hidden="true" />
               <span>
-                {previewFailed ? 'Aperçu indisponible' : 'Aucun logo'}
+                {previewFailed ? 'Aperçu indisponible' : 'Aucune image'}
               </span>
             </>
           )}
@@ -151,8 +157,8 @@ export function GameLogoField({
               }}
             >
               <Upload size={22} aria-hidden="true" />
-              <strong>Glissez votre logo ici</strong>
-              <span>ou sélectionnez-le dans vos fichiers</span>
+              <strong>Glissez votre image ici</strong>
+              <span>ou sélectionnez-la dans vos fichiers</span>
               <button
                 type="button"
                 className={styles.secondaryButton}
@@ -165,17 +171,17 @@ export function GameLogoField({
                 id={`${id}-file`}
                 className={styles.visuallyHidden}
                 type="file"
-                name="logoFile"
+                name={`${name}File`}
                 accept="image/jpeg,image/png,image/webp"
-                aria-label="Fichier du logo depuis l’ordinateur"
+                aria-label={`Fichier : ${label}`}
                 aria-describedby={`${id}-help ${id}-error`}
                 aria-invalid={Boolean(error)}
                 onChange={readSelection}
               />
             </div>
             <small id={`${id}-help`}>
-              JPEG, PNG ou WebP · {maxLabel} maximum. Le logo sera envoyé lors
-              de l’enregistrement du jeu.
+              JPEG, PNG ou WebP · {maxLabel} maximum. L’image sera envoyée lors
+              de l’enregistrement.
             </small>
             <small>
               Pour utiliser un chemin du Mac, cliquez sur « Choisir un fichier
@@ -186,10 +192,11 @@ export function GameLogoField({
             <label>
               Adresse de l’image sur le site
               <input
-                name="logoUrl"
+                name={`${name}Url`}
                 value={path}
                 onChange={(event) => {
                   setPath(event.target.value);
+                  onUrlChange?.(event.target.value);
                   setPreviewFailed(false);
                 }}
                 placeholder="/assets/images/... ou /media/..."
@@ -234,11 +241,12 @@ export function GameLogoField({
               className={styles.quietButton}
               onClick={() => {
                 setPath('');
+                onUrlChange?.('');
                 setPreviewFailed(false);
                 clearFile(true);
               }}
             >
-              Retirer le logo
+              Retirer l’image
             </button>
           )}
           {error && (
