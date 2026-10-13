@@ -295,3 +295,210 @@ test('studio : une programmation incomplète ne peut jamais devenir un envoi imm
     /incohérent/,
   );
 });
+
+test('studio visuel : compositions, style borné, version texte et empilement mobile', () => {
+  const document: NewsletterDocument = {
+    version: 1,
+    theme: 'journal',
+    design: { font: 'serif', fontSize: 18, accent: 'plum' },
+    blocks: [
+      {
+        id: 'heading',
+        type: 'heading',
+        text: 'Votre sélection <vérifiée>',
+        level: 2,
+      },
+      {
+        id: 'feature',
+        type: 'feature',
+        src: '/assets/brand/logo-header-no-bg.png',
+        alt: 'Caldera',
+        title: 'À découvrir',
+        text: 'Un **conseil** utile.',
+        label: 'Voir les produits',
+        href: '/catalogue',
+        placement: 'right',
+        style: { align: 'center', tone: 'sage', padding: 24, radius: 16 },
+      },
+      {
+        id: 'columns',
+        type: 'columns',
+        columns: [
+          {
+            title: 'Pour commencer',
+            text: 'Comparez les formats.',
+            label: 'Explorer',
+            href: '/pokemon',
+          },
+          {
+            title: 'Pour collectionner',
+            text: 'Choisissez votre extension.',
+            label: 'Extensions',
+            href: '/extensions',
+          },
+        ],
+      },
+    ],
+  };
+  assert.deepEqual(
+    parseNewsletterDocument(serializeNewsletterDocument(document)),
+    document,
+  );
+  assert.deepEqual(newsletterIssues(document), []);
+  const email = renderNewsletterCampaignEmail(
+    {
+      subject: 'Découvertes',
+      preheader: null,
+      heading: 'Caldera',
+      bodyMarkdown: serializeNewsletterDocument(document),
+      ctaLabel: null,
+      ctaUrl: null,
+    },
+    { logo: '/assets/brand/logo-header-no-bg.png' },
+  );
+  assert.match(email.html, /newsletter-column/);
+  assert.match(
+    email.html,
+    /\.newsletter-column\{display:block!important;width:100%!important/,
+  );
+  assert.match(
+    email.html,
+    /background:#e8f0e9;padding:24px;border-radius:16px;font-family:Georgia,Times,serif;font-size:18px/,
+  );
+  assert.match(email.html, /background:#63395a;color:#fff/);
+  assert.match(email.html, /Votre sélection &lt;vérifiée&gt;/);
+  assert.match(email.html, /utm_source=newsletter/);
+  assert.match(email.text, /Pour commencer/);
+  assert.match(email.text, /https:\/\/lesterresdecaldera.fr\/extensions/);
+  assert.doesNotMatch(email.text, /"columns"|"design"/);
+});
+
+test('studio visuel : interdit le CSS libre, les colonnes malformées et les blocs incomplets', () => {
+  const raw = {
+    version: 1,
+    theme: 'journal',
+    blocks: [{ id: 'text', type: 'text', text: 'Message' }],
+  };
+  for (const style of [
+    {
+      align: 'left',
+      tone: 'url(https://evil.example)',
+      padding: 16,
+      radius: 8,
+    },
+    { align: 'left;position:fixed', tone: 'sage', padding: 16, radius: 8 },
+    { align: 'left', tone: 'sage', padding: 9999, radius: 8 },
+  ])
+    assert.throws(
+      () =>
+        parseNewsletterDocument(
+          DOCUMENT_PREFIX +
+            JSON.stringify({ ...raw, blocks: [{ ...raw.blocks[0], style }] }),
+        ),
+      /design/,
+    );
+  assert.throws(
+    () =>
+      parseNewsletterDocument(
+        DOCUMENT_PREFIX +
+          JSON.stringify({
+            ...raw,
+            design: { font: 'Arial;bad', fontSize: 18, accent: 'forest' },
+          }),
+      ),
+    /design/,
+  );
+  assert.throws(
+    () =>
+      parseNewsletterDocument(
+        DOCUMENT_PREFIX +
+          JSON.stringify({
+            ...raw,
+            blocks: [{ id: 'columns', type: 'columns', columns: [] }],
+          }),
+      ),
+    /colonnes/,
+  );
+  const incomplete: NewsletterDocument = {
+    version: 1,
+    theme: 'journal',
+    blocks: [
+      {
+        id: 'feature',
+        type: 'feature',
+        src: '',
+        alt: '',
+        title: '',
+        text: '',
+        label: 'Voir',
+        href: '',
+        placement: 'top',
+      },
+    ],
+  };
+  assert.ok(newsletterIssues(incomplete).length >= 2);
+  assert.throws(
+    () =>
+      assertCampaignReady({
+        bodyMarkdown: serializeNewsletterDocument(incomplete),
+        ctaLabel: null,
+        ctaUrl: null,
+      }),
+    /image|texte|contenu/i,
+  );
+});
+
+import {
+  validateNewsletterBackup,
+  newsletterRecoverySnapshot,
+} from '../src/lib/newsletter/recovery';
+test('studio : la copie de secours expire, valide le document et ne restaure que les champs éditoriaux', () => {
+  const value = {
+    internalName: 'Brouillon',
+    subject: 'Votre sélection',
+    preheader: 'Aperçu',
+    heading: 'Caldera',
+  };
+  const backup = {
+    savedAt: Date.now(),
+    value: { ...value, id: 'forged', ctaUrl: 'javascript:alert(1)' },
+    doc: blocks,
+  };
+  const parsed = validateNewsletterBackup(JSON.stringify(backup));
+  assert.deepEqual(parsed.value, value);
+  assert.deepEqual(parsed.doc, blocks);
+  assert.equal(
+    newsletterRecoverySnapshot(
+      { ...value, subject: ' Votre sélection ' },
+      blocks,
+    ),
+    newsletterRecoverySnapshot(value, blocks),
+  );
+  assert.throws(
+    () =>
+      validateNewsletterBackup(
+        JSON.stringify({ ...backup, savedAt: Date.now() - 86400001 }),
+      ),
+    /expired/,
+  );
+  assert.throws(
+    () =>
+      validateNewsletterBackup(
+        JSON.stringify({
+          ...backup,
+          doc: {
+            ...blocks,
+            design: { font: 'evil', fontSize: 16, accent: 'forest' },
+          },
+        }),
+      ),
+    /design/,
+  );
+  assert.throws(
+    () =>
+      validateNewsletterBackup(
+        JSON.stringify({ ...backup, value: { ...value, subject: 12 } }),
+      ),
+    /invalid/,
+  );
+});
