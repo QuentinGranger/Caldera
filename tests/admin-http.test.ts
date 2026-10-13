@@ -927,7 +927,10 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           assert.match(invalidQueue.body, /date d’envoi/);
           const advanced = await action('advancedCarnetEditionAction', refs);
           assert.ok(
-            advanced.body.includes(`/admin/newsletter/campagnes/${campaignId}`),
+            (
+              advanced.response.headers.get('x-action-redirect') ??
+              advanced.body
+            ).includes(`/admin/newsletter/campagnes/${campaignId}`),
           );
           const studio = await page(
             `/admin/newsletter/campagnes/${campaignId}`,
