@@ -96,10 +96,8 @@ export default async function CarnetsPage({
       ) : (
         <EmptyState>
           <BookOpen size={26} />
-          <p>
-            Aucun Carnet dans cette sélection. Créez votre premier récit ou
-            consultez les archives.
-          </p>
+          Aucun Carnet dans cette sélection. Créez votre premier récit ou
+          consultez les archives.
         </EmptyState>
       )}
       <Pagination
