@@ -20,3 +20,34 @@ Les cartes sont de vrais liens, entièrement cliquables et utilisables au clavie
 Le Carnet utilise son propre éditeur spécialisé, jamais un template libre du Campaign Studio. Sa campagne liée reste un canal de diffusion préparé ensuite, à partir du récit canonique et de sa coupure.
 
 Le Comptoir est explicitement indiqué « à venir » : cette étape prépare l’orientation éditoriale, sans présenter comme disponible une section commerciale qui n’est pas encore implémentée.
+
+## Tableau de production éditoriale
+
+`/admin/newsletter` présente d’abord la prochaine édition et l’avance éditoriale,
+puis les campagnes, l’audience avec ses consentements et enfin l’état technique.
+Aucune visite ne crée de chapitre ou de campagne.
+
+La prochaine édition est le premier Carnet DRAFT/READY dont la diffusion n’a pas
+commencé : `publishedAt` vide et aucune livraison SENT/SENDING liée. Les dates
+`earlyAccessAt` les plus anciennes passent en premier (y compris une échéance
+manquée), puis les numéros croissants ; les Carnets sans date viennent ensuite.
+Une édition QUEUED reste prochaine jusqu’au début de diffusion. Les diffusions
+engagées et leurs éventuels échecs restent suivis dans les campagnes.
+
+La réserve compte les Carnets READY répondant à ces mêmes critères : nombre / 2
+= mois d’avance, avec les demi-mois affichés. La barre utilise un repère visuel
+explicite de 3 mois (6 Carnets) ; le total affiché reste exact au-delà. Ce compte
+n’exonère pas de valider les illustrations, emails et stocks de chaque édition.
+
+La checklist dérive le nombre de mots de la coupure canonique, vérifie l’image et
+son alt et relit Product/ProductVariant (stock disponible net des réservations).
+Un Comptoir vide est valide. Le stock est celui lu au chargement ; la vérification
+bloquante au moment de la programmation reste assurée par le moteur existant.
+
+Les tests réussis sont lus dans les audits de la campagne explicitement liée
+(édition principale, ou ancienne propriétaire de diffusion). Les nouveaux audits
+contiennent la révision Carnet et la date de modification de campagne réellement
+testées. Un test antérieur à une modification ne valide plus la checklist. Les
+anciens audits sans versions utilisent leurs dates. « M’envoyer un test » appelle
+l’action existante, protégée par authentification admin/MFA et contrôle de version,
+vers l’adresse de test configurée ou l’adresse de l’admin ; il ne programme rien.
