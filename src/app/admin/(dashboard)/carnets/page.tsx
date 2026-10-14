@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays } from 'lucide-react';
 import {
   AdminTable,
   Badge,
@@ -26,6 +26,13 @@ export default async function CarnetsPage({
         title="Les Carnets de Caldera"
         description="Un chapitre écrit une seule fois, un extrait newsletter dérivé de sa coupure. Cette section prépare les récits sans les publier."
       >
+        <Link
+          className={`${styles.button} ${styles.secondaryButton}`}
+          href="/admin/carnets/calendrier"
+        >
+          <CalendarDays size={16} aria-hidden="true" />
+          Calendrier éditorial
+        </Link>
         <Link className={styles.button} href="/admin/carnets/nouveau">
           <Plus size={16} /> Nouveau Carnet
         </Link>

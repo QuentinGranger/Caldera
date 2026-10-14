@@ -3,10 +3,10 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getPrisma } from '@/lib/db/prisma';
 import { chapterComptoir } from './comptoir';
-import { deriveCarnet, parseCarnetContent } from './content';
+import { carnetReadiness } from './readiness';
 
 /** Started releases are managed in Campaigns, never counted as editorial reserve. */
-const upcoming = {
+export const upcomingCarnets = {
   status: { in: ['DRAFT', 'READY'] },
   publishedAt: null,
   campaigns: {
@@ -17,14 +17,14 @@ const upcoming = {
 export async function readEditorialProduction(db: Prisma.TransactionClient) {
   const [chapter, readyCount] = await Promise.all([
     db.carnetChapter.findFirst({
-      where: upcoming,
+      where: upcomingCarnets,
       orderBy: [
         { earlyAccessAt: { sort: 'asc', nulls: 'last' } },
         { number: 'asc' },
       ],
       include: { editionCampaign: true, releaseCampaign: true },
     }),
-    db.carnetChapter.count({ where: { ...upcoming, status: 'READY' } }),
+    db.carnetChapter.count({ where: { ...upcomingCarnets, status: 'READY' } }),
   ]);
   if (!chapter) return { readyCount, monthsAhead: readyCount / 2, next: null };
   // Explicit ownership only: a later commercial campaign must not validate this edition.
@@ -43,38 +43,7 @@ export async function readEditorialProduction(db: Prisma.TransactionClient) {
         })
       : null,
   ]);
-  let words = 0,
-    excerptWords = 0;
-  try {
-    const derived = deriveCarnet(parseCarnetContent(chapter.content));
-    words = derived.full.words;
-    excerptWords = derived.excerpt?.words ?? 0;
-  } catch {
-    // An invalid legacy document is an editorial task, not a broken dashboard.
-  }
-  const metadata = lastTest?.metadata;
-  const versioned =
-    metadata && typeof metadata === 'object' && !Array.isArray(metadata)
-      ? metadata
-      : null;
-  const testCurrent = Boolean(
-    campaign &&
-    lastTest &&
-    (versioned && 'chapterRevision' in versioned
-      ? versioned.chapterRevision === chapter.revision &&
-        versioned.campaignUpdatedAt === campaign.updatedAt.toISOString()
-      : lastTest.createdAt >= chapter.updatedAt &&
-        lastTest.createdAt >= campaign.updatedAt),
-  );
-  const chapterReady =
-    chapter.status === 'READY' && words > excerptWords && excerptWords > 0;
-  const illustrationReady = Boolean(
-    chapter.illustrationUrl && chapter.illustrationAlt?.trim(),
-  );
-  const unavailable = products.filter((product) => !product.eligible);
-  const emailReady = Boolean(
-    campaign?.subject.trim() && campaign.preheader?.trim(),
-  );
+  const readiness = carnetReadiness(chapter, campaign, products, lastTest);
   return {
     readyCount,
     monthsAhead: readyCount / 2,
@@ -92,25 +61,16 @@ export async function readEditorialProduction(db: Prisma.TransactionClient) {
       campaignStatus: campaign?.status ?? null,
       newsletterAt: chapter.earlyAccessAt ?? campaign?.scheduledAt ?? null,
       publicAt: chapter.publicAt,
-      chapterReady,
-      excerptReady: excerptWords > 0 && words > excerptWords,
-      excerptWords,
-      illustrationReady,
+      ...readiness,
       productCount: products.length,
-      unavailable: unavailable.map(({ name, unavailableReason }) => ({
-        name,
-        reason: unavailableReason,
-      })),
-      testCurrent,
       lastTestAt: lastTest?.createdAt ?? null,
-      emailReady,
       customized: campaign?.carnetCustomized ?? false,
       canTest: Boolean(
         chapter.editionCampaign &&
-        chapterReady &&
-        illustrationReady &&
-        emailReady &&
-        !unavailable.length,
+        readiness.chapterReady &&
+        readiness.illustrationReady &&
+        readiness.emailReady &&
+        !readiness.unavailable.length,
       ),
     },
   };
