@@ -229,6 +229,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/jeux',
           '/admin/carnets',
           '/admin/carnets/nouveau',
+          '/admin/carnets/calendrier?mois=2026-11',
           '/admin/newsletter',
           '/admin/newsletter/nouvelle',
           '/admin/newsletter/campagnes/nouvelle',
@@ -437,6 +438,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/fournisseurs/imports/nouveau',
           '/admin/fournisseurs/veille',
           '/admin/discord',
+          '/admin/carnets/calendrier?mois=2026-11',
           '/admin/newsletter',
           '/admin/newsletter/nouvelle',
           '/admin/newsletter/campagnes/nouvelle',
@@ -666,6 +668,39 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         assert.match(commercial.html, /CAMPAIGN STUDIO/);
         for (const result of [choice, carnet, commercial])
           assert.match(result.html, /href="\/admin\/newsletter"/);
+        assert.deepEqual(
+          {
+            chapters: await db.carnetChapter.count(),
+            campaigns: await db.newsletterCampaign.count(),
+          },
+          before,
+        );
+      },
+    );
+    await t.test(
+      'Calendrier éditorial : mois, navigation et visite sans modification',
+      async () => {
+        const before = {
+          chapters: await db.carnetChapter.count(),
+          campaigns: await db.newsletterCampaign.count(),
+        };
+        const result = await page('/admin/carnets/calendrier?mois=2026-11');
+        assert.equal(result.response.status, 200);
+        assert.match(result.html, /Calendrier des Carnets/);
+        assert.match(result.html, /novembre 2026/);
+        assert.match(result.html, /href="\?mois=2026-10"/);
+        assert.match(result.html, /href="\?mois=2026-12"/);
+        assert.match(result.html, /carnets-a-planifier/);
+        assert.match(result.html, /Repère : 6 à 10 épisodes/);
+        assert.match(result.html, /Prêt à envoyer/);
+        assert.match(result.html, /href="\/admin\/carnets\/nouveau"/);
+        assert.ok(
+          result.response.headers.get('cache-control')?.includes('no-store'),
+        );
+        const january = await page('/admin/carnets/calendrier?mois=2027-01');
+        assert.match(january.html, /href="\?mois=2026-12"/);
+        const invalid = await page('/admin/carnets/calendrier?mois=invalid');
+        assert.equal(invalid.response.status, 200);
         assert.deepEqual(
           {
             chapters: await db.carnetChapter.count(),

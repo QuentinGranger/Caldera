@@ -34,7 +34,9 @@ export function AdminBreadcrumbs() {
       : parts[1] === 'carnets' && parts[2]
         ? parts[2] === 'nouveau'
           ? 'Nouveau Carnet'
-          : 'Carnet'
+          : parts[2] === 'calendrier'
+            ? 'Calendrier éditorial'
+            : 'Carnet'
         : parts[1] === 'fournisseurs' && parts[2] === 'imports'
           ? parts[3] === 'nouveau'
             ? 'Nouvel import'

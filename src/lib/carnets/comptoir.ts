@@ -142,3 +142,22 @@ export async function getCarnetProducts(selected: string[] = [], search = '') {
     option,
   );
 }
+
+/** One query for a month/reserve, using the same eligibility rules as queueing. */
+export async function loadChapterComptoirs(
+  tx: Prisma.TransactionClient,
+  chapterIds: string[],
+) {
+  const refs = await tx.carnetComptoirProduct.findMany({
+    where: { chapterId: { in: chapterIds } },
+    orderBy: [{ chapterId: 'asc' }, { position: 'asc' }],
+    select: { chapterId: true, product: { select } },
+  });
+  const result = new Map<string, CarnetProduct[]>();
+  for (const ref of refs) {
+    const products = result.get(ref.chapterId) ?? [];
+    products.push(option(ref.product));
+    result.set(ref.chapterId, products);
+  }
+  return result;
+}

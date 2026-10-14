@@ -3,7 +3,7 @@ import { getEditorialProduction } from '@/lib/carnets/production';
 import { LifecycleEmailStatus } from '@/components/admin/LifecycleEmailStatus';
 import { NewsletterStatus } from '@/generated/prisma/client';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, CalendarDays } from 'lucide-react';
 import { FilterPanel } from '@/components/admin/FilterPanel';
 import {
   AdminTable,
@@ -39,6 +39,13 @@ export default async function AdminNewsletterPage({
         title="Newsletter"
         description="Préparez la prochaine édition, gardez de l’avance sur vos récits et suivez leur diffusion."
       >
+        <Link
+          className={`${styles.button} ${styles.secondaryButton}`}
+          href="/admin/carnets/calendrier"
+        >
+          <CalendarDays size={16} aria-hidden="true" />
+          Calendrier éditorial
+        </Link>
         <Link className={styles.button} href="/admin/newsletter/nouvelle">
           <Plus size={16} aria-hidden="true" />
           Nouvelle édition

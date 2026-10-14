@@ -51,3 +51,43 @@ testées. Un test antérieur à une modification ne valide plus la checklist. Le
 anciens audits sans versions utilisent leurs dates. « M’envoyer un test » appelle
 l’action existante, protégée par authentification admin/MFA et contrôle de version,
 vers l’adresse de test configurée ou l’adresse de l’admin ; il ne programme rien.
+
+## Calendrier éditorial des Carnets
+
+Route admin protégée : `/admin/carnets/calendrier?mois=YYYY-MM`, accessible depuis
+les pages Carnets et Newsletter. Le mois par défaut est le mois civil de Paris.
+La navigation précédente/suivante traverse les années (2000–2099). Une valeur
+invalide revient au mois courant. Les bornes SQL suivent les changements d’heure
+à Paris, pas le fuseau du serveur.
+
+Un Carnet apparaît une seule fois dans le mois si sa newsletter ou sa publication
+publique s’y trouve. Les deux dates restent visibles, même si l’une est hors du
+mois : une newsletter du 29 novembre et sa publication du 13 décembre apparaissent
+dans les deux vues mensuelles avec l’événement du mois signalé. Les dates d’un
+brouillon sont explicitement prévisionnelles. Le clic ouvre l’édition du Carnet.
+Les archives sont exclues. Les dix premiers Carnets sans aucun calendrier sont
+présentés à part, avec leur nombre total et un accès à la liste complète.
+
+Les états sont dérivés, sans nouvelle colonne en base :
+
+- Brouillon : chapitre non validé ou document/coupure incomplet.
+- Texte prêt : chapitre validé (READY ou ancien état de publication), extrait
+  non vide et suite après la coupure.
+- Prêt à envoyer : texte prêt, édition principale DRAFT, illustration avec alt,
+  objet/preheader, Comptoir disponible (ou vide) et test de la version actuelle.
+- Programmé : calendrier de diffusion engagé et campagne propriétaire QUEUED ou
+  SENDING (ou diffusion déjà commencée), avant la date d’accès anticipé.
+- Accès anticipé / Public : état de visibilité réel retourné par les règles
+  existantes des Carnets, aux frontières exactes earlyAccessAt/publicAt. Une
+  date sans propriétaire de diffusion ne rend pas le Carnet public.
+
+Le stock Product/ProductVariant et les dernières preuves de test sont chargés en
+lots, avec les mêmes règles de préparation que le tableau newsletter. Une baisse
+ultérieure du stock ne rétrograde pas une diffusion déjà programmée ou publique ;
+elle est signalée séparément. La programmation conserve ses contrôles bloquants.
+
+La réserve affiche les textes réellement prêts non diffusés et dont l’accès n’est
+pas déjà ouvert, ainsi que le sous-ensemble prêt à envoyer. Les brouillons,
+archives et textes incomplets sont exclus. Le repère visuel est 6 à 10 épisodes ;
+le total n’est jamais plafonné. L’équivalent en mois utilise 2 Carnets par mois.
+Ce calendrier n’envoie et ne programme rien lors d’une visite.
