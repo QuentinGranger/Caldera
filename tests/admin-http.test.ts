@@ -630,7 +630,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         );
         assert.match(choice.html, /Créer un Carnet/);
         assert.match(choice.html, /Créer une campagne commerciale/);
-        assert.match(choice.html, /Le Comptoir · à venir/);
+        assert.match(choice.html, /Le Comptoir/);
         const carnet = await page('/admin/carnets/nouveau');
         assert.equal(carnet.response.status, 200);
         assert.ok(
@@ -704,7 +704,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         assert.equal(forged.response.status, 500);
         const saved = await action('saveCarnetChapterAction', values);
         assert.ok(
-          saved.body.includes('Carnet enregistré'),
+          saved.body.includes('Édition enregistrée'),
           saved.body.slice(0, 400),
         );
         const chapter = await db.carnetChapter.findUniqueOrThrow({
@@ -805,7 +805,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           id: chapter.id,
           status: 'READY',
         });
-        assert.ok(ready.body.includes('Carnet enregistré'));
+        assert.ok(ready.body.includes('Édition enregistrée'));
         const stale = await action('saveCarnetChapterAction', {
           ...values,
           id: chapter.id,
@@ -837,6 +837,121 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           ).revision,
           3,
         );
+      },
+    );
+    await t.test(
+      'Édition Carnet HTTP : cinq sections, sauvegarde complète, Mode avancé et accès protégés',
+      async () => {
+        const fields = {
+          revision: '0',
+          number: '543208',
+          title: 'Édition workflow HTTP',
+          slug: `edition-http-${key}`,
+          status: 'READY',
+          content: JSON.stringify({
+            version: 1,
+            document: {
+              type: 'doc',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [{ type: 'text', text: 'Extrait HTTP sauvegardé.' }],
+                },
+                { type: 'newsletterCut' },
+                {
+                  type: 'paragraph',
+                  content: [
+                    { type: 'text', text: 'Suite réservée du récit HTTP.' },
+                  ],
+                },
+              ],
+            },
+          }),
+          illustrationUrl: '/assets/brand/logo-header-no-bg.png',
+          illustrationAlt: 'Caldera',
+          emailSubject: 'Objet de l’édition HTTP',
+          emailPreheader: 'Preheader HTTP',
+          productIds: JSON.stringify([product.id]),
+        };
+        let chapterId = '',
+          campaignId = '';
+        try {
+          const saved = await action('saveCarnetChapterAction', fields);
+          assert.ok(
+            saved.body.includes('"success":true'),
+            saved.body.slice(0, 500),
+          );
+          const chapter = await db.carnetChapter.findUniqueOrThrow({
+            where: { slug: fields.slug },
+          });
+          chapterId = chapter.id;
+          campaignId = chapter.editionCampaignId!;
+          const campaign = await db.newsletterCampaign.findUniqueOrThrow({
+            where: { id: campaignId },
+          });
+          const detail = await page(`/admin/carnets/${chapterId}`);
+          for (const section of [
+            'carnet-recit',
+            'carnet-comptoir',
+            'carnet-email',
+            'carnet-diffusion',
+            'carnet-verification',
+          ])
+            assert.ok(detail.html.includes(`id="${section}"`));
+          assert.doesNotMatch(
+            detail.html,
+            /CAMPAIGN STUDIO|Bibliothèque de blocs/,
+          );
+          assert.match(detail.html, /Objet de l’édition HTTP/);
+          assert.match(detail.html, /Continuer l’expédition/);
+          assert.match(detail.html, /Aperçu e-mail ordinateur/);
+          const refs = {
+            id: chapter.id,
+            revision: String(chapter.revision),
+            campaignUpdatedAt: campaign.updatedAt.toISOString(),
+          };
+          const anonymous = await action(
+            'advancedCarnetEditionAction',
+            refs,
+            '',
+          );
+          assert.ok(
+            (
+              anonymous.response.headers.get('x-action-redirect') ??
+              anonymous.body
+            ).includes('/admin/login'),
+          );
+          const test = await action('testCarnetEditionAction', refs);
+          assert.match(test.body, /désactivés/);
+          const invalidQueue = await action('queueCarnetEditionAction', refs);
+          assert.match(invalidQueue.body, /date d’envoi/);
+          const advanced = await action('advancedCarnetEditionAction', refs);
+          assert.ok(
+            (
+              advanced.response.headers.get('x-action-redirect') ??
+              advanced.body
+            ).includes(`/admin/newsletter/campagnes/${campaignId}`),
+          );
+          const studio = await page(
+            `/admin/newsletter/campagnes/${campaignId}`,
+          );
+          assert.match(studio.html, /CAMPAIGN STUDIO/);
+          assert.match(studio.html, /Composition/);
+          assert.match(studio.html, /personnalisé/);
+          assert.deepEqual(
+            (
+              await db.carnetChapter.findUniqueOrThrow({
+                where: { id: chapterId },
+              })
+            ).content,
+            chapter.content,
+          );
+        } finally {
+          if (chapterId)
+            await db.carnetChapter.delete({ where: { id: chapterId } });
+          if (campaignId)
+            await db.newsletterCampaign.delete({ where: { id: campaignId } });
+        }
       },
     );
     await t.test(

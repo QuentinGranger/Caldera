@@ -22,6 +22,14 @@ export type NewsletterCampaignContent = {
   campaignId?: string;
   /** Server-derived, escaped canonical Carnet excerpt; never an editable email copy. */
   carnetExcerpt?: { html: string; text: string };
+  carnetIllustration?: { src: string; alt: string };
+  carnetComptoir?: {
+    id: string;
+    name: string;
+    href: string;
+    image: string;
+    price: string;
+  }[];
 };
 
 function absoluteUrl(value: string) {
@@ -98,7 +106,45 @@ export function renderNewsletterCampaignEmail(
   const unsubscribe = urls.unsubscribe
     ? `<p style="margin:10px 0 0;font-size:12px;color:#60665d">Vous recevez cet e-mail après avoir confirmé votre inscription. <a href="${escapeHtml(urls.unsubscribe)}" style="color:#173e32">Se désinscrire</a>.</p>`
     : '<p style="margin:10px 0 0;font-size:12px;color:#60665d">E-mail de test — aucun abonné ne l’a reçu.</p>';
-  const bodyHtml = `<h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:30px;line-height:1.2">${escapeHtml(campaign.heading)}</h1>${content}${cta}`;
+  const illustration = campaign.carnetIllustration
+    ? renderNewsletterBlocks(
+        {
+          version: 1,
+          theme: 'journal',
+          blocks: [
+            {
+              id: 'illustration',
+              type: 'image',
+              src: campaign.carnetIllustration.src,
+              alt: campaign.carnetIllustration.alt,
+              caption: '',
+              href: '',
+            },
+          ],
+        },
+        decorate,
+        campaignLink,
+        PRODUCTION_SITE_URL,
+      )
+    : '';
+  const comptoirDocument = {
+    version: 1 as const,
+    theme: 'journal' as const,
+    blocks: (campaign.carnetComptoir ?? []).map((p) => ({
+      id: p.id,
+      type: 'product' as const,
+      productId: p.id,
+      name: p.name,
+      image: p.image,
+      price: p.price,
+      href: p.href,
+      description: '',
+    })),
+  };
+  const comptoir = comptoirDocument.blocks.length
+    ? `<h2 style="margin:36px 0 12px;font-family:Georgia,serif">Le Comptoir</h2>${renderNewsletterBlocks(comptoirDocument, decorate, campaignLink, PRODUCTION_SITE_URL)}`
+    : '';
+  const bodyHtml = `<h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:30px;line-height:1.2">${escapeHtml(campaign.heading)}</h1>${illustration}${content}${cta}${comptoir}`;
   const html = emailLayout({
     subject: subject,
     background: document ? THEMES[document.theme].background : undefined,
@@ -116,6 +162,12 @@ export function renderNewsletterCampaignEmail(
         : plainMarkdown(campaign.bodyMarkdown)),
     ...(campaign.ctaLabel && campaign.ctaUrl
       ? [`${campaign.ctaLabel} : ${absoluteUrl(campaign.ctaUrl)}`]
+      : []),
+    ...(comptoirDocument.blocks.length
+      ? [
+          'Le Comptoir',
+          newsletterPlainText(comptoirDocument, plainMarkdown, campaignLink),
+        ]
       : []),
     'Les Terres de Caldera',
     `Site : ${PRODUCTION_SITE_URL}`,

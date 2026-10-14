@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getCarnetProducts } from '@/lib/carnets/comptoir';
 import { getNextCarnetNumber } from '@/lib/carnets/admin';
 import { PageHeader } from '@/components/admin/AdminUI';
 import { CarnetEditor } from '@/components/admin/carnets/CarnetEditor';
@@ -6,7 +7,10 @@ import { saveCarnetChapterAction } from '@/lib/carnets/actions';
 import { emptyCarnetContent } from '@/lib/carnets/content';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function NewCarnetPage() {
-  const number = await getNextCarnetNumber();
+  const [number, products] = await Promise.all([
+    getNextCarnetNumber(),
+    getCarnetProducts(),
+  ]);
   return (
     <>
       <PageHeader
@@ -28,6 +32,7 @@ export default async function NewCarnetPage() {
       </PageHeader>
       <CarnetEditor
         action={saveCarnetChapterAction}
+        products={products}
         value={{
           revision: 0,
           number,

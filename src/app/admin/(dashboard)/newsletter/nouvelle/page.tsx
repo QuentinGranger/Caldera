@@ -43,7 +43,9 @@ export default async function NewEditionPage() {
             <li>14 jours d’avance</li>
             <li>Publication automatique</li>
           </ul>
-          <p className={styles.note}>Le Comptoir · à venir</p>
+          <p className={styles.note}>
+            Le Comptoir · jusqu’à 3 produits associés
+          </p>
           <span className={`${admin.button} ${styles.cta}`} aria-hidden="true">
             Créer un Carnet <ArrowRight size={17} />
           </span>

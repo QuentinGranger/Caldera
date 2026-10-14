@@ -1,3 +1,4 @@
+import { chapterComptoir } from '@/lib/carnets/comptoir';
 import { parseCarnetContent, deriveCarnet } from '@/lib/carnets/content';
 import { CarnetDiffusion } from '@/components/admin/carnets/CarnetDiffusion';
 import { getNewsletterStudioData } from '@/lib/newsletter/studio';
@@ -65,14 +66,21 @@ export default async function NewsletterCampaignPage({
         },
       }),
     ]);
-  const issues = campaign.chapter
-    ? ['READY', 'EARLY_ACCESS', 'PUBLIC'].includes(campaign.chapter.status)
-      ? []
-      : ['Le Carnet doit être prêt éditorialement.']
-    : newsletterIssues(documentFromLegacy(campaign.bodyMarkdown));
+  const issues = campaign.carnetCustomized
+    ? newsletterIssues(documentFromLegacy(campaign.bodyMarkdown))
+    : campaign.chapter
+      ? ['READY', 'EARLY_ACCESS', 'PUBLIC'].includes(campaign.chapter.status)
+        ? []
+        : ['Le Carnet doit être prêt éditorialement.']
+      : newsletterIssues(documentFromLegacy(campaign.bodyMarkdown));
   const excerpt = campaign.chapter
     ? deriveCarnet(parseCarnetContent(campaign.chapter.content)).excerpt
     : null;
+  const carnetProducts = campaign.chapter
+    ? campaign.status !== 'DRAFT' && Array.isArray(campaign.carnetProducts)
+      ? (campaign.carnetProducts as unknown as import('@/lib/carnets/comptoir').CarnetProduct[])
+      : await chapterComptoir(db, campaign.chapter.id, false)
+    : [];
   const value = {
     id: campaign.id,
     internalName: campaign.internalName,
@@ -82,10 +90,19 @@ export default async function NewsletterCampaignPage({
     bodyMarkdown: campaign.bodyMarkdown,
     ctaLabel: campaign.ctaLabel ?? '',
     ctaUrl: campaign.ctaUrl ?? '',
+    carnetCustomized: campaign.carnetCustomized,
+    editionOwned: Boolean(campaign.chapter?.editionCampaignId === campaign.id),
     chapterId: campaign.chapterId ?? '',
     ...(campaign.chapter && excerpt
       ? {
           carnetSource: {
+            products: carnetProducts,
+            illustration: campaign.chapter.illustrationUrl
+              ? {
+                  src: campaign.chapter.illustrationUrl,
+                  alt: campaign.chapter.illustrationAlt ?? '',
+                }
+              : undefined,
             id: campaign.chapter.id,
             title: campaign.chapter.title,
             slug: campaign.chapter.slug,
@@ -145,9 +162,11 @@ export default async function NewsletterCampaignPage({
             {campaign.chapter.title}
           </Link>
           <p>
-            Le titre, l’extrait et le bouton de l’email proviennent du Carnet
-            enregistré. La programmation active l’avant-première et la
-            publication publique automatique.
+            {campaign.carnetCustomized
+              ? 'Email personnalisé : cette composition est indépendante. Le chapitre web reste géré dans le Carnet, sans synchronisation automatique.'
+              : 'Le titre, l’extrait et le bouton de l’email proviennent du Carnet enregistré.'}{' '}
+            La programmation active l’avant-première et la publication publique
+            automatique.
           </p>
           {(campaign.status !== 'DRAFT' || campaign.chapter.publishedAt) && (
             <CarnetDiffusion

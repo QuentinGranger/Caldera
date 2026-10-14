@@ -102,7 +102,7 @@
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 22px;
 }
@@ -119,7 +119,9 @@
   border-radius: 12px;
   overflow: hidden;
   :global(.tiptap) {
-    min-height: 460px;
+    min-height: 360px;
+    max-height: 560px;
+    overflow-y: auto;
     padding: 26px;
     outline: none;
     font-family: Georgia, Times, serif;
@@ -496,5 +498,257 @@
     color: #173e32;
     text-underline-offset: 4px;
     font-weight: 600;
+  }
+}
+.workflowNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid t.$border;
+  border-radius: 12px;
+  a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    color: #173e32;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    min-height: 44px;
+  }
+  span {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #edf2e8;
+  }
+  a:focus-visible {
+    outline: 2px solid #173e32;
+    outline-offset: 2px;
+  }
+}
+.workflowSection {
+  margin: 24px 0;
+  padding: clamp(18px, 3vw, 30px);
+  background: #fff;
+  border: 1px solid t.$border;
+  border-radius: 14px;
+  scroll-margin-top: 100px;
+  min-width: 0;
+  h2 {
+    font:
+      500 clamp(23px, 3vw, 30px)/1.2 Georgia,
+      serif;
+    color: #173e32;
+    margin: 10px 0 18px;
+  }
+  p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #586854;
+  }
+  > label {
+    max-width: 460px;
+  }
+}
+.eyebrow {
+  font: 700 10px t.$mono;
+  letter-spacing: 0.12em;
+  color: #61705e;
+}
+.emailFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.products {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0;
+  display: grid;
+  gap: 12px;
+  counter-reset: products;
+  li {
+    counter-increment: products;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid t.$border;
+    border-radius: 10px;
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+  li:before {
+    content: counter(products);
+    font:
+      500 22px Georgia,
+      serif;
+    color: #7b6634;
+  }
+  img {
+    object-fit: contain;
+  }
+  li > div:first-of-type {
+    flex: 1;
+    min-width: 160px;
+  }
+  strong,
+  span,
+  small {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+  span {
+    margin: 6px 0;
+    color: #173e32;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  small {
+    color: #61705e;
+    font-size: 12px;
+  }
+}
+.productActions,
+.panelActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  button {
+    min-height: 44px;
+  }
+}
+.picker {
+  border-top: 1px solid t.$border;
+  padding-top: 16px;
+  summary {
+    cursor: pointer;
+    min-height: 44px;
+    font-weight: 600;
+    color: #173e32;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    max-height: 300px;
+    overflow: auto;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid t.$border;
+  }
+  strong,
+  small {
+    display: block;
+  }
+  small {
+    font-size: 12px;
+    margin-top: 6px;
+  }
+}
+.checklist {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #666f61;
+  }
+  li[data-ok='true'] {
+    color: #173e32;
+  }
+}
+.notice {
+  padding: 14px 18px;
+  border-left: 3px solid #b6954d;
+  background: #fff9e8;
+}
+.advanced,
+.recovery {
+  padding: 18px 22px;
+  margin: 20px 0;
+  border: 1px solid t.$border;
+  border-radius: 12px;
+  p {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  summary {
+    cursor: pointer;
+    min-height: 32px;
+    color: #586854;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  small {
+    display: block;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #61705e;
+  }
+}
+.recovery {
+  background: #f4f7ef;
+  margin-top: 0;
+  button {
+    margin: 0 8px 12px 0;
+  }
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 700px) {
+  .emailFields,
+  .checklist {
+    grid-template-columns: 1fr;
+  }
+  .workflowNav {
+    gap: 2px;
+    a {
+      padding: 6px 8px;
+    }
+  }
+  .productActions {
+    width: 100%;
+  }
+}
+
+.webPreview {
+  margin: 12px 0 0;
+  min-width: 0;
+  summary {
+    cursor: pointer;
+    min-height: 44px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #173e32;
+  }
+  .preview {
+    position: static;
   }
 }

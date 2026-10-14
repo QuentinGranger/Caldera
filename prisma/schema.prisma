@@ -140,6 +140,7 @@ model Product {
   images           ProductImage[]
   tags             Tag[]
   orderItems       OrderItem[]
+  carnetComptoir  CarnetComptoirProduct[]
   wishlistItems    WishlistItem[]
   pilotageLaunches BusinessPilotageLaunchProduct[]
   /// Draft created from a supplier catalogue: publication needs the shop's own
@@ -1047,6 +1048,10 @@ model NewsletterCampaign {
   deliveries     NewsletterCampaignDelivery[]
   scheduledAt    DateTime?
   sendImmediately Boolean @default(false)
+  editionChapter CarnetChapter? @relation("CarnetEdition")
+  carnetCustomized Boolean @default(false)
+  /// Product presentation frozen at queue time; the narrative remains canonical.
+  carnetProducts Json?
   releaseChapter CarnetChapter? @relation("CarnetRelease")
   chapterId      String?                      @db.Uuid
   chapter        CarnetChapter?               @relation(fields: [chapterId], references: [id], onDelete: SetNull)
@@ -1894,6 +1899,9 @@ model CarnetChapter {
   publishedAt     DateTime?
   releaseCampaignId String? @unique @db.Uuid
   releaseCampaign NewsletterCampaign? @relation("CarnetRelease", fields: [releaseCampaignId], references: [id], onDelete: SetNull)
+  editionCampaignId String? @unique @db.Uuid
+  editionCampaign NewsletterCampaign? @relation("CarnetEdition", fields: [editionCampaignId], references: [id], onDelete: SetNull)
+  comptoir CarnetComptoirProduct[]
   campaigns       NewsletterCampaign[]
   status          CarnetChapterStatus   @default(DRAFT)
   revision        Int                   @default(0)
@@ -1906,4 +1914,16 @@ model CarnetChapter {
   @@index([createdById])
   @@index([status, earlyAccessAt])
   @@index([status, publicAt])
+}
+
+/// At most three ordered references, enforced by position range and uniqueness.
+model CarnetComptoirProduct {
+  chapterId String @db.Uuid
+  productId String @db.Uuid
+  position Int
+  chapter CarnetChapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  @@id([chapterId, productId])
+  @@unique([chapterId, position])
+  @@index([productId])
 }

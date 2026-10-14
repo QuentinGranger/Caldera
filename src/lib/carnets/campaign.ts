@@ -9,6 +9,8 @@ import { renderNewsletterCampaignEmail } from '@/emails/newsletter-campaign';
 import { parseCarnetContent, deriveCarnet, carnetUrl } from './content';
 import { appOrigin } from '@/lib/orders/access';
 import { carnetAccessToken, carnetAccessUrl } from './access';
+import { carnetEmailContent } from './email';
+import type { CarnetProduct } from './comptoir';
 import { carnetPublicDate } from './dates';
 export function assertCarnetReady(chapter: CarnetChapter) {
   if (!['READY', 'EARLY_ACCESS', 'PUBLIC'].includes(chapter.status))
@@ -93,20 +95,49 @@ export function renderCarnetCampaign(
   chapter: CarnetChapter,
   urls: { logo: string; unsubscribe?: string },
 ) {
-  const excerpt = assertCarnetReady(chapter);
+  assertCarnetReady(chapter);
+  const href =
+    chapter.earlyAccessAt &&
+    chapter.publicAt &&
+    (chapter.releaseCampaignId || chapter.publishedAt)
+      ? carnetAccessUrl(chapter)
+      : `${appOrigin()}${carnetUrl(chapter.slug)}`;
+  if (campaign.carnetCustomized) {
+    // Only rewrite this chapter's exact canonical URL, never arbitrary user links.
+    const clean = carnetUrl(chapter.slug);
+    const bodyMarkdown = campaign.bodyMarkdown.replace(
+      /"href":"([^"\\]*)"/g,
+      (match, url: string) =>
+        url === clean || url === `${appOrigin()}${clean}`
+          ? `"href":${JSON.stringify(href.startsWith('https://') ? href : new URL(href).pathname + new URL(href).search)}`
+          : match,
+    );
+    return renderNewsletterCampaignEmail(
+      {
+        ...campaign,
+        bodyMarkdown,
+        campaignId: campaign.id,
+        ctaUrl:
+          campaign.ctaUrl === clean ||
+          campaign.ctaUrl === `${appOrigin()}${clean}`
+            ? href
+            : campaign.ctaUrl,
+      },
+      urls,
+    );
+  }
+  const products = Array.isArray(campaign.carnetProducts)
+    ? (campaign.carnetProducts as unknown as CarnetProduct[])
+    : [];
   return renderNewsletterCampaignEmail(
     {
-      ...campaign,
+      ...carnetEmailContent(
+        { ...chapter, content: parseCarnetContent(chapter.content) },
+        products,
+        campaign,
+        href,
+      ),
       campaignId: campaign.id,
-      heading: chapter.title,
-      ctaLabel: 'Continuer l’expédition',
-      ctaUrl:
-        chapter.earlyAccessAt &&
-        chapter.publicAt &&
-        (chapter.releaseCampaignId || chapter.publishedAt)
-          ? carnetAccessUrl(chapter)
-          : `${appOrigin()}${carnetUrl(chapter.slug)}`,
-      carnetExcerpt: { html: excerpt.html, text: excerpt.text },
     },
     urls,
   );
