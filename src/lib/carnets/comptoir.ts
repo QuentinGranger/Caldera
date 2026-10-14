@@ -2,7 +2,8 @@ import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { requireAdmin } from '@/lib/admin/auth';
-import { AdminError, uuid } from '@/lib/admin/validation';
+import { parseComptoirSelection } from './comptoir-selection';
+import { AdminError } from '@/lib/admin/validation';
 export type CarnetProduct = {
   id: string;
   name: string;
@@ -11,6 +12,7 @@ export type CarnetProduct = {
   price: string;
   stock: number;
   eligible: boolean;
+  unavailableReason?: string;
 };
 const select = {
   id: true,
@@ -36,6 +38,18 @@ function option(
   const variants = p.variants.filter((v) => v.availableQuantity > 0);
   const stock = variants.reduce((sum, v) => sum + v.availableQuantity, 0);
   const price = (variants[0] ?? p.variants[0])?.price;
+  const unavailableReason =
+    p.status !== 'ACTIVE'
+      ? 'produit non publié'
+      : p.isDemonstration
+        ? 'produit de démonstration'
+        : !p.category.isActive
+          ? 'catégorie inactive'
+          : !p.variants.length
+            ? 'aucune variante active'
+            : stock <= 0
+              ? 'épuisé (aucun stock disponible)'
+              : undefined;
   return {
     id: p.id,
     name: p.name,
@@ -45,6 +59,7 @@ function option(
       ? `${p.variants.length > 1 ? 'À partir de ' : ''}${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(price))}`
       : '',
     stock,
+    unavailableReason,
     eligible:
       p.status === 'ACTIVE' &&
       !p.isDemonstration &&
@@ -52,30 +67,13 @@ function option(
       stock > 0,
   };
 }
-export function comptoirIds(raw: string) {
-  let ids: unknown;
-  try {
-    ids = JSON.parse(raw);
-  } catch {
-    throw new AdminError('Sélection du Comptoir invalide.');
-  }
-  if (!Array.isArray(ids) || ids.length > 3)
-    throw new AdminError('Le Comptoir est limité à trois produits.');
-  const result = ids.map((v) => {
-    if (typeof v !== 'string') throw new AdminError('Produit invalide.');
-    return uuid(v);
-  });
-  if (new Set(result).size !== result.length)
-    throw new AdminError(
-      'Un produit ne peut apparaître qu’une fois dans le Comptoir.',
-    );
-  return result;
-}
+export const comptoirIds = (raw: string) => parseComptoirSelection(raw);
 export async function loadComptoir(
   tx: Prisma.TransactionClient,
   ids: string[],
   requireAvailable = true,
 ) {
+  ids = parseComptoirSelection(ids);
   const rows = await tx.product.findMany({
     where: { id: { in: ids } },
     select,
@@ -85,9 +83,10 @@ export async function loadComptoir(
     if (!p) throw new AdminError('Produit du Comptoir introuvable.');
     return option(p);
   });
-  if (requireAvailable && products.some((p) => !p.eligible))
+  const unavailable = products.find((p) => !p.eligible);
+  if (requireAvailable && unavailable)
     throw new AdminError(
-      'Un produit du Comptoir est indisponible ou non publié. Retirez-le ou remplacez-le.',
+      `Envoi bloqué : le produit « ${unavailable.name} » est indisponible (${unavailable.unavailableReason ?? 'stock ou publication à vérifier'}). Remplacez-le ou supprimez-le du Comptoir.`,
     );
   return products;
 }
@@ -108,6 +107,7 @@ export async function chapterComptoir(
 }
 export async function getCarnetProducts(selected: string[] = [], search = '') {
   await requireAdmin();
+  selected = parseComptoirSelection(selected);
   const rows = await getPrisma().product.findMany({
     where: {
       OR: [

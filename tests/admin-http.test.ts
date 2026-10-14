@@ -653,6 +653,63 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       },
     );
     await t.test(
+      'Recherche Comptoir protégée et stock actualisé pour les produits sélectionnés',
+      async () => {
+        const data = {
+          search: 'Produit HTTP',
+          selectedIds: JSON.stringify([product.id]),
+        };
+        const denied = await action(
+          'searchCarnetProductsAction',
+          data,
+          '',
+          origin,
+          false,
+          true,
+        );
+        assert.ok(
+          (
+            denied.response.headers.get('x-action-redirect') ?? denied.body
+          ).includes('/admin/login'),
+        );
+        const found = await action(
+          'searchCarnetProductsAction',
+          data,
+          cookie,
+          origin,
+          false,
+          true,
+        );
+        assert.ok(found.body.includes(product.id));
+        assert.ok(found.body.includes(product.name));
+        assert.doesNotMatch(found.body, /costPrice|procurementFees/);
+        await db.product.update({
+          where: { id: product.id },
+          data: { status: 'DRAFT' },
+        });
+        try {
+          const retained = await action(
+            'searchCarnetProductsAction',
+            {
+              search: 'aucun résultat',
+              selectedIds: JSON.stringify([product.id]),
+            },
+            cookie,
+            origin,
+            false,
+            true,
+          );
+          assert.ok(retained.body.includes(product.id));
+          assert.match(retained.body, /produit non publié/);
+        } finally {
+          await db.product.update({
+            where: { id: product.id },
+            data: { status: 'ACTIVE' },
+          });
+        }
+      },
+    );
+    await t.test(
       'Carnets HTTP : source unique, MFA requis, validation, conflit et archivage réversible',
       async () => {
         const content = JSON.stringify({
