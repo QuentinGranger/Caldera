@@ -246,6 +246,17 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
           assert.match(envelope!.html, /DERNIER_EXTRAIT_SAUVEGARDE/);
           assert.doesNotMatch(envelope!.html, /RECIT_CANONIQUE_RESERVE/);
           assert.match(envelope!.html, /Le Comptoir/);
+          const audit = await db.adminAuditLog.findFirstOrThrow({
+            where: {
+              entityId: campaign.id,
+              action: 'NEWSLETTER_CAMPAIGN_TEST_SENT',
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+          assert.deepEqual(audit.metadata, {
+            chapterRevision: chapter.revision,
+            campaignUpdatedAt: campaign.updatedAt.toISOString(),
+          });
         } finally {
           globalThis.fetch = original;
           for (const n of names) {

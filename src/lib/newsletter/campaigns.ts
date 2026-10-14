@@ -344,6 +344,10 @@ export async function sendNewsletterCampaignTest(
         'NEWSLETTER_CAMPAIGN_TEST_SENT',
         'NewsletterCampaign',
         campaignId,
+        {
+          chapterRevision: chapter?.revision ?? null,
+          campaignUpdatedAt: campaign.updatedAt.toISOString(),
+        },
       ),
     );
   } catch (error) {

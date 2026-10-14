@@ -608,6 +608,29 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         const newsletter = await page('/admin/newsletter');
         assert.match(newsletter.html, /href="\/admin\/newsletter\/nouvelle"/);
         assert.match(newsletter.html, /Nouvelle édition/);
+        const sections = [
+          'prochaine-edition',
+          'avance-editoriale',
+          'campagnes-newsletter',
+          'audience-newsletter',
+          'technique-newsletter',
+        ];
+        const positions = sections.map((id) =>
+          newsletter.html.indexOf(`id="${id}"`),
+        );
+        assert.ok(
+          positions.every(
+            (position, i) =>
+              position >= 0 && (i === 0 || position > positions[i - 1]!),
+          ),
+          'Production, campagnes, audience, technique dans cet ordre',
+        );
+        assert.match(newsletter.html, /2 Carnets par mois/);
+        assert.match(
+          newsletter.html,
+          /Inscriptions à la newsletter|Aucune inscription trouvée/,
+        );
+        assert.match(newsletter.html, /Automatisations et état du service d/);
         assert.doesNotMatch(
           newsletter.html,
           /href="\/admin\/newsletter\/campagnes\/nouvelle"/,

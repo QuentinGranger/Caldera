@@ -143,6 +143,7 @@ export async function testCarnetEditionAction(
       chapter.editionCampaign!.updatedAt.toISOString(),
     );
     await sendNewsletterCampaignTest(admin, data);
+    refreshEdition(chapter.id, chapter.editionCampaignId!);
     return {
       success: true,
       message:
