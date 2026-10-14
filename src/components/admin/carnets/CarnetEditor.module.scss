@@ -584,13 +584,7 @@
     padding: 16px;
     flex-wrap: wrap;
   }
-  li:before {
-    content: counter(products);
-    font:
-      500 22px Georgia,
-      serif;
-    color: #7b6634;
-  }
+
   img {
     object-fit: contain;
   }
@@ -750,5 +744,83 @@
   }
   .preview {
     position: static;
+  }
+}
+
+.comptoirToolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+  small {
+    font-size: 12px;
+    color: #61705e;
+  }
+}
+.products .productSlot {
+  font: 700 10px t.$mono;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #61705e;
+  margin-bottom: 8px;
+}
+.products .dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 44px;
+  padding: 6px;
+  background: #f0f4eb;
+  color: #61705e;
+  box-shadow: none;
+  cursor: grab;
+}
+.products li[data-dragging='true'] {
+  border-color: #315944;
+  opacity: 0.6;
+}
+.stockAlert {
+  border: 1px solid #b95c43;
+  border-left: 4px solid #b95c43;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff5ef;
+  color: #813c2b;
+  font-size: 13px;
+  line-height: 1.7;
+  ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+  }
+}
+.picker {
+  h3 {
+    font-size: 15px;
+    color: #173e32;
+  }
+  li > span {
+    flex: 1;
+    min-width: 0;
+  }
+  img {
+    object-fit: contain;
+  }
+}
+@media (max-width: 600px) {
+  .products li {
+    gap: 10px;
+  }
+  .products li > div:first-of-type {
+    min-width: 120px;
+  }
+  .products img {
+    width: 48px;
+    height: 48px;
+  }
+  .productActions button {
+    font-size: 11px;
+    padding: 8px 10px;
   }
 }

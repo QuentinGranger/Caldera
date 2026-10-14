@@ -513,6 +513,7 @@ function Fields({
       <CarnetComptoir
         ids={value.productIds ?? []}
         products={products}
+        onProductsChange={onProducts}
         onChange={(productIds, nextProducts) => {
           if (nextProducts) onProducts(nextProducts);
           setValue((v) => ({ ...v, productIds }));
@@ -559,14 +560,20 @@ function Edition({
   const [device, setDevice] = useState<PreviewDevice>('desktop');
   const [views, setViews] = useState<{ desktop?: string; mobile?: string }>({});
   const rescue = useCarnetRecovery(normalized, value);
-  const fingerprint = JSON.stringify(value);
+  const draftFingerprint = JSON.stringify(value);
+  const fingerprint = JSON.stringify({
+    value,
+    products: (value.productIds ?? []).map((id) =>
+      productOptions.find((p) => p.id === id),
+    ),
+  });
   const dirty =
     JSON.stringify({
       ...initial,
       productIds: initial.productIds ?? [],
       emailSubject: initial.emailSubject ?? '',
       emailPreheader: initial.emailPreheader ?? '',
-    }) !== fingerprint;
+    }) !== draftFingerprint;
   function preview(next: PreviewDevice) {
     setDevice(next);
     if (next !== 'text') setViews((v) => ({ ...v, [next]: fingerprint }));

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { Prisma } from '@/generated/prisma/client';
 import type { AdminActionState } from '@/lib/admin/action-types';
 import { requireAdmin } from '@/lib/admin/auth';
+import { parseComptoirSelection } from './comptoir-selection';
 import { getCarnetProducts } from './comptoir';
 import { getPrisma } from '@/lib/db/prisma';
 import { id, integer, text, whitelist } from '@/lib/admin/validation';
@@ -240,6 +241,9 @@ export async function cancelCarnetEditionAction(
 
 export async function searchCarnetProductsAction(form: FormData) {
   await requireAdmin();
-  whitelist(form, ['search']);
-  return getCarnetProducts([], text(form, 'search', 120, false));
+  whitelist(form, ['search', 'selectedIds']);
+  const selected = form.has('selectedIds')
+    ? parseComptoirSelection(text(form, 'selectedIds', 300))
+    : [];
+  return getCarnetProducts(selected, text(form, 'search', 120, false));
 }
