@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { renderNewsletterCampaignEmail } from '@/emails/newsletter-campaign';
 import { carnetEmailContent } from '@/lib/carnets/email';
-import { deriveCarnet, carnetCta, carnetUrl } from '@/lib/carnets/content';
+import { carnetUrl } from '@/lib/carnets/content';
 import { carnetPublicLocal } from '@/lib/carnets/dates';
 import type { CarnetEditorValue } from '@/lib/carnets/admin';
 import type { CarnetProduct } from '@/lib/carnets/comptoir';
@@ -17,6 +17,8 @@ import {
 } from '@/lib/carnets/actions';
 import { CarnetDiffusion } from './CarnetDiffusion';
 import styles from './CarnetEditor.module.scss';
+import { carnetChecklist, type DepartureCheck } from '@/lib/carnets/readiness';
+import { parseCarnetDate } from '@/lib/carnets/dates';
 export type PreviewDevice = 'desktop' | 'mobile' | 'text';
 export function CarnetEmailPanel({
   value,
@@ -193,7 +195,9 @@ export function CarnetVerification({
   viewed,
   onPreview,
   readOnly = false,
+  verification,
 }: {
+  verification?: CarnetEditorValue['verification'];
   value: CarnetEditorValue;
   products: CarnetProduct[];
   dirty: boolean;
@@ -201,61 +205,89 @@ export function CarnetVerification({
   onPreview: (device: PreviewDevice) => void;
   readOnly?: boolean;
 }) {
-  const derived = deriveCarnet(value.content),
-    ids = value.productIds ?? [];
-  const checks: [string, boolean][] = [
-    ['Titre renseigné', Boolean(value.title.trim())],
-    ['Arc renseigné (facultatif)', Boolean(value.arcTitle.trim())],
-    [
-      'Image principale et texte alternatif',
-      Boolean(value.illustrationUrl && value.illustrationAlt?.trim()),
-    ],
-    [
-      'Récit avant et après la coupure',
-      Boolean(
-        derived.excerpt?.words && derived.full.words > derived.excerpt.words,
-      ),
-    ],
-    ['Statut prêt éditorialement', value.status === 'READY'],
-    [
-      `Extrait : ${derived.excerpt?.words ?? 0} mots · repère 250–400`,
-      Boolean(derived.excerpt?.words),
-    ],
-    [
-      `Chapitre : ${derived.full.words} mots · repère 900–1 100`,
-      derived.full.words > 0,
-    ],
-    ['Objet email', Boolean(value.emailSubject?.trim())],
-    ['Preheader', Boolean(value.emailPreheader?.trim())],
-    [
-      'CTA généré : Continuer l’expédition',
-      !value.campaign?.customized &&
-        Boolean(carnetCta(value.slug).href && value.slug),
-    ],
-    [
-      ids.length
-        ? `${ids.length} produit${ids.length > 1 ? 's' : ''} disponible${ids.length > 1 ? 's' : ''}`
-        : 'Comptoir vide (facultatif)',
-      ids.every((id) => products.some((p) => p.id === id && p.eligible)),
-    ],
-    [
-      'Date d’envoi et publication à J+14',
-      Boolean(value.earlyAccessAt && carnetPublicLocal(value.earlyAccessAt)),
-    ],
-    ['Aperçu ordinateur ouvert pour cette version', viewed.desktop],
-    ['Aperçu mobile ouvert pour cette version', viewed.mobile],
-  ];
-  const ready = Boolean(
-    value.campaign &&
-    value.status === 'READY' &&
-    value.illustrationUrl &&
-    value.illustrationAlt?.trim() &&
-    derived.excerpt?.words &&
-    derived.full.words > derived.excerpt.words &&
-    value.emailSubject?.trim() &&
-    value.emailPreheader?.trim() &&
-    ids.every((id) => products.some((p) => p.id === id && p.eligible)),
+  const ids = value.productIds ?? [];
+  const selected = ids.map(
+    (id) =>
+      products.find((p) => p.id === id) ?? {
+        id,
+        name: 'Produit introuvable',
+        eligible: false,
+        unavailableReason: 'référence introuvable',
+      },
   );
+  const date = (input?: string) => {
+    try {
+      return parseCarnetDate(input ?? '', 'Diffusion') ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const proof = verification ?? {
+    testCurrent: false,
+    accessConfigured: false,
+    testSentAt: null,
+  };
+  const checklist = carnetChecklist(
+    {
+      ...value,
+      updatedAt: new Date(0),
+      illustrationUrl: value.illustrationUrl ?? null,
+      illustrationAlt: value.illustrationAlt ?? null,
+      earlyAccessAt: date(value.earlyAccessAt),
+      publicAt: date(
+        value.publicAt ?? carnetPublicLocal(value.earlyAccessAt ?? ''),
+      ),
+      publishedAt: value.publishedAt ? new Date(value.publishedAt) : null,
+    },
+    value.campaign
+      ? {
+          ...value.campaign,
+          carnetCustomized: value.campaign.customized,
+          subject: value.emailSubject ?? '',
+          preheader: value.emailPreheader ?? '',
+          updatedAt: new Date(value.campaign.updatedAt),
+        }
+      : null,
+    selected,
+    { ...proof, dirty },
+  );
+  const ready = checklist.canSchedule;
+  function fix(action: NonNullable<DepartureCheck['action']>) {
+    const selectors = {
+      recit: '[name="status"]',
+      coupure: '#carnet-coupure',
+      illustration: '[name="illustrationAlt"]',
+      comptoir: '#carnet-comptoir',
+      email: '#carnet-email',
+      diffusion: '#carnet-diffusion',
+      test: '#carnet-test button[type="submit"]',
+    };
+    const target = document.querySelector<HTMLElement>(
+      selectors[action.target],
+    );
+    if (!target) return;
+    let parent = target.parentElement;
+    while (parent) {
+      if (parent instanceof HTMLDetailsElement) parent.open = true;
+      parent = parent.parentElement;
+    }
+    target.scrollIntoView({
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'instant'
+        : 'smooth',
+      block: 'center',
+    });
+    if (action.target === 'test') {
+      (target as HTMLButtonElement).click();
+      return;
+    }
+    (target.matches('input,select,button')
+      ? target
+      : target.querySelector<HTMLElement>(
+          'input,select,button,[contenteditable="true"]',
+        )
+    )?.focus({ preventScroll: true });
+  }
   return (
     <>
       <section
@@ -265,23 +297,89 @@ export function CarnetVerification({
       >
         <span className={styles.eyebrow}>05 / VÉRIFICATION</span>
         <h2 id="verification-title">La dernière lecture avant le départ</h2>
-        <ul className={styles.checklist}>
-          {checks.map(([label, ok]) => (
-            <li key={label} data-ok={ok}>
-              <span aria-hidden="true">{ok ? '✓' : '○'}</span>
-              <span>
-                <span className={styles.srOnly}>
-                  {ok ? 'Vérifié : ' : 'À vérifier : '}
-                </span>
-                {label}
+        <p className={styles.checkLegend}>
+          ✓ Conforme · ⚠ À corriger (conseil) · ✕ Bloquant
+        </p>
+        <ul
+          className={styles.checklist}
+          aria-label="Checklist de départ du Carnet"
+        >
+          {checklist.checks.map((check) => (
+            <li key={check.key} data-state={check.state}>
+              <span aria-hidden="true">
+                {check.state === 'ok'
+                  ? '✓'
+                  : check.state === 'warning'
+                    ? '⚠'
+                    : '✕'}
               </span>
+              <div>
+                <strong>
+                  <span className={styles.srOnly}>
+                    {check.state === 'ok'
+                      ? 'Conforme : '
+                      : check.state === 'warning'
+                        ? 'À corriger : '
+                        : 'Bloquant : '}
+                  </span>
+                  {check.label}
+                </strong>
+                <small>
+                  {check.detail}
+                  {check.key === 'test' && proof.testSentAt
+                    ? ` Dernier test : ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(proof.testSentAt))}.`
+                    : ''}
+                </small>
+                {check.action &&
+                !readOnly &&
+                value.campaign?.customized &&
+                ['cta', 'composition'].includes(check.key) ? (
+                  <Link
+                    href={`/admin/newsletter/campagnes/${value.campaign.id}`}
+                  >
+                    Corriger dans le Studio
+                  </Link>
+                ) : (
+                  check.action &&
+                  !readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => fix(check.action!)}
+                      disabled={
+                        check.action.target === 'test' &&
+                        (dirty || !checklist.canTest)
+                      }
+                    >
+                      {check.action.label}
+                    </button>
+                  )
+                )}
+              </div>
             </li>
           ))}
         </ul>
+        <div
+          className={ready ? styles.departureReady : styles.departureBlocked}
+          role="status"
+        >
+          <strong>
+            {readOnly
+              ? 'ÉDITION ENGAGÉE DANS LA DIFFUSION'
+              : ready
+                ? 'PRÊT POUR LE DÉPART'
+                : 'LE DÉPART ATTEND VOS CORRECTIONS'}
+          </strong>
+          <p>
+            {readOnly
+              ? 'La programmation et le contenu sont figés. Consultez le suivi de campagne.'
+              : ready
+                ? `Toutes les vérifications obligatoires passent.${checklist.warnings.length ? ' Les conseils éditoriaux restent à relire.' : ''}`
+                : `${checklist.blocking.length} point(s) bloquant(s). Corrigez-les, sauvegardez puis envoyez-vous un test.`}
+          </p>
+        </div>
         <p>
-          Ouvrir un aperçu ne confirme pas sa qualité. Relisez le contenu, les
-          liens et les informations commerciales. Les longueurs recommandées
-          restent indicatives.
+          Le stock et la version testée seront revérifiés côté serveur au moment
+          de programmer. Les aperçus restent une aide à votre relecture.
         </p>
         <div className={styles.panelActions}>
           <button type="button" onClick={() => onPreview('desktop')}>
@@ -291,6 +389,11 @@ export function CarnetVerification({
             Aperçu mobile
           </button>
         </div>
+        <p className={styles.checkLegend}>
+          Relecture ordinateur :{' '}
+          {viewed.desktop ? 'ouverte pour cette version' : 'à ouvrir'} · Mobile
+          : {viewed.mobile ? 'ouverte pour cette version' : 'à ouvrir'}
+        </p>
         {dirty && (
           <p role="status" className={styles.notice}>
             Modifications non enregistrées : sauvegardez avant de tester,
@@ -299,15 +402,17 @@ export function CarnetVerification({
         )}
         {value.campaign ? (
           <div className={styles.panelActions}>
-            <AdminForm
-              action={testCarnetEditionAction}
-              guard={false}
-              requireSaved
-              submit="M’envoyer un test"
-              submitDisabled={dirty || !ready}
-            >
-              <EditionReferences value={value} />
-            </AdminForm>
+            <div id="carnet-test">
+              <AdminForm
+                action={testCarnetEditionAction}
+                guard={false}
+                requireSaved
+                submit="M’envoyer un test"
+                submitDisabled={dirty || !checklist.canTest}
+              >
+                <EditionReferences value={value} />
+              </AdminForm>
+            </div>
             {!readOnly && (
               <AdminForm
                 action={queueCarnetEditionAction}

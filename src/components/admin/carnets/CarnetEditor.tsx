@@ -442,7 +442,11 @@ function Fields({
         <div className={styles.writing}>
           <h2>Le récit complet</h2>
           <Narrative value={value.content} onChange={change} />
-          <section className={styles.cutPanel} aria-labelledby={`${id}-cut`}>
+          <section
+            id="carnet-coupure"
+            className={styles.cutPanel}
+            aria-labelledby={`${id}-cut`}
+          >
             <h3 id={`${id}-cut`}>✂ La coupure newsletter</h3>
             <p>
               {derived.excerpt
@@ -563,6 +567,7 @@ function Edition({
   const normalized = useMemo(
     () => ({
       ...initial,
+      verification: undefined,
       productIds: initial.productIds ?? [],
       emailSubject: initial.emailSubject ?? '',
       emailPreheader: initial.emailPreheader ?? '',
@@ -570,11 +575,17 @@ function Edition({
     [initial],
   );
   const [value, setValue] = useState<CarnetEditorValue>(normalized);
-  const [productOptions, setProductOptions] = useState(products);
+  const [searchedProducts, setProductOptions] = useState(products);
+  const productOptions = searchedProducts.map(
+    (p) => products.find((current) => current.id === p.id) ?? p,
+  );
   const [device, setDevice] = useState<PreviewDevice>('desktop');
   const [views, setViews] = useState<{ desktop?: string; mobile?: string }>({});
   const rescue = useCarnetRecovery(normalized, value);
-  const draftFingerprint = JSON.stringify(value);
+  const draftFingerprint = JSON.stringify({
+    ...value,
+    verification: undefined,
+  });
   const fingerprint = JSON.stringify({
     value,
     products: (value.productIds ?? []).map((id) =>
@@ -584,6 +595,7 @@ function Edition({
   const dirty =
     JSON.stringify({
       ...initial,
+      verification: undefined,
       productIds: initial.productIds ?? [],
       emailSubject: initial.emailSubject ?? '',
       emailPreheader: initial.emailPreheader ?? '',
@@ -661,6 +673,7 @@ function Edition({
       )}
       <CarnetVerification
         value={value}
+        verification={initial.verification}
         products={productOptions}
         dirty={!readOnly && dirty}
         viewed={{

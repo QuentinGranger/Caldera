@@ -1,3 +1,4 @@
+import { carnetTestProof } from './helpers/carnet-test-proof';
 import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -282,6 +283,7 @@ test('Comptoir PostgreSQL : références seules et revérification effective du 
           },
         });
         try {
+          await carnetTestProof(admin.id, campaignId);
           const queued = await queueNewsletterCampaign(
             admin.id,
             form({ id: campaignId }),

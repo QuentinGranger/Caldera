@@ -1041,6 +1041,14 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
             /CAMPAIGN STUDIO|Bibliothèque de blocs/,
           );
           assert.match(detail.html, /Objet de l’édition HTTP/);
+          for (const label of [
+            'Extrait entre 250 et 400 mots',
+            'Publication publique prévue à J+14',
+            'Test email envoyé',
+            'LE DÉPART ATTEND VOS CORRECTIONS',
+          ])
+            assert.ok(detail.html.includes(label), label);
+          assert.doesNotMatch(detail.html, /PRÊT POUR LE DÉPART/);
           assert.match(detail.html, /Continuer l’expédition/);
           assert.match(detail.html, /Aperçu e-mail ordinateur/);
           const refs = {

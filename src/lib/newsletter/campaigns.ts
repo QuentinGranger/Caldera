@@ -1,5 +1,10 @@
 import 'server-only';
 import {
+  assertCarnetDeparture,
+  assertCarnetTestable,
+  carnetTestSignature,
+} from '@/lib/carnets/verification-server';
+import {
   planCarnetRelease,
   renderCarnetCampaign,
 } from '@/lib/carnets/campaign';
@@ -207,8 +212,9 @@ export async function queueNewsletterCampaign(adminId: string, form: FormData) {
         throw new AdminError(
           'La première diffusion doit utiliser la campagne principale du Carnet.',
         );
-      if (saved.editionCampaignId) assertEditionComplete(saved, campaign);
+
       const products = await chapterComptoir(tx, saved.id);
+      await assertCarnetDeparture(tx, saved, campaign, products, scheduledAt);
       campaign = await tx.newsletterCampaign.update({
         where: { id: campaign.id },
         data: {
@@ -308,6 +314,12 @@ export async function sendNewsletterCampaignTest(
       chapter && campaign.status === 'DRAFT'
         ? await chapterComptoir(getPrisma(), chapter.id)
         : null;
+    const testedProducts =
+      products ??
+      (Array.isArray(campaign.carnetProducts)
+        ? (campaign.carnetProducts as unknown as import('@/lib/carnets/comptoir').CarnetProduct[])
+        : []);
+    if (chapter) assertCarnetTestable(chapter, campaign, testedProducts);
     const rendered = chapter
       ? renderCarnetCampaign(
           {
@@ -345,6 +357,15 @@ export async function sendNewsletterCampaignTest(
         'NewsletterCampaign',
         campaignId,
         {
+          ...(chapter
+            ? {
+                carnetTestSignature: carnetTestSignature(
+                  chapter,
+                  campaign,
+                  testedProducts,
+                ),
+              }
+            : {}),
           chapterRevision: chapter?.revision ?? null,
           campaignUpdatedAt: campaign.updatedAt.toISOString(),
         },
