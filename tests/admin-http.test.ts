@@ -678,6 +678,29 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
       },
     );
     await t.test(
+      'Arcs narratifs : vue par défaut, liste conservée et préremplissage sans création',
+      async () => {
+        const before = await db.carnetChapter.count();
+        const arcs = await page('/admin/carnets');
+        assert.equal(arcs.response.status, 200);
+        assert.match(arcs.html, /Vos arcs narratifs/);
+        assert.match(arcs.html, /Pagination des arcs/);
+        assert.match(arcs.html, /vue=liste/);
+        const list = await page('/admin/carnets?vue=liste');
+        assert.equal(list.response.status, 200);
+        assert.match(list.html, /name="vue" value="liste"/);
+        const draft = await page(
+          '/admin/carnets/nouveau?arcTitle=La%20for%C3%AAt&arcPosition=4&arcTotal=6',
+        );
+        assert.equal(draft.response.status, 200);
+        assert.match(draft.html, /name="arcTitle"[^>]*value="La forêt"/);
+        assert.match(draft.html, /name="arcPosition"[^>]*value="4"/);
+        assert.match(draft.html, /name="arcTotal"[^>]*value="6"/);
+        assert.match(draft.html, /<datalist/);
+        assert.equal(await db.carnetChapter.count(), before);
+      },
+    );
+    await t.test(
       'Calendrier éditorial : mois, navigation et visite sans modification',
       async () => {
         const before = {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, BookOpen, CalendarDays } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays, Layers3, List } from 'lucide-react';
 import {
   AdminTable,
   Badge,
@@ -8,6 +8,9 @@ import {
   Pagination,
 } from '@/components/admin/AdminUI';
 import { FilterPanel } from '@/components/admin/FilterPanel';
+import { getAdminCarnetArcs } from '@/lib/carnets/arcs';
+import { CarnetArcs } from '@/components/admin/carnets/CarnetArcs';
+import { adminListHref } from '@/lib/admin/list-url';
 import { getAdminCarnets } from '@/lib/carnets/admin';
 import { CARNET_STATUSES, CARNET_STATUS_LABELS } from '@/lib/carnets/content';
 import { formatDate } from '@/lib/admin/format';
@@ -19,12 +22,14 @@ export default async function CarnetsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const data = await getAdminCarnets(params);
+  const list = param(params, 'vue') === 'liste';
+  const data = list ? await getAdminCarnets(params) : null;
+  const arcs = list ? null : await getAdminCarnetArcs(params);
   return (
     <>
       <PageHeader
         title="Les Carnets de Caldera"
-        description="Un chapitre écrit une seule fois, un extrait newsletter dérivé de sa coupure. Cette section prépare les récits sans les publier."
+        description="Organisez vos récits par arc et retrouvez les prochains chapitres à préparer."
       >
         <Link
           className={`${styles.button} ${styles.secondaryButton}`}
@@ -37,8 +42,25 @@ export default async function CarnetsPage({
           <Plus size={16} /> Nouveau Carnet
         </Link>
       </PageHeader>
+      <nav className={styles.tabs} aria-label="Vue des Carnets">
+        <Link
+          href={adminListHref('/admin/carnets', params, { vue: undefined })}
+          aria-current={!list ? 'page' : undefined}
+        >
+          <Layers3 size={16} aria-hidden="true" />
+          Par arc
+        </Link>
+        <Link
+          href={adminListHref('/admin/carnets', params, { vue: 'liste' })}
+          aria-current={list ? 'page' : undefined}
+        >
+          <List size={16} aria-hidden="true" />
+          Liste des épisodes
+        </Link>
+      </nav>
       <FilterPanel
         params={params}
+        keep={list ? { vue: 'liste' } : {}}
         action="/admin/carnets"
         search={param(params, 'search')}
         placeholder="Titre, numéro ou arc"
@@ -47,7 +69,7 @@ export default async function CarnetsPage({
         <label>
           Statut éditorial
           <select name="status" defaultValue={param(params, 'status')}>
-            <option value="">Brouillons et prêts</option>
+            <option value="">Carnets non archivés</option>
             {CARNET_STATUSES.map((value) => (
               <option key={value} value={value}>
                 {CARNET_STATUS_LABELS[value]}
@@ -68,51 +90,56 @@ export default async function CarnetsPage({
           </select>
         </label>
       </FilterPanel>
-      {data.chapters.length ? (
-        <AdminTable
-          caption="Carnets éditoriaux"
-          headings={['Numéro', 'Titre', 'Arc', 'Statut', 'Modification']}
-        >
-          {data.chapters.map((chapter) => (
-            <tr key={chapter.id}>
-              <td>#{String(chapter.number).padStart(3, '0')}</td>
-              <td>
-                <Link href={`/admin/carnets/${chapter.id}`}>
-                  {chapter.title}
-                </Link>
-                <small>{chapter.slug}</small>
-              </td>
-              <td>
-                {chapter.arcTitle ?? '—'}
-                {chapter.arcPosition && chapter.arcTotal ? (
-                  <small>
-                    {chapter.arcPosition} / {chapter.arcTotal}
-                  </small>
-                ) : null}
-              </td>
-              <td>
-                <Badge
-                  value={CARNET_STATUS_LABELS[chapter.status]}
-                  tone={chapter.status === 'READY' ? 'success' : 'neutral'}
-                />
-              </td>
-              <td>{formatDate(chapter.updatedAt)}</td>
-            </tr>
-          ))}
-        </AdminTable>
-      ) : (
-        <EmptyState>
-          <BookOpen size={26} />
-          Aucun Carnet dans cette sélection. Créez votre premier récit ou
-          consultez les archives.
-        </EmptyState>
+      {arcs && <CarnetArcs data={arcs} params={params} />}
+      {data && (
+        <>
+          {data.chapters.length ? (
+            <AdminTable
+              caption="Carnets éditoriaux"
+              headings={['Numéro', 'Titre', 'Arc', 'Statut', 'Modification']}
+            >
+              {data.chapters.map((chapter) => (
+                <tr key={chapter.id}>
+                  <td>#{String(chapter.number).padStart(3, '0')}</td>
+                  <td>
+                    <Link href={`/admin/carnets/${chapter.id}`}>
+                      {chapter.title}
+                    </Link>
+                    <small>{chapter.slug}</small>
+                  </td>
+                  <td>
+                    {chapter.arcTitle ?? '—'}
+                    {chapter.arcPosition && chapter.arcTotal ? (
+                      <small>
+                        {chapter.arcPosition} / {chapter.arcTotal}
+                      </small>
+                    ) : null}
+                  </td>
+                  <td>
+                    <Badge
+                      value={CARNET_STATUS_LABELS[chapter.status]}
+                      tone={chapter.status === 'READY' ? 'success' : 'neutral'}
+                    />
+                  </td>
+                  <td>{formatDate(chapter.updatedAt)}</td>
+                </tr>
+              ))}
+            </AdminTable>
+          ) : (
+            <EmptyState>
+              <BookOpen size={26} />
+              Aucun Carnet dans cette sélection. Créez votre premier récit ou
+              consultez les archives.
+            </EmptyState>
+          )}
+          <Pagination
+            path="/admin/carnets"
+            page={data.page}
+            total={data.total}
+            params={params}
+          />
+        </>
       )}
-      <Pagination
-        path="/admin/carnets"
-        page={data.page}
-        total={data.total}
-        params={params}
-      />
     </>
   );
 }

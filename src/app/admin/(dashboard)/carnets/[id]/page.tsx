@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getCarnetArcTitles } from '@/lib/carnets/arcs';
 import { notFound } from 'next/navigation';
 import { PageHeader, Badge } from '@/components/admin/AdminUI';
 import { AdminForm } from '@/components/admin/AdminForm';
@@ -27,9 +28,10 @@ export default async function EditCarnetPage({
   const chapter = await getAdminCarnet(id);
   if (!chapter) notFound();
   const archived = chapter.status === 'ARCHIVED';
-  const products = await getCarnetProducts(
-    chapter.comptoir.map((p) => p.productId),
-  );
+  const [products, arcTitles] = await Promise.all([
+    getCarnetProducts(chapter.comptoir.map((p) => p.productId)),
+    getCarnetArcTitles(),
+  ]);
   const campaign = chapter.editionCampaign;
   return (
     <>
@@ -74,6 +76,7 @@ export default async function EditCarnetPage({
         }
         revision={`${chapter.revision}:${campaign?.updatedAt.toISOString() ?? ''}`}
         products={products}
+        arcTitles={arcTitles}
         value={{
           id: chapter.id,
           productIds: chapter.comptoir.map((p) => p.productId),

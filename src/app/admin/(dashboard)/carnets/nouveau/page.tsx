@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { getCarnetArcTitles } from '@/lib/carnets/arcs';
+import { arcDraftDefaults } from '@/lib/carnets/arcs-model';
+import type { SearchParams } from '@/lib/admin/queries';
 import { getCarnetProducts } from '@/lib/carnets/comptoir';
 import { getNextCarnetNumber } from '@/lib/carnets/admin';
 import { PageHeader } from '@/components/admin/AdminUI';
@@ -6,10 +9,16 @@ import { CarnetEditor } from '@/components/admin/carnets/CarnetEditor';
 import { saveCarnetChapterAction } from '@/lib/carnets/actions';
 import { emptyCarnetContent } from '@/lib/carnets/content';
 import styles from '@/components/admin/Admin.module.scss';
-export default async function NewCarnetPage() {
-  const [number, products] = await Promise.all([
+export default async function NewCarnetPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const defaults = arcDraftDefaults(await searchParams);
+  const [number, products, arcTitles] = await Promise.all([
     getNextCarnetNumber(),
     getCarnetProducts(),
+    getCarnetArcTitles(),
   ]);
   return (
     <>
@@ -33,14 +42,13 @@ export default async function NewCarnetPage() {
       <CarnetEditor
         action={saveCarnetChapterAction}
         products={products}
+        arcTitles={arcTitles}
         value={{
           revision: 0,
           number,
           title: '',
           slug: '',
-          arcTitle: '',
-          arcPosition: '',
-          arcTotal: '',
+          ...defaults,
           status: 'DRAFT',
           content: emptyCarnetContent(),
         }}

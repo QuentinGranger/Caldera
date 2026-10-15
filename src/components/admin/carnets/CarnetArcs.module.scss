@@ -1,0 +1,253 @@
+@use '../tokens' as t;
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0 0.6rem;
+}
+.heading h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.heading p,
+.heading > span,
+.note {
+  font-size: 0.77rem;
+  color: t.$muted;
+  line-height: 1.65;
+}
+.heading p {
+  margin: 0.3rem 0 0;
+}
+.note {
+  margin: 0.6rem 0 1rem;
+}
+.arcs {
+  display: grid;
+  gap: 1rem;
+}
+.arc {
+  background: t.$surface;
+  border: 1px solid t.$border;
+  border-radius: 1rem;
+  min-width: 0;
+}
+.arc > summary {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.3rem 1.5rem;
+  cursor: pointer;
+  list-style: none;
+}
+.arc > summary::-webkit-details-marker {
+  display: none;
+}
+.arc > summary:focus-visible {
+  outline: 3px solid t.$purple;
+  outline-offset: 3px;
+  border-radius: 1rem;
+}
+.arcTitle {
+  flex: 1;
+  min-width: 0;
+}
+.kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-weight: 750;
+  color: t.$purple;
+}
+.arcTitle h3 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  margin: 0.3rem 0;
+  overflow-wrap: anywhere;
+}
+.total {
+  color: t.$muted;
+  font-size: 0.73rem;
+}
+.progress {
+  flex: 0 1 16rem;
+  min-width: 10rem;
+}
+.progress strong {
+  font-size: 0.85rem;
+}
+.progress > span {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: t.$muted;
+  margin-top: 0.4rem;
+}
+.progress progress {
+  display: block;
+  width: 100%;
+  height: 0.5rem;
+  background: t.$border;
+  border: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  accent-color: t.$purple;
+  margin-top: 0.65rem;
+}
+.progress progress::-webkit-progress-bar {
+  background: t.$border;
+  border-radius: 1rem;
+}
+.progress progress::-webkit-progress-value {
+  background: t.$purple;
+  border-radius: 1rem;
+}
+.progress progress::-moz-progress-bar {
+  background: t.$purple;
+  border-radius: 1rem;
+}
+.chevron {
+  color: t.$muted;
+  flex-shrink: 0;
+}
+.arc[open] .chevron {
+  transform: rotate(180deg);
+}
+.body {
+  padding: 0.2rem 1.5rem 1.25rem;
+  border-top: 1px solid t.$border;
+}
+.chapters {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+}
+.chapter {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 64px;
+  padding: 0.8rem 0.4rem;
+  border-bottom: 1px solid t.$border;
+  text-decoration: none;
+  color: t.$ink;
+  border-radius: 0.3rem;
+}
+.chapter:hover {
+  background: #f5f8f3;
+}
+.chapter:focus-visible {
+  outline: 3px solid t.$purple;
+  outline-offset: 2px;
+}
+.number {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: t.$muted;
+  min-width: 2rem;
+}
+.chapterTitle {
+  flex: 1;
+  min-width: 0;
+  font-weight: 650;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.chapterTitle small {
+  display: block;
+  font-size: 0.69rem;
+  color: t.$muted;
+  margin-top: 0.2rem;
+  font-weight: 400;
+}
+.chapter > svg {
+  flex-shrink: 0;
+}
+.done {
+  color: t.$purple;
+}
+.working {
+  color: #89631d;
+}
+.empty {
+  color: t.$muted;
+}
+.warning {
+  background: #fff5df;
+  color: #76551b;
+  border-left: 3px solid #ae812d;
+  padding: 0.8rem;
+  font-size: 0.77rem;
+  line-height: 1.7;
+  margin: 0.8rem 0;
+}
+.warning ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1rem;
+}
+.gaps {
+  margin-top: 1rem;
+}
+.gaps p {
+  font-size: 0.77rem;
+  color: t.$muted;
+}
+.gaps a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  min-height: 44px;
+  border: 1px dashed t.$border;
+  border-radius: 0.5rem;
+  margin: 0.4rem 0;
+  text-decoration: none;
+  font-size: 0.75rem;
+  color: t.$muted;
+}
+.gaps a span {
+  flex: 1;
+}
+.gaps a:hover {
+  border-color: t.$purple;
+  color: t.$purple-dark;
+}
+.gaps small {
+  color: t.$muted;
+  font-size: 0.7rem;
+}
+@media (max-width: 52rem) {
+  .heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .arc > summary {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+  .arcTitle {
+    flex-basis: calc(100% - 2.5rem);
+  }
+  .progress {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .body {
+    padding: 0.2rem 1rem 1rem;
+  }
+}
+@media (max-width: 30rem) {
+  .chapter {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .chapterTitle {
+    flex-basis: calc(100% - 3rem);
+  }
+  .chapter > svg {
+    margin-left: 2.5rem;
+  }
+}

@@ -147,6 +147,7 @@ function Fields({
   onProducts,
   device,
   onDevice,
+  arcTitles,
 }: {
   initial: CarnetEditorValue;
   value: CarnetEditorValue;
@@ -155,6 +156,7 @@ function Fields({
   onProducts: (products: CarnetProduct[]) => void;
   device: PreviewDevice;
   onDevice: (device: PreviewDevice) => void;
+  arcTitles: string[];
 }) {
   const [manualSlug, setManualSlug] = useState(
       Boolean(initial.id || initial.slug),
@@ -297,6 +299,7 @@ function Fields({
             Arc narratif (facultatif)
             <input
               name="arcTitle"
+              list={`${id}-arc-titles`}
               maxLength={200}
               value={value.arcTitle}
               onChange={(e) =>
@@ -304,6 +307,15 @@ function Fields({
               }
               placeholder="La route noyée"
             />
+            <datalist id={`${id}-arc-titles`}>
+              {arcTitles.map((title) => (
+                <option key={title} value={title} />
+              ))}
+            </datalist>
+            <small>
+              Choisissez un titre existant pour rejoindre le même arc, ou
+              saisissez un nouveau titre.
+            </small>
           </label>
           <label>
             Position dans l’arc
@@ -540,11 +552,13 @@ function Edition({
   action,
   products,
   readOnly,
+  arcTitles,
 }: {
   value: CarnetEditorValue;
   action?: AdminAction;
   products: CarnetProduct[];
   readOnly: boolean;
+  arcTitles: string[];
 }) {
   const normalized = useMemo(
     () => ({
@@ -633,6 +647,7 @@ function Edition({
               rescue={rescue}
             />
             <Fields
+              arcTitles={arcTitles}
               initial={initial}
               value={value}
               setValue={setValue}
@@ -708,12 +723,14 @@ export function CarnetEditor({
   revision,
   readOnly = false,
   products = [],
+  arcTitles = [],
 }: {
   value: CarnetEditorValue;
   action?: AdminAction;
   revision?: string;
   readOnly?: boolean;
   products?: CarnetProduct[];
+  arcTitles?: string[];
 }) {
   return (
     <Edition
@@ -721,6 +738,7 @@ export function CarnetEditor({
       value={value}
       action={action}
       products={products}
+      arcTitles={arcTitles}
       readOnly={readOnly}
     />
   );
