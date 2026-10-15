@@ -8,6 +8,7 @@ import { deriveCarnet, parseCarnetContent } from '../src/lib/carnets/content';
 import { renderNewsletterCampaignEmail } from '../src/emails/newsletter-campaign';
 import { parseNewsletterDocument } from '../src/lib/newsletter/document';
 const source = {
+  number: 1,
   title: 'Quand le lac recula',
   slug: '001-lac',
   illustrationUrl: '/assets/lac.webp',

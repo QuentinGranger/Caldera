@@ -6,7 +6,7 @@ import { getPrisma } from '@/lib/db/prisma';
 import {
   classifyChannel,
   MEASUREMENT_EVENTS,
-  publicCampaign,
+  measurementCampaign,
 } from '@/lib/analytics/attribution';
 import {
   MEASUREMENT_COOKIE,
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
           id,
           visitorHash: hash,
           ...acquisition,
-          campaign: publicCampaign(data.campaign),
+          campaign: measurementCampaign(data.campaign, data.campaignId),
           ...flag,
         },
       });

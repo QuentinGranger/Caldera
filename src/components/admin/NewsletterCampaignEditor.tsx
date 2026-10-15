@@ -60,6 +60,7 @@ export type CampaignEditorValue = {
   editionOwned?: boolean;
   carnetSource?: {
     id: string;
+    number: number;
     title: string;
     slug: string;
     html: string;
@@ -156,7 +157,19 @@ function freshBlock(type: NewsletterBlock['type']): NewsletterBlock {
   }
 }
 
-function renderPreview(value: Omit<CampaignEditorValue, 'id'>) {
+function renderPreview(value: CampaignEditorValue) {
+  const tracking = {
+    campaignId: value.id,
+    ...(value.carnetSource && value.carnetSource.id === value.chapterId
+      ? {
+          carnetLinks: {
+            number: value.carnetSource.number,
+            storyPath: carnetUrl(value.carnetSource.slug),
+            products: value.carnetSource.products ?? [],
+          },
+        }
+      : {}),
+  };
   if (
     value.chapterId &&
     !value.carnetCustomized &&
@@ -165,6 +178,7 @@ function renderPreview(value: Omit<CampaignEditorValue, 'id'>) {
     return renderNewsletterCampaignEmail(
       {
         ...value,
+        ...tracking,
         heading: value.carnetSource.title,
         carnetExcerpt: {
           html: value.carnetSource.html,
@@ -184,6 +198,7 @@ function renderPreview(value: Omit<CampaignEditorValue, 'id'>) {
     return renderNewsletterCampaignEmail(
       {
         ...value,
+        ...tracking,
         bodyMarkdown,
         preheader: value.preheader || null,
         subject: value.subject || 'Objet de votre campagne',
@@ -195,6 +210,7 @@ function renderPreview(value: Omit<CampaignEditorValue, 'id'>) {
     return renderNewsletterCampaignEmail(
       {
         ...value,
+        ...tracking,
         bodyMarkdown:
           'Le contenu dépasse les limites de l’éditeur. Réduisez la longueur du message.',
         preheader: null,

@@ -46,3 +46,15 @@ export function classifyChannel(
   } catch {}
   return { channel: s ? 'campaign' : 'direct', source: s ?? 'direct' };
 }
+
+/** Keep the public campaign label in GA4, and the stable sending campaign in first-party purchase attribution. */
+export function measurementCampaign(campaign: unknown, campaignId: unknown) {
+  const label = publicCampaign(campaign);
+  return /^carnet_[0-9]{3,6}$/.test(label ?? '') &&
+    typeof campaignId === 'string' &&
+    /^campaign_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+      campaignId,
+    )
+    ? campaignId
+    : label;
+}

@@ -251,13 +251,18 @@ export async function processNewsletterDeliveries(
               where: { id: delivery.campaign.chapterId },
             })
           : null;
+        const sender = marketingSender(delivery.subscriber, settings.from);
         const rendered = chapter
-          ? renderCarnetCampaign(delivery.campaign, chapter, urls)
+          ? renderCarnetCampaign(
+              delivery.campaign,
+              chapter,
+              urls,
+              sender.tracked,
+            )
           : renderNewsletterCampaignEmail(
               { ...delivery.campaign, campaignId: delivery.campaign.id },
               urls,
             );
-        const sender = marketingSender(delivery.subscriber, settings.from);
         frozenTrackingConsentAt = sender.tracked
           ? delivery.subscriber.emailTrackingConsentAt
           : null;

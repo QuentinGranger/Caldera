@@ -131,6 +131,26 @@ test('HTTP Carnets : accès serveur HTML/RSC, metadata, archives, sitemap et bas
     assert.equal(new URL(historical.url).pathname, path);
     assert.equal(new URL(historical.url).search, '');
     assert.match(await historical.text(), new RegExp(marker));
+    const marketing = await fetch(
+      `${base}${path}?access=ancien-token&utm_source=newsletter&utm_medium=email&utm_campaign=carnet_${chapter.number}&utm_content=continuer_expedition&utm_id=campaign_${randomUUID()}`,
+    );
+    const marketingUrl = new URL(marketing.url);
+    assert.equal(marketingUrl.searchParams.has('access'), false);
+    assert.equal(
+      marketingUrl.searchParams.get('utm_campaign'),
+      `carnet_${chapter.number}`,
+    );
+    assert.equal(
+      marketingUrl.searchParams.get('utm_content'),
+      'continuer_expedition',
+    );
+    assert.match(marketingUrl.searchParams.get('utm_id')!, /^campaign_/);
+    const marketingHtml = await marketing.text();
+    assert.ok(
+      marketingHtml.includes(`href="https://lesterresdecaldera.fr${path}"`),
+    );
+    assert.doesNotMatch(marketingHtml, /<link rel="canonical"[^>]*utm_/);
+
     assert.ok(
       (await (await fetch(`${base}/univers/carnets`)).text()).includes(path),
     );

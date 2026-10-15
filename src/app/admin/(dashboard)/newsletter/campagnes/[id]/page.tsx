@@ -104,6 +104,7 @@ export default async function NewsletterCampaignPage({
                 }
               : undefined,
             id: campaign.chapter.id,
+            number: campaign.chapter.number,
             title: campaign.chapter.title,
             slug: campaign.chapter.slug,
             html: excerpt.html,

@@ -7,6 +7,7 @@ import {
 import {
   classifyChannel,
   publicCampaign,
+  measurementCampaign,
 } from '../src/lib/analytics/attribution';
 import { campaignUrl } from '../src/lib/analytics/campaign';
 import { measurementId, measurementToken } from '../src/lib/analytics/server';
@@ -75,4 +76,21 @@ test('cookie d’attribution : signature obligatoire, expiration et absence de s
     if (saved === undefined) delete process.env.BETTER_AUTH_SECRET;
     else process.env.BETTER_AUTH_SECRET = saved;
   }
+});
+
+test('attribution Carnets : libellé GA4 lisible, ID précis par envoi, legacy et ID invalide', () => {
+  const campaign = 'campaign_12345678-1234-4234-8234-123456789abc';
+  assert.equal(measurementCampaign('carnet_001', campaign), campaign);
+  assert.equal(
+    measurementCampaign('carnet_001', 'email@example.com'),
+    'carnet_001',
+  );
+  assert.equal(measurementCampaign(campaign, null), campaign);
+  assert.equal(measurementCampaign('autre', campaign), 'autre');
+  assert.equal(
+    analyticsLocation(
+      `https://lesterresdecaldera.fr/univers/carnets/lac?access=secret&utm_campaign=carnet_001&utm_content=continuer_expedition&utm_id=${campaign}`,
+    ),
+    `https://lesterresdecaldera.fr/univers/carnets/lac?utm_campaign=carnet_001&utm_content=continuer_expedition&utm_id=${campaign}`,
+  );
 });
