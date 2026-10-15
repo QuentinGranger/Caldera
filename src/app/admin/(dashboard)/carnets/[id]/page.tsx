@@ -47,6 +47,12 @@ export default async function EditCarnetPage({
         </Link>
         <Link
           className={`${styles.button} ${styles.secondaryButton}`}
+          href={`/admin/carnets/${chapter.id}/analytics`}
+        >
+          Mesures de lecture
+        </Link>
+        <Link
+          className={`${styles.button} ${styles.secondaryButton}`}
           href="/admin/newsletter"
         >
           Newsletter

@@ -62,7 +62,7 @@ export default function ConfidentialitePage() {
           <h1>Politique de confidentialité</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
           <p className={styles.version}>
-            Dernière mise à jour : 11 octobre 2026
+            Dernière mise à jour : 15 octobre 2026
           </p>
         </Container>
       </section>
@@ -816,6 +816,26 @@ export default function ConfidentialitePage() {
 
             <Section id="section-8" title="8. Mesure d’audience">
               <p>
+                Avec votre accord de mesure d’audience, Caldera utilise aussi
+                Google Analytics et des mesures internes pour compter les
+                visites, les lectures des Carnets, les retours vers les fiches
+                produit dans les 24 heures et les consultations d’épisodes
+                suivants. Les mesures internes utilisent un identifiant
+                aléatoire de navigateur pseudonymisé, sans adresse IP, email,
+                compte client ou URL privée enregistrée. Elles sont conservées
+                au maximum 90 jours. Une fin de lecture est une estimation de
+                présence et de défilement.
+              </p>
+              <p>
+                Le suivi des clics des liens de la newsletter dépend de votre
+                consentement distinct au suivi email. Il distingue le lien du
+                récit et les produits du Comptoir. Il n’est pas rapproché de
+                l’identité de navigation. Vous pouvez retirer votre accord dans
+                « Cookies · préférences » pour le site et dans vos préférences
+                newsletter pour les emails ; les observations correspondantes
+                sont alors supprimées.
+              </p>
+              <p>
                 CALDERA utilise <strong>Vercel Web Analytics</strong> afin de
                 mesurer la fréquentation et le fonctionnement du site.
               </p>
@@ -859,9 +879,9 @@ export default function ConfidentialitePage() {
                 pseudonymes : canal d’arrivée, campagne publique, actions sur le
                 panier et association aux commandes payées. Aucune adresse IP ni
                 URL complète n’est stockée par cette mesure interne. Le retrait
-                supprime la session courante et son attribution ; les
-                obligations légales de conservation des commandes restent
-                indépendantes.
+                supprime les sessions et lectures associées au même identifiant
+                de navigateur, ainsi que leurs attributions ; les obligations
+                légales de conservation des commandes restent indépendantes.
               </p>
               <p>
                 Les noms, adresses, e-mails, coordonnées de paiement et liens

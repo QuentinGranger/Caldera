@@ -175,6 +175,13 @@ export function CarnetArcs({
                           }
                         />
                       </Link>
+                      <Link
+                        className={styles.metricsLink}
+                        href={`/admin/carnets/${chapter.id}/analytics`}
+                      >
+                        Mesures de lecture · #
+                        {String(chapter.number).padStart(3, '0')}
+                      </Link>
                     </li>
                   );
                 })}

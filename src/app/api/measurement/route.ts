@@ -1,3 +1,4 @@
+import { recordCarnetReading } from '@/lib/carnets/analytics-record';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { randomUUID } from 'node:crypto';
@@ -37,8 +38,25 @@ export async function POST(request: Request) {
     const jar = await cookies();
     if (data.event === 'withdraw') {
       const id = measurementId(jar.get(MEASUREMENT_COOKIE)?.value);
-      if (id)
-        await getPrisma().measurementSession.deleteMany({ where: { id } });
+      const db = getPrisma();
+      const session = id
+        ? await db.measurementSession.findUnique({
+            where: { id },
+            select: { visitorHash: true },
+          })
+        : null;
+      const visitor =
+        typeof data.visitor === 'string' &&
+        /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+          data.visitor,
+        )
+          ? measurementHash(data.visitor)
+          : null;
+      const hash = session?.visitorHash ?? visitor;
+      if (hash)
+        await db.measurementSession.deleteMany({
+          where: { visitorHash: hash },
+        });
       jar.delete(MEASUREMENT_COOKIE);
       return reply(204);
     }
@@ -66,6 +84,19 @@ export async function POST(request: Request) {
           select: { id: true },
         })
       : null;
+    const carnetEvent =
+      data.event === 'carnet_view' || data.event === 'carnet_complete';
+    if (carnetEvent && !existing) return reply(400);
+    if (
+      carnetEvent &&
+      (typeof data.chapterId !== 'string' ||
+        !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+          data.chapterId,
+        ) ||
+        (data.access !== undefined &&
+          (typeof data.access !== 'string' || data.access.length > 200)))
+    )
+      return reply(400);
     const flag =
       data.event === 'view_item'
         ? { productViewed: true }
@@ -98,6 +129,13 @@ export async function POST(request: Request) {
         },
       });
     }
+    if (id && (carnetEvent || data.event === 'view_item'))
+      await recordCarnetReading(id, {
+        event: data.event,
+        chapterId: data.chapterId,
+        access: data.access,
+        variantId: data.variantId,
+      });
     jar.set(MEASUREMENT_COOKIE, measurementToken(id!), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

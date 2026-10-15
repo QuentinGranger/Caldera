@@ -4,7 +4,7 @@ import {
   newsletterPlainText,
   THEMES,
 } from '@/lib/newsletter/document';
-import { campaignUrl } from '@/lib/analytics/campaign';
+import { carnetLink, type CarnetLinks } from '@/lib/carnets/analytics-links';
 import { emailLayout } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { decodeEntities, renderMarkdown } from '@/lib/content/markdown';
@@ -20,6 +20,7 @@ export type NewsletterCampaignContent = {
   ctaUrl: string | null;
   /** Stable public campaign ID (never a recipient ID). */
   campaignId?: string;
+  carnetLinks?: CarnetLinks;
   /** Server-derived, escaped canonical Carnet excerpt; never an editable email copy. */
   carnetExcerpt?: { html: string; text: string };
   carnetIllustration?: { src: string; alt: string };
@@ -77,7 +78,7 @@ export function renderNewsletterCampaignEmail(
   campaign = {
     ...campaign,
     ctaUrl: campaign.ctaUrl
-      ? campaignUrl(absoluteUrl(campaign.ctaUrl), code)
+      ? carnetLink(absoluteUrl(campaign.ctaUrl), code, campaign.carnetLinks)
       : null,
   };
   const subject = campaign.subject.replace(/[\r\n]+/g, ' ').trim();
@@ -86,9 +87,10 @@ export function renderNewsletterCampaignEmail(
     emailMarkdown(source).replace(
       /href="([^"#]+)"/g,
       (_match, url: string) =>
-        `href="${escapeHtml(campaignUrl(decodeEntities(url), code))}"`,
+        `href="${escapeHtml(carnetLink(decodeEntities(url), code, campaign.carnetLinks))}"`,
     );
-  const campaignLink = (value: string) => campaignUrl(absoluteUrl(value), code);
+  const campaignLink = (value: string) =>
+    carnetLink(absoluteUrl(value), code, campaign.carnetLinks);
   const content =
     campaign.carnetExcerpt?.html ??
     (document

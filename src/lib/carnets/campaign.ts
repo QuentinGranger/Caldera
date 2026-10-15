@@ -117,6 +117,12 @@ export function renderCarnetCampaign(
         ...campaign,
         bodyMarkdown,
         campaignId: campaign.id,
+        carnetLinks: {
+          storyPath: carnetUrl(chapter.slug),
+          products: Array.isArray(campaign.carnetProducts)
+            ? (campaign.carnetProducts as unknown as CarnetProduct[])
+            : [],
+        },
         ctaUrl:
           campaign.ctaUrl === clean ||
           campaign.ctaUrl === `${appOrigin()}${clean}`

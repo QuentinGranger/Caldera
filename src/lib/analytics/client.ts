@@ -59,9 +59,14 @@ export function trackCommerce(
     shipping?: number;
     tax?: number;
   },
+  local = true,
 ) {
   if (typeof window === 'undefined' || !analyticsAllowed()) return;
-  measureLocal(name);
+  if (local)
+    measureLocal(
+      name,
+      name === 'view_item' ? { variantId: data.items[0]?.item_id } : {},
+    );
   window.dispatchEvent(
     new CustomEvent('caldera:commerce', {
       detail: { name, data: { ...data, currency: 'EUR' } },
@@ -70,11 +75,16 @@ export function trackCommerce(
 }
 
 let measurementQueue = Promise.resolve();
-export function measureLocal(event: string) {
+export function measureLocal(
+  event: string,
+  details: { chapterId?: string; access?: string; variantId?: string } = {},
+) {
   if (
     !analyticsAllowed() ||
     ![
       'page_view',
+      'carnet_view',
+      'carnet_complete',
       'view_item',
       'add_to_cart',
       'begin_checkout',
@@ -98,6 +108,7 @@ export function measureLocal(event: string) {
   } catch {}
   const body = JSON.stringify({
     event,
+    ...details,
     consent: true,
     visitor,
     source: url.searchParams.get('utm_source'),

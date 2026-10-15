@@ -1,3 +1,5 @@
+import { CarnetAnalytics } from '@/components/monitoring/CarnetAnalytics';
+import { publicCampaign } from '@/lib/analytics/attribution';
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
@@ -16,7 +18,10 @@ import styles from '../page.module.scss';
 export const dynamic = 'force-dynamic';
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ access?: string | string[] }>;
+  searchParams: Promise<{
+    access?: string | string[];
+    [key: string]: string | string[] | undefined;
+  }>;
 };
 const read = cache(async (slug: string, access: string | undefined) => {
   await connection();
@@ -33,6 +38,15 @@ async function data(props: Props) {
       typeof query.access === 'string' ? query.access : undefined,
     ),
     hasAccess: query.access !== undefined,
+    access: typeof query.access === 'string' ? query.access : undefined,
+    trackingQuery: Object.fromEntries(
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].flatMap(
+        (key) =>
+          publicCampaign(query[key])
+            ? [[key, publicCampaign(query[key])!]]
+            : [],
+      ),
+    ),
   };
 }
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -65,10 +79,13 @@ const date = (value: Date) =>
     timeStyle: 'short',
   }).format(value);
 export default async function CarnetPage(props: Props) {
-  const { result, hasAccess } = await data(props);
+  const { result, hasAccess, access, trackingQuery } = await data(props);
   if (!result) notFound();
   const { chapter, state, content } = result;
-  if (state === 'public' && hasAccess) redirect(carnetUrl(chapter.slug));
+  if (state === 'public' && hasAccess) {
+    const query = new URLSearchParams(trackingQuery);
+    redirect(carnetUrl(chapter.slug) + (query.size ? `?${query}` : ''));
+  }
   const chapters = content ? await listPublicCarnets() : [];
   const older = chapters.filter((c) => c.number < chapter.number).at(0);
   const newer = [...chapters].reverse().find((c) => c.number > chapter.number);
@@ -98,7 +115,8 @@ export default async function CarnetPage(props: Props) {
           {content && chapter.location && <p>{chapter.location}</p>}
         </header>
         {content ? (
-          <article aria-label={chapter.title}>
+          <article aria-label={chapter.title} data-carnet-reading>
+            <CarnetAnalytics chapterId={chapter.id} access={access} />
             {chapter.illustrationUrl && (
               <Image
                 className={styles.image}
@@ -115,6 +133,7 @@ export default async function CarnetPage(props: Props) {
                 __html: deriveCarnet(parseCarnetContent(content)).full.html,
               }}
             />
+            <div data-carnet-end aria-hidden="true" style={{ height: 1 }} />
             <nav className={styles.nav} aria-label="Navigation des Carnets">
               {older && (
                 <Link href={carnetUrl(older.slug)} prefetch={false}>
