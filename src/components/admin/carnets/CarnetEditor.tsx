@@ -4,6 +4,7 @@ import {
   useId,
   useState,
   useMemo,
+  useCallback,
   type Dispatch,
   type SetStateAction,
 } from 'react';
@@ -22,6 +23,7 @@ import {
   CARNET_STATUS_LABELS,
   type CarnetContent,
 } from '@/lib/carnets/content';
+import { carnetProductTestValue } from '@/lib/carnets/readiness';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
 import styles from './CarnetEditor.module.scss';
 import Image from 'next/image';
@@ -575,10 +577,35 @@ function Edition({
     [initial],
   );
   const [value, setValue] = useState<CarnetEditorValue>(normalized);
-  const [searchedProducts, setProductOptions] = useState(products);
-  const productOptions = searchedProducts.map(
-    (p) => products.find((current) => current.id === p.id) ?? p,
+  const [searchState, setSearchState] = useState({
+    source: products,
+    options: products,
+  });
+  const setProductOptions = useCallback(
+    (options: CarnetProduct[]) => setSearchState({ source: products, options }),
+    [products],
   );
+  const productOptions =
+    searchState.source === products
+      ? searchState.options
+      : searchState.options.map(
+          (p) => products.find((current) => current.id === p.id) ?? p,
+        );
+  const productProof = (options: CarnetProduct[]) =>
+    JSON.stringify(
+      (value.productIds ?? []).map((id) => {
+        const product = options.find((p) => p.id === id);
+        return product ? carnetProductTestValue(product) : null;
+      }),
+    );
+  const verification = initial.verification
+    ? {
+        ...initial.verification,
+        testCurrent:
+          initial.verification.testCurrent &&
+          productProof(products) === productProof(productOptions),
+      }
+    : undefined;
   const [device, setDevice] = useState<PreviewDevice>('desktop');
   const [views, setViews] = useState<{ desktop?: string; mobile?: string }>({});
   const rescue = useCarnetRecovery(normalized, value);
@@ -673,7 +700,7 @@ function Edition({
       )}
       <CarnetVerification
         value={value}
-        verification={initial.verification}
+        verification={verification}
         products={productOptions}
         dirty={!readOnly && dirty}
         viewed={{

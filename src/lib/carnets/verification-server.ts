@@ -6,7 +6,11 @@ import type {
   Prisma,
 } from '@/generated/prisma/client';
 import type { CarnetProduct } from './comptoir';
-import { carnetReadiness, carnetChecklist } from './readiness';
+import {
+  carnetReadiness,
+  carnetChecklist,
+  carnetProductTestValue,
+} from './readiness';
 import { carnetAccessToken, verifyCarnetAccess } from './access';
 import { carnetPublicDate } from './dates';
 import { parseCarnetContent, carnetUrl } from './content';
@@ -42,13 +46,7 @@ export function carnetTestSignature(
               ctaUrl: campaign.ctaUrl,
             }
           : {}),
-        products: products.map(({ id, name, href, image, price }) => ({
-          id,
-          name,
-          href,
-          image,
-          price,
-        })),
+        products: products.map(carnetProductTestValue),
       }),
     )
     .digest('hex');

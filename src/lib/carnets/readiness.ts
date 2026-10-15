@@ -354,3 +354,14 @@ export function carnetChecklist(
     warnings: checks.filter((c) => c.state === 'warning'),
   };
 }
+
+/** Product fields actually rendered in the tested email, shared with the editor. */
+export function carnetProductTestValue({
+  id,
+  name,
+  href,
+  image,
+  price,
+}: Pick<CarnetProduct, 'id' | 'name' | 'href' | 'image' | 'price'>) {
+  return { id, name, href, image, price };
+}
