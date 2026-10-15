@@ -43,8 +43,16 @@ export function analyticsLocation(input: string) {
     'utm_medium',
     'utm_campaign',
     'utm_content',
+    'utm_id',
   ]) {
     const value = url.searchParams.get(key);
+    if (
+      key === 'utm_id' &&
+      !/^campaign_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+        value ?? '',
+      )
+    )
+      continue;
     if (value && /^[a-zA-Z0-9_-]{1,80}$/.test(value))
       output.searchParams.set(key, value);
   }
@@ -114,6 +122,7 @@ export function measureLocal(
     source: url.searchParams.get('utm_source'),
     medium: url.searchParams.get('utm_medium'),
     campaign: url.searchParams.get('utm_campaign'),
+    campaignId: url.searchParams.get('utm_id'),
     referrer,
   });
   // Serialize so first-event responses cannot create concurrent sessions.

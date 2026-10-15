@@ -77,6 +77,7 @@ export default async function NewNewsletterCampaignPage({
                       }
                     : undefined,
                   id: chapter.id,
+                  number: chapter.number,
                   title: chapter.title,
                   slug: chapter.slug,
                   html: deriveCarnet(parseCarnetContent(chapter.content))

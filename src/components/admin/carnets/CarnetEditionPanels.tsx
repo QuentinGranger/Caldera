@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { renderNewsletterCampaignEmail } from '@/emails/newsletter-campaign';
 import { carnetEmailContent } from '@/lib/carnets/email';
-import { deriveCarnet, carnetCta } from '@/lib/carnets/content';
+import { deriveCarnet, carnetCta, carnetUrl } from '@/lib/carnets/content';
 import { carnetPublicLocal } from '@/lib/carnets/dates';
 import type { CarnetEditorValue } from '@/lib/carnets/admin';
 import type { CarnetProduct } from '@/lib/carnets/comptoir';
@@ -43,7 +43,16 @@ export function CarnetEmailPanel({
     preheader: value.emailPreheader ?? '',
   };
   const content = campaign?.customized
-    ? { ...campaign, ...email, campaignId: campaign.id }
+    ? {
+        ...campaign,
+        ...email,
+        campaignId: campaign.id,
+        carnetLinks: {
+          number: value.number,
+          storyPath: carnetUrl(value.slug),
+          products: campaign.products,
+        },
+      }
     : {
         ...carnetEmailContent(
           value,
@@ -97,7 +106,9 @@ export function CarnetEmailPanel({
       <p>
         Le test utilise la dernière version enregistrée. Une image importée
         apparaît dans l’email après sauvegarde. Le lien d’accès anticipé sera
-        signé lors de la diffusion.
+        signé lors de la diffusion. Les paramètres de suivi du récit et des
+        trois positions du Comptoir sont générés automatiquement ; aucune saisie
+        UTM n’est nécessaire.
       </p>
       <NewsletterEmailPreview
         rendered={rendered}

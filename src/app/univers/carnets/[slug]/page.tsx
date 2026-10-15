@@ -40,11 +40,14 @@ async function data(props: Props) {
     hasAccess: query.access !== undefined,
     access: typeof query.access === 'string' ? query.access : undefined,
     trackingQuery: Object.fromEntries(
-      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].flatMap(
-        (key) =>
-          publicCampaign(query[key])
-            ? [[key, publicCampaign(query[key])!]]
-            : [],
+      [
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_content',
+        'utm_id',
+      ].flatMap((key) =>
+        publicCampaign(query[key]) ? [[key, publicCampaign(query[key])!]] : [],
       ),
     ),
   };

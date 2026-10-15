@@ -61,7 +61,18 @@ test(
       });
     try {
       assert.equal((await post('carnet_view')).status, 400);
-      const started = await post('page_view');
+      const campaignId = `campaign_${randomUUID()}`;
+      const started = await post('page_view', '', {
+        campaign: `carnet_${chapter.number}`,
+        campaignId,
+        source: 'newsletter',
+        medium: 'email',
+      });
+      const session = await db.measurementSession.findFirstOrThrow({
+        where: { visitorHash: measurementHash(visitor)! },
+      });
+      assert.equal(session.campaign, campaignId);
+      assert.equal(session.channel, 'newsletter');
       assert.equal(started.status, 204);
       const cookie = started.headers.get('set-cookie')!.split(';')[0]!;
       assert.equal(

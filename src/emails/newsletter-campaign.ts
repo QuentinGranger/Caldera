@@ -21,6 +21,8 @@ export type NewsletterCampaignContent = {
   /** Stable public campaign ID (never a recipient ID). */
   campaignId?: string;
   carnetLinks?: CarnetLinks;
+  /** Preview/test default to tagged links; live deliveries pass the frozen sender decision. */
+  trackingEnabled?: boolean;
   /** Server-derived, escaped canonical Carnet excerpt; never an editable email copy. */
   carnetExcerpt?: { html: string; text: string };
   carnetIllustration?: { src: string; alt: string };
@@ -78,7 +80,12 @@ export function renderNewsletterCampaignEmail(
   campaign = {
     ...campaign,
     ctaUrl: campaign.ctaUrl
-      ? carnetLink(absoluteUrl(campaign.ctaUrl), code, campaign.carnetLinks)
+      ? carnetLink(
+          absoluteUrl(campaign.ctaUrl),
+          code,
+          campaign.carnetLinks,
+          campaign.trackingEnabled !== false,
+        )
       : null,
   };
   const subject = campaign.subject.replace(/[\r\n]+/g, ' ').trim();
@@ -87,10 +94,15 @@ export function renderNewsletterCampaignEmail(
     emailMarkdown(source).replace(
       /href="([^"#]+)"/g,
       (_match, url: string) =>
-        `href="${escapeHtml(carnetLink(decodeEntities(url), code, campaign.carnetLinks))}"`,
+        `href="${escapeHtml(carnetLink(decodeEntities(url), code, campaign.carnetLinks, campaign.trackingEnabled !== false))}"`,
     );
   const campaignLink = (value: string) =>
-    carnetLink(absoluteUrl(value), code, campaign.carnetLinks);
+    carnetLink(
+      absoluteUrl(value),
+      code,
+      campaign.carnetLinks,
+      campaign.trackingEnabled !== false,
+    );
   const content =
     campaign.carnetExcerpt?.html ??
     (document

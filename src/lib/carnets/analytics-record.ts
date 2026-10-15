@@ -127,6 +127,7 @@ export async function recordCarnetEmailClick(
           : [],
       );
     const click = identifyCarnetClick(raw, delivery.campaignId, {
+      number: delivery.campaign.chapter.number,
       storyPath: carnetUrl(delivery.campaign.chapter.slug),
       products,
     });

@@ -269,6 +269,7 @@ test('Carnets clics : chaque lien après le clic global, replays, consentement, 
     },
   });
   const links = {
+    number: chapter.number,
     storyPath: `/univers/carnets/${chapter.slug}`,
     products: [1, 2, 3].map((n) => ({
       id: randomUUID(),

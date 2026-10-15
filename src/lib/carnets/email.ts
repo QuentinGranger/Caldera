@@ -11,6 +11,7 @@ import {
   type NewsletterBlock,
 } from '@/lib/newsletter/document';
 export type CarnetEmailSource = {
+  number: number;
   title: string;
   slug: string;
   content: CarnetContent;
@@ -44,7 +45,11 @@ export function carnetEmailContent(
       ? { src: source.illustrationUrl, alt: source.illustrationAlt ?? '' }
       : undefined,
     carnetComptoir: products,
-    carnetLinks: { storyPath: carnetUrl(source.slug), products },
+    carnetLinks: {
+      number: source.number,
+      storyPath: carnetUrl(source.slug),
+      products,
+    },
   };
 }
 function markdownInline(nodes: CarnetInline[] = []): string {

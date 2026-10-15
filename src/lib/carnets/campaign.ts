@@ -94,6 +94,7 @@ export function renderCarnetCampaign(
   campaign: NewsletterCampaign,
   chapter: CarnetChapter,
   urls: { logo: string; unsubscribe?: string },
+  trackingEnabled = true,
 ) {
   assertCarnetReady(chapter);
   const href =
@@ -103,31 +104,43 @@ export function renderCarnetCampaign(
       ? carnetAccessUrl(chapter)
       : `${appOrigin()}${carnetUrl(chapter.slug)}`;
   if (campaign.carnetCustomized) {
-    // Only rewrite this chapter's exact canonical URL, never arbitrary user links.
+    // Sign only this chapter's canonical path; preserve its functional query and fragment.
     const clean = carnetUrl(chapter.slug);
+    const storyHref = (input: string) => {
+      try {
+        const url = new URL(input, appOrigin());
+        if (
+          url.origin !== new URL(appOrigin()).origin ||
+          url.pathname !== clean
+        )
+          return input;
+        const signed = new URL(href);
+        if (signed.searchParams.has('access'))
+          url.searchParams.set('access', signed.searchParams.get('access')!);
+        // Relative form also makes local previews use the canonical public marketing origin.
+        return url.pathname + url.search + url.hash;
+      } catch {
+        return input;
+      }
+    };
     const bodyMarkdown = campaign.bodyMarkdown.replace(
       /"href":"([^"\\]*)"/g,
-      (match, url: string) =>
-        url === clean || url === `${appOrigin()}${clean}`
-          ? `"href":${JSON.stringify(href.startsWith('https://') ? href : new URL(href).pathname + new URL(href).search)}`
-          : match,
+      (match, url: string) => `"href":${JSON.stringify(storyHref(url))}`,
     );
     return renderNewsletterCampaignEmail(
       {
         ...campaign,
         bodyMarkdown,
         campaignId: campaign.id,
+        trackingEnabled,
         carnetLinks: {
+          number: chapter.number,
           storyPath: carnetUrl(chapter.slug),
           products: Array.isArray(campaign.carnetProducts)
             ? (campaign.carnetProducts as unknown as CarnetProduct[])
             : [],
         },
-        ctaUrl:
-          campaign.ctaUrl === clean ||
-          campaign.ctaUrl === `${appOrigin()}${clean}`
-            ? href
-            : campaign.ctaUrl,
+        ctaUrl: campaign.ctaUrl ? storyHref(campaign.ctaUrl) : null,
       },
       urls,
     );
@@ -144,6 +157,7 @@ export function renderCarnetCampaign(
         href,
       ),
       campaignId: campaign.id,
+      trackingEnabled,
     },
     urls,
   );
