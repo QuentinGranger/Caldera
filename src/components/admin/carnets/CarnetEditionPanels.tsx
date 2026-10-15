@@ -284,7 +284,7 @@ export function CarnetVerification({
     (target.matches('input,select,button')
       ? target
       : target.querySelector<HTMLElement>(
-          'input,select,button,[contenteditable="true"]',
+          'input:not([type="hidden"]),select,button,[contenteditable="true"]',
         )
     )?.focus({ preventScroll: true });
   }
