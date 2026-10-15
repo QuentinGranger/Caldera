@@ -1,3 +1,4 @@
+import { carnetTestProof } from './helpers/carnet-test-proof';
 import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -8,6 +9,7 @@ import {
   customizeCarnetEdition,
   restoreAutomaticCarnetEdition,
 } from '../src/lib/carnets/edition';
+import { carnetVerificationContext } from '../src/lib/carnets/verification-server';
 import { chapterComptoir } from '../src/lib/carnets/comptoir';
 import {
   queueNewsletterCampaign,
@@ -207,6 +209,36 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
       },
     );
     await t.test(
+      'Pas de test : programmation refusée, aucun destinataire ni calendrier engagé',
+      async () => {
+        await assert.rejects(
+          queueNewsletterCampaign(admin.id, form({ id: campaign.id })),
+          /Test email envoyé/,
+        );
+        await assert.rejects(
+          queueNewsletterCampaign(
+            admin.id,
+            form({ id: campaign.id, testCurrent: 'true' }),
+          ),
+          /non autorisé|inattendu/i,
+        );
+        assert.equal(
+          await db.newsletterCampaignDelivery.count({
+            where: { campaignId: campaign.id },
+          }),
+          0,
+        );
+        assert.equal(
+          (
+            await db.carnetChapter.findUniqueOrThrow({
+              where: { id: chapter.id },
+            })
+          ).releaseCampaignId,
+          null,
+        );
+      },
+    );
+    await t.test(
       'Test utilise la dernière version enregistrée, sans appel réel à Resend',
       async () => {
         const names = [
@@ -234,6 +266,25 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
           return Response.json({ id: 'mock-test' });
         };
         try {
+          globalThis.fetch = async () =>
+            Response.json({ message: 'QA failure' }, { status: 503 });
+          await assert.rejects(
+            sendNewsletterCampaignTest(admin, form({ id: campaign.id })),
+          );
+          assert.equal(
+            await db.adminAuditLog.count({
+              where: {
+                entityId: campaign.id,
+                action: 'NEWSLETTER_CAMPAIGN_TEST_SENT',
+              },
+            }),
+            0,
+          );
+          globalThis.fetch = async (input, init) => {
+            assert.equal(String(input), 'https://api.resend.com/emails');
+            envelope = JSON.parse(String(init?.body));
+            return Response.json({ id: 'mock-test' });
+          };
           await sendNewsletterCampaignTest(
             admin,
             form({
@@ -253,10 +304,29 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
             },
             orderBy: { createdAt: 'desc' },
           });
-          assert.deepEqual(audit.metadata, {
-            chapterRevision: chapter.revision,
-            campaignUpdatedAt: campaign.updatedAt.toISOString(),
-          });
+          assert.ok(
+            audit.metadata &&
+              typeof audit.metadata === 'object' &&
+              !Array.isArray(audit.metadata),
+          );
+          assert.match(
+            String(
+              (audit.metadata as Record<string, unknown>).carnetTestSignature,
+            ),
+            /^[a-f0-9]{64}$/,
+          );
+          assert.deepEqual(
+            {
+              chapterRevision: (audit.metadata as Record<string, unknown>)
+                .chapterRevision,
+              campaignUpdatedAt: (audit.metadata as Record<string, unknown>)
+                .campaignUpdatedAt,
+            },
+            {
+              chapterRevision: chapter.revision,
+              campaignUpdatedAt: campaign.updatedAt.toISOString(),
+            },
+          );
         } finally {
           globalThis.fetch = original;
           for (const n of names) {
@@ -264,6 +334,70 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
             else process.env[n] = prior[n];
           }
         }
+      },
+    );
+    await t.test(
+      'Preuve du test : prix, contenu et objet modifiés exigent un nouveau test ; le stock est revérifié séparément',
+      async () => {
+        const context = async () =>
+          carnetVerificationContext(
+            db,
+            await db.carnetChapter.findUniqueOrThrow({
+              where: { id: chapter.id },
+            }),
+            await db.newsletterCampaign.findUniqueOrThrow({
+              where: { id: campaign.id },
+            }),
+            await chapterComptoir(db, chapter.id, false),
+          );
+        assert.equal((await context()).testCurrent, true);
+        await db.productVariant.updateMany({
+          where: { productId: products[0]!.id },
+          data: { price: 90 },
+        });
+        assert.equal((await context()).testCurrent, false);
+        await assert.rejects(
+          queueNewsletterCampaign(admin.id, form({ id: campaign.id })),
+          /Test email envoyé/,
+        );
+        await db.productVariant.updateMany({
+          where: { productId: products[0]!.id },
+          data: { price: 11, stockQuantity: 0 },
+        });
+        assert.equal((await context()).testCurrent, true);
+        await assert.rejects(
+          queueNewsletterCampaign(admin.id, form({ id: campaign.id })),
+          /épuisé|disponible/i,
+        );
+        await db.productVariant.updateMany({
+          where: { productId: products[0]!.id },
+          data: { stockQuantity: 8 },
+        });
+        await db.newsletterCampaign.update({
+          where: { id: campaign.id },
+          data: { subject: 'Objet non testé' },
+        });
+        assert.equal((await context()).testCurrent, false);
+        await db.newsletterCampaign.update({
+          where: { id: campaign.id },
+          data: { subject: campaign.subject },
+        });
+        await db.carnetChapter.update({
+          where: { id: chapter.id },
+          data: { title: 'Titre non testé' },
+        });
+        assert.equal((await context()).testCurrent, false);
+        await db.carnetChapter.update({
+          where: { id: chapter.id },
+          data: { title: chapter.title },
+        });
+        assert.equal((await context()).testCurrent, true);
+        campaign = await db.newsletterCampaign.findUniqueOrThrow({
+          where: { id: campaign.id },
+        });
+        chapter = await db.carnetChapter.findUniqueOrThrow({
+          where: { id: chapter.id },
+        });
       },
     );
     await t.test(
@@ -357,7 +491,7 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
         });
         await assert.rejects(
           queueNewsletterCampaign(admin.id, form({ id: campaign.id })),
-          /image principale/,
+          /Illustration présente/,
         );
         assert.equal(
           (
@@ -395,6 +529,7 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
       await t.test(
         'Programmation existante : J+14, produits figés et annulation réversible',
         async () => {
+          await carnetTestProof(admin.id, campaign.id);
           await queueNewsletterCampaign(
             admin.id,
             form({
@@ -412,6 +547,18 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
           });
           assert.equal(chapter.releaseCampaignId, campaign.id);
           assert.deepEqual(chapter.publicAt, carnetPublicDate(date));
+          assert.equal(
+            (
+              await carnetVerificationContext(
+                db,
+                chapter,
+                campaign,
+                await chapterComptoir(db, chapter.id),
+              )
+            ).testCurrent,
+            true,
+            'Programmer ne modifie pas le contenu testé',
+          );
           const rendered = renderCarnetCampaign(campaign, chapter, {
             logo: '',
           });
@@ -441,6 +588,7 @@ test('Workflow complet Carnet : références, sauvegarde, test, Studio et moteur
         'Snapshot avancé envoyé par le worker avec lien signé et récit réservé absent',
         async () => {
           campaign = await customizeCarnetEdition(admin.id, form(refs()));
+          await carnetTestProof(admin.id, campaign.id);
           await queueNewsletterCampaign(
             admin.id,
             form({ id: campaign.id, sendMode: 'now' }),

@@ -276,6 +276,11 @@ export async function getNextCarnetNumber() {
 }
 
 export type CarnetEditorValue = {
+  verification?: {
+    testCurrent: boolean;
+    testSentAt: string | null;
+    accessConfigured: boolean;
+  };
   id?: string;
   revision: number;
   number: number;

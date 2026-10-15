@@ -1,3 +1,4 @@
+import { carnetTestProof } from './helpers/carnet-test-proof';
 import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -77,6 +78,8 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
     slug: `cycle-${key}`,
     revision: '0',
     status: 'READY',
+    illustrationUrl: '/assets/brand/logo-header-no-bg.png',
+    illustrationAlt: 'Illustration QA',
     content: JSON.stringify(content),
   };
   try {
@@ -86,12 +89,14 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
       form({
         internalName: 'Cycle',
         subject: 'Cycle',
+        preheader: 'La route de Caldera',
         heading: 'Cycle',
         bodyMarkdown: 'NE_JAMAIS_ENVOYER_CETTE_COPIE',
         chapterId: chapter.id,
       }),
     );
     const schedule = new Date(Date.now() + 3600000);
+    await carnetTestProof(admin.id, campaign.id);
     await queueNewsletterCampaign(
       admin.id,
       form({ id: campaign.id, scheduledAt: schedule.toISOString() }),
@@ -130,6 +135,7 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
     );
     await cancelNewsletterCampaign(admin.id, form({ id: campaign.id }));
     assert.equal(await readCarnet(chapter.slug, token), null);
+    await carnetTestProof(admin.id, campaign.id);
     await queueNewsletterCampaign(
       admin.id,
       form({
@@ -149,6 +155,7 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
       false,
     );
     await cancelNewsletterCampaign(admin.id, form({ id: campaign.id }));
+    await carnetTestProof(admin.id, campaign.id);
     await queueNewsletterCampaign(
       admin.id,
       form({ id: campaign.id, sendMode: 'now' }),
@@ -268,6 +275,7 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
       form({
         internalName: 'Rappel',
         subject: 'Rappel',
+        preheader: 'La route de Caldera',
         heading: 'Rappel',
         bodyMarkdown: '',
         chapterId: chapter.id,
@@ -276,6 +284,7 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
     const previous = await db.carnetChapter.findUniqueOrThrow({
       where: { id: chapter.id },
     });
+    await carnetTestProof(admin.id, repeat.id);
     await queueNewsletterCampaign(
       admin.id,
       form({ id: repeat.id, scheduledAt: schedule.toISOString() }),
@@ -301,11 +310,13 @@ test('Cycle Carnet : programmation, annulation, tokens, diffusion r√©elle simul√
       form({
         internalName: 'Retard worker',
         subject: 'Retard',
+        preheader: 'La route de Caldera',
         heading: 'Retard',
         bodyMarkdown: '',
         chapterId: delayed.id,
       }),
     );
+    await carnetTestProof(admin.id, delayedCampaign.id);
     await queueNewsletterCampaign(
       admin.id,
       form({ id: delayedCampaign.id, scheduledAt: schedule.toISOString() }),

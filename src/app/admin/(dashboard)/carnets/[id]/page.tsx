@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { carnetVerificationContext } from '@/lib/carnets/verification-server';
+import { getPrisma } from '@/lib/db/prisma';
 import { getCarnetArcTitles } from '@/lib/carnets/arcs';
 import { notFound } from 'next/navigation';
 import { PageHeader, Badge } from '@/components/admin/AdminUI';
@@ -33,6 +35,14 @@ export default async function EditCarnetPage({
     getCarnetArcTitles(),
   ]);
   const campaign = chapter.editionCampaign;
+  const verification = await carnetVerificationContext(
+    getPrisma(),
+    chapter,
+    campaign,
+    chapter.comptoir
+      .map((ref) => products.find((p) => p.id === ref.productId))
+      .filter((p): p is (typeof products)[number] => Boolean(p)),
+  );
   return (
     <>
       <PageHeader
@@ -85,6 +95,7 @@ export default async function EditCarnetPage({
         arcTitles={arcTitles}
         value={{
           id: chapter.id,
+          verification,
           productIds: chapter.comptoir.map((p) => p.productId),
           emailSubject: campaign?.subject ?? '',
           emailPreheader: campaign?.preheader ?? '',

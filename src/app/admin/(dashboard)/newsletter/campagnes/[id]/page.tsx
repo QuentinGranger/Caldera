@@ -1,3 +1,5 @@
+import { carnetChecklist } from '@/lib/carnets/readiness';
+import { carnetVerificationContext } from '@/lib/carnets/verification-server';
 import { chapterComptoir } from '@/lib/carnets/comptoir';
 import { parseCarnetContent, deriveCarnet } from '@/lib/carnets/content';
 import { CarnetDiffusion } from '@/components/admin/carnets/CarnetDiffusion';
@@ -81,6 +83,25 @@ export default async function NewsletterCampaignPage({
       ? (campaign.carnetProducts as unknown as import('@/lib/carnets/comptoir').CarnetProduct[])
       : await chapterComptoir(db, campaign.chapter.id, false)
     : [];
+  if (campaign.chapter && campaign.status === 'DRAFT') {
+    const context = await carnetVerificationContext(
+      db,
+      campaign.chapter,
+      campaign,
+      carnetProducts,
+    );
+    const review = carnetChecklist(
+      campaign.chapter,
+      campaign,
+      carnetProducts,
+      context,
+    );
+    issues.push(
+      ...review.blocking
+        .filter((c) => !['access', 'public'].includes(c.key))
+        .map((c) => `${c.label} — ${c.detail}`),
+    );
+  }
   const value = {
     id: campaign.id,
     internalName: campaign.internalName,
@@ -205,6 +226,15 @@ export default async function NewsletterCampaignPage({
           </AdminForm>
         </div>
       </section>
+      {campaign.chapter && (
+        <p className={styles.card}>
+          <Link
+            href={`/admin/carnets/${campaign.chapter.id}#carnet-verification`}
+          >
+            Ouvrir la checklist Carnet et envoyer un test
+          </Link>
+        </p>
+      )}
       {campaign.status === 'DRAFT' ? (
         <NewsletterCampaignDelivery
           id={campaign.id}
