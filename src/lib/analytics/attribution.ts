@@ -1,5 +1,7 @@
 export const MEASUREMENT_EVENTS = [
   'page_view',
+  'carnet_view',
+  'carnet_complete',
   'view_item',
   'add_to_cart',
   'begin_checkout',

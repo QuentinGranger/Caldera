@@ -1087,6 +1087,7 @@ model NewsletterCampaignDelivery {
   @@index([status, nextAttemptAt])
   @@index([leaseUntil])
   @@index([subscriberId])
+  carnetClicks CarnetEmailClick[]
   trackingEnabled Boolean @default(false)
   trackingConsentAt DateTime?
   deliveredAt DateTime?
@@ -1860,6 +1861,7 @@ model MeasurementSession {
   checkoutStarted Boolean @default(false)
   paymentStarted Boolean @default(false)
   orders MeasurementOrder[]
+  carnetReadings CarnetReading[]
   @@index([startedAt, channel])
   @@index([visitorHash])
 }
@@ -1902,6 +1904,7 @@ model CarnetChapter {
   editionCampaignId String? @unique @db.Uuid
   editionCampaign NewsletterCampaign? @relation("CarnetEdition", fields: [editionCampaignId], references: [id], onDelete: SetNull)
   comptoir CarnetComptoirProduct[]
+  readings CarnetReading[]
   campaigns       NewsletterCampaign[]
   status          CarnetChapterStatus   @default(DRAFT)
   revision        Int                   @default(0)
@@ -1926,4 +1929,29 @@ model CarnetComptoirProduct {
   @@id([chapterId, productId])
   @@unique([chapterId, position])
   @@index([productId])
+}
+
+/// Consented first-party reading observations; identity stays in MeasurementSession.
+model CarnetReading {
+  id String @id @default(uuid()) @db.Uuid
+  chapterId String @db.Uuid
+  chapter CarnetChapter @relation(fields:[chapterId],references:[id],onDelete:Cascade)
+  sessionId String @db.Uuid
+  session MeasurementSession @relation(fields:[sessionId],references:[id],onDelete:Cascade)
+  viewedAt DateTime @default(now())
+  completedAt DateTime?
+  productViewedAt DateTime?
+  @@unique([sessionId,chapterId])
+  @@index([chapterId,viewedAt])
+  @@index([viewedAt])
+}
+/// One observation per delivery/link; no clicked URL, IP or user agent stored.
+model CarnetEmailClick {
+  deliveryId String @db.Uuid
+  delivery NewsletterCampaignDelivery @relation(fields:[deliveryId],references:[id],onDelete:Cascade)
+  linkKey String @db.VarChar(24)
+  productId String? @db.Uuid
+  clickedAt DateTime
+  @@id([deliveryId,linkKey])
+  @@index([clickedAt])
 }

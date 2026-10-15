@@ -126,10 +126,17 @@ export function CommerceAnalytics({
       );
     } catch {}
     if (!accepted) {
+      let visitor: string | null = null;
+      try {
+        visitor = localStorage.getItem('caldera-measurement-visitor');
+      } catch {}
       void fetch('/api/measurement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: 'withdraw' }),
+        body: JSON.stringify({
+          event: 'withdraw',
+          visitor,
+        }),
         keepalive: true,
       }).catch(() => {});
       try {
@@ -154,6 +161,7 @@ export function CommerceAnalytics({
       }
     }
     setChoice(accepted ? 'yes' : 'no');
+    window.dispatchEvent(new Event('caldera:consent-changed'));
   }
   return choice === 'unknown' ? (
     <section
@@ -163,8 +171,9 @@ export function CommerceAnalytics({
       <div>
         <strong>Mesurer pour améliorer Caldera</strong>
         <p>
-          Avec votre accord, Google Analytics mesure les visites et le parcours
-          d’achat. Les cookies nécessaires au panier restent indépendants.{' '}
+          Avec votre accord, Google Analytics et les mesures internes de Caldera
+          suivent les visites, les lectures des Carnets et le parcours d’achat.
+          Les cookies nécessaires au panier restent indépendants.{' '}
           <Link href="/confidentialite">En savoir plus</Link>
         </p>
       </div>

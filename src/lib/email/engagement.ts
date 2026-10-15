@@ -52,6 +52,9 @@ export async function clearSubscriberEngagement(subscriberId: string) {
       data,
     }),
     getPrisma().lifecycleDelivery.updateMany({ where: { subscriberId }, data }),
+    getPrisma().carnetEmailClick.deleteMany({
+      where: { delivery: { subscriberId } },
+    }),
   ]);
 }
 export async function purgeEmailEngagement() {
@@ -73,5 +76,13 @@ export async function purgeEmailEngagement() {
       data,
     }),
   ]);
+  await getPrisma().carnetEmailClick.deleteMany({
+    where: {
+      OR: [
+        { clickedAt: { lt: cutoff } },
+        { delivery: { trackingEnabled: false } },
+      ],
+    },
+  });
   return { emailEngagementPurged: result.reduce((n, r) => n + r.count, 0) };
 }

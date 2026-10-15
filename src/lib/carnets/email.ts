@@ -44,6 +44,7 @@ export function carnetEmailContent(
       ? { src: source.illustrationUrl, alt: source.illustrationAlt ?? '' }
       : undefined,
     carnetComptoir: products,
+    carnetLinks: { storyPath: carnetUrl(source.slug), products },
   };
 }
 function markdownInline(nodes: CarnetInline[] = []): string {

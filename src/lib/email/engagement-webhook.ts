@@ -5,6 +5,7 @@ import type {
   NewsletterSubscriber,
 } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
+import { recordCarnetEmailClick } from '@/lib/carnets/analytics-record';
 import { trackingAllowed } from './engagement';
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 /** Receives an already signature-verified payload. Never stores IP, UA, recipient or clicked URL. */
@@ -13,7 +14,7 @@ export async function recordEmailEngagement(payload: unknown) {
   const event = payload as {
     type?: unknown;
     created_at?: unknown;
-    data?: { email_id?: unknown; tags?: unknown };
+    data?: { email_id?: unknown; tags?: unknown; click?: { link?: unknown } };
   };
   const field =
     event.type === 'email.opened'
@@ -96,6 +97,13 @@ export async function recordEmailEngagement(payload: unknown) {
         data,
       });
     else await db.lifecycleDelivery.updateMany({ where: updateWhere, data });
+    if (type === 'campaign' && field === 'clickedAt')
+      await recordCarnetEmailClick(
+        row.id,
+        event.data.click?.link,
+        occurredAt,
+        now,
+      );
     return;
   }
 }
