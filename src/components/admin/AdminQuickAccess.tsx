@@ -3,14 +3,41 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
-import { ArrowRight, Search, X } from 'lucide-react';
+import {
+  ArrowRight,
+  Search,
+  X,
+  CalendarDays,
+  Users,
+  Settings2,
+} from 'lucide-react';
 import { adminNavGroups } from './AdminNavigation';
 import { confirmAdminNavigation } from './AdminForm';
 import styles from './Admin.module.scss';
 
-const entries = adminNavGroups.flatMap((group) =>
-  group.links.map((link) => ({ ...link, group: group.label })),
-);
+const entries = [
+  ...adminNavGroups.flatMap((group) =>
+    group.links.map((link) => ({ ...link, group: group.label })),
+  ),
+  {
+    href: '/admin/carnets/calendrier',
+    label: 'Calendrier éditorial',
+    icon: CalendarDays,
+    group: 'Communication',
+  },
+  {
+    href: '/admin/newsletter?audience=1#audience-newsletter',
+    label: 'Audience & consentements',
+    icon: Users,
+    group: 'Communication',
+  },
+  {
+    href: '/admin/newsletter?technique=1#technique-newsletter',
+    label: 'Automatisations email',
+    icon: Settings2,
+    group: 'Communication',
+  },
+];
 const shortcuts = new Set([
   '/admin',
   '/admin/commandes',
@@ -20,6 +47,8 @@ const shortcuts = new Set([
   '/admin/mesures',
 ]);
 const aliases: Record<string, string> = {
+  '/admin/carnets/calendrier':
+    'planning agenda programmation dates newsletter public',
   '/admin/carnets':
     'chapitres récit narration arc extrait coupure newsletter carnets',
   '/admin/mesures':

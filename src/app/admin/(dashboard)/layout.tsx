@@ -10,6 +10,7 @@ import { AdminNavigation } from '@/components/admin/AdminNavigation';
 import { AdminBreadcrumbs } from '@/components/admin/AdminBreadcrumbs';
 import { AdminAccountMenu } from '@/components/admin/AdminAccountMenu';
 import { AdminQuickAccess } from '@/components/admin/AdminQuickAccess';
+import { CommunicationNavigation } from '@/components/admin/CommunicationNavigation';
 import { AdminLogo } from '@/components/admin/AdminLogo';
 import styles from '@/components/admin/Admin.module.scss';
 export default async function DashboardLayout({
@@ -71,6 +72,7 @@ export default async function DashboardLayout({
           </AdminAccountMenu>
         </header>
         <main id="contenu" className={styles.content}>
+          <CommunicationNavigation />
           {children}
         </main>
       </div>

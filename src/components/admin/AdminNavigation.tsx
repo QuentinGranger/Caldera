@@ -63,15 +63,19 @@ export const adminNavGroups = [
       { href: '/admin/retours', label: 'Retours', icon: PackageOpen },
       { href: '/admin/clients', label: 'Clients', icon: Users },
       { href: '/admin/livraison', label: 'Livraison', icon: Truck },
+      { href: '/admin/promotions', label: 'Codes promo', icon: TicketPercent },
     ],
   },
   {
     label: 'Communication',
     links: [
-      { href: '/admin/newsletter', label: 'Emails & newsletter', icon: Mail },
+      {
+        href: '/admin/newsletter',
+        label: 'Newsletter & campagnes',
+        icon: Mail,
+      },
       { href: '/admin/carnets', label: 'Carnets de Caldera', icon: BookOpen },
       { href: '/admin/discord', label: 'Discord', icon: MessageSquare },
-      { href: '/admin/promotions', label: 'Codes promo', icon: TicketPercent },
     ],
   },
   {

@@ -186,19 +186,23 @@ export function Pagination({
   total,
   params,
   path,
+  pageKey = 'page',
+  fragment = '',
 }: {
   page: number;
   total: number;
   params: SearchParams;
   path: string;
+  pageKey?: string;
+  fragment?: string;
 }) {
   const pages = Math.max(1, Math.ceil(total / 25));
   function href(next: number) {
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(params))
-      if (typeof value === 'string' && key !== 'page') query.set(key, value);
-    query.set('page', String(next));
-    return `${path}?${query}`;
+      if (typeof value === 'string' && key !== pageKey) query.set(key, value);
+    query.set(pageKey, String(next));
+    return `${path}?${query}${fragment ? `#${fragment}` : ''}`;
   }
   return (
     <nav className={styles.pagination} aria-label="Pagination">

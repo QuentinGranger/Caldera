@@ -2,18 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import styles from './Admin.module.scss';
+import { revealAdminSection } from './reveal-section';
 
 type Section = { id: string; label: string; count?: number };
-
-function revealSection(id: string) {
-  const target = document.getElementById(id);
-  if (!target) return;
-  let element: HTMLElement | null = target;
-  while (element) {
-    if (element instanceof HTMLDetailsElement) element.open = true;
-    element = element.parentElement;
-  }
-}
 
 /** Real anchors remain usable before hydration; JavaScript adds scroll tracking. */
 export function DetailNavigation({ sections }: { sections: Section[] }) {
@@ -45,7 +36,7 @@ export function DetailNavigation({ sections }: { sections: Section[] }) {
     function followHash() {
       const id = window.location.hash.slice(1);
       if (!sections.some((section) => section.id === id)) return;
-      revealSection(id);
+      revealAdminSection(id);
       document.getElementById(id)?.scrollIntoView({ block: 'start' });
       schedule();
     }
@@ -73,7 +64,7 @@ export function DetailNavigation({ sections }: { sections: Section[] }) {
           key={section.id}
           href={`#${section.id}`}
           aria-current={active === section.id ? 'location' : undefined}
-          onClick={() => revealSection(section.id)}
+          onClick={() => revealAdminSection(section.id)}
         >
           {section.label}
           {section.count !== undefined && <span>{section.count}</span>}

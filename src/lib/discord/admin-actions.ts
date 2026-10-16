@@ -19,11 +19,12 @@ export async function saveDiscordDraftAction(
       message: 'Trop d’actions Discord. Réessayez dans quelques minutes.',
     };
   try {
-    await saveDiscordDraft(admin.id, form);
+    const draft = await saveDiscordDraft(admin.id, form);
     revalidatePath('/admin/discord');
     return {
       success: true,
       message: 'Brouillon enregistré. Relisez l’aperçu avant sa mise en file.',
+      redirectTo: `/admin/discord?view=drafts#discord-${draft.id}`,
     };
   } catch (error) {
     return {

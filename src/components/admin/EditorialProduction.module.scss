@@ -2,7 +2,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(16rem, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(15rem, 0.85fr);
   gap: 1.25rem;
   margin-bottom: 2rem;
   align-items: start;
@@ -17,6 +17,7 @@
 }
 .edition {
   border-top: 3px solid t.$purple;
+  box-shadow: 0 7px 24px #192d2505;
 }
 .advance {
   background: linear-gradient(140deg, #edf4ee, #fffdf7);
@@ -58,6 +59,8 @@
   font-size: 0.86rem;
 }
 .checklist {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -67,8 +70,10 @@
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  padding: 0.8rem 0;
-  border-bottom: 1px solid t.$border;
+  padding: 0.8rem;
+  border: 1px solid t.$border;
+  border-radius: 0.65rem;
+  background: #fafbf8;
   font-size: 0.84rem;
 }
 .checklist li > svg {
@@ -93,6 +98,7 @@
   color: #89631d;
 }
 .checkState {
+  display: none;
   color: t.$muted;
   font-size: 0.7rem;
   white-space: nowrap;
@@ -230,13 +236,37 @@
   font-weight: 650;
   margin-top: 0.8rem;
 }
-@media (max-width: 70rem) {
+@media (max-width: 75rem) {
   .grid {
     grid-template-columns: 1fr;
+  }
+  .advance {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 1.5rem;
+  }
+  .advance h2,
+  .advance .note,
+  .reserveLinks {
+    grid-column: 1/-1;
+  }
+  .count {
+    grid-row: 2/5;
   }
   .count {
     margin-top: 1.5rem;
     font-size: 3rem;
+  }
+}
+@media (max-width: 40rem) {
+  .checklist {
+    grid-template-columns: 1fr;
+  }
+  .advance {
+    display: block;
+  }
+  .nextAction a {
+    font-size: 0.85rem;
   }
 }
 @media (max-width: 30rem) {
@@ -250,4 +280,39 @@
     flex: 1;
     justify-content: center;
   }
+}
+
+.nextAction {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  background: #edf4ee;
+  border-radius: 0.65rem;
+  border: 1px solid #cddcce;
+  span {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: t.$muted;
+    margin-bottom: 0.3rem;
+  }
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    color: t.$purple-dark;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    min-height: 32px;
+  }
+}
+.reserveLinks {
+  border-top: 1px solid #d9e2d4;
+  margin-top: 1rem;
+  padding-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
