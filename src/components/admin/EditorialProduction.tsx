@@ -77,6 +77,31 @@ export function EditorialProduction({
                 'Arc non renseigné'
               )}
             </p>
+            <div className={styles.nextAction}>
+              <span>Votre prochaine action</span>
+              <Link
+                href={
+                  next.campaignStatus === 'QUEUED' && next.campaignId
+                    ? `/admin/newsletter/campagnes/${next.campaignId}`
+                    : `/admin/carnets/${next.id}${!next.chapterReady ? '#carnet-recit' : !next.illustrationReady ? '#carnet-recit' : next.unavailable.length ? '#carnet-comptoir' : !next.emailReady ? '#carnet-email' : '#carnet-verification'}`
+                }
+              >
+                {next.campaignStatus === 'QUEUED'
+                  ? 'Suivre la programmation'
+                  : !next.chapterReady
+                    ? 'Compléter le récit'
+                    : !next.illustrationReady
+                      ? 'Ajouter l’illustration et son alt'
+                      : next.unavailable.length
+                        ? 'Vérifier les produits du Comptoir'
+                        : !next.emailReady
+                          ? 'Compléter l’email'
+                          : !next.testCurrent
+                            ? 'Vérifier et tester l’édition'
+                            : 'Ouvrir la vérification finale'}{' '}
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
             <ul className={styles.checklist}>
               <Check
                 done={next.chapterReady}
@@ -176,7 +201,7 @@ export function EditorialProduction({
             <div className={styles.actions}>
               <Link className={admin.button} href={`/admin/carnets/${next.id}`}>
                 <Pencil size={15} aria-hidden="true" />
-                Modifier
+                {next.campaignStatus === 'QUEUED' ? 'Consulter' : 'Modifier'}
               </Link>
               <Link
                 className={`${admin.button} ${admin.secondaryButton}`}
@@ -254,9 +279,15 @@ export function EditorialProduction({
         <p className={styles.note}>
           La checklist de chaque édition reste à valider avant l’envoi.
         </p>
-        <Link className={styles.reserveLink} href="/admin/carnets">
-          Voir les Carnets <ArrowRight size={16} aria-hidden="true" />
-        </Link>
+        <div className={styles.reserveLinks}>
+          <Link className={styles.reserveLink} href="/admin/carnets/calendrier">
+            <CalendarDays size={16} aria-hidden="true" />
+            Planifier les prochaines éditions
+          </Link>
+          <Link className={styles.reserveLink} href="/admin/carnets">
+            Voir les Carnets <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </section>
     </div>
   );

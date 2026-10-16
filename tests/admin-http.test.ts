@@ -231,6 +231,8 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/carnets/nouveau',
           '/admin/carnets/calendrier?mois=2026-11',
           '/admin/newsletter',
+          '/admin/newsletter?audience=1&campaignStatus=DRAFT',
+          '/admin/discord?view=review',
           '/admin/newsletter/nouvelle',
           '/admin/newsletter/campagnes/nouvelle',
           `/admin/commandes/${order.id}/bon-preparation`,
@@ -610,6 +612,23 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         const newsletter = await page('/admin/newsletter');
         assert.match(newsletter.html, /href="\/admin\/newsletter\/nouvelle"/);
         assert.match(newsletter.html, /Nouvelle édition/);
+        assert.match(newsletter.html, /aria-label="Espace communication"/);
+        assert.match(newsletter.html, /name="campaignSearch"/);
+        assert.match(newsletter.html, /name="campaignStatus"/);
+        assert.match(newsletter.html, /Repères newsletter/);
+        const audience = await page(
+          '/admin/newsletter?audience=1&campaignStatus=DRAFT',
+        );
+        assert.match(
+          audience.html,
+          /<details[^>]*id="audience-newsletter"[^>]*open=""/,
+        );
+        assert.match(audience.html, /name="campaignStatus" value="DRAFT"/);
+        const discord = await page('/admin/discord?view=review');
+        assert.equal(discord.response.status, 200);
+        assert.match(discord.html, /Vues des publications Discord/);
+        assert.match(discord.html, /Configuration Discord/);
+        assert.match(discord.html, /discord-composer/);
         const sections = [
           'prochaine-edition',
           'avance-editoriale',

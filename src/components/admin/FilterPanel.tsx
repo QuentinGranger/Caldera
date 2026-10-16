@@ -13,6 +13,7 @@ export function FilterPanel({
   params,
   criteria = [],
   children,
+  fragment = '',
 }: {
   action: string;
   search: string;
@@ -25,6 +26,7 @@ export function FilterPanel({
   criteria?: { name: string; label: string }[];
   /** The filters; none: the search alone. */
   children?: ReactNode;
+  fragment?: string;
 }) {
   const selected = [
     ...(search ? [{ name: 'search', label: `Recherche : ${search}` }] : []),
@@ -33,7 +35,7 @@ export function FilterPanel({
   return (
     <form
       key={JSON.stringify(params)}
-      action={action}
+      action={`${action}${fragment ? `#${fragment}` : ''}`}
       className={styles.filterPanel}
     >
       <div className={styles.filterPrimary}>
@@ -54,7 +56,11 @@ export function FilterPanel({
           <Search size={16} aria-hidden="true" />
           Rechercher
         </button>
-        {(search || activeCount > 0) && <Link href={action}>Tout effacer</Link>}
+        {(search || activeCount > 0) && (
+          <Link href={`${action}${fragment ? `#${fragment}` : ''}`}>
+            Tout effacer
+          </Link>
+        )}
       </div>
       {Object.entries(keep).map(
         ([name, value]) =>
@@ -83,7 +89,7 @@ export function FilterPanel({
           {selected.map(({ name, label }) => (
             <Link
               key={name}
-              href={adminListHref(action, params, { [name]: undefined })}
+              href={`${adminListHref(action, params, { [name]: undefined })}${fragment ? `#${fragment}` : ''}`}
               aria-label={`Retirer le filtre ${label}`}
             >
               <span>{label}</span>

@@ -3,6 +3,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requireAdmin } from '@/lib/admin/auth';
 import { getPrisma } from '@/lib/db/prisma';
 import { chapterComptoir } from './comptoir';
+import { carnetVerificationContext } from './verification-server';
 import { carnetReadiness } from './readiness';
 
 /** Started releases are managed in Campaigns, never counted as editorial reserve. */
@@ -44,6 +45,17 @@ export async function readEditorialProduction(db: Prisma.TransactionClient) {
       : null,
   ]);
   const readiness = carnetReadiness(chapter, campaign, products, lastTest);
+  const metadata = lastTest?.metadata;
+  if (
+    metadata &&
+    typeof metadata === 'object' &&
+    !Array.isArray(metadata) &&
+    typeof metadata.carnetTestSignature === 'string'
+  ) {
+    readiness.testCurrent = (
+      await carnetVerificationContext(db, chapter, campaign, products)
+    ).testCurrent;
+  }
   return {
     readyCount,
     monthsAhead: readyCount / 2,

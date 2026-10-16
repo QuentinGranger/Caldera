@@ -1,3 +1,6 @@
+import { carnetTestProof } from './helpers/carnet-test-proof';
+import { chapterComptoir } from '../src/lib/carnets/comptoir';
+import type { Prisma } from '../src/generated/prisma/client';
 import 'dotenv/config';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -204,6 +207,48 @@ test('Production éditoriale : prochaine édition, réserve, stock et preuve de 
           (await readEditorialProduction(db)).next?.testCurrent,
           false,
         );
+      },
+    );
+    await t.test(
+      'Le résumé suit la preuve de contenu : programmer ne l’invalide pas, changer le prix du brouillon oui',
+      async () => {
+        await carnetTestProof(admin.id, campaign.id);
+        assert.equal(
+          (await readEditorialProduction(db)).next?.testCurrent,
+          true,
+        );
+        const snapshot = await chapterComptoir(db, selected.id);
+        await db.newsletterCampaign.update({
+          where: { id: campaign.id },
+          data: {
+            status: 'QUEUED',
+            carnetProducts: snapshot as unknown as Prisma.InputJsonValue,
+          },
+        });
+        await db.carnetChapter.update({
+          where: { id: selected.id },
+          data: { revision: { increment: 1 } },
+        });
+        assert.equal(
+          (await readEditorialProduction(db)).next?.testCurrent,
+          true,
+        );
+        await db.newsletterCampaign.update({
+          where: { id: campaign.id },
+          data: { status: 'DRAFT' },
+        });
+        await db.productVariant.update({
+          where: { id: product.variants[0]!.id },
+          data: { price: 21 },
+        });
+        assert.equal(
+          (await readEditorialProduction(db)).next?.testCurrent,
+          false,
+        );
+        await db.productVariant.update({
+          where: { id: product.variants[0]!.id },
+          data: { price: 20 },
+        });
       },
     );
     await t.test(

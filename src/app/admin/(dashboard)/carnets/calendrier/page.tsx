@@ -109,12 +109,6 @@ export default async function CarnetCalendarPage({
         title="Calendrier des Carnets"
         description="Les prochaines newsletters et publications publiques, réunies mois par mois. Dates à l’heure de Paris."
       >
-        <Link
-          href="/admin/carnets"
-          className={`${admin.button} ${admin.secondaryButton}`}
-        >
-          Liste des Carnets
-        </Link>
         <Link href="/admin/carnets/nouveau" className={admin.button}>
           <Plus size={16} aria-hidden="true" />
           Nouveau Carnet
