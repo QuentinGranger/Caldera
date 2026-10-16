@@ -5,10 +5,10 @@ export function AdminLogo() {
   return (
     <Image
       className={styles.brandImage}
-      src="/assets/images/brand/caldera-admin.webp"
+      src="/assets/images/brand/caldera-admin-editorial.webp"
       alt="Caldera Administration"
-      width={768}
-      height={258}
+      width={864}
+      height={288}
       loading="eager"
       unoptimized
     />
