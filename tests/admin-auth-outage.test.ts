@@ -23,7 +23,7 @@ test('panne du stockage des limites admin : refus sûr identique pour toute adre
   );
   const originalQuery = db.$queryRaw;
   let queryCount = 0;
-  db.$queryRaw = async () => {
+  db.$queryRaw = () => {
     queryCount++;
     throw databaseError;
   };
