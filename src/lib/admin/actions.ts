@@ -9,7 +9,7 @@ import { invalidateCatalogCache } from '@/lib/cache/catalogCache';
 import { safelyProcessStockAlerts } from '@/lib/stock-alerts/processor';
 import { safelyProcessDiscordOutbox } from '@/lib/discord/outbox';
 import { getAdminAuth, requireAdmin } from './auth';
-import { allowLogin } from './login';
+import { AdminAuthUnavailableError, allowLogin } from './login';
 import { AdminError, text, uuid, whitelist } from './validation';
 import { setMessageHandled } from './messages';
 import type { AdminActionState } from './action-types';
@@ -118,7 +118,9 @@ export async function loginAction(
       });
       if (!admin.twoFactorEnabled) destination = '/admin/securite';
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof AdminAuthUnavailableError)
+      return { success: false, message: error.message };
     return { success: false, message: 'Identifiants incorrects.' };
   }
   redirect(destination);

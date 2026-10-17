@@ -8,7 +8,7 @@ import {
 } from '@/lib/auth/passwordPolicy';
 import type { AdminActionState } from './action-types';
 import { getAdminAuth } from './auth';
-import { allowAdminPasswordReset } from './login';
+import { AdminAuthUnavailableError, allowAdminPasswordReset } from './login';
 import { AdminError, text, whitelist } from './validation';
 
 const GENERIC =
@@ -30,7 +30,9 @@ export async function requestAdminPasswordResetAction(
       return { success: false, message: 'Indiquez une adresse e-mail valide.' };
     if (await allowAdminPasswordReset(email))
       await getAdminAuth().api.requestPasswordReset({ body: { email } });
-  } catch {
+  } catch (error) {
+    if (error instanceof AdminAuthUnavailableError)
+      return { success: false, message: error.message };
     // The same answer prevents account enumeration and provider disclosure.
   }
   return { success: true, message: GENERIC };
