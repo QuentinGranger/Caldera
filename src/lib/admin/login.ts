@@ -1,22 +1,49 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { getPrisma } from '@/lib/db/prisma';
+import { AdminError } from './errors';
+
+export class AdminAuthUnavailableError extends AdminError {
+  constructor() {
+    super(
+      'Le service d’authentification est temporairement indisponible. Réessayez plus tard.',
+    );
+  }
+}
+
+/** Fail closed before looking up an account; never report an email as sent. */
+async function loginStorage<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch {
+    // No address, password, token, connection string or provider error in logs.
+    console.error(
+      JSON.stringify({ scope: 'admin', action: 'login_storage_unavailable' }),
+    );
+    throw new AdminAuthUnavailableError();
+  }
+}
+
 async function take(key: string, maximum: number, seconds: number) {
-  const rows = await getPrisma().$queryRaw<{ count: number }[]>`
+  const rows = await loginStorage(
+    () => getPrisma().$queryRaw<{ count: number }[]>`
     INSERT INTO "AdminLoginAttempt" (key, count, "windowStart") VALUES (${key}, 1, NOW())
     ON CONFLICT (key) DO UPDATE SET
       count = CASE WHEN "AdminLoginAttempt"."windowStart" < NOW() - ${seconds} * INTERVAL '1 second' THEN 1 ELSE "AdminLoginAttempt".count + 1 END,
       "windowStart" = CASE WHEN "AdminLoginAttempt"."windowStart" < NOW() - ${seconds} * INTERVAL '1 second' THEN NOW() ELSE "AdminLoginAttempt"."windowStart" END
-    RETURNING count`;
+    RETURNING count`,
+  );
   return (rows[0]?.count ?? maximum + 1) <= maximum;
 }
 /** Persisted fixed windows; no trust in spoofable forwarding headers. */
 export async function allowLogin(email: string) {
   const db = getPrisma();
   if (!(await take('global', 60, 60))) return false;
-  await db.adminLoginAttempt.deleteMany({
-    where: { windowStart: { lt: new Date(Date.now() - 86400000) } },
-  });
+  await loginStorage(() =>
+    db.adminLoginAttempt.deleteMany({
+      where: { windowStart: { lt: new Date(Date.now() - 86400000) } },
+    }),
+  );
   return take(createHash('sha256').update(email).digest('hex'), 5, 900);
 }
 
