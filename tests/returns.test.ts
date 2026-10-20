@@ -137,7 +137,11 @@ test('retours : accusé de rétractation sur support durable, échappé', () => 
     }),
     urls,
   );
-  assert.ok(!rejected.text.includes('Pierre Valdo'));
+  // Sender identity belongs in every footer. A rejected return must still
+  // never tell the customer to ship a parcel back to that address.
+  const rejectedBody = rejected.text.split('\n\nExpéditeur :')[0]!;
+  assert.ok(!rejectedBody.includes('Pierre Valdo'));
+  assert.match(rejected.text, /Expéditeur :[\s\S]*74 rue Pierre Valdo/);
   assert.ok(rejected.html.includes('Délai &lt;dépassé&gt;'));
   assert.match(rejected.subject, /^Demande de retour RET-2026-0A1B2C3D/);
 
