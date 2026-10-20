@@ -84,6 +84,19 @@ test('emails : envoi selon accord, webhook signé, dédoublonnage, retrait et r�
         async send(envelope) {
           const person = people.find((p) => p.email === envelope.to[0])!;
           assert.equal(envelope.from.includes('@news.'), person.emailTracking);
+          assert.equal(
+            envelope.headers?.['List-Unsubscribe-Post'],
+            'List-Unsubscribe=One-Click',
+          );
+          assert.ok(
+            envelope.headers?.['List-Unsubscribe']?.includes(
+              '/api/newsletter/unsubscribe?token=',
+            ),
+          );
+          assert.equal(
+            envelope.tags?.find((tag) => tag.name === 'caldera_kind')?.value,
+            'campaign',
+          );
           const messageId = randomUUID();
           messageIds.set(person.id, messageId);
           return { id: messageId };

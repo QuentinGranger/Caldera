@@ -3,6 +3,7 @@ import {
   trackingAllowed,
   trackingTags,
 } from '@/lib/email/engagement';
+import { newsletterUnsubscribeHeaders } from '@/lib/email/unsubscribe-headers';
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { getPrisma } from '@/lib/db/prisma';
@@ -345,9 +346,8 @@ export async function processLifecycleEmails(
           : null;
         envelope = {
           from: sender.from,
-          ...(sender.tracked
-            ? { tags: trackingTags(row.id, 'lifecycle') }
-            : {}),
+          headers: newsletterUnsubscribeHeaders(row.subscriberId),
+          tags: trackingTags(row.id, 'lifecycle'),
           to: [settings.testRecipient ?? row.subscriber.email],
           ...rendered,
           subject: `${settings.testRecipient ? '[TEST] ' : ''}${rendered.subject}`,

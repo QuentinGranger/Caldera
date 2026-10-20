@@ -1,4 +1,4 @@
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import type { EmailType } from '@/generated/prisma/client';
 import { customerReplyLink } from './reply';
@@ -334,5 +334,5 @@ export function renderShopEmail(
     'Notification automatique de la boutique. « Répondre » écrit au client en citant cette notification.',
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
-  return { subject, html, text, replyTo: data.customer.email };
+  return { subject, html, text: emailText(text), replyTo: data.customer.email };
 }

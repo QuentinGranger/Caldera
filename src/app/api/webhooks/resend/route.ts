@@ -1,13 +1,13 @@
 import { Webhook } from 'svix';
 import { recordEmailEngagement } from '@/lib/email/engagement-webhook';
+import { recordEmailDeliveryFeedback } from '@/lib/email/delivery-feedback';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const reply = (status: number) =>
   new Response(null, { status, headers: { 'Cache-Control': 'no-store' } });
 export async function POST(request: Request) {
   const secret = process.env.RESEND_WEBHOOK_SECRET;
-  if (!secret || process.env.EMAIL_ENGAGEMENT_ENABLED !== 'true')
-    return reply(503);
+  if (!secret) return reply(503);
   const id = request.headers.get('svix-id');
   const timestamp = request.headers.get('svix-timestamp');
   const signature = request.headers.get('svix-signature');
@@ -51,7 +51,9 @@ export async function POST(request: Request) {
     return reply(400);
   }
   try {
-    await recordEmailEngagement(payload);
+    await recordEmailDeliveryFeedback(payload);
+    if (process.env.EMAIL_ENGAGEMENT_ENABLED === 'true')
+      await recordEmailEngagement(payload);
     return reply(204);
   } catch {
     return reply(503);

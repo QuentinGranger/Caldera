@@ -8,6 +8,7 @@ export type EmailEnvelope = {
   subject: string;
   html: string;
   text: string;
+  headers?: Record<string, string>;
 };
 export interface EmailProvider {
   name: string;
@@ -52,6 +53,7 @@ export function resendProvider(): EmailProvider {
   return {
     name: 'resend',
     async send(envelope, idempotencyKey) {
+      envelope = parseEnvelope(envelope);
       const sendingKey = envelope.from.includes('@news.lesterresdecaldera.fr')
         ? process.env.MARKETING_EMAIL_PROVIDER_API_KEY || key
         : key;
@@ -99,5 +101,59 @@ export function parseEnvelope(value: unknown): EmailEnvelope {
     (row.reply_to !== undefined && typeof row.reply_to !== 'string')
   )
     throw new EmailProviderError('ENVELOPPE_INVALIDE');
-  return value as EmailEnvelope;
+  const address = (v: string) =>
+    !/[\x00-\x1f\x7f]/.test(v) && /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(v);
+  const from = row.from as string;
+  if (
+    /[\x00-\x1f\x7f]/.test(from) ||
+    !address(/<([^<>]+)>$/.exec(from)?.[1] ?? from) ||
+    !address(row.to[0]) ||
+    (row.reply_to !== undefined && !address(row.reply_to as string)) ||
+    /[\r\n\x00]/.test(row.subject as string) ||
+    !(row.subject as string).trim() ||
+    !(row.html as string).trim() ||
+    !(row.text as string).trim()
+  )
+    throw new EmailProviderError('ENVELOPPE_INVALIDE');
+  if (row.headers !== undefined) {
+    if (
+      !row.headers ||
+      typeof row.headers !== 'object' ||
+      Array.isArray(row.headers)
+    )
+      throw new EmailProviderError('ENVELOPPE_INVALIDE');
+    const allowed = ['List-Unsubscribe', 'List-Unsubscribe-Post', 'List-Id'];
+    for (const [name, header] of Object.entries(row.headers))
+      if (
+        !allowed.includes(name) ||
+        typeof header !== 'string' ||
+        header.length > 2048 ||
+        /[\r\n\x00]/.test(header)
+      )
+        throw new EmailProviderError('ENVELOPPE_INVALIDE');
+  }
+  if (
+    row.tags !== undefined &&
+    (!Array.isArray(row.tags) ||
+      row.tags.some(
+        (tag) =>
+          !tag ||
+          typeof tag !== 'object' ||
+          typeof tag.name !== 'string' ||
+          typeof tag.value !== 'string' ||
+          !/^[a-zA-Z0-9_-]{1,256}$/.test(tag.name) ||
+          !/^[a-zA-Z0-9_-]{1,256}$/.test(tag.value),
+      ))
+  )
+    throw new EmailProviderError('ENVELOPPE_INVALIDE');
+  return {
+    from,
+    to: [row.to[0]],
+    subject: row.subject as string,
+    html: row.html as string,
+    text: row.text as string,
+    ...(row.reply_to ? { reply_to: row.reply_to as string } : {}),
+    ...(row.tags ? { tags: row.tags as EmailEnvelope['tags'] } : {}),
+    ...(row.headers ? { headers: row.headers as Record<string, string> } : {}),
+  };
 }

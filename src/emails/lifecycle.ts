@@ -1,5 +1,5 @@
 import { campaignUrl } from '@/lib/analytics/campaign';
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { escapeHtml } from './templates';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import type { LifecycleKind } from '@/lib/lifecycle/policy';
@@ -118,16 +118,18 @@ export function renderLifecycleEmail(
   return {
     subject,
     html,
-    text: [
-      subject,
-      message.body,
-      ...products
-        .slice(0, 4)
-        .map((p, i) => `${lines[i]}\nVoir le produit : ${p.url}`),
-      `${message.cta} : ${urls.action}`,
-      `Préférences : ${urls.preferences}`,
-      `Désinscription : ${urls.unsubscribe}`,
-      EMAIL_SOCIAL_LINKS_TEXT,
-    ].join('\n\n'),
+    text: emailText(
+      [
+        subject,
+        message.body,
+        ...products
+          .slice(0, 4)
+          .map((p, i) => `${lines[i]}\nVoir le produit : ${p.url}`),
+        `${message.cta} : ${urls.action}`,
+        `Préférences : ${urls.preferences}`,
+        `Désinscription : ${urls.unsubscribe}`,
+        EMAIL_SOCIAL_LINKS_TEXT,
+      ].join('\n\n'),
+    ),
   };
 }

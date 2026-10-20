@@ -1,5 +1,5 @@
 import { campaignUrl } from '@/lib/analytics/campaign';
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { escapeHtml } from './templates';
 
@@ -47,13 +47,13 @@ export function renderStockAlertConfirmationEmail(
     'Les Terres de Caldera',
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
-  return { subject, html, text };
+  return { subject, html, text: emailText(text) };
 }
 
 /** The one message of an alert: the variant can be bought again. */
 export function renderStockAlertNotificationEmail(
   product: StockAlertEmailProduct,
-  urls: { product: string; logo: string },
+  urls: { product: string; logo: string; removal?: string },
 ) {
   urls = { ...urls, product: campaignUrl(urls.product, 'stock_alert') };
   const subject = `De retour en stock : ${product.name}`.replace(
@@ -62,7 +62,7 @@ export function renderStockAlertNotificationEmail(
   );
   const html = layout(
     subject,
-    `<p style="font-size:13px">Alerte de retour en stock</p><h1 style="font-family:Georgia,serif;font-size:30px;line-height:1.2">Il est de retour</h1><p><strong>${escapeHtml(productLine(product))}</strong><br>${escapeHtml(product.price)}</p><p>La version que vous suiviez est de nouveau disponible. Consultez sa fiche pour vérifier le stock actuel ; cette alerte ne réserve pas de produit.</p>${button(urls.product, 'Voir le produit disponible')}<p style="font-size:12px;color:#60665d">Vous recevez ce message une seule fois : cette alerte est maintenant terminée et votre adresse sera effacée sous 30 jours.</p>`,
+    `<p style="font-size:13px">Alerte de retour en stock</p><h1 style="font-family:Georgia,serif;font-size:30px;line-height:1.2">Il est de retour</h1><p><strong>${escapeHtml(productLine(product))}</strong><br>${escapeHtml(product.price)}</p><p>La version que vous suiviez est de nouveau disponible. Consultez sa fiche pour vérifier le stock actuel ; cette alerte ne réserve pas de produit.</p>${button(urls.product, 'Voir le produit disponible')}<p style="font-size:12px;color:#60665d">Vous recevez ce message une seule fois : cette alerte est maintenant terminée et votre adresse sera effacée sous 30 jours.${urls.removal ? ` <a href="${escapeHtml(urls.removal)}">Supprimer cette alerte</a>.` : ''}</p>`,
     urls.logo,
   );
   const text = [
@@ -72,8 +72,9 @@ export function renderStockAlertNotificationEmail(
     'La version que vous suiviez est de nouveau disponible. Consultez sa fiche pour vérifier le stock actuel ; cette alerte ne réserve pas de produit.',
     `Voir le produit : ${urls.product}`,
     'Vous recevez ce message une seule fois : cette alerte est maintenant terminée.',
+    ...(urls.removal ? [`Supprimer cette alerte : ${urls.removal}`] : []),
     'Les Terres de Caldera',
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
-  return { subject, html, text };
+  return { subject, html, text: emailText(text) };
 }

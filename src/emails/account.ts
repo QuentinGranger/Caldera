@@ -1,4 +1,4 @@
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { escapeHtml } from './templates';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
@@ -88,5 +88,5 @@ export function renderAccountEmail(
     `Site : ${PRODUCTION_SITE_URL}`,
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
-  return { subject: copy.subject, html, text };
+  return { subject: copy.subject, html, text: emailText(text) };
 }

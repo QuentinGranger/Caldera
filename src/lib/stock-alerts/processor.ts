@@ -9,6 +9,8 @@ import {
   type EmailProvider,
 } from '@/lib/email/provider';
 import { appOrigin } from '@/lib/orders/access';
+import { stockAlertUnsubscribeHeaders } from '@/lib/email/unsubscribe-headers';
+import { stockAlertRemovalUrl } from './tokens';
 import { formatPrice } from '@/utils/formatPrice';
 
 export const MAX_STOCK_ALERT_ATTEMPTS = 5;
@@ -165,12 +167,14 @@ export async function processStockAlerts(
         {
           product: `${appOrigin()}/produit/${product.slug}?variant=${encodeURIComponent(alert.variant.sku)}`,
           logo: `${appOrigin()}/assets/brand/logo-header-no-bg.png`,
+          removal: stockAlertRemovalUrl(alert.id),
         },
       );
       // Same key on every attempt: a crash after sending never sends twice.
       const result = await provider.send(
         {
           from: settings.from,
+          headers: stockAlertUnsubscribeHeaders(alert.id),
           to: [settings.testRecipient ?? alert.email],
           ...(settings.replyTo ? { reply_to: settings.replyTo } : {}),
           subject: `${settings.testRecipient ? '[TEST] ' : ''}${rendered.subject}`,

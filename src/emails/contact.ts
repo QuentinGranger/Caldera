@@ -1,4 +1,4 @@
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { customerReplyLink } from './reply';
 import { escapeHtml } from './templates';
@@ -72,5 +72,5 @@ export function renderContactEmail(
     '',
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n');
-  return { subject, html, text };
+  return { subject, html, text: emailText(text) };
 }
