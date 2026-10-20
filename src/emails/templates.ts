@@ -1,4 +1,4 @@
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { validTrackingUrl } from '@/lib/fulfillment/carriers';
 import type { EmailType } from '@/generated/prisma/client';
@@ -356,7 +356,7 @@ function renderReturnEmail(
       urls,
       note: 'Conservez cet e-mail : il fait foi de la date de votre demande. Une question ? Écrivez-nous depuis la page contact du site en indiquant votre numéro de commande.',
     }),
-    text,
+    text: emailText(text),
   };
 }
 /** The customer is told what was refunded and when to expect it. */
@@ -409,7 +409,7 @@ function renderRefundEmail(
     `Site : ${PRODUCTION_SITE_URL}`,
     EMAIL_SOCIAL_LINKS_TEXT,
   ];
-  return { subject, html, text: text.join('\n\n') };
+  return { subject, html, text: emailText(text.join('\n\n')) };
 }
 export function renderEmail(
   type: EmailType,
@@ -479,5 +479,5 @@ export function renderEmail(
     `Site : ${PRODUCTION_SITE_URL}`,
     EMAIL_SOCIAL_LINKS_TEXT,
   ];
-  return { subject, html, text: lines.join('\n\n') };
+  return { subject, html, text: emailText(lines.join('\n\n')) };
 }

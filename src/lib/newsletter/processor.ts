@@ -23,6 +23,7 @@ import {
 } from '@/lib/email/provider';
 import { appOrigin } from '@/lib/orders/access';
 import { newsletterUnsubscribeUrl } from './tokens';
+import { newsletterUnsubscribeHeaders } from '@/lib/email/unsubscribe-headers';
 
 export const MAX_NEWSLETTER_ATTEMPTS = 5;
 export const DEFAULT_NEWSLETTER_DAILY_LIMIT = 80;
@@ -268,9 +269,9 @@ export async function processNewsletterDeliveries(
           : null;
         envelope = {
           from: sender.from,
-          ...(sender.tracked
-            ? { tags: trackingTags(delivery.id, 'campaign') }
-            : {}),
+          headers: newsletterUnsubscribeHeaders(delivery.subscriberId),
+          // Delivery correlation also handles bounces without analytics consent.
+          tags: trackingTags(delivery.id, 'campaign'),
           to: [settings.testRecipient ?? delivery.recipient],
           ...(settings.replyTo ? { reply_to: settings.replyTo } : {}),
           subject: `${settings.testRecipient ? '[TEST] ' : ''}${rendered.subject}`,

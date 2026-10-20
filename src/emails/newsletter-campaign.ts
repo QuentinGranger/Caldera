@@ -5,7 +5,7 @@ import {
   THEMES,
 } from '@/lib/newsletter/document';
 import { carnetLink, type CarnetLinks } from '@/lib/carnets/analytics-links';
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { decodeEntities, renderMarkdown } from '@/lib/content/markdown';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
@@ -185,7 +185,7 @@ export function renderNewsletterCampaignEmail(
       : []),
     'Les Terres de Caldera',
     `Site : ${PRODUCTION_SITE_URL}`,
-    EMAIL_SOCIAL_LINKS_TEXT,
+    emailText(EMAIL_SOCIAL_LINKS_TEXT),
     urls.unsubscribe
       ? `Se désinscrire : ${urls.unsubscribe}`
       : 'E-mail de test — aucun abonné ne l’a reçu.',

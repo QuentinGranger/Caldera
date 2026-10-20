@@ -1,4 +1,4 @@
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { escapeHtml } from './templates';
 
@@ -45,7 +45,7 @@ export function renderAdminAccountEmail(
     'Les Terres de Caldera',
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
-  return { subject: copy.subject, html, text };
+  return { subject: copy.subject, html, text: emailText(text) };
 }
 
 /** Kept for the existing callers and tests. */

@@ -1,4 +1,4 @@
-import { emailLayout } from './layout';
+import { emailLayout, emailText } from './layout';
 import { EMAIL_SOCIAL_LINKS_TEXT } from './social-links';
 import { escapeHtml } from './templates';
 import { PRODUCTION_SITE_URL } from '@/lib/site';
@@ -23,5 +23,5 @@ export function renderNewsletterConfirmationEmail(urls: {
     `Site : ${PRODUCTION_SITE_URL}`,
     EMAIL_SOCIAL_LINKS_TEXT,
   ].join('\n\n');
-  return { subject, html, text };
+  return { subject, html, text: emailText(text) };
 }

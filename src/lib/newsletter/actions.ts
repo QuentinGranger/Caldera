@@ -1,8 +1,5 @@
 'use server';
-import {
-  clearSubscriberEngagement,
-  EMAIL_TRACKING_VERSION,
-} from '@/lib/email/engagement';
+import { EMAIL_TRACKING_VERSION } from '@/lib/email/engagement';
 import { deliverAfterResponse } from '@/lib/auth/deliver';
 import { runLifecycle } from '@/lib/lifecycle/run';
 import { revalidatePath } from 'next/cache';
@@ -19,6 +16,7 @@ import {
   NEWSLETTER_CONSENT_VERSION,
   type NewsletterActionState,
 } from './validation';
+import { unsubscribeNewsletter } from './unsubscribe';
 
 const GENERIC_SUCCESS =
   'Vérifiez votre boîte mail : si l’adresse peut être inscrite, un lien de confirmation valable 24 heures vient d’être envoyé.';
@@ -155,21 +153,7 @@ export async function unsubscribeNewsletterAction(
   const id = verifyNewsletterUnsubscribeToken(form.get('token'));
   if (!id) return failure('Ce lien de désinscription n’est pas valable.');
   try {
-    await getPrisma().newsletterSubscriber.updateMany({
-      where: { id },
-      data: {
-        status: 'UNSUBSCRIBED',
-        emailTracking: false,
-        emailTrackingConsentAt: null,
-        emailTrackingConsentVersion: null,
-        personalizedEmails: false,
-        personalizedConsentAt: null,
-        unsubscribedAt: new Date(),
-        confirmationTokenHash: null,
-        confirmationExpiresAt: null,
-      },
-    });
-    await clearSubscriberEngagement(id);
+    await unsubscribeNewsletter(id);
     revalidatePath('/admin/newsletter');
     return {
       success: true,

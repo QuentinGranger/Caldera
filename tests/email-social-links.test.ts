@@ -20,6 +20,7 @@ import {
   renderStockAlertNotificationEmail,
 } from '../src/emails/stock-alert';
 import { customerReplyLink } from '../src/emails/reply';
+import { LEGAL_IDENTITY, ORGANIZATION } from '../src/lib/seo/policies';
 
 const urls = {
   action: 'https://caldera.example/verification#token=private-token',
@@ -83,6 +84,10 @@ const shop: ShopEmailSnapshot = {
 };
 
 function assertSocialLinks(email: { html: string; text: string }) {
+  for (const content of [email.html, email.text]) {
+    assert.ok(content.includes(LEGAL_IDENTITY.address.street));
+    assert.ok(content.includes(ORGANIZATION.email));
+  }
   for (const [label, url] of [
     ['Discord', DISCORD_INVITE_URL],
     ['Instagram', INSTAGRAM_PROFILE_URL],
