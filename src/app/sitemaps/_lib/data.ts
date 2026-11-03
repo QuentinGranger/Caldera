@@ -63,6 +63,7 @@ const STATIC_PAGES: readonly { path: string; updated?: string }[] = [
     updated: chapter.updated,
   })),
   { path: '/contact' },
+  { path: '/liens' },
   { path: '/cgv' },
   { path: '/mentions-legales' },
   { path: '/confidentialite' },

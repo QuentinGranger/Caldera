@@ -11,6 +11,7 @@ export function StorefrontOnly({
 }) {
   const path = usePathname();
   return (hideOnCart && path === '/panier') ||
+    path === '/liens' ||
     path === '/checkout' ||
     path.startsWith('/checkout/') ||
     path === '/admin' ||

@@ -39,6 +39,7 @@ main {
 // Standalone full-screen experiences hide the normal shop chrome on the
 // server-rendered markup, without a client effect or a flash.
 body:has([data-caldera-not-found]) .storefront-chrome,
+body:has([data-caldera-links]) .storefront-chrome,
 body:has([data-caldera-construction]) .storefront-chrome {
   display: none;
 }

@@ -1,0 +1,332 @@
+@use '../../styles/abstracts/variables' as v;
+
+.main {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  min-height: 100svh;
+  padding: clamp(2rem, 6vh, 5rem) 1.25rem;
+  overflow: hidden;
+  color: v.$color-text-on-dark;
+  background: v.$color-night;
+}
+
+.landscape {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background:
+      linear-gradient(90deg, #03140e45, #03140ef0 68%),
+      linear-gradient(0deg, #03140e 0%, transparent 65%, #03140e66 100%);
+  }
+}
+
+.landscapeImage {
+  object-fit: cover;
+  object-position: 30% center;
+  opacity: 0.85;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(3rem, 7vw, 8rem);
+  width: min(100%, 70rem);
+  margin-inline: auto;
+}
+
+.intro {
+  padding-bottom: 1.5rem;
+
+  h1 {
+    margin: 1.4rem 0 1.1rem;
+    font-size: clamp(3.8rem, 6.5vw, 6.5rem);
+    letter-spacing: -0.035em;
+    line-height: 0.94;
+
+    em {
+      display: block;
+      color: v.$color-gold-light;
+      font-weight: 400;
+    }
+  }
+}
+
+.emblem {
+  display: inline-flex;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e8c26155;
+  border-radius: 50%;
+  padding: 0.3rem;
+  background: v.$color-night;
+
+  img {
+    width: 4.75rem;
+    height: 4.75rem;
+    border-radius: 50%;
+  }
+}
+
+.eyebrow,
+.independent {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  color: v.$color-gold-light;
+}
+.independent {
+  color: #d1d6c4;
+  letter-spacing: 0.12em;
+}
+.motto {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #ece8d7;
+}
+
+.signature {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 10rem;
+  margin: 2.4rem 0 1rem;
+  color: v.$color-gold;
+
+  span {
+    flex: 1;
+    height: 1px;
+    background: #e8c26166;
+  }
+}
+
+.invitation {
+  margin: 0 0 1.4rem;
+  font-family: v.$font-heading;
+  font-size: 1.8rem;
+  font-style: italic;
+  color: v.$color-cream;
+}
+
+.destinations nav {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 6.4rem;
+  border: 1px solid #e8c26138;
+  border-radius: 0.6rem;
+  padding: 1.1rem 1.2rem;
+  background: #08261cdd;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: #e8c261aa;
+    background: #10382add;
+  }
+
+  &:focus-visible {
+    outline-color: v.$color-gold-light;
+  }
+}
+
+.icon {
+  display: grid;
+  flex: 0 0 2.5rem;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: v.$color-gold-light;
+}
+
+.cardText {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.cardEyebrow {
+  font-size: 0.63rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d8c798;
+}
+.cardTitle {
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.cardDescription {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #c3cec4;
+}
+.arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: v.$color-gold;
+}
+
+.featured {
+  border-color: v.$color-gold;
+  background: linear-gradient(115deg, #f1d084, #e8c261);
+  color: v.$color-night;
+  box-shadow: 0 10px 40px #0003;
+
+  .cardEyebrow {
+    color: #36503a;
+  }
+  .cardDescription {
+    color: #304831;
+  }
+  .icon,
+  .arrow {
+    color: v.$color-green-dark;
+  }
+  &:hover {
+    background: v.$color-gold-light;
+    border-color: v.$color-gold-light;
+  }
+}
+
+.footer {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  margin-top: 1.7rem;
+  font-size: 0.75rem;
+  color: #c5cdbb;
+
+  a:hover {
+    color: v.$color-gold-light;
+  }
+}
+
+.instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+}
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+}
+.footerLinks a {
+  padding-block: 0.45rem;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 47.99rem) {
+  .main {
+    padding: 2rem 1.15rem 1.4rem;
+    align-items: start;
+  }
+  .shell {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+    max-width: 29rem;
+  }
+  .intro {
+    padding-bottom: 0;
+    text-align: center;
+  }
+  .emblem {
+    margin-bottom: 0.85rem;
+    img {
+      width: 3.75rem;
+      height: 3.75rem;
+    }
+  }
+  .eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.17em;
+  }
+  .intro h1 {
+    margin: 0.8rem 0;
+    font-size: 3.1rem;
+    line-height: 0.98;
+  }
+  .motto {
+    font-size: 0.77rem;
+  }
+  .signature {
+    display: none;
+  }
+  .independent {
+    margin-top: 0.75rem;
+    font-size: 0.57rem;
+    letter-spacing: 0.08em;
+  }
+  .invitation {
+    margin-bottom: 0.8rem;
+    font-size: 1.4rem;
+    text-align: center;
+  }
+  .destinations nav {
+    gap: 0.65rem;
+  }
+  .card {
+    min-height: 5.35rem;
+    padding: 0.85rem 0.85rem;
+    gap: 0.6rem;
+  }
+  .icon {
+    flex-basis: 1.9rem;
+    width: 1.9rem;
+  }
+  .cardTitle {
+    font-size: 0.86rem;
+  }
+  .cardEyebrow {
+    font-size: 0.57rem;
+  }
+  .cardDescription {
+    font-size: 0.75rem;
+  }
+  .arrow {
+    width: 1rem;
+  }
+  .footer {
+    margin-top: 1.1rem;
+    gap: 0.4rem;
+  }
+  .landscape::after {
+    background: linear-gradient(
+      0deg,
+      #03140e 0%,
+      #03140eec 45%,
+      #03140e77 100%
+    );
+  }
+  .landscapeImage {
+    object-position: 26% top;
+  }
+}

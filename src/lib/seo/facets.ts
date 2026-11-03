@@ -90,6 +90,7 @@ export const RESERVED_ROOT_SLUGS: ReadonlySet<string> = new Set([
   'compte',
   'confidentialite',
   'contact',
+  'liens',
   'extensions',
   'fonts',
   'media',

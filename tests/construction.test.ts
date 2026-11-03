@@ -41,6 +41,54 @@ test('launch curtain opens only the account and keeps storefront closed even wit
   }
 });
 
+test('the public link hub and newsletter work before opening without exposing shop routes', async () => {
+  const previousOpen = process.env.STORE_OPEN;
+  const previousDemo = process.env.CATALOG_DEMO_MODE;
+  delete process.env.STORE_OPEN;
+  process.env.CATALOG_DEMO_MODE = '1';
+  try {
+    for (const path of [
+      '/liens',
+      '/newsletter',
+      '/newsletter/confirmation',
+      '/newsletter/desinscription',
+      '/confidentialite',
+    ]) {
+      const response = await proxy(
+        new NextRequest(`https://lesterresdecaldera.fr${path}`),
+      );
+      assert.equal(response.headers.get('x-middleware-rewrite'), null, path);
+      if (path === '/liens')
+        assert.equal(response.headers.get('x-robots-tag'), null);
+      if (path.startsWith('/newsletter')) {
+        assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+        assert.match(response.headers.get('cache-control')!, /no-store/);
+      }
+    }
+    for (const path of [
+      '/liens-fake',
+      '/liens/fake',
+      '/newsletter-fake',
+      '/catalogue',
+      '/checkout',
+    ]) {
+      const response = await proxy(
+        new NextRequest(`https://lesterresdecaldera.fr${path}`),
+      );
+      assert.equal(
+        new URL(response.headers.get('x-middleware-rewrite')!).pathname,
+        '/en-construction',
+        path,
+      );
+    }
+  } finally {
+    if (previousOpen === undefined) delete process.env.STORE_OPEN;
+    else process.env.STORE_OPEN = previousOpen;
+    if (previousDemo === undefined) delete process.env.CATALOG_DEMO_MODE;
+    else process.env.CATALOG_DEMO_MODE = previousDemo;
+  }
+});
+
 // Opening is controlled by the server environment; credentials stay protected.
 test('opening the store removes the curtain while private pages retain noindex', async () => {
   const previous = process.env.STORE_OPEN;

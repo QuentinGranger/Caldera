@@ -39,6 +39,7 @@ export async function Footer() {
         ...(navigation.extensions ? [navigation.extensions] : []),
         ...(navigation.calendar ? [navigation.calendar] : []),
         navigation.guides,
+        { label: 'Tous nos liens', href: '/liens' },
         ...(navigation.news ? [navigation.news] : []),
       ],
     },

@@ -56,6 +56,16 @@ function shouldShowConstruction(request: NextRequest) {
     return false;
   if (pathname === CONSTRUCTION_PATH) return false;
 
+  // The Instagram landing and newsletter remain usable before sales open.
+  // Keep exact path boundaries: this never opens a catalogue or checkout.
+  if (
+    pathname === '/liens' ||
+    pathname === '/newsletter' ||
+    pathname.startsWith('/newsletter/') ||
+    pathname === '/confidentialite'
+  )
+    return false;
+
   // Image routes must stay as real image responses. Next.js serves app/icon.png
   // through /icon and its optimizer fetches /media/<validated UUID> internally;
   // rewriting either route would break the favicon or admin product images.
@@ -245,7 +255,11 @@ export async function proxy(request: NextRequest) {
     pathname === '/univers/carnets' || pathname.startsWith('/univers/carnets/');
   // The demo catalogue is not indexable. Real editorial Carnets determine
   // their own robots metadata from the release date, independently of stock.
-  if (process.env.CATALOG_DEMO_MODE === '1' && !isCarnet)
+  if (
+    process.env.CATALOG_DEMO_MODE === '1' &&
+    !isCarnet &&
+    pathname !== '/liens'
+  )
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   if (isCarnet)
     response.headers.set('Cache-Control', 'private, no-store, max-age=0');

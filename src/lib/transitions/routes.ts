@@ -47,6 +47,7 @@ const FIRST_SEGMENT: Readonly<Record<string, RouteKind>> = {
   livraison: 'UTILITY',
   retractation: 'UTILITY',
   contact: 'UTILITY',
+  liens: 'UTILITY',
   'en-construction': 'UTILITY',
   media: 'UTILITY',
   api: 'UTILITY',
