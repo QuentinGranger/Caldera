@@ -42,7 +42,7 @@ export default function LinksPage() {
       href: '/',
       icon: Compass,
       eyebrow: 'Le site officiel',
-      title: preparing ? 'Découvrir la boutique' : 'Explorer la boutique',
+      title: 'Découvrir la boutique',
       description: preparing
         ? 'Notre univers et le catalogue de démonstration.'
         : 'Cartes Pokémon, boosters, coffrets et collections.',
