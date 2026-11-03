@@ -10,6 +10,7 @@ import {
   safeAnalyticsPath,
 } from '@/lib/analytics/client';
 import styles from './CommerceAnalytics.module.scss';
+import { OPEN_COOKIE_PREFERENCES_EVENT } from './CookiePreferencesButton';
 
 type Gtag = (...args: unknown[]) => void;
 export function CommerceAnalytics({
@@ -39,8 +40,16 @@ export function CommerceAnalytics({
       }
     };
     read();
+    const openPreferences = () => setChoice('unknown');
     window.addEventListener('storage', read);
-    return () => window.removeEventListener('storage', read);
+    window.addEventListener(OPEN_COOKIE_PREFERENCES_EVENT, openPreferences);
+    return () => {
+      window.removeEventListener('storage', read);
+      window.removeEventListener(
+        OPEN_COOKIE_PREFERENCES_EVENT,
+        openPreferences,
+      );
+    };
   }, [configured]);
   useEffect(() => {
     if (!configured || choice !== 'yes') return;
@@ -182,9 +191,5 @@ export function CommerceAnalytics({
         <button onClick={() => choose(true)}>Accepter la mesure</button>
       </div>
     </section>
-  ) : (
-    <button className={styles.preferences} onClick={() => setChoice('unknown')}>
-      Cookies · préférences
-    </button>
-  );
+  ) : null;
 }

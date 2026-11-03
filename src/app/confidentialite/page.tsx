@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { Container } from '@/components/ui/Container/Container';
+import { CookiePreferencesButton } from '@/components/monitoring/CookiePreferencesButton';
 import {
   editorialDecision,
   editorialMetadata,
@@ -928,6 +929,9 @@ export default function ConfidentialitePage() {
                 Le bouton « Cookies · préférences » permet de modifier votre
                 choix à tout moment ; refuser ne bloque pas les achats.
               </p>
+              <CookiePreferencesButton
+                measurementId={process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID}
+              />
             </Section>
 
             <Section id="section-10" title="10. Sécurité">

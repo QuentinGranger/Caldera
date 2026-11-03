@@ -11,6 +11,7 @@ import { getSiteNavigation, type NavLink } from '@/data/navigation';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { ORGANIZATION } from '@/lib/seo/policies';
 import { FooterSocialLinks } from './FooterSocialLinks';
+import { CookiePreferencesButton } from '@/components/monitoring/CookiePreferencesButton';
 import styles from './Footer.module.scss';
 
 /**
@@ -113,6 +114,15 @@ export async function Footer() {
                       <Link href={link.href}>{link.label}</Link>
                     </li>
                   ))}
+                  {group.title === 'Légal' && (
+                    <li>
+                      <CookiePreferencesButton
+                        measurementId={
+                          process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+                        }
+                      />
+                    </li>
+                  )}
                 </ul>
               </div>
             ))}

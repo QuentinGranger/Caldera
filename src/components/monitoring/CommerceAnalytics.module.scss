@@ -40,15 +40,13 @@
   }
 }
 .preferences {
-  position: fixed;
-  bottom: 8px;
-  left: 8px;
-  z-index: 100;
-  padding: 8px 12px;
-  background: #fffcf5;
-  color: #173e32;
-  border: 1px solid #b9a56b;
-  border-radius: 6px;
-  font-size: 11px;
+  min-height: 44px;
+  padding: 0.4rem 0;
+  background: none;
+  color: inherit;
+  border: 0;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
