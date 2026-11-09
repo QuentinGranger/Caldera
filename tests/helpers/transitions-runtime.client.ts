@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  arrivalDuration,
   beginNavigation,
   notePath,
   presentArrival,
@@ -25,6 +26,7 @@ test('real scenery is independent of native captures and remains disposable', as
   const frames = new Map<number, FrameRequestCallback>();
   let frameId = 0;
   let reduced = false;
+  let mobile = false;
   let native = false;
   const root = { dataset, style: { setProperty() {}, removeProperty() {} } };
   const fakeDocument = {
@@ -38,7 +40,9 @@ test('real scenery is independent of native captures and remains disposable', as
         origin: 'https://caldera.test',
         href: 'https://caldera.test/',
       },
-      matchMedia: () => ({ matches: reduced }),
+      matchMedia: (query: string) => ({
+        matches: query.includes('prefers-reduced-motion') ? reduced : mobile,
+      }),
     },
     document: fakeDocument,
     CSS: { supports: () => native },
@@ -66,6 +70,7 @@ test('real scenery is independent of native captures and remains disposable', as
     resetPresentation();
     native = false;
     reduced = false;
+    mobile = false;
     notePath('/');
   };
   try {
@@ -131,24 +136,64 @@ test('real scenery is independent of native captures and remains disposable', as
       },
     );
     await t.test(
-      'a slow route releases the departure curtain within 900 ms',
+      'mobile uses shorter entrances without changing navigation semantics',
+      () => {
+        prepare();
+        assert.equal(arrivalDuration('shop'), 320);
+        assert.equal(arrivalDuration('enter-world'), 560);
+        mobile = true;
+        assert.equal(arrivalDuration('shop'), 240);
+        assert.equal(arrivalDuration('enter-world'), 420);
+        beginNavigation('/univers', 'push');
+        presentArrival('/univers');
+        assert.equal(dataset.calderaArrival, 'enter-world');
+      },
+    );
+    await t.test(
+      'a mismatched commit cannot consume the pending arrival',
+      () => {
+        prepare();
+        beginNavigation('/univers', 'push');
+        presentArrival('/catalogue');
+        assert.equal(dataset.calderaArrival, undefined);
+        presentArrival('/univers');
+        assert.equal(dataset.calderaArrival, 'enter-world');
+      },
+    );
+    await t.test('a second journey cancels the first entrance cleanup', (t) => {
+      prepare();
+      t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+      beginNavigation('/catalogue', 'push');
+      presentArrival('/catalogue');
+      t.mock.timers.tick(100);
+      beginNavigation('/univers', 'push');
+      presentArrival('/univers');
+      t.mock.timers.tick(221);
+      assert.equal(dataset.calderaArrival, 'enter-world');
+      assert.equal(dataset.calderaMotion, 'live');
+      t.mock.timers.tick(340);
+      assert.equal(dataset.calderaMotion, undefined);
+    });
+    await t.test(
+      'slow routes release the departure and receive a full entrance at commit',
       (t) => {
         prepare();
         t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
         beginNavigation('/univers', 'push');
         assert.equal(dataset.calderaMotion, 'departing');
-        t.mock.timers.tick(901);
+        t.mock.timers.tick(241);
         assert.equal(dataset.calderaMotion, undefined);
+        t.mock.timers.tick(2000);
         presentArrival('/univers');
-        assert.equal(dataset.calderaMotion, undefined);
-        t.mock.timers.tick(1001);
+        assert.equal(dataset.calderaMotion, 'live');
+        t.mock.timers.tick(561);
         assert.equal(dataset.calderaMotion, undefined);
         prepare();
         beginNavigation('/univers', 'push');
         t.mock.timers.tick(350);
         presentArrival('/univers');
         assert.equal(dataset.calderaMotion, 'live');
-        t.mock.timers.tick(551);
+        t.mock.timers.tick(561);
         assert.equal(dataset.calderaMotion, undefined);
       },
     );

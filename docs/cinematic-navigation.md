@@ -1,5 +1,30 @@
 # Navigation cinématique Caldera
 
+## Révision du 9 novembre 2026
+
+Le rideau montant décrit dans l’historique ci-dessous est remplacé par une brume
+translucide et un fondu du contenu en 200 ms. Le paysage se rapproche légèrement
+(1,012 → 1), les titres parcourent 8 px maximum et le déplacement entre chapitres
+reste orienté. Le header demeure stable et les contrôles restent utilisables.
+
+| Arrivée                            | Desktop | Mobile |
+| ---------------------------------- | ------- | ------ |
+| Boutique                           | 320 ms  | 240 ms |
+| Lecture                            | 360 ms  | 270 ms |
+| Produit                            | 480 ms  | 360 ms |
+| Univers et autres pages immersives | 560 ms  | 420 ms |
+
+Le départ est nettoyé en 240 ms. L’arrivée commence au commit avec sa propre
+durée, y compris après un chargement lent. Les premières visites, filtres,
+ancres, historique et pages utilitaires restent immédiats. Le mouvement réduit
+désactive tous les effets. Aucun ajout de dépendance ni attente du routeur.
+
+Les tests runtime couvrent aussi le remplacement d’une animation en cours, un
+commit qui ne correspond pas à la destination, et une route arrivant après
+plusieurs secondes. Les sections suivantes conservent l’historique précédent.
+
+## Historique
+
 Révision du 9 octobre 2026 après le signalement « aucune transition visible ».
 
 ## Problème et correction

@@ -26,7 +26,6 @@ let lastClick: { path: string; transition: string | null; at: number } | null =
 let pendingArrival: {
   path: string;
   name: TransitionName | null;
-  at: number;
 } | null = null;
 
 /*
@@ -35,6 +34,23 @@ let pendingArrival: {
  * from native hit-testing. Navigation remains live during the animation.
  */
 let stageTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Arrival has its own short timeline, independent of network latency. */
+export function arrivalDuration(name: TransitionName) {
+  const duration =
+    name === 'instant'
+      ? 0
+      : name === 'shop'
+        ? 320
+        : name === 'archive'
+          ? 360
+          : name === 'product' || name === 'product-return'
+            ? 480
+            : 560;
+  return window.matchMedia('(max-width: 47.99rem)').matches
+    ? Math.round(duration * 0.75)
+    : duration;
+}
 
 /** Native capabilities are needed only for optional product-image morphs. */
 export function canAnimateJourney() {
@@ -53,7 +69,6 @@ export function resetPresentation() {
   delete document.documentElement.dataset.calderaArrival;
   delete document.documentElement.dataset.calderaMotion;
   document.documentElement.style.removeProperty('--caldera-chrome-bottom');
-  document.documentElement.style.removeProperty('--caldera-veil-start');
   document.documentElement.style.removeProperty('--caldera-journey-budget');
 }
 
@@ -61,8 +76,8 @@ function stage(on: boolean) {
   resetPresentation();
   if (!on) return;
   document.documentElement.dataset.calderaMotion = 'departing';
-  // A slow/failed route never leaves an opaque curtain over the current page.
-  stageTimer = setTimeout(resetPresentation, 900);
+  // Keep the current page visible and release it quickly if navigation stalls.
+  stageTimer = setTimeout(resetPresentation, 240);
 }
 
 const decode = (path: string) => {
@@ -102,7 +117,7 @@ export function beginNavigation(url: string, navigation: string) {
     ) {
       setActiveCard(null);
       setReturnSlug(null);
-      pendingArrival = { path: target.pathname, name: null, at: Date.now() };
+      pendingArrival = { path: target.pathname, name: null };
       return stage(false);
     }
     const click =
@@ -125,7 +140,7 @@ export function beginNavigation(url: string, navigation: string) {
         ? productSlug(from)
         : null,
     );
-    pendingArrival = { path: target.pathname, name: journey, at: Date.now() };
+    pendingArrival = { path: target.pathname, name: journey };
     stage(journey !== null && journey !== 'instant');
     // Native snapshots are reserved for the shared product image. A browser
     // callback is not evidence that a decorative capture painted anything.
@@ -156,7 +171,6 @@ export function takeArrival(pathname: string) {
  * type. No native callback can prematurely suppress or remove the entrance. */
 export function presentArrival(pathname: string) {
   notePath(pathname);
-  const departedAt = pendingArrival?.at;
   const arrival = takeArrival(pathname);
   if (arrival === undefined) return;
   if (
@@ -165,21 +179,13 @@ export function presentArrival(pathname: string) {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
     return resetPresentation();
-  const elapsed = Math.max(0, Date.now() - (departedAt ?? Date.now()));
-  const budget = Math.max(0, 900 - elapsed);
-  if (!budget) return resetPresentation();
+  const budget = arrivalDuration(arrival);
   const root = document.documentElement;
   root.style.setProperty('--caldera-journey-budget', `${budget}ms`);
-  // Continue the same upward movement even if the cached route lands quickly.
-  const remaining = Math.max(
-    0,
-    1 - (Date.now() - (departedAt ?? Date.now())) / 220,
-  );
-  root.style.setProperty('--caldera-veil-start', `${remaining * 100}%`);
   root.dataset.calderaArrival = arrival;
   root.dataset.calderaMotion = 'live';
   clearTimeout(stageTimer);
-  // Departure and arrival share one 900 ms budget, even on a slow route.
+  // Even a slow route gets a complete entrance when its content actually lands.
   stageTimer = setTimeout(() => {
     resetPresentation();
     setActiveCard(null);

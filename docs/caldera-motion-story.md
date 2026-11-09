@@ -73,12 +73,15 @@ flux normal. Le changement de préférence en cours de visite est pris en compte
 
 ## Signature de navigation
 
-Réaction immédiate au départ, voile minéral montant, puis révélation de la
-destination. Animation bornée à 900 ms, plus courte sur mobile ; aucun délai
-artificiel avant le routing ni contrôle désactivé. Le masque ne reçoit aucun
-événement. Les produits gardent leur morph facultatif ; l’historique natif garde
-sa restauration du scroll sans seconde animation. Les navigations rapides
-remplacent la présentation précédente ; un garde-fou libère tout voile abandonné.
+Révision du 9 novembre 2026 : fondu discret au départ, puis arrivée du contenu
+en 200 ms avec de légers mouvements du décor et des titres. La brume est
+translucide ; aucun rideau opaque ne masque la page. Le départ est libéré en
+240 ms si la route tarde. L’arrivée dispose de sa propre durée au commit :
+320 ms en boutique, 360 ms en lecture, 480 ms pour le produit et 560 ms dans
+l’univers ; ces durées sont réduites de 25 % sur mobile. Aucun délai artificiel
+avant le routing ni contrôle désactivé. Les produits gardent leur morph
+facultatif ; l’historique natif garde sa restauration du scroll sans seconde
+animation. Une nouvelle navigation annule le nettoyage de la précédente.
 
 ## Vérifications
 
@@ -86,8 +89,9 @@ remplacent la présentation précédente ; un garde-fou libère tout voile aband
   fondu entre deux paysages voisins, calculs regroupés par frame, scènes hors
   écran ignorées, nettoyage et changement de préférence reduced-motion.
 - Le test de navigation vérifie le départ immédiat, les clics consécutifs,
-  l'historique, les filtres et un budget partagé de 900 ms entre départ/arrivée.
-  Une destination trop lente arrive directement une fois ce budget écoulé.
+  l’historique, les filtres, les durées mobiles et les commits intermédiaires.
+  Une destination lente dispose aussi d’une arrivée complète ; son temps de
+  chargement ne réduit plus la durée du fondu.
 - Contrôles visuels locaux dans Chromium, Safari et Firefox ; Hero au scroll,
   territoires, chapitre des origines et continuité avec la newsletter.
 - Viewports 390 × 844, 844 × 390 et desktop : pas de débordement horizontal,
