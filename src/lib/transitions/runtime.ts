@@ -26,7 +26,70 @@ let lastClick: { path: string; transition: string | null; at: number } | null =
 let pendingArrival: {
   path: string;
   name: TransitionName | null;
+  landscape: LandscapeSnapshot | null;
 } | null = null;
+
+type LandscapeSnapshot = {
+  src: string;
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  position: string;
+  radius: string;
+  filter: string;
+};
+let landscapeSnapshot: LandscapeSnapshot | null = null;
+const landscapeListeners = new Set<() => void>();
+function setLandscape(snapshot: LandscapeSnapshot | null) {
+  if (landscapeSnapshot === snapshot) return;
+  landscapeSnapshot = snapshot;
+  for (const listener of landscapeListeners) listener();
+}
+export const landscapeTransitions = {
+  subscribe(listener: () => void) {
+    landscapeListeners.add(listener);
+    return () => {
+      landscapeListeners.delete(listener);
+    };
+  },
+  get: () => landscapeSnapshot,
+  getServer: () => null,
+};
+
+/** Retain only the already loaded decorative image, never text or controls. */
+function captureLandscape(): LandscapeSnapshot | null {
+  try {
+    const landscape = document.querySelector<HTMLElement>(
+      '[data-caldera-landscape]',
+    );
+    const image = landscape?.querySelector('img');
+    if (!landscape || !image?.complete || !image.naturalWidth) return null;
+    const rect = landscape.getBoundingClientRect();
+    const headerBottom =
+      document.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
+    if (
+      !rect.width ||
+      !rect.height ||
+      rect.bottom <= headerBottom ||
+      rect.top >= window.innerHeight
+    )
+      return null;
+    const imageStyle = window.getComputedStyle(image);
+    return {
+      src: image.currentSrc || image.src,
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      position: imageStyle.objectPosition,
+      radius: window.getComputedStyle(landscape).borderRadius,
+      filter: imageStyle.filter,
+    };
+  } catch {
+    return null;
+  }
+}
 
 /*
  * Only the selected product image is captured. Never name the HTML,
@@ -41,14 +104,14 @@ export function arrivalDuration(name: TransitionName) {
     name === 'instant'
       ? 0
       : name === 'shop'
-        ? 320
+        ? 700
         : name === 'archive'
-          ? 360
+          ? 620
           : name === 'product' || name === 'product-return'
-            ? 480
-            : 560;
+            ? 650
+            : 900;
   return window.matchMedia('(max-width: 47.99rem)').matches
-    ? Math.round(duration * 0.75)
+    ? Math.round(duration * 0.8)
     : duration;
 }
 
@@ -66,6 +129,7 @@ export function canAnimateJourney() {
 
 export function resetPresentation() {
   clearTimeout(stageTimer);
+  setLandscape(null);
   delete document.documentElement.dataset.calderaArrival;
   delete document.documentElement.dataset.calderaMotion;
   document.documentElement.style.removeProperty('--caldera-chrome-bottom');
@@ -75,6 +139,7 @@ export function resetPresentation() {
 function stage(on: boolean) {
   resetPresentation();
   if (!on) return;
+  measureChrome();
   document.documentElement.dataset.calderaMotion = 'departing';
   // Keep the current page visible and release it quickly if navigation stalls.
   stageTimer = setTimeout(resetPresentation, 240);
@@ -93,6 +158,9 @@ const sameDestination = (a: string, b: string) =>
 /** The page on screen, once React has committed it. */
 export function notePath(pathname: string) {
   currentPath = pathname;
+  measureChrome();
+}
+function measureChrome() {
   const header = document.querySelector('header');
   document.documentElement.style.setProperty(
     '--caldera-chrome-bottom',
@@ -117,7 +185,7 @@ export function beginNavigation(url: string, navigation: string) {
     ) {
       setActiveCard(null);
       setReturnSlug(null);
-      pendingArrival = { path: target.pathname, name: null };
+      pendingArrival = { path: target.pathname, name: null, landscape: null };
       return stage(false);
     }
     const click =
@@ -140,7 +208,11 @@ export function beginNavigation(url: string, navigation: string) {
         ? productSlug(from)
         : null,
     );
-    pendingArrival = { path: target.pathname, name: journey };
+    pendingArrival = {
+      path: target.pathname,
+      name: journey,
+      landscape: journey && journey !== 'instant' ? captureLandscape() : null,
+    };
     stage(journey !== null && journey !== 'instant');
     // Native snapshots are reserved for the shared product image. A browser
     // callback is not evidence that a decorative capture painted anything.
@@ -171,6 +243,7 @@ export function takeArrival(pathname: string) {
  * type. No native callback can prematurely suppress or remove the entrance. */
 export function presentArrival(pathname: string) {
   notePath(pathname);
+  const previousLandscape = pendingArrival?.landscape ?? null;
   const arrival = takeArrival(pathname);
   if (arrival === undefined) return;
   if (
@@ -180,6 +253,7 @@ export function presentArrival(pathname: string) {
   )
     return resetPresentation();
   const budget = arrivalDuration(arrival);
+  setLandscape(previousLandscape);
   const root = document.documentElement;
   root.style.setProperty('--caldera-journey-budget', `${budget}ms`);
   root.dataset.calderaArrival = arrival;

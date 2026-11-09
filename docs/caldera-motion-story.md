@@ -73,12 +73,14 @@ flux normal. Le changement de préférence en cours de visite est pris en compte
 
 ## Signature de navigation
 
-Révision du 9 novembre 2026 : fondu discret au départ, puis arrivée du contenu
-en 200 ms avec de légers mouvements du décor et des titres. La brume est
-translucide ; aucun rideau opaque ne masque la page. Le départ est libéré en
-240 ms si la route tarde. L’arrivée dispose de sa propre durée au commit :
-320 ms en boutique, 360 ms en lecture, 480 ms pour le produit et 560 ms dans
-l’univers ; ces durées sont réduites de 25 % sur mobile. Aucun délai artificiel
+Révision du 9 novembre 2026 : le paysage précédent reste présent le temps de se
+dissoudre dans le suivant, accompagné d’une brume en mouvement. Les titres
+arrivent en décalé ; les pages Pokémon, Produits scellés et Extensions participent
+à la même séquence. Le décor sortant est gardé uniquement lorsqu’il est chargé et
+visible. Le départ est libéré en 240 ms si la route tarde. L’arrivée dispose de sa
+propre durée au commit : 700 ms en boutique, 620 ms en lecture, 650 ms pour le
+produit et 900 ms dans l’univers ; ces durées sont réduites de 20 % sur mobile.
+Aucun délai artificiel
 avant le routing ni contrôle désactivé. Les produits gardent leur morph
 facultatif ; l’historique natif garde sa restauration du scroll sans seconde
 animation. Une nouvelle navigation annule le nettoyage de la précédente.

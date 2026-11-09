@@ -2,17 +2,22 @@
 
 ## Révision du 9 novembre 2026
 
-Le rideau montant décrit dans l’historique ci-dessous est remplacé par une brume
-translucide et un fondu du contenu en 200 ms. Le paysage se rapproche légèrement
-(1,012 → 1), les titres parcourent 8 px maximum et le déplacement entre chapitres
-reste orienté. Le header demeure stable et les contrôles restent utilisables.
+La navigation conserve l’image déjà chargée du paysage de départ et la dissout
+dans le suivant. Une brume traverse ce raccord ; le nouveau paysage se rapproche
+(1,055 → 1) et les titres arrivent en décalé sur 22 px maximum. Les illustrations
+des pages Pokémon, Produits scellés et Extensions entrent aussi dans la séquence.
+Le header demeure stable et les contrôles restent utilisables.
+
+Le décor sortant est conservé par URL et géométrie, sans capture du texte ou des
+contrôles, puis libéré en fin d’animation. Un décor hors écran ou non chargé ne
+participe pas au raccord. Les captures natives restent réservées aux produits.
 
 | Arrivée                            | Desktop | Mobile |
 | ---------------------------------- | ------- | ------ |
-| Boutique                           | 320 ms  | 240 ms |
-| Lecture                            | 360 ms  | 270 ms |
-| Produit                            | 480 ms  | 360 ms |
-| Univers et autres pages immersives | 560 ms  | 420 ms |
+| Boutique                           | 700 ms  | 560 ms |
+| Lecture                            | 620 ms  | 496 ms |
+| Produit                            | 650 ms  | 520 ms |
+| Univers et autres pages immersives | 900 ms  | 720 ms |
 
 Le départ est nettoyé en 240 ms. L’arrivée commence au commit avec sa propre
 durée, y compris après un chargement lent. Les premières visites, filtres,

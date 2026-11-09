@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowDown, ArrowUpRight, CalendarDays } from 'lucide-react';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import buttonStyles from '@/components/ui/Button/Button.module.scss';
 import styles from './ExtensionsWorld.module.scss';
 
@@ -15,7 +16,12 @@ const illustrations = [
 export function ExtensionsHero({ calendar }: { calendar: boolean }) {
   return (
     <section className={styles.hero} aria-labelledby="page-title">
-      <div className={styles.landscape} data-depth-landscape aria-hidden="true">
+      <div
+        className={styles.landscape}
+        data-depth-landscape
+        data-caldera-landscape
+        aria-hidden="true"
+      >
         <Image
           src="/assets/images/editorial/foret.png"
           alt=""
@@ -31,39 +37,43 @@ export function ExtensionsHero({ calendar }: { calendar: boolean }) {
         />
         <div className={styles.composition}>
           <div className={styles.copy}>
-            <p className={styles.eyebrow}>L’atlas des collections</p>
-            <h1 id="page-title">
-              Extensions.
-              <br />
-              <em>De nouveaux horizons.</em>
-            </h1>
-            <p className={styles.lead}>
-              Chaque extension ouvre un nouvel univers. Retrouvez les sorties
-              annoncées, les dernières parutions et les collections déjà
-              sorties.
-            </p>
-            <div className={styles.actions}>
-              <a
-                href="#chronologie"
-                className={`${buttonStyles.button} ${buttonStyles.gold}`}
-              >
-                Parcourir les extensions{' '}
-                <ArrowDown size={18} aria-hidden="true" />
-              </a>
-              {calendar ? (
-                <Link href="/calendrier-des-sorties">
-                  Le calendrier <ArrowUpRight size={17} aria-hidden="true" />
-                </Link>
-              ) : (
-                <Link href="/pokemon">
-                  Explorer Pokémon <ArrowUpRight size={17} aria-hidden="true" />
-                </Link>
-              )}
-            </div>
+            <ArrivalLayers>
+              <p className={styles.eyebrow}>L’atlas des collections</p>
+              <h1 id="page-title">
+                Extensions.
+                <br />
+                <em>De nouveaux horizons.</em>
+              </h1>
+              <p className={styles.lead}>
+                Chaque extension ouvre un nouvel univers. Retrouvez les sorties
+                annoncées, les dernières parutions et les collections déjà
+                sorties.
+              </p>
+              <div className={styles.actions}>
+                <a
+                  href="#chronologie"
+                  className={`${buttonStyles.button} ${buttonStyles.gold}`}
+                >
+                  Parcourir les extensions{' '}
+                  <ArrowDown size={18} aria-hidden="true" />
+                </a>
+                {calendar ? (
+                  <Link href="/calendrier-des-sorties">
+                    Le calendrier <ArrowUpRight size={17} aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <Link href="/pokemon">
+                    Explorer Pokémon{' '}
+                    <ArrowUpRight size={17} aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+            </ArrivalLayers>
           </div>
           <div
             className={styles.scene}
             data-depth-stage="extensions-hero"
+            data-caldera-visual
             aria-hidden="true"
           >
             <span className={styles.aura} />

@@ -6,6 +6,7 @@ import {
   type BreadcrumbItem,
 } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { Button } from '@/components/ui/Button/Button';
+import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import styles from './PokemonWorld.module.scss';
 
 /** A short entrance to the shop, with depth on imagery and stable shopping links. */
@@ -33,7 +34,12 @@ export function PokemonHero({
       data-kind={kind}
       aria-labelledby="page-title"
     >
-      <div className={styles.landscape} aria-hidden="true" data-depth-landscape>
+      <div
+        className={styles.landscape}
+        aria-hidden="true"
+        data-depth-landscape
+        data-caldera-landscape
+      >
         <Image
           src={
             sealed
@@ -51,37 +57,40 @@ export function PokemonHero({
         <Breadcrumb items={breadcrumb} currentPath={path} />
         <div className={styles.composition}>
           <div className={styles.copy}>
-            <p className={styles.eyebrow}>{eyebrow}</p>
-            <h1 id="page-title">
-              {sealed ? (
-                <>
-                  {title.replace(/ Pokémon$/, '')}
-                  <br />
-                  <em>Pokémon.</em>
-                </>
-              ) : (
-                <>
-                  {title} <em>Tout un univers.</em>
-                </>
-              )}
-            </h1>
-            <p className={styles.lead}>{lead}</p>
-            <div className={styles.actions}>
-              {hasProducts && (
-                <Button href="#catalogue-resultats" variant="gold">
-                  Explorer les produits{' '}
-                  <ArrowDown size={18} aria-hidden="true" />
-                </Button>
-              )}
-              <Link href={sealed ? '/pokemon' : '/pokemon/scelles'}>
-                {sealed ? 'Tout Pokémon' : 'Les produits scellés'}{' '}
-                <ArrowUpRight size={17} aria-hidden="true" />
-              </Link>
-            </div>
+            <ArrivalLayers>
+              <p className={styles.eyebrow}>{eyebrow}</p>
+              <h1 id="page-title">
+                {sealed ? (
+                  <>
+                    {title.replace(/ Pokémon$/, '')}
+                    <br />
+                    <em>Pokémon.</em>
+                  </>
+                ) : (
+                  <>
+                    {title} <em>Tout un univers.</em>
+                  </>
+                )}
+              </h1>
+              <p className={styles.lead}>{lead}</p>
+              <div className={styles.actions}>
+                {hasProducts && (
+                  <Button href="#catalogue-resultats" variant="gold">
+                    Explorer les produits{' '}
+                    <ArrowDown size={18} aria-hidden="true" />
+                  </Button>
+                )}
+                <Link href={sealed ? '/pokemon' : '/pokemon/scelles'}>
+                  {sealed ? 'Tout Pokémon' : 'Les produits scellés'}{' '}
+                  <ArrowUpRight size={17} aria-hidden="true" />
+                </Link>
+              </div>
+            </ArrivalLayers>
           </div>
           <div
             className={styles.scene}
             data-depth-stage="hero"
+            data-caldera-visual
             aria-hidden="true"
           >
             <span className={styles.orbit} />

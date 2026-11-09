@@ -1,7 +1,8 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useSyncExternalStore } from 'react';
 import {
+  landscapeTransitions,
   noteClick,
   presentArrival,
   resetPresentation,
@@ -11,6 +12,11 @@ import {
  * Keying the stage restarts its CSS timeline for every destination. */
 export function TransitionStage() {
   const pathname = usePathname();
+  const landscape = useSyncExternalStore(
+    landscapeTransitions.subscribe,
+    landscapeTransitions.get,
+    landscapeTransitions.getServer,
+  );
   // First visits/reloads have no pending journey and remain immediately visible.
   useLayoutEffect(() => {
     presentArrival(pathname);
@@ -32,6 +38,21 @@ export function TransitionStage() {
   }, []);
   return (
     <div key={pathname} className="caldera-veil" aria-hidden="true">
+      {landscape && (
+        <div
+          className="caldera-veil__previous"
+          style={{
+            top: landscape.top,
+            left: landscape.left,
+            width: landscape.width,
+            height: landscape.height,
+            backgroundImage: `url(${JSON.stringify(landscape.src)})`,
+            backgroundPosition: landscape.position,
+            borderRadius: landscape.radius,
+            filter: landscape.filter,
+          }}
+        />
+      )}
       <div className="caldera-veil__mineral" />
     </div>
   );

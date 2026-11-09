@@ -6,21 +6,21 @@
   view-transition-name: none;
   --motion-instant: 100ms;
   --motion-fast: 240ms;
-  --motion-page: 320ms;
-  --motion-cinematic: 560ms;
+  --motion-page: 700ms;
+  --motion-cinematic: 900ms;
   --ease-caldera: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-caldera-enter: cubic-bezier(0.2, 0.65, 0.25, 1);
   --ease-caldera-exit: cubic-bezier(0.45, 0, 0.55, 1);
-  --motion-layer: 240ms;
-  --motion-layer-start: 40ms;
-  --motion-layer-step: 18ms;
+  --motion-layer: 460ms;
+  --motion-layer-start: 100ms;
+  --motion-layer-step: 40ms;
   --motion-depth: 1;
-  --motion-layer-distance: 8px;
+  --motion-layer-distance: 22px;
 
   @media (max-width: 47.99rem) {
-    --motion-page: 240ms;
-    --motion-cinematic: 420ms;
-    --motion-depth: 0.5;
+    --motion-page: 560ms;
+    --motion-cinematic: 720ms;
+    --motion-depth: 0.7;
   }
 }
 
@@ -41,13 +41,25 @@
 // Outside a journey this decorative layer has no paint, no events or semantics.
 .caldera-veil {
   position: fixed;
-  inset: var(--caldera-chrome-bottom, 0px) 0 0;
+  inset: 0;
+  clip-path: inset(var(--caldera-chrome-bottom, 0px) 0 0);
   z-index: 30;
   pointer-events: none;
   overflow: hidden;
   visibility: hidden;
   & * {
     pointer-events: none;
+  }
+}
+.caldera-veil__previous {
+  position: absolute;
+  background-size: cover;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(1 20 14 / 15%), rgb(1 20 14 / 55%));
   }
 }
 ::view-transition {
@@ -59,10 +71,10 @@
 ::view-transition-group(.caldera-product) {
   z-index: 4;
   overflow: clip;
-  animation-duration: 480ms;
+  animation-duration: 650ms;
   animation-timing-function: var(--ease-caldera);
   @media (max-width: 47.99rem) {
-    animation-duration: 360ms;
+    animation-duration: 520ms;
   }
 }
 ::view-transition-old(.caldera-product),
@@ -98,10 +110,11 @@
     --journey-duration: var(--motion-page);
   }
   @include journey(archive) {
-    --journey-duration: 360ms;
+    --journey-duration: 620ms;
   }
   @include journey(product, product-return) {
-    --journey-duration: 480ms;
+    --journey-duration: 650ms;
+    --atmosphere-strength: 0.5;
   }
   @include journey(chapter-forward) {
     --chapter-direction: 1;
@@ -112,30 +125,36 @@
 
   :root[data-caldera-motion='live'] {
     main {
-      animation: caldera-page-in 200ms ease-out both;
+      animation: caldera-page-in 420ms var(--ease-caldera) both;
     }
-    [data-caldera-landscape] {
+    [data-caldera-landscape]:not([data-depth-landscape]),
+    [data-caldera-landscape][data-depth-landscape] > img {
       animation: caldera-camera
-        min(var(--journey-duration), var(--caldera-journey-budget, 560ms))
+        min(var(--journey-duration), var(--caldera-journey-budget, 900ms))
         var(--ease-caldera-enter) both;
+    }
+    [data-caldera-visual] {
+      animation: caldera-object-in
+        min(650ms, var(--caldera-journey-budget, 900ms)) var(--ease-caldera)
+        both;
     }
     @for $layer from 0 through 5 {
       [data-caldera-layer='#{$layer}'] {
         animation: caldera-layer-in
           min(
             var(--motion-layer),
-            calc(var(--caldera-journey-budget, 560ms) * 0.55)
+            calc(var(--caldera-journey-budget, 900ms) * 0.55)
           )
           var(--ease-caldera-enter)
           calc(
             min(
                 var(--motion-layer-start),
-                var(--caldera-journey-budget, 560ms) * 0.08
+                var(--caldera-journey-budget, 900ms) * 0.08
               ) +
               #{$layer} *
               min(
                 var(--motion-layer-step),
-                var(--caldera-journey-budget, 560ms) * 0.025
+                var(--caldera-journey-budget, 900ms) * 0.025
               )
           )
           both;
@@ -144,18 +163,28 @@
     .caldera-veil {
       visibility: visible;
     }
+    .caldera-veil__previous {
+      animation: caldera-landscape-handoff
+        min(var(--journey-duration), var(--caldera-journey-budget, 900ms))
+        var(--ease-caldera) both;
+    }
   }
 
   .caldera-veil__mineral {
     position: absolute;
-    inset: 0;
+    inset: -35% -70%;
     background:
       radial-gradient(
-        ellipse at 80% 70%,
-        rgb(217 185 106 / 20%),
-        transparent 60%
+        ellipse at 35% 55%,
+        rgb(191 203 184 / 65%),
+        rgb(124 151 137 / 28%) 25%,
+        transparent 55%
       ),
-      linear-gradient(155deg, rgb(21 37 31 / 45%), rgb(3 20 14 / 24%) 65%);
+      radial-gradient(
+        ellipse at 65% 65%,
+        rgb(220 197 142 / 32%),
+        transparent 40%
+      );
   }
   :root[data-caldera-motion='departing'] {
     main {
@@ -170,16 +199,16 @@
   }
   :root[data-caldera-motion='live'] .caldera-veil__mineral {
     animation: caldera-mineral-reveal
-      min(var(--journey-duration), var(--caldera-journey-budget, 560ms))
+      min(var(--journey-duration), var(--caldera-journey-budget, 900ms))
       var(--ease-caldera-enter) both;
   }
 
   @media (max-width: 47.99rem) {
     @include journey(archive) {
-      --journey-duration: 270ms;
+      --journey-duration: 496ms;
     }
     @include journey(product, product-return) {
-      --journey-duration: 360ms;
+      --journey-duration: 520ms;
     }
   }
 }
@@ -187,9 +216,9 @@
 @keyframes caldera-camera {
   from {
     transform: translateX(
-        calc(1vw * var(--chapter-direction, 0) * var(--motion-depth))
+        calc(2vw * var(--chapter-direction, 0) * var(--motion-depth))
       )
-      scale(1.012);
+      scale(1.055);
   }
   to {
     transform: translateX(0) scale(1);
@@ -197,15 +226,25 @@
 }
 @keyframes caldera-layer-in {
   from {
-    opacity: 0.35;
+    opacity: 0;
     transform: translate(
-      calc(12px * var(--chapter-direction, 0) * var(--motion-depth)),
+      calc(24px * var(--chapter-direction, 0) * var(--motion-depth)),
       calc(var(--motion-layer-distance) * var(--motion-depth))
     );
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+@keyframes caldera-object-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 @keyframes caldera-dim {
@@ -215,7 +254,7 @@
 }
 @keyframes caldera-page-in {
   from {
-    opacity: 0.72;
+    opacity: 0.55;
   }
   to {
     opacity: 1;
@@ -224,20 +263,41 @@
 @keyframes caldera-mineral-cover {
   0% {
     opacity: 0;
+    transform: translate3d(-14%, 8%, 0);
   }
   45% {
-    opacity: 0.22;
+    opacity: 0.55;
   }
   100% {
     opacity: 0;
+    transform: translate3d(2%, 0, 0);
   }
 }
 @keyframes caldera-mineral-reveal {
   0% {
-    opacity: 0.18;
+    opacity: calc(0.85 * var(--atmosphere-strength, 1));
+    transform: translate3d(-10%, 8%, 0) scale(1.05);
+  }
+  40% {
+    opacity: calc(0.6 * var(--atmosphere-strength, 1));
   }
   100% {
     opacity: 0;
+    transform: translate3d(18%, -12%, 0) scale(1.1);
+  }
+}
+@keyframes caldera-landscape-handoff {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 0.65;
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-1vw * var(--chapter-direction, 0))) scale(1.03);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -246,6 +306,8 @@
   ::view-transition-new(*),
   :root[data-caldera-motion] main,
   [data-caldera-landscape],
+  [data-caldera-landscape] > img,
+  [data-caldera-visual],
   [data-caldera-layer],
   .caldera-veil * {
     animation: none !important;
