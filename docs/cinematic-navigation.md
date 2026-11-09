@@ -2,9 +2,17 @@
 
 ## Révision du 9 novembre 2026
 
+GSAP 3.15.1 pilote maintenant la chorégraphie via `src/lib/transitions/gsap.ts`.
+Le départ et l’arrivée utilisent des timelines, avec masques sur les titres,
+stagger, mouvement du paysage et brume synchronisés. Un `gsap.context()` restaure
+tous les styles lors d’une interruption, du mouvement réduit ou du démontage.
+Les animations CSS de ces participants sont désactivées pendant que GSAP est
+monté ; elles restent un fallback. Le routeur, son préchargement et ses liens
+restent indépendants de la bibliothèque d’animation.
+
 La navigation conserve l’image déjà chargée du paysage de départ et la dissout
 dans le suivant. Une brume traverse ce raccord ; le nouveau paysage se rapproche
-(1,055 → 1) et les titres arrivent en décalé sur 22 px maximum. Les illustrations
+(1,065 → 1) et les titres se dévoilent en décalé sur 28 px maximum, 18 px sur mobile. Les illustrations
 des pages Pokémon, Produits scellés et Extensions entrent aussi dans la séquence.
 Le header demeure stable et les contrôles restent utilisables.
 

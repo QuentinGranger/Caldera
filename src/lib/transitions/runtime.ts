@@ -102,6 +102,24 @@ function captureLandscape(): LandscapeSnapshot | null {
  */
 let stageTimer: ReturnType<typeof setTimeout> | undefined;
 
+export type JourneyAnimator = {
+  depart(): void;
+  arrive(name: TransitionName, duration: number, complete: () => void): void;
+  reset(): void;
+};
+let animator: JourneyAnimator | null = null;
+
+/** The renderer registers its animation library without coupling routing to it. */
+export function installJourneyAnimator(next: JourneyAnimator) {
+  animator = next;
+  document.documentElement.dataset.calderaAnimator = 'gsap';
+  return () => {
+    resetPresentation();
+    animator = null;
+    delete document.documentElement.dataset.calderaAnimator;
+  };
+}
+
 /** Arrival has its own short timeline, independent of network latency. */
 export function arrivalDuration(name: TransitionName) {
   const duration =
@@ -134,6 +152,7 @@ export function canAnimateJourney() {
 export function resetPresentation() {
   clearTimeout(stageTimer);
   stageTimer = undefined;
+  animator?.reset();
   setLandscape(null);
   delete document.documentElement.dataset.calderaArrival;
   delete document.documentElement.dataset.calderaMotion;
@@ -148,6 +167,7 @@ function stage(on: boolean) {
   if (!on) return;
   measureChrome();
   document.documentElement.dataset.calderaMotion = 'departing';
+  animator?.depart();
   // A failed navigation eventually releases the scene; the page stays usable.
   stageTimer = setTimeout(resetPresentation, 4000);
 }
@@ -282,11 +302,18 @@ export function presentArrival(pathname: string) {
   root.dataset.calderaMotion = 'live';
   clearTimeout(stageTimer);
   // Even a slow route gets a complete entrance when its content actually lands.
-  stageTimer = setTimeout(() => {
+  const complete = () => {
     resetPresentation();
     setActiveCard(null);
     setReturnSlug(null);
-  }, budget);
+  };
+  if (animator) {
+    animator.arrive(arrival, budget, complete);
+    // GSAP owns completion; this timer only releases an interrupted renderer.
+    stageTimer = setTimeout(complete, budget + 160);
+  } else {
+    stageTimer = setTimeout(complete, budget);
+  }
 }
 
 /** Remembers the link that starts a navigation, before React handles it. */

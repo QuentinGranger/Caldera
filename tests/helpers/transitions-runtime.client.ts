@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import {
   arrivalDuration,
   beginNavigation,
+  installJourneyAnimator,
   landscapeTransitions,
   noteClick,
   notePath,
@@ -351,6 +352,51 @@ test('real scenery is independent of native captures and remains disposable', as
           presentArrival('/univers');
           assert.equal(landscapeTransitions.get(), null);
         }
+      },
+    );
+    await t.test(
+      'the GSAP renderer starts at click, completes and restores presentation',
+      (t) => {
+        prepare();
+        t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+        let departures = 0;
+        let resets = 0;
+        let finish: (() => void) | undefined;
+        const arrivals: Array<[string, number]> = [];
+        const detach = installJourneyAnimator({
+          depart: () => {
+            departures++;
+          },
+          arrive: (name, duration, complete) => {
+            arrivals.push([name, duration]);
+            finish = complete;
+          },
+          reset: () => {
+            resets++;
+          },
+        });
+        try {
+          assert.equal(dataset.calderaAnimator, 'gsap');
+          noteClick(click('/univers'));
+          assert.equal(departures, 1);
+          beginNavigation('/univers', 'push');
+          assert.equal(departures, 1);
+          presentArrival('/univers');
+          assert.deepEqual(arrivals, [['enter-world', 900]]);
+          t.mock.timers.tick(901);
+          assert.equal(dataset.calderaMotion, 'live');
+          assert.ok(finish);
+          finish();
+          assert.equal(dataset.calderaMotion, undefined);
+          assert.ok(resets >= 2);
+          reduced = true;
+          beginNavigation('/catalogue', 'push');
+          assert.equal(departures, 1);
+          assert.equal(dataset.calderaMotion, undefined);
+        } finally {
+          detach();
+        }
+        assert.equal(dataset.calderaAnimator, undefined);
       },
     );
   } finally {

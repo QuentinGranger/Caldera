@@ -1,7 +1,14 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { useEffect, useLayoutEffect, useSyncExternalStore } from 'react';
 import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
+import { createJourneyAnimator } from '@/lib/transitions/gsap';
+import {
+  installJourneyAnimator,
   landscapeTransitions,
   noteClick,
   presentArrival,
@@ -11,11 +18,16 @@ import {
 /** Persistent scenery connects click feedback and arrival without a second cut. */
 export function TransitionStage() {
   const pathname = usePathname();
+  const stage = useRef<HTMLDivElement>(null);
   const landscape = useSyncExternalStore(
     landscapeTransitions.subscribe,
     landscapeTransitions.get,
     landscapeTransitions.getServer,
   );
+  useLayoutEffect(() => {
+    if (!stage.current) return;
+    return installJourneyAnimator(createJourneyAnimator(stage.current));
+  }, []);
   // First visits/reloads have no pending journey and remain immediately visible.
   useLayoutEffect(() => {
     presentArrival(pathname);
@@ -36,22 +48,25 @@ export function TransitionStage() {
     };
   }, []);
   return (
-    <div className="caldera-veil" aria-hidden="true">
-      {landscape && (
-        <div
-          className="caldera-veil__previous"
-          style={{
-            top: landscape.top,
-            left: landscape.left,
-            width: landscape.width,
-            height: landscape.height,
-            backgroundImage: `url(${JSON.stringify(landscape.src)})`,
-            backgroundPosition: landscape.position,
-            borderRadius: landscape.radius,
-            filter: landscape.filter,
-          }}
-        />
-      )}
+    <div ref={stage} className="caldera-veil" aria-hidden="true">
+      <div
+        className="caldera-veil__previous"
+        hidden={!landscape}
+        style={
+          landscape
+            ? {
+                top: landscape.top,
+                left: landscape.left,
+                width: landscape.width,
+                height: landscape.height,
+                backgroundImage: `url(${JSON.stringify(landscape.src)})`,
+                backgroundPosition: landscape.position,
+                borderRadius: landscape.radius,
+                filter: landscape.filter,
+              }
+            : undefined
+        }
+      />
       <div className="caldera-veil__mineral" />
       <div className="caldera-veil__progress" />
     </div>

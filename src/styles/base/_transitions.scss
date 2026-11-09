@@ -336,3 +336,15 @@
     visibility: hidden !important;
   }
 }
+
+// GSAP owns these participants when its renderer is mounted; CSS is the fallback.
+:root[data-caldera-animator='gsap'] {
+  main,
+  [data-caldera-landscape],
+  [data-caldera-landscape] > img,
+  [data-caldera-layer],
+  [data-caldera-visual],
+  .caldera-veil * {
+    animation: none !important;
+  }
+}
