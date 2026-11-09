@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { usePathname } from 'next/navigation';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import type { NavItem, NavLink } from '@/data/navigation';
@@ -31,6 +31,7 @@ function Dropdown({ links, pathname }: { links: NavLink[]; pathname: string }) {
     <div className={styles.dropdown}>
       <Link
         href={all.href}
+        prefetch
         className={styles.featured}
         aria-current={pathname === all.href ? 'page' : undefined}
       >
@@ -43,6 +44,7 @@ function Dropdown({ links, pathname }: { links: NavLink[]; pathname: string }) {
             <li key={family.href}>
               <Link
                 href={family.href}
+                prefetch
                 aria-current={pathname === family.href ? 'page' : undefined}
               >
                 <span>{family.label}</span>
@@ -81,6 +83,7 @@ export function Navigation({ items }: { items: NavItem[] }) {
             >
               <Link
                 href={item.href}
+                prefetch
                 className={item.href === current ? styles.current : undefined}
                 aria-current={pathname === item.href ? 'page' : undefined}
               >
@@ -97,6 +100,7 @@ export function Navigation({ items }: { items: NavItem[] }) {
                           <li key={link.href}>
                             <Link
                               href={link.href}
+                              prefetch
                               aria-current={
                                 pathname === link.href ? 'page' : undefined
                               }

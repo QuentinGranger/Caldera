@@ -1,6 +1,6 @@
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { connection } from 'next/server';
 import { ViewTransition, type ReactNode } from 'react';
@@ -147,6 +147,7 @@ export async function UniverseChapterShell({
               {previous ? (
                 <Link
                   href={universeChapterPath(previous.slug)}
+                  prefetch
                   className={styles.previous}
                 >
                   <ArrowLeft size={17} aria-hidden="true" />
@@ -162,6 +163,7 @@ export async function UniverseChapterShell({
               {next ? (
                 <Link
                   href={universeChapterPath(next.slug)}
+                  prefetch
                   className={styles.next}
                 >
                   <span>

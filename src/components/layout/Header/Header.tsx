@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { CartButton } from '@/components/cart/CartButton';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { UserRound } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
 import { IconLink } from '@/components/ui/IconButton/IconButton';
@@ -28,6 +28,7 @@ export async function Header() {
         </div>
         <Link
           href="/"
+          prefetch
           className={styles.brand}
           aria-label="Les Terres de Caldera — Accueil"
         >

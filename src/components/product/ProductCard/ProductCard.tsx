@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { ProductBadge } from '@/components/product/ProductBadge/ProductBadge';
 import { SharedProductImage } from '@/components/transitions/SharedProductImage';
 import { ProductCardQuickAdd } from './ProductCardQuickAdd';

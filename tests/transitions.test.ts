@@ -9,7 +9,7 @@ import {
   perTransition,
   productTransitionName,
 } from '@/lib/transitions/classes';
-import { isPageJourney } from '@/lib/transitions/navigation';
+import { canPrefetchPage, isPageJourney } from '@/lib/transitions/navigation';
 import {
   TRANSITIONS,
   chooseTransition,
@@ -26,6 +26,29 @@ import {
 
 const go = (from: string, to: string, override?: string) =>
   chooseTransition({ from, to, override });
+
+test('Préchargement : pages publiques seulement, sans compte, jeton ni ancre', () => {
+  for (const href of [
+    '/',
+    '/catalogue',
+    '/pokemon/scelles',
+    '/univers',
+    '/produit/a',
+  ])
+    assert.equal(canPrefetchPage(href), true, href);
+  for (const href of [
+    '/compte',
+    '/commande/a?token=private',
+    '/checkout',
+    '/api/contact',
+    '/univers/carnets?key=private',
+    '/univers/carnets/a',
+    '/catalogue#resultats',
+    '//elsewhere.test/',
+    'https://elsewhere.test/',
+  ])
+    assert.equal(canPrefetchPage(href), false, href);
+});
 
 test('Transitions : chaque route a sa famille', () => {
   assert.equal(routeKind('/'), 'HOME');

@@ -165,8 +165,8 @@
     }
     .caldera-veil__previous {
       animation: caldera-landscape-handoff
-        min(var(--journey-duration), var(--caldera-journey-budget, 900ms))
-        var(--ease-caldera) both;
+        min(380ms, var(--caldera-journey-budget, 900ms)) var(--ease-caldera)
+        both;
     }
   }
 
@@ -194,7 +194,16 @@
       visibility: visible;
     }
     .caldera-veil__mineral {
-      animation: caldera-mineral-cover 240ms ease-out both;
+      animation: caldera-mineral-cover 180ms ease-out both;
+    }
+    .caldera-veil__progress {
+      position: absolute;
+      top: var(--caldera-chrome-bottom, 0px);
+      left: 0;
+      width: 35%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #e8c261, transparent);
+      animation: caldera-route-pending 900ms linear 160ms infinite both;
     }
   }
   :root[data-caldera-motion='live'] .caldera-veil__mineral {
@@ -265,18 +274,15 @@
     opacity: 0;
     transform: translate3d(-14%, 8%, 0);
   }
-  45% {
-    opacity: 0.55;
-  }
   100% {
-    opacity: 0;
-    transform: translate3d(2%, 0, 0);
+    opacity: 0.4;
+    transform: translate3d(-6%, 3%, 0);
   }
 }
 @keyframes caldera-mineral-reveal {
   0% {
-    opacity: calc(0.85 * var(--atmosphere-strength, 1));
-    transform: translate3d(-10%, 8%, 0) scale(1.05);
+    opacity: var(--caldera-fog-opacity, 0);
+    transform: var(--caldera-fog-transform, translate3d(-10%, 8%, 0));
   }
   40% {
     opacity: calc(0.6 * var(--atmosphere-strength, 1));
@@ -286,13 +292,27 @@
     transform: translate3d(18%, -12%, 0) scale(1.1);
   }
 }
+@keyframes caldera-route-pending {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(390%);
+  }
+}
 @keyframes caldera-landscape-handoff {
   0% {
-    opacity: 1;
+    opacity: 0.85;
     transform: scale(1);
   }
   30% {
-    opacity: 0.65;
+    opacity: 0.35;
   }
   75%,
   100% {

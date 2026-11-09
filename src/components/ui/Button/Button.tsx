@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
+import { canPrefetchPage } from '@/lib/transitions/navigation';
 import type { ComponentProps, ReactNode } from 'react';
 import styles from './Button.module.scss';
 type Common = {
@@ -23,7 +24,11 @@ export function Button({
   const classes = `${styles.button} ${styles[variant]} ${className}`;
   if (href !== undefined)
     return (
-      <Link href={href} className={classes}>
+      <Link
+        href={href}
+        prefetch={canPrefetchPage(href) ? true : undefined}
+        className={classes}
+      >
         {children}
       </Link>
     );

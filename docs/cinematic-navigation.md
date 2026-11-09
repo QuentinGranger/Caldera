@@ -19,7 +19,16 @@ participe pas au raccord. Les captures natives restent réservées aux produits.
 | Produit                            | 650 ms  | 520 ms |
 | Univers et autres pages immersives | 900 ms  | 720 ms |
 
-Le départ est nettoyé en 240 ms. L’arrivée commence au commit avec sa propre
+Le départ commence dans la capture du clic, avant le routeur. La même brume est
+conservée jusqu’à l’arrivée : sa position et son opacité courantes servent de
+point de départ à la révélation. Une ligne discrète indique un chargement qui
+dure ; un garde-fou de quatre secondes libère la scène si la navigation échoue.
+Les liens principaux préchargent leur route dynamique complète. Les autres
+liens publics concernés passent au préchargement complet au survol, au focus ou
+au toucher ; les espaces privés, les liens d’accès aux Carnets et les liens
+explicitement exclus ne sont pas préchargés de cette manière.
+
+L’arrivée commence au commit avec sa propre
 durée, y compris après un chargement lent. Les premières visites, filtres,
 ancres, historique et pages utilitaires restent immédiats. Le mouvement réduit
 désactive tous les effets. Aucun ajout de dépendance ni attente du routeur.

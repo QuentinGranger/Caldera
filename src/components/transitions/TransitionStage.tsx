@@ -8,8 +8,7 @@ import {
   resetPresentation,
 } from '@/lib/transitions/runtime';
 
-/** Real, pointer-transparent scenery, independent of native snapshot support.
- * Keying the stage restarts its CSS timeline for every destination. */
+/** Persistent scenery connects click feedback and arrival without a second cut. */
 export function TransitionStage() {
   const pathname = usePathname();
   const landscape = useSyncExternalStore(
@@ -37,7 +36,7 @@ export function TransitionStage() {
     };
   }, []);
   return (
-    <div key={pathname} className="caldera-veil" aria-hidden="true">
+    <div className="caldera-veil" aria-hidden="true">
       {landscape && (
         <div
           className="caldera-veil__previous"
@@ -54,6 +53,7 @@ export function TransitionStage() {
         />
       )}
       <div className="caldera-veil__mineral" />
+      <div className="caldera-veil__progress" />
     </div>
   );
 }

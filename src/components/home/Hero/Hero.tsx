@@ -1,6 +1,6 @@
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { ArrowRight } from 'lucide-react';
 import { ViewTransition } from 'react';
 import { Button } from '@/components/ui/Button/Button';
@@ -76,7 +76,7 @@ export function Hero({ links }: { links: HomeLinks }) {
                     <ArrowRight aria-hidden="true" />
                   </Button>
                 )}
-                <Link href="/univers" className={styles.secondary}>
+                <Link href="/univers" prefetch className={styles.secondary}>
                   Découvrir l’univers{' '}
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>

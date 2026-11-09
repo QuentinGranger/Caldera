@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import {
   Breadcrumb,
@@ -80,7 +80,7 @@ export function PokemonHero({
                     <ArrowDown size={18} aria-hidden="true" />
                   </Button>
                 )}
-                <Link href={sealed ? '/pokemon' : '/pokemon/scelles'}>
+                <Link href={sealed ? '/pokemon' : '/pokemon/scelles'} prefetch>
                   {sealed ? 'Tout Pokémon' : 'Les produits scellés'}{' '}
                   <ArrowUpRight size={17} aria-hidden="true" />
                 </Link>

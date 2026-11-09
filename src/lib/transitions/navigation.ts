@@ -1,3 +1,16 @@
+import { routeKind } from './routes';
+
+/** Full prefetch is reserved for public pages, without fragments or access links. */
+export function canPrefetchPage(href: string) {
+  return (
+    href.startsWith('/') &&
+    !href.startsWith('//') &&
+    !href.includes('#') &&
+    !/^\/univers\/carnets(?:\/|\?|$)/.test(href) &&
+    !['ACCOUNT', 'UTILITY'].includes(routeKind(href))
+  );
+}
+
 /** Native link gestures and fragment destinations never become a page journey. */
 export function isPageJourney({
   from,

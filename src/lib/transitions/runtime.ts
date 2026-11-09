@@ -20,8 +20,12 @@ import { isPageJourney } from './navigation';
  */
 
 let currentPath: string | null = null;
-let lastClick: { path: string; transition: string | null; at: number } | null =
-  null;
+let lastClick: {
+  path: string;
+  transition: string | null;
+  at: number;
+  previewed: boolean;
+} | null = null;
 /** The journey of the navigation under way, for the page it leads to. */
 let pendingArrival: {
   path: string;
@@ -129,11 +133,14 @@ export function canAnimateJourney() {
 
 export function resetPresentation() {
   clearTimeout(stageTimer);
+  stageTimer = undefined;
   setLandscape(null);
   delete document.documentElement.dataset.calderaArrival;
   delete document.documentElement.dataset.calderaMotion;
   document.documentElement.style.removeProperty('--caldera-chrome-bottom');
   document.documentElement.style.removeProperty('--caldera-journey-budget');
+  document.documentElement.style.removeProperty('--caldera-fog-opacity');
+  document.documentElement.style.removeProperty('--caldera-fog-transform');
 }
 
 function stage(on: boolean) {
@@ -141,8 +148,8 @@ function stage(on: boolean) {
   if (!on) return;
   measureChrome();
   document.documentElement.dataset.calderaMotion = 'departing';
-  // Keep the current page visible and release it quickly if navigation stalls.
-  stageTimer = setTimeout(resetPresentation, 240);
+  // A failed navigation eventually releases the scene; the page stays usable.
+  stageTimer = setTimeout(resetPresentation, 4000);
 }
 
 const decode = (path: string) => {
@@ -208,12 +215,16 @@ export function beginNavigation(url: string, navigation: string) {
         ? productSlug(from)
         : null,
     );
-    pendingArrival = {
-      path: target.pathname,
-      name: journey,
-      landscape: journey && journey !== 'instant' ? captureLandscape() : null,
-    };
-    stage(journey !== null && journey !== 'instant');
+    // The capture-phase click already started the scene. Do not restart it
+    // when React dispatches the navigation a moment later.
+    if (!click?.previewed) {
+      pendingArrival = {
+        path: target.pathname,
+        name: journey,
+        landscape: journey && journey !== 'instant' ? captureLandscape() : null,
+      };
+      stage(journey !== null && journey !== 'instant');
+    }
     // Native snapshots are reserved for the shared product image. A browser
     // callback is not evidence that a decorative capture painted anything.
     if (
@@ -245,7 +256,11 @@ export function presentArrival(pathname: string) {
   notePath(pathname);
   const previousLandscape = pendingArrival?.landscape ?? null;
   const arrival = takeArrival(pathname);
-  if (arrival === undefined) return;
+  if (arrival === undefined) {
+    // Redirects or intermediate commits must not leave a loading scene behind.
+    if (pendingArrival) resetPresentation();
+    return;
+  }
   if (
     !arrival ||
     arrival === 'instant' ||
@@ -253,8 +268,15 @@ export function presentArrival(pathname: string) {
   )
     return resetPresentation();
   const budget = arrivalDuration(arrival);
+  const fog = document.querySelector('.caldera-veil__mineral');
+  const fogStyle = fog ? window.getComputedStyle(fog) : null;
   setLandscape(previousLandscape);
   const root = document.documentElement;
+  root.style.setProperty('--caldera-fog-opacity', fogStyle?.opacity || '0');
+  root.style.setProperty(
+    '--caldera-fog-transform',
+    fogStyle?.transform || 'translate3d(-10%, 8%, 0)',
+  );
   root.style.setProperty('--caldera-journey-budget', `${budget}ms`);
   root.dataset.calderaArrival = arrival;
   root.dataset.calderaMotion = 'live';
@@ -289,7 +311,24 @@ export function noteClick(event: MouseEvent) {
     path: url.pathname,
     transition: link.dataset.transition ?? null,
     at: Date.now(),
+    previewed: true,
   };
+  const journey = chooseTransition({
+    from: currentPath ?? window.location.pathname,
+    to: url.pathname,
+    override: lastClick.transition,
+  });
+  const animated =
+    journey !== null &&
+    journey !== 'instant' &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  pendingArrival = {
+    path: url.pathname,
+    name: animated ? journey : null,
+    landscape: animated ? captureLandscape() : null,
+  };
+  // Feedback starts in this click handler, before router scheduling or fetches.
+  stage(animated);
   // A product card: its image becomes the product page's image.
   const card = link.closest('[data-product-card]');
   const image = card?.querySelector<HTMLImageElement>('img[data-vt-product]');

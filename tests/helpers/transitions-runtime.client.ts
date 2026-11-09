@@ -4,6 +4,7 @@ import {
   arrivalDuration,
   beginNavigation,
   landscapeTransitions,
+  noteClick,
   notePath,
   presentArrival,
   resetPresentation,
@@ -16,6 +17,7 @@ test('real scenery is independent of native captures and remains disposable', as
     'CSS',
     'requestAnimationFrame',
     'cancelAnimationFrame',
+    'HTMLAnchorElement',
   ] as const;
   const saved = new Map(
     names.map((name) => [
@@ -46,25 +48,59 @@ test('real scenery is independent of native captures and remains disposable', as
       height: 608,
     }),
   };
-  const root = { dataset, style: { setProperty() {}, removeProperty() {} } };
+  const properties = new Map<string, string>();
+  const root = {
+    dataset,
+    style: {
+      setProperty: (key: string, value: string) => properties.set(key, value),
+      removeProperty: (key: string) => properties.delete(key),
+    },
+  };
+  const fog = {};
+  class Anchor {
+    target = '';
+    dataset = {};
+    constructor(public href: string) {}
+    hasAttribute() {
+      return false;
+    }
+    closest(selector: string) {
+      return selector === 'a[href]' ? this : null;
+    }
+  }
+  const click = (href: string, extra = {}) =>
+    ({
+      defaultPrevented: false,
+      button: 0,
+      target: new Anchor(new URL(href, 'https://caldera.test').href),
+      ...extra,
+    }) as unknown as MouseEvent;
   const fakeDocument = {
     documentElement: root,
     querySelector: (selector: string) =>
       selector === 'header'
         ? { getBoundingClientRect: () => ({ bottom: 92 }) }
-        : sceneryVisible
-          ? scenery
-          : null,
+        : selector === '.caldera-veil__mineral'
+          ? fog
+          : sceneryVisible
+            ? scenery
+            : null,
     startViewTransition: () => {},
   };
   const values = {
     window: {
       innerHeight: 900,
-      getComputedStyle: () => ({
-        objectPosition: '50% 50%',
-        borderRadius: '0px',
-        filter: 'none',
-      }),
+      getComputedStyle: (element: unknown) =>
+        element === fog
+          ? {
+              opacity: '0.4',
+              transform: 'matrix(1, 0, 0, 1, -12, 8)',
+            }
+          : {
+              objectPosition: '50% 50%',
+              borderRadius: '0px',
+              filter: 'none',
+            },
       location: {
         origin: 'https://caldera.test',
         href: 'https://caldera.test/',
@@ -82,6 +118,7 @@ test('real scenery is independent of native captures and remains disposable', as
     cancelAnimationFrame: (id: number) => {
       frames.delete(id);
     },
+    HTMLAnchorElement: Anchor,
   };
   for (const name of names)
     Object.defineProperty(globalThis, name, {
@@ -189,6 +226,7 @@ test('real scenery is independent of native captures and remains disposable', as
         beginNavigation('/univers', 'push');
         presentArrival('/catalogue');
         assert.equal(dataset.calderaArrival, undefined);
+        assert.equal(dataset.calderaMotion, undefined);
         presentArrival('/univers');
         assert.equal(dataset.calderaArrival, 'enter-world');
       },
@@ -217,8 +255,9 @@ test('real scenery is independent of native captures and remains disposable', as
         beginNavigation('/univers', 'push');
         assert.equal(dataset.calderaMotion, 'departing');
         t.mock.timers.tick(241);
-        assert.equal(dataset.calderaMotion, undefined);
+        assert.equal(dataset.calderaMotion, 'departing');
         t.mock.timers.tick(2000);
+        assert.equal(dataset.calderaMotion, 'departing');
         presentArrival('/univers');
         assert.equal(dataset.calderaMotion, 'live');
         t.mock.timers.tick(901);
@@ -230,6 +269,54 @@ test('real scenery is independent of native captures and remains disposable', as
         assert.equal(dataset.calderaMotion, 'live');
         t.mock.timers.tick(901);
         assert.equal(dataset.calderaMotion, undefined);
+      },
+    );
+    await t.test(
+      'click feedback starts before the router and keeps the same timeline',
+      (t) => {
+        prepare();
+        t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+        noteClick(click('/univers'));
+        assert.equal(dataset.calderaMotion, 'departing');
+        t.mock.timers.tick(120);
+        beginNavigation('/univers', 'push');
+        t.mock.timers.tick(3881);
+        assert.equal(dataset.calderaMotion, undefined);
+        presentArrival('/univers');
+        assert.equal(properties.get('--caldera-fog-opacity'), '0.4');
+        assert.equal(
+          properties.get('--caldera-fog-transform'),
+          'matrix(1, 0, 0, 1, -12, 8)',
+        );
+        assert.equal(dataset.calderaMotion, 'live');
+      },
+    );
+    await t.test(
+      'modified, cancelled, external and same-page clicks do not start a scene',
+      () => {
+        for (const [href, extra] of [
+          ['/univers', { metaKey: true }],
+          ['/univers', { button: 1 }],
+          ['/univers', { defaultPrevented: true }],
+          ['https://elsewhere.test/univers', {}],
+          ['/#newsletter', {}],
+          ['/?sort=recent', {}],
+        ] as const) {
+          prepare();
+          noteClick(click(href, extra));
+          assert.equal(dataset.calderaMotion, undefined);
+        }
+      },
+    );
+    await t.test(
+      'a failed navigation releases the continuous departure',
+      (t) => {
+        prepare();
+        t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+        beginNavigation('/univers', 'push');
+        t.mock.timers.tick(4001);
+        assert.equal(dataset.calderaMotion, undefined);
+        assert.equal(landscapeTransitions.get(), null);
       },
     );
     await t.test(

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { ChevronRight } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { breadcrumbListNode, breadcrumbTrail } from '@/lib/seo/jsonld';

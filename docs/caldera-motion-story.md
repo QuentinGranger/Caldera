@@ -77,7 +77,10 @@ Révision du 9 novembre 2026 : le paysage précédent reste présent le temps de
 dissoudre dans le suivant, accompagné d’une brume en mouvement. Les titres
 arrivent en décalé ; les pages Pokémon, Produits scellés et Extensions participent
 à la même séquence. Le décor sortant est gardé uniquement lorsqu’il est chargé et
-visible. Le départ est libéré en 240 ms si la route tarde. L’arrivée dispose de sa
+visible. Le départ commence dès le clic et accompagne le chargement jusqu’à
+l’arrivée, sans reprise de la brume à zéro ; un échec libère la scène après
+quatre secondes. Les liens principaux préchargent leur contenu dynamique complet,
+et les autres liens publics se préparent au survol ou au focus. L’arrivée dispose de sa
 propre durée au commit : 700 ms en boutique, 620 ms en lecture, 650 ms pour le
 produit et 900 ms dans l’univers ; ces durées sont réduites de 20 % sur mobile.
 Aucun délai artificiel

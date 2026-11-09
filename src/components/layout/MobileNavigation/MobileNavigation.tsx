@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { usePathname } from 'next/navigation';
 import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import type { NavItem, NavLink, SiteNavigation } from '@/data/navigation';
@@ -24,6 +24,7 @@ function MainLink({
   return (
     <Link
       href={link.href}
+      prefetch
       className={styles.main}
       onClick={onNavigate}
       aria-current={pathname === link.href ? 'page' : undefined}
@@ -67,6 +68,7 @@ function Accordion({
             <li key={link.href}>
               <Link
                 href={link.href}
+                prefetch
                 onClick={onNavigate}
                 aria-current={pathname === link.href ? 'page' : undefined}
               >
@@ -260,6 +262,7 @@ export function MobileNavigation({
                     <li key={href}>
                       <Link
                         href={href}
+                        prefetch
                         onClick={close}
                         aria-current={pathname === href ? 'page' : undefined}
                       >
@@ -281,6 +284,7 @@ export function MobileNavigation({
                 <li key={href}>
                   <Link
                     href={href}
+                    prefetch
                     onClick={close}
                     aria-current={pathname === href ? 'page' : undefined}
                   >
@@ -311,6 +315,7 @@ export function MobileNavigation({
                   <li key={chapter.slug}>
                     <Link
                       href={href}
+                      prefetch
                       onClick={close}
                       aria-current={pathname === href ? 'page' : undefined}
                     >

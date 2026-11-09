@@ -2,7 +2,7 @@ import { connection } from 'next/server';
 import { listPublicCarnets } from '@/lib/carnets/public';
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/transitions/PrefetchLink';
 import { ArrowRight, Compass } from 'lucide-react';
 import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
@@ -77,6 +77,7 @@ export default async function UniversePage() {
             <Link
               className={styles.primaryCta}
               href={universeChapterPath('origines')}
+              prefetch
             >
               Commencer par les origines
               <ArrowRight size={17} aria-hidden="true" />
