@@ -1,11 +1,17 @@
 import { gsap } from 'gsap';
+import { SplitText } from 'gsap/SplitText';
 import type { JourneyAnimator } from './runtime';
+
+gsap.registerPlugin(SplitText);
 
 /** One GSAP context owns every style and tween, including rapid-click cleanup. */
 export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
   const fog = stage.querySelector('.caldera-veil__mineral');
   const previous = stage.querySelector('.caldera-veil__previous');
   const progress = stage.querySelector('.caldera-veil__progress');
+  const near = stage.querySelector('.caldera-veil__near');
+  const light = stage.querySelector('.caldera-veil__light');
+  const vignette = stage.querySelector('.caldera-veil__vignette');
   let context: gsap.Context | undefined;
   let timeline: gsap.core.Timeline | undefined;
 
@@ -14,7 +20,7 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
     context = undefined;
     timeline = undefined;
   }
-  function animate(callback: () => void) {
+  function animate(callback: () => void | (() => void)) {
     context ??= gsap.context(() => {});
     context.add(callback);
   }
@@ -45,6 +51,26 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
             },
             0,
           );
+        if (near)
+          timeline.fromTo(
+            near,
+            { opacity: 0, xPercent: 16, yPercent: 10 },
+            {
+              opacity: 0.35,
+              xPercent: 8,
+              yPercent: 4,
+              duration: 0.2,
+              ease: 'power2.out',
+            },
+            0,
+          );
+        if (light)
+          timeline.fromTo(
+            light,
+            { opacity: 0, xPercent: -12 },
+            { opacity: 0.3, xPercent: 0, duration: 0.24 },
+            0,
+          );
         if (progress)
           timeline.fromTo(
             progress,
@@ -66,6 +92,7 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
       animate(() => {
         const mobile = window.matchMedia('(max-width: 47.99rem)').matches;
         const duration = milliseconds / 1000;
+        const clones: HTMLElement[] = [];
         const direction =
           name === 'chapter-forward' ? 1 : name === 'chapter-back' ? -1 : 0;
         const main = document.querySelector('main');
@@ -94,20 +121,20 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
         if (main)
           timeline.fromTo(
             main,
-            { opacity: 0.7 },
+            { opacity: 0.82 },
             { opacity: 1, duration: 0.28 },
             0,
           );
         if (previous)
           timeline.fromTo(
             previous,
-            { opacity: 0.85, scale: 1, clipPath: 'inset(0% 0% 0% 0%)' },
+            { opacity: 0.85, scale: 1, yPercent: 0 },
             {
               opacity: 0,
-              scale: 1.035,
-              clipPath: 'inset(0% 0% 100% 0%)',
-              duration: 0.38,
-              ease: 'power2.inOut',
+              scale: mobile ? 1.06 : 1.1,
+              yPercent: -3,
+              duration: duration * 0.62,
+              ease: 'power3.out',
             },
             0,
           );
@@ -115,23 +142,71 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
           timeline.fromTo(
             scenery,
             {
-              scale: (index: number) => scales[index]! * 1.065,
-              xPercent: direction * 1.5,
+              scale: (index: number) => scales[index]! * (mobile ? 1.1 : 1.16),
+              xPercent: direction ? direction * 2.2 : -0.8,
+              yPercent: 2,
             },
             {
               scale: (index: number) => scales[index]!,
               xPercent: 0,
-              duration: duration * 0.95,
-              ease: 'power2.out',
+              yPercent: 0,
+              duration,
+              ease: 'power3.out',
             },
             0,
           );
-        if (layers.length)
+        const copy = layers.filter((element) => {
+          if (element.tagName !== 'H1' || document.fonts.status !== 'loaded')
+            return true;
+          // Split a visual twin so React always retains its original heading DOM.
+          const clone = element.cloneNode(true) as HTMLElement;
+          clone.removeAttribute('id');
+          clone.removeAttribute('data-caldera-layer');
+          clone.setAttribute('aria-hidden', 'true');
+          clone.setAttribute('data-caldera-title-clone', '');
+          Object.assign(clone.style, {
+            position: 'absolute',
+            top: `${element.offsetTop}px`,
+            left: `${element.offsetLeft}px`,
+            width: `${element.offsetWidth}px`,
+            margin: '0',
+            pointerEvents: 'none',
+          });
+          element.after(clone);
+          try {
+            const split = SplitText.create(clone, {
+              type: 'lines',
+              mask: 'lines',
+              aria: 'hidden',
+              linesClass: 'caldera-cinema-line',
+            });
+            clones.push(clone);
+            gsap.set(element, { opacity: 0 });
+            timeline!.fromTo(
+              split.lines,
+              { opacity: 0.15, yPercent: 110, x: direction * 12 },
+              {
+                opacity: 1,
+                yPercent: 0,
+                x: 0,
+                duration: 0.54,
+                stagger: mobile ? 0.055 : 0.075,
+                ease: 'power4.out',
+              },
+              0.04,
+            );
+            return false;
+          } catch {
+            clone.remove();
+            return true;
+          }
+        });
+        if (copy.length)
           timeline.fromTo(
-            layers,
+            copy,
             {
               opacity: 0,
-              y: mobile ? 18 : 28,
+              y: mobile ? 20 : 34,
               x: direction * 24,
               clipPath: 'inset(0% 0% 100% 0%)',
             },
@@ -140,7 +215,7 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
               y: 0,
               x: 0,
               clipPath: 'inset(0% 0% 0% 0%)',
-              duration: 0.46,
+              duration: 0.5,
               stagger: mobile ? 0.035 : 0.055,
             },
             0.035,
@@ -165,7 +240,39 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
             },
             duration * 0.15,
           );
+        if (near)
+          timeline.to(near, { opacity: 0.42, duration: duration * 0.15 }, 0).to(
+            near,
+            {
+              opacity: 0,
+              xPercent: -22,
+              yPercent: -8,
+              scale: 1.08,
+              duration: duration * 0.85,
+              ease: 'power3.inOut',
+            },
+            duration * 0.15,
+          );
+        if (light)
+          timeline.to(light, { opacity: 0.45, duration: duration * 0.2 }, 0).to(
+            light,
+            {
+              opacity: 0,
+              xPercent: 16,
+              duration: duration * 0.8,
+              ease: 'sine.inOut',
+            },
+            duration * 0.2,
+          );
+        if (vignette)
+          timeline.fromTo(
+            vignette,
+            { opacity: 0.65 },
+            { opacity: 0, duration, ease: 'power2.out' },
+            0,
+          );
         timeline.duration(duration);
+        return () => clones.forEach((clone) => clone.remove());
       });
     },
   };

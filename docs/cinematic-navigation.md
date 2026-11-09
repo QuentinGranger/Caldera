@@ -10,9 +10,20 @@ Les animations CSS de ces participants sont désactivées pendant que GSAP est
 monté ; elles restent un fallback. Le routeur, son préchargement et ses liens
 restent indépendants de la bibliothèque d’animation.
 
+La version cinématographique ajoute une brume de premier plan, une lumière
+chaude et un vignettage temporaire. Le travelling du paysage est amplifié
+(1,16 → 1 sur desktop, 1,10 → 1 sur mobile) ; le paysage précédent se dissout
+sans bord de masque dur. Les durées ci-dessous restent inchangées.
+
+SplitText dévoile les grands titres ligne par ligne sur des doublures visuelles
+`aria-hidden`, positionnées exactement sur le titre original. Le DOM possédé par
+React et le titre accessible ne sont pas découpés. Le contexte restaure l’opacité
+originale et retire ces doublures à la fin ou à l’interruption. Si les polices ne
+sont pas encore chargées, le dévoilement simple prend le relais sans attendre.
+
 La navigation conserve l’image déjà chargée du paysage de départ et la dissout
 dans le suivant. Une brume traverse ce raccord ; le nouveau paysage se rapproche
-(1,065 → 1) et les titres se dévoilent en décalé sur 28 px maximum, 18 px sur mobile. Les illustrations
+(1,16 → 1 sur desktop, 1,10 → 1 sur mobile) et les titres se dévoilent ligne par ligne. Les illustrations
 des pages Pokémon, Produits scellés et Extensions entrent aussi dans la séquence.
 Le header demeure stable et les contrôles restent utilisables.
 
@@ -39,7 +50,7 @@ explicitement exclus ne sont pas préchargés de cette manière.
 L’arrivée commence au commit avec sa propre
 durée, y compris après un chargement lent. Les premières visites, filtres,
 ancres, historique et pages utilitaires restent immédiats. Le mouvement réduit
-désactive tous les effets. Aucun ajout de dépendance ni attente du routeur.
+désactive tous les effets. GSAP reste l’unique dépendance d’animation et le routeur n’attend pas la fin des effets.
 
 Les tests runtime couvrent aussi le remplacement d’une animation en cours, un
 commit qui ne correspond pas à la destination, et une route arrivant après

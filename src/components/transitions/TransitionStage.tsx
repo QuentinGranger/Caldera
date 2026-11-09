@@ -68,6 +68,9 @@ export function TransitionStage() {
         }
       />
       <div className="caldera-veil__mineral" />
+      <div className="caldera-veil__near" />
+      <div className="caldera-veil__light" />
+      <div className="caldera-veil__vignette" />
       <div className="caldera-veil__progress" />
     </div>
   );

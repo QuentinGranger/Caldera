@@ -62,6 +62,41 @@
     background: linear-gradient(180deg, rgb(1 20 14 / 15%), rgb(1 20 14 / 55%));
   }
 }
+.caldera-veil__near,
+.caldera-veil__light,
+.caldera-veil__vignette {
+  position: absolute;
+  opacity: 0;
+}
+.caldera-veil__near {
+  inset: -40% -60%;
+  background: radial-gradient(
+    ellipse at 65% 75%,
+    rgb(173 192 175 / 60%),
+    rgb(51 88 67 / 30%) 28%,
+    transparent 58%
+  );
+}
+.caldera-veil__light {
+  inset: -20%;
+  background: radial-gradient(
+    ellipse at 70% 20%,
+    rgb(241 211 143 / 30%),
+    transparent 55%
+  );
+}
+.caldera-veil__vignette {
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 48%,
+    transparent 35%,
+    rgb(0 12 7 / 48%) 100%
+  );
+}
+.caldera-cinema-line-mask {
+  padding-block: 0.12em;
+  margin-block: -0.12em;
+}
 ::view-transition {
   pointer-events: none;
   clip-path: inset(var(--caldera-chrome-bottom, 0px) 0 0);
