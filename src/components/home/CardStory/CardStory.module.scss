@@ -112,6 +112,14 @@
   letter-spacing: 0.1em;
   color: v.$color-gold;
 }
+.universe {
+  @include m.underline-link(v.$color-gold-light);
+  display: flex;
+  width: fit-content;
+  min-height: 44px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
 .skip {
   display: inline-flex;
   align-items: center;
@@ -149,7 +157,7 @@
 }
 @media (prefers-reduced-motion: no-preference) and (min-width: 360px) and (min-height: 600px) {
   .story[data-card-layout='pinned'] {
-    height: 340svh;
+    height: 220svh;
     .stage {
       position: sticky;
       top: 0;
@@ -227,7 +235,7 @@
       }
     }
     @media (max-width: 63.99rem) {
-      height: 280svh;
+      height: 210svh;
       .stage {
         align-items: end;
         padding: 0 6vw 5rem;
@@ -256,7 +264,7 @@
       }
       .chapters {
         margin-top: 1.3rem;
-        height: 6rem;
+        height: 7rem;
       }
       .chapter {
         padding-left: 2rem;
@@ -269,6 +277,10 @@
           font-size: 0.82rem;
           line-height: 1.4;
         }
+      }
+      .universe {
+        margin-top: 0.25rem;
+        font-size: 0.85rem;
       }
       .skip {
         margin-top: 0.5rem;

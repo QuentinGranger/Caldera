@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, ArrowRight } from 'lucide-react';
 import styles from './CardStory.module.scss';
 
 const chapters = [
@@ -15,8 +16,8 @@ const chapters = [
     text: 'Une illustration qui retient le regard. Une collection qui prend forme, pièce après pièce.',
   },
   {
-    title: 'À vous la suite.',
-    text: 'Ouvrir, jouer, collectionner. Découvrez les produits Pokémon sélectionnés par Caldera.',
+    title: 'Un monde à explorer.',
+    text: 'Des premières découvertes aux cinq territoires, nos chroniques racontent le monde qui donne son nom à Caldera.',
   },
 ];
 
@@ -187,6 +188,10 @@ export function CardStory({
               </div>
             ))}
           </div>
+          <Link href="/univers" className={styles.universe}>
+            Explorer l’univers de Caldera{' '}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
           <a className={styles.skip} href={skipTo.href}>
             {skipTo.label} <ArrowDown size={16} aria-hidden="true" />
           </a>

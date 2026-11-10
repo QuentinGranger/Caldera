@@ -3,18 +3,14 @@ import {
   type HomeChapter,
 } from '@/components/home/HomeJourney/HomeJourney';
 import { CardStory } from '@/components/home/CardStory/CardStory';
-import { Origins } from '@/components/home/Origins/Origins';
 import { ScrollScenes } from '@/components/home/ScrollScenes';
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { Hero } from '@/components/home/Hero/Hero';
 import { Families } from '@/components/home/Families/Families';
 import { Showcase } from '@/components/home/Showcase/Showcase';
-import { Territories } from '@/components/home/Territories/Territories';
 import { Collections } from '@/components/home/Collections/Collections';
-import { ShoppingGuide } from '@/components/catalog/ShoppingGuide/ShoppingGuide';
 import { HomeShop } from '@/components/home/HomeShop/HomeShop';
-import { Reflection } from '@/components/home/Reflection/Reflection';
 import { Assurances } from '@/components/home/Assurances/Assurances';
 import { Journal } from '@/components/home/Journal/Journal';
 import { FinalCall } from '@/components/home/FinalCall/FinalCall';
@@ -27,7 +23,6 @@ import { DEFAULT_TITLE } from '@/components/layout/siteMetadata';
 import { JsonLd } from '@/components/seo/JsonLd';
 import {
   getMerchandisingProducts,
-  getShoppingIntentLinks,
   getLastPiecesProducts,
   getRestockedProducts,
 } from '@/lib/catalog/queries';
@@ -45,12 +40,8 @@ export async function generateMetadata(): Promise<Metadata> {
     index: true,
   });
 }
-// Selling first: under a hero shorter than the screen, the shop's shelves
-// (new, back in stock, last pieces), then the Caldera selection, every card
-// with its price, its stock and a button to buy. The families, collections
-// and reassurance follow; the universe (its words, the card's story, the
-// origins, the territories) comes after. A section without data is simply
-// absent; the products are those of the licence sold (shopProductWhere).
+// Product shelves lead into one immersive card scene. Buying advice lives
+// in the journal; the complete world and its territories live in /univers.
 const SHELF = 4;
 const SELECTION = 2;
 
@@ -58,25 +49,18 @@ export default async function HomePage() {
   await connection();
   // Editorial choices stay separate from timed, stock-backed shelves.
   // Read extra candidates to avoid repeating cards between shelves.
-  const [
-    home,
-    intents,
-    featuredProducts,
-    newProducts,
-    restockProducts,
-    lastProducts,
-  ] = await Promise.all([
-    getHomeData(),
-    getShoppingIntentLinks(),
-    getMerchandisingProducts('du-moment', SELECTION, shopProductWhere),
-    getMerchandisingProducts(
-      'nouveaute-de-la-semaine',
-      SHELF * 2,
-      shopProductWhere,
-    ),
-    getRestockedProducts(SHELF * 2, shopProductWhere),
-    getLastPiecesProducts(SHELF * 2, shopProductWhere),
-  ]);
+  const [home, featuredProducts, newProducts, restockProducts, lastProducts] =
+    await Promise.all([
+      getHomeData(),
+      getMerchandisingProducts('du-moment', SELECTION, shopProductWhere),
+      getMerchandisingProducts(
+        'nouveaute-de-la-semaine',
+        SHELF * 2,
+        shopProductWhere,
+      ),
+      getRestockedProducts(SHELF * 2, shopProductWhere),
+      getLastPiecesProducts(SHELF * 2, shopProductWhere),
+    ]);
   // The team's selection is kept whole; the shelves share the rest without
   // ever repeating a card.
   const [selected, newShelf, restockShelf, lastShelf] = distinctSections(
@@ -87,24 +71,18 @@ export default async function HomePage() {
     restocked = restockShelf,
     lastPieces = lastShelf;
   const onSale = [latest, restocked, lastPieces].some((list) => list.length);
-  // The story of the card ends on the first section after it.
+  const demonstration = process.env.CATALOG_DEMO_MODE === '1';
   const cardSkip = home.collections.length
     ? { href: '#collections', label: 'Voir les extensions' }
-    : {
-        href: '#garanties',
-        label:
-          process.env.CATALOG_DEMO_MODE === '1'
-            ? 'Découvrir Caldera'
-            : 'Voir les garanties',
-      };
+    : home.journal
+      ? { href: '#journal', label: 'Passer aux guides et actualités' }
+      : { href: '#newsletter', label: 'Rejoindre la communauté' };
   const night = '#03140e',
     forest = '#072419',
     paper = '#f6f1e4',
     sand = '#ebe5d7';
-  // Chapters join by their colours (HomeJourney): the dark ones are kept
-  // together so that the landscape flows from the hero to the story of the
-  // card without a seam; the light ones (collections, reassurance, guides)
-  // follow, and the origins hand back to the night.
+  // Keep adjacent product chapters in the same night, then a single
+  // immersive passage before the practical reading and community chapters.
   const chapters: HomeChapter[] = [
     {
       key: 'hero',
@@ -113,13 +91,6 @@ export default async function HomePage() {
       end: night,
     },
   ];
-  if (home.families.length)
-    chapters.push({
-      key: 'choices',
-      content: <ShoppingGuide intents={intents} />,
-      start: night,
-      end: forest,
-    });
   if (onSale)
     chapters.push({
       key: 'shop',
@@ -149,22 +120,14 @@ export default async function HomePage() {
       start: night,
       end: forest,
     });
-  chapters.push(
-    {
-      key: 'reflection',
-      content: <Reflection />,
-      start: night,
-      end: night,
-    },
-    {
-      key: 'card',
-      content: <CardStory skipTo={cardSkip} />,
-      start: night,
-      end: night,
-      pinned: true,
-      bridge: true,
-    },
-  );
+  chapters.push({
+    key: 'card',
+    content: <CardStory skipTo={cardSkip} />,
+    start: night,
+    end: night,
+    pinned: true,
+    bridge: true,
+  });
   if (home.collections.length)
     chapters.push({
       key: 'collections',
@@ -172,12 +135,13 @@ export default async function HomePage() {
       start: paper,
       end: paper,
     });
-  chapters.push({
-    key: 'assurances',
-    content: <Assurances />,
-    start: sand,
-    end: sand,
-  });
+  if (!demonstration)
+    chapters.push({
+      key: 'assurances',
+      content: <Assurances />,
+      start: sand,
+      end: sand,
+    });
   if (home.journal)
     chapters.push({
       key: 'journal',
@@ -185,27 +149,12 @@ export default async function HomePage() {
       start: paper,
       end: paper,
     });
-  chapters.push(
-    {
-      key: 'origins',
-      content: <Origins />,
-      start: paper,
-      end: night,
-    },
-    {
-      key: 'territories',
-      content: <Territories />,
-      start: night,
-      end: night,
-      pinned: true,
-    },
-    {
-      key: 'community',
-      content: <FinalCall catalogue={home.links.catalogue} />,
-      start: night,
-      end: night,
-    },
-  );
+  chapters.push({
+    key: 'community',
+    content: <FinalCall catalogue={home.links.catalogue} />,
+    start: night,
+    end: night,
+  });
   return (
     <main id="contenu" tabIndex={-1} className={styles.main}>
       <JsonLd data={graph(organizationNode(), websiteNode())} />

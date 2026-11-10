@@ -36,9 +36,6 @@ export function Showcase({
               </h2>
             </div>
             <div className={styles.intro}>
-              <p className={styles.lead}>
-                Il y a des pièces que l’on cherche. Et celles qui nous trouvent.
-              </p>
               <p>
                 {products.every((product) => product.isDemonstration)
                   ? 'Des produits d’exemple pour découvrir le catalogue de Caldera.'

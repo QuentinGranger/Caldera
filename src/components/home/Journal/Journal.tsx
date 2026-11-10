@@ -23,7 +23,11 @@ const dateFr = new Intl.DateTimeFormat('fr-FR', {
 export function Journal({ journal }: { journal: HomeJournal | null }) {
   if (!journal) return null;
   return (
-    <section className={styles.section} aria-labelledby="journal-title">
+    <section
+      id="journal"
+      className={styles.section}
+      aria-labelledby="journal-title"
+    >
       <div className={styles.inner}>
         <header className={styles.head}>
           <div>

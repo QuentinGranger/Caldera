@@ -4,7 +4,7 @@
 // A full-width product chapter: the pieces get the space, the story introduces them.
 .section {
   position: relative;
-  padding-block: clamp(4.5rem, 10vw, 10rem);
+  padding-block: clamp(3rem, 6vw, 5rem);
   background:
     radial-gradient(
       ellipse 65% 45% at 50% 65%,
@@ -21,10 +21,10 @@
   display: grid;
   align-items: end;
   gap: 2rem;
-  margin-bottom: clamp(2.5rem, 5vw, 5rem);
+  margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
   h2 {
     margin-top: 1rem;
-    font-size: clamp(3rem, 6.6vw, 6.5rem);
+    font-size: clamp(2.6rem, 4.5vw, 4.5rem);
     line-height: 0.98;
     letter-spacing: -0.035em;
     em {
@@ -53,12 +53,6 @@
 .eyebrow {
   @include m.eyebrow;
   color: v.$color-gold;
-}
-.lead {
-  color: v.$color-text-on-dark;
-  font-family: v.$font-heading;
-  font-size: clamp(1.5rem, 2.4vw, 2.2rem);
-  line-height: 1.2;
 }
 .link {
   @include m.underline-link(v.$color-gold-light);
