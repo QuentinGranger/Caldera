@@ -3,9 +3,9 @@
 // A monumental, centred opening over the Caldera landscape.
 .hero {
   // Shorter than the screen: the first shelf of the shop shows beneath.
-  --hero-height: max(32rem, 78svh);
+  --hero-height: max(30rem, 64svh);
   @include m.from(v.$breakpoint-desktop) {
-    --hero-height: max(32rem, 72svh);
+    --hero-height: max(30rem, 68svh);
   }
   position: relative;
   isolation: isolate;
@@ -83,8 +83,8 @@
   justify-content: center;
   @include m.container;
   min-height: var(--hero-height);
-  padding-top: calc(var(--header-height) + 3rem);
-  padding-bottom: clamp(3rem, 7vh, 5rem);
+  padding-top: calc(var(--header-height) + 2rem);
+  padding-bottom: clamp(2rem, 4vh, 3rem);
 }
 .content {
   max-width: 72rem;
@@ -93,7 +93,7 @@
   h1 {
     margin-block: 1.25rem 1.5rem;
     // Short lines leave the landscape room to breathe.
-    font-size: clamp(3.4rem, 9vw, 8rem);
+    font-size: clamp(3.4rem, 8vw, 7.5rem);
     font-weight: 500;
     line-height: 0.9;
     letter-spacing: -0.045em;

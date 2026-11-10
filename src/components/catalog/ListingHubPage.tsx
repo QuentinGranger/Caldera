@@ -26,27 +26,7 @@ import {
   listingScope,
 } from './listingHub';
 import { EXPLORE_PRODUCTS, LISTING_COPY } from './pageCopy';
-import { HeroRange, PageHero } from './PageHero';
-
-/** The counter's range, in the shop's words and order. */
-const COUNTER_FAMILIES = [
-  ['scelles', 'Produits scellés'],
-  ['boosters', 'Boosters'],
-  ['displays', 'Displays'],
-  ['coffrets', 'Coffrets'],
-  ['accessoires', 'Accessoires'],
-] as const;
-
-/** The licence sold, then each family once it has products. */
-function counterRange(families: readonly { slug: string }[]): string[] {
-  const present = new Set(families.map((family) => family.slug));
-  return [
-    'Pokémon TCG',
-    ...COUNTER_FAMILIES.filter(([slug]) => present.has(slug)).map(
-      ([, label]) => label,
-    ),
-  ];
-}
+import { PageHero } from './PageHero';
 
 /** generateMetadata of a transverse listing. */
 export async function listingHubMetadata(
@@ -114,6 +94,7 @@ export async function ListingHubPage({
     <CatalogShell
       hero={
         <PageHero
+          compact={listing === 'catalogue'}
           breadcrumb={breadcrumb}
           path={config.path}
           eyebrow={copy.eyebrow}
@@ -122,18 +103,11 @@ export async function ListingHubPage({
           note={copy.note}
           view={copy.view}
           action={
-            load.total > 0
+            listing !== 'catalogue' && load.total > 0
               ? { href: '#catalogue-resultats', label: EXPLORE_PRODUCTS }
               : undefined
           }
-        >
-          {listing === 'catalogue' && (
-            <HeroRange
-              items={counterRange(load.facets.categories)}
-              label="Au comptoir"
-            />
-          )}
-        </PageHero>
+        />
       }
       jsonLd={graph(
         collectionPageNode({

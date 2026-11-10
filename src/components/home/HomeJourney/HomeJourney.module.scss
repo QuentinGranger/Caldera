@@ -55,8 +55,8 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 42% 34% at 32% 50%, #e8c26130, transparent 100%),
-      radial-gradient(ellipse 34% 24% at 74% 48%, #d5e2c31c, transparent 100%);
+      radial-gradient(ellipse 55% 40% at 28% 50%, #e8c26120, transparent 100%),
+      radial-gradient(ellipse 42% 32% at 76% 48%, #d5e2c326, transparent 100%);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -69,22 +69,23 @@
           scale(calc(0.8 + var(--journey-departure, 0) * 0.5));
       }
     }
-    // The next light surface rises into the reserved bridge like a curved page.
-    // All of this stays below the outgoing content, including its last CTA.
-    &[data-home-bridge] {
-      background: var(--chapter-end);
-      .handoff {
-        bottom: -1px;
-        height: var(--chapter-bridge);
-        opacity: 1;
-        span {
-          background: var(--chapter-next);
-          border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-          box-shadow: 0 -2px 0 #e8c26160;
-          transform-origin: 50% 100%;
-          transform: translateY(calc((1 - var(--journey-departure, 0)) * 30%))
-            scaleX(1.5);
-        }
+    // The reserved bridge carries a soft colour dissolve below the content.
+    // The chapter gradient remains visible even with motion disabled.
+    &[data-home-bridge] .handoff {
+      bottom: 0;
+      height: var(--chapter-bridge);
+      opacity: 1;
+      span {
+        background:
+          radial-gradient(
+            ellipse 55% 80% at 28% 70%,
+            #e8c2611a,
+            transparent 75%
+          ),
+          linear-gradient(180deg, transparent, var(--chapter-next));
+        filter: blur(12px);
+        transform: translateX(calc((var(--journey-departure, 0) - 0.5) * 5%))
+          scaleX(1.1);
       }
     }
     [data-journey-item] {

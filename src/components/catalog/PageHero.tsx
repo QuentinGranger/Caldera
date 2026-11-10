@@ -33,9 +33,8 @@ export interface HeroView {
 
 /**
  * The entrance of every catalogue page: where you are, what is sold here,
- * the way in. One height, one type scale, one call to action everywhere;
- * the view and its framing give each page its own face. Short: the
- * products follow right below.
+ * the way in. Family views keep their framing; compact listings reserve
+ * the first screen for products and omit the extra anchor call to action.
  */
 export function PageHero({
   breadcrumb,
@@ -48,7 +47,10 @@ export function PageHero({
   action,
   view,
   children,
+  compact = false,
 }: {
+  /** A short entrance when shopping is the main task. */
+  compact?: boolean;
   breadcrumb: BreadcrumbItem[];
   path: string;
   eyebrow: string;
@@ -81,6 +83,7 @@ export function PageHero({
     <section
       className={styles.hero}
       data-frame={view.frame}
+      data-compact={compact || undefined}
       data-stable-desktop={view.desktopHeight ? '' : undefined}
       style={heroStyle}
       aria-labelledby="page-title"

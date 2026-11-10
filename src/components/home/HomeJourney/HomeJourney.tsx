@@ -30,7 +30,7 @@ export function HomeJourney({ chapters }: { chapters: HomeChapter[] }) {
           '--chapter-end': chapter.end,
           '--chapter-next': chapters[index + 1]?.start ?? chapter.end,
           ...(chapter.bridge
-            ? { '--chapter-bridge': 'clamp(5rem, 14svh, 9rem)' }
+            ? { '--chapter-bridge': 'clamp(3rem, 8svh, 5rem)' }
             : {}),
         } as CSSProperties
       }

@@ -30,24 +30,19 @@ export function Showcase({
         <div className={styles.inner}>
           <header className={styles.story}>
             <div>
-              <p className={styles.eyebrow}>Le regard du collectionneur</p>
+              <p className={styles.eyebrow}>Choisi par Caldera</p>
               <h2 id="selection-title">
                 Sélection <em>du moment.</em>
               </h2>
             </div>
             <div className={styles.intro}>
-              <p>
-                {products.every((product) => product.isDemonstration)
-                  ? 'Des produits d’exemple pour découvrir le catalogue de Caldera.'
-                  : 'Mises en avant par l’équipe, avec leur prix et leur disponibilité du jour.'}
-              </p>
               {catalogue && (
                 <Link
                   href={merchandisingPath('du-moment')}
                   className={styles.link}
+                  aria-label="Voir toute la sélection"
                 >
-                  Voir toute la sélection{' '}
-                  <ArrowRight size={16} aria-hidden="true" />
+                  Tout voir <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               )}
             </div>
@@ -58,7 +53,7 @@ export function Showcase({
             data-count={products.length}
           >
             {products.map((product) => (
-              <li key={product.id} data-journey-item="product">
+              <li key={product.id}>
                 <ProductCard
                   product={product}
                   tone="night"

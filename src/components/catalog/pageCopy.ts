@@ -41,7 +41,7 @@ export const LISTING_COPY: Readonly<Record<ListingKind, PageCopy>> = {
   catalogue: {
     eyebrow: 'Le Comptoir',
     title: 'Tout le catalogue',
-    lead: 'Explorez les collections de Caldera et trouvez les pièces qui rejoindront votre prochaine aventure.',
+    lead: 'Boosters, ETB et coffrets Pokémon : trouvez votre prochain produit.',
     view: { src: VIEWS.archives, frame: 'backdrop', focus: '35% 45%' },
   },
   nouveautes: {

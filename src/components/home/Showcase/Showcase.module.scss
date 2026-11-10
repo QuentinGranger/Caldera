@@ -4,7 +4,7 @@
 // A full-width product chapter: the pieces get the space, the story introduces them.
 .section {
   position: relative;
-  padding-block: clamp(3rem, 6vw, 5rem);
+  padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(3rem, 6vw, 5rem);
   background:
     radial-gradient(
       ellipse 65% 45% at 50% 65%,
@@ -18,33 +18,27 @@
   @include m.container;
 }
 .story {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   align-items: end;
-  gap: 2rem;
-  margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.25rem;
   h2 {
-    margin-top: 1rem;
-    font-size: clamp(2.6rem, 4.5vw, 4.5rem);
+    margin-top: 0.5rem;
+    font-size: clamp(1.75rem, 3.4vw, 3.25rem);
     line-height: 0.98;
     letter-spacing: -0.035em;
     em {
-      display: block;
       color: v.$color-gold-light;
       font-weight: 400;
     }
-  }
-  @include m.from(v.$breakpoint-tablet) {
-    grid-template-columns: 1.15fr 1fr;
-    gap: 4rem;
   }
 }
 .intro {
   display: grid;
   gap: 1rem;
   max-width: 29rem;
-  p:not(.lead) {
-    color: v.$color-muted-on-night;
-  }
   @include m.from(v.$breakpoint-tablet) {
     justify-self: end;
     padding-bottom: 0.35rem;
@@ -57,7 +51,7 @@
 .link {
   @include m.underline-link(v.$color-gold-light);
   justify-self: start;
-  margin-top: 0.5rem;
+  min-height: 44px;
   color: v.$color-text-on-dark;
 }
 .pieces {

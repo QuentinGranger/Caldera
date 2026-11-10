@@ -91,6 +91,15 @@ export default async function HomePage() {
       end: night,
     },
   ];
+  if (selected.length)
+    chapters.push({
+      key: 'selection',
+      content: (
+        <Showcase products={selected} catalogue={home.links.catalogue} />
+      ),
+      start: forest,
+      end: forest,
+    });
   if (onSale)
     chapters.push({
       key: 'shop',
@@ -102,15 +111,6 @@ export default async function HomePage() {
         />
       ),
       start: night,
-      end: forest,
-    });
-  if (selected.length)
-    chapters.push({
-      key: 'selection',
-      content: (
-        <Showcase products={selected} catalogue={home.links.catalogue} />
-      ),
-      start: forest,
       end: forest,
     });
   if (home.families.length)
@@ -145,6 +145,7 @@ export default async function HomePage() {
   if (home.journal)
     chapters.push({
       key: 'journal',
+      bridge: true,
       content: <Journal journal={home.journal} />,
       start: paper,
       end: paper,
