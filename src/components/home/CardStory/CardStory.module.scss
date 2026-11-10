@@ -153,9 +153,6 @@
   align-items: center;
   gap: 0.7rem;
 }
-.progress {
-  display: none;
-}
 @media (min-width: 64rem) {
   .fallback {
     float: right;
@@ -225,23 +222,6 @@
     }
     .cue {
       display: inline-flex;
-    }
-    .progress {
-      opacity: calc(1 - var(--card-progress, 0));
-      display: block;
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: #e8c26115;
-      span {
-        display: block;
-        height: 100%;
-        background: v.$color-gold;
-        transform-origin: left;
-        transform: scaleX(var(--card-progress, 0));
-      }
     }
     @media (max-width: 63.99rem) {
       height: 210svh;

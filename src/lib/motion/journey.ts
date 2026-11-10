@@ -85,14 +85,6 @@ export function observeHomeJourney() {
             '--journey-progress',
             flow.progress.toFixed(4),
           );
-          node.style.setProperty(
-            '--journey-crossing',
-            (4 * flow.departure * (1 - flow.departure)).toFixed(4),
-          );
-          node.style.setProperty(
-            '--journey-departure',
-            flow.departure.toFixed(4),
-          );
         }
       }
     };
@@ -143,8 +135,6 @@ export function observeHomeJourney() {
           ?.removeAttribute('data-home-anchor');
         delete node.dataset.homeJourneyReady;
         node.style.removeProperty('--journey-progress');
-        node.style.removeProperty('--journey-crossing');
-        node.style.removeProperty('--journey-departure');
       });
       items.forEach((node) => node.style.removeProperty('--item-reveal'));
     };

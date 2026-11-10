@@ -29,9 +29,6 @@ export function HomeJourney({ chapters }: { chapters: HomeChapter[] }) {
           '--chapter-start': chapter.start,
           '--chapter-end': chapter.end,
           '--chapter-next': chapters[index + 1]?.start ?? chapter.end,
-          ...(chapter.bridge
-            ? { '--chapter-bridge': 'clamp(3rem, 8svh, 5rem)' }
-            : {}),
         } as CSSProperties
       }
     >
@@ -41,11 +38,6 @@ export function HomeJourney({ chapters }: { chapters: HomeChapter[] }) {
       >
         <div className={styles.body}>{chapter.content}</div>
       </div>
-      {index < chapters.length - 1 && !chapter.bridge && (
-        <div className={styles.handoff} aria-hidden="true">
-          <span />
-        </div>
-      )}
     </div>
   ));
 }

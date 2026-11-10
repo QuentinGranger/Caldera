@@ -1,7 +1,7 @@
 // The backgrounds join inside existing section padding. No extra scroll
 // chapter, except a short bridge where a dark chapter meets a light one.
 .chapter {
-  --fade: var(--chapter-bridge, clamp(6rem, 18svh, 12rem));
+  --fade: 8rem;
   position: relative;
   min-width: 0;
   padding-bottom: var(--chapter-bridge, 0px);
@@ -28,7 +28,7 @@
 // Start the dissolve in the section's existing bottom padding. The bridge
 // keeps its height, while the colour change has room to breathe below the copy.
 .chapter[data-home-bridge] {
-  --fade: calc(var(--chapter-bridge) + clamp(2rem, 5vw, 4rem));
+  --chapter-bridge: 4rem;
 }
 // A chapter starts a pixel above its end of the previous one: at a fractional
 // position the page's own background would otherwise show as a hairline. The
@@ -45,37 +45,17 @@
     background: transparent;
   }
 }
-// One light field straddles each actual boundary; no new scroll interval.
-// It is absent without the motion observer, and never captures input.
-.handoff {
-  display: none;
-  position: absolute;
-  inset: auto 0 calc(clamp(10rem, 30svh, 20rem) * -0.5);
-  height: clamp(10rem, 30svh, 20rem);
-  z-index: 2;
-  overflow: hidden;
-  overflow: clip;
-  pointer-events: none;
-  span {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 55% 40% at 28% 50%, #e8c26120, transparent 100%),
-      radial-gradient(ellipse 42% 32% at 76% 48%, #d5e2c326, transparent 100%);
+// Colour joins are static. Only content and image depth follow the scroll.
+@media (max-width: 47.99rem) {
+  .chapter {
+    --fade: 5rem;
+  }
+  .chapter[data-home-bridge] {
+    --chapter-bridge: 3rem;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
   .chapter[data-home-journey-ready] {
-    .handoff {
-      display: block;
-      opacity: var(--journey-crossing, 0);
-      span {
-        transform: translateX(calc((var(--journey-departure, 0) - 0.5) * 12%))
-          scale(calc(0.8 + var(--journey-departure, 0) * 0.5));
-      }
-    }
-    // Dark/light bridges are painted only by the chapter gradient. A blurred
-    // overlay clipped to this short band creates a visible edge at both ends.
     [data-journey-item] {
       --journey-side: -1;
       perspective: 1400px;

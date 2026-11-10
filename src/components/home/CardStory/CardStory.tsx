@@ -203,9 +203,6 @@ export function CardStory({
             <ArrowDown size={14} aria-hidden="true" />
           </span>
         </div>
-        <div className={styles.progress} aria-hidden="true">
-          <span />
-        </div>
       </div>
     </section>
   );

@@ -63,7 +63,6 @@ export async function mountCardStory(
     delete root.dataset.cardState;
     delete root.dataset.cardLayout;
     delete root.dataset.cardChapter;
-    root.style.removeProperty('--card-progress');
     for (const chapter of chapters) {
       delete chapter.dataset.active;
       chapter.removeAttribute('aria-hidden');
@@ -253,7 +252,6 @@ export async function mountCardStory(
       }
       if (Math.abs(aim.x - target.x) + Math.abs(aim.y - target.y) > 0.001)
         schedule();
-      root.style.setProperty('--card-progress', progress.toFixed(4));
       if (chapterIndex !== pose.chapter) {
         chapterIndex = pose.chapter;
         root.dataset.cardChapter = String(chapterIndex);
