@@ -38,7 +38,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
         data-depth-landscape
       >
         <Image
-          src="/assets/images/editorial/hero-banner.png"
+          src="/assets/images/editorial/cite-des-cascades.webp"
           alt=""
           fill
           sizes="100vw"
