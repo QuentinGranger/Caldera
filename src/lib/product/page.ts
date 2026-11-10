@@ -26,8 +26,7 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import { findSlugRedirect } from '@/lib/seo/redirects';
 import { getLandingIndex, type LandingIndex } from '@/lib/seo/registry';
 import { getShippingFacts } from '@/lib/seo/shipping';
-import type { IndexDecision, SeoLink } from '@/lib/seo/types';
-import type { CatalogProduct } from '@/types/product';
+import type { IndexDecision } from '@/lib/seo/types';
 import {
   CATALOGUE_LEVEL,
   CATALOGUE_PATH,
@@ -173,60 +172,40 @@ async function productGuides(
 
 export interface ProductPageData {
   breadcrumb: TrailItem[];
-  /** Indexable landing of the product's set, if any. */
   setHref: string | null;
-  /** Indexable landings around the product (set, families, languages, game). */
-  links: SeoLink[];
-  glossary: ContentEntry | null;
-  guides: ContentEntry[];
-  /** Purchasable products first. */
-  related: CatalogProduct[];
-  complementary: CatalogProduct[];
   shipping: ShippingOptionView[];
-  /** Product markup of an indexable page, null otherwise. */
   structuredData: JsonLdGraph | null;
 }
 
+function placementOf(
+  product: ProductDetail,
+  categories: Awaited<ReturnType<typeof getCategories>>,
+): ProductPlacement {
+  return {
+    game: product.game,
+    set: product.tcgSet,
+    families: familyLineage(categories, product.categoryInfo.id),
+  };
+}
+
+/** Only the facts needed above the fold. Discovery never holds up the product. */
 export async function loadProductPage(
   product: ProductDetail,
   decision: IndexDecision,
 ): Promise<ProductPageData> {
-  const [
-    index,
-    categories,
-    related,
-    complementary,
-    linkGroups,
-    glossary,
-    shipping,
-  ] = await Promise.all([
+  const [index, categories, shipping] = await Promise.all([
     getLandingIndex(),
     getCategories(),
-    getRelatedProducts(product),
-    getComplementaryProducts(product),
-    getProductLinks(product),
-    getGlossaryTermForProductType(product.productType),
     getShippingFacts(),
   ]);
-  const placement: ProductPlacement = {
-    game: product.game,
-    set: product.tcgSet
-      ? {
-          id: product.tcgSet.id,
-          slug: product.tcgSet.slug,
-          name: product.tcgSet.name,
-        }
-      : null,
-    families: familyLineage(categories, product.categoryInfo.id),
-  };
-  const parents = productParents(placement, indexablePaths(index));
+  const parents = productParents(
+    placementOf(product, categories),
+    indexablePaths(index),
+  );
   const levels = productTrailLevels(parents);
-  const [guides, catalogue] = await Promise.all([
-    productGuides(product, placement),
-    levels.length
-      ? null
-      : getIndexableListings().then((listings) => listings.has('catalogue')),
-  ]);
+  const catalogue = levels.length
+    ? false
+    : (await getIndexableListings()).has('catalogue');
   const productMarkup = productStructuredData(product, shipping);
   return {
     breadcrumb: productBreadcrumb(
@@ -234,11 +213,6 @@ export async function loadProductPage(
       product.name,
     ),
     setHref: parents.find((parent) => parent.kind === 'set')?.path ?? null,
-    links: linkGroups.flatMap((group) => group.links),
-    glossary,
-    guides,
-    related,
-    complementary,
     shipping: shippingOptionViews(shipping),
     structuredData:
       decision.index && productMarkup
@@ -246,3 +220,22 @@ export async function loadProductPage(
         : null,
   };
 }
+
+/** Shared by the separately streamed alternatives, guides and recommendations. */
+export const loadProductDiscovery = cache(async (product: ProductDetail) => {
+  const [categories, related, complementary, linkGroups, glossary] =
+    await Promise.all([
+      getCategories(),
+      getRelatedProducts(product),
+      getComplementaryProducts(product),
+      getProductLinks(product),
+      getGlossaryTermForProductType(product.productType),
+    ]);
+  return {
+    links: linkGroups.flatMap((group) => group.links),
+    glossary,
+    guides: await productGuides(product, placementOf(product, categories)),
+    related,
+    complementary,
+  };
+});

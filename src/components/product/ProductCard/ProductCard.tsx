@@ -77,6 +77,8 @@ export function ProductCard({
         />
         <Link
           href={`/produit/${product.slug}`}
+          prefetch={true}
+          pendingLabel="Ouverture…"
           aria-label={viewProductLabel(product.name)}
         >
           <SharedProductImage
@@ -95,7 +97,9 @@ export function ProductCard({
             : `${product.category}${product.tcgSet ? ` · ${product.tcgSet.name}` : ''}`}
         </p>
         <h3>
-          <Link href={`/produit/${product.slug}`}>{product.name}</Link>
+          <Link href={`/produit/${product.slug}`} prefetch={true}>
+            {product.name}
+          </Link>
         </h3>
         {/* Availability is stated once, on the image badge. */}
         {edition && product.languages.length > 0 ? (

@@ -130,7 +130,7 @@ export function arrivalDuration(name: TransitionName) {
         : name === 'archive'
           ? 620
           : name === 'product' || name === 'product-return'
-            ? 650
+            ? 320
             : 900;
   return window.matchMedia('(max-width: 47.99rem)').matches
     ? Math.round(duration * 0.8)

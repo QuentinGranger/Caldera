@@ -1,17 +1,20 @@
 'use client';
 
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
+import styles from './PrefetchLink.module.scss';
 import { useState, type ComponentProps } from 'react';
 import { canPrefetchPage } from '@/lib/transitions/navigation';
 
 /** Upgrade public links to a full prefetch on hover, focus or touch intent. */
 export default function PrefetchLink({
   prefetch,
+  children,
+  pendingLabel,
   onPointerEnter,
   onPointerDown,
   onFocus,
   ...props
-}: ComponentProps<typeof Link>) {
+}: ComponentProps<typeof Link> & { pendingLabel?: string }) {
   const [intent, setIntent] = useState(false);
   function warm(link: HTMLAnchorElement) {
     const url = new URL(link.href);
@@ -38,6 +41,22 @@ export default function PrefetchLink({
         warm(event.currentTarget);
         onFocus?.(event);
       }}
-    />
+    >
+      {children}
+      {pendingLabel && <PendingHint label={pendingLabel} />}
+    </Link>
+  );
+}
+
+function PendingHint({ label }: { label: string }) {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      className={styles.pending}
+      data-pending={pending || undefined}
+      role="status"
+    >
+      {pending ? label : ''}
+    </span>
   );
 }

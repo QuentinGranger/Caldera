@@ -106,10 +106,10 @@
 ::view-transition-group(.caldera-product) {
   z-index: 4;
   overflow: clip;
-  animation-duration: 650ms;
+  animation-duration: 320ms;
   animation-timing-function: var(--ease-caldera);
   @media (max-width: 47.99rem) {
-    animation-duration: 520ms;
+    animation-duration: 256ms;
   }
 }
 ::view-transition-old(.caldera-product),
@@ -148,7 +148,7 @@
     --journey-duration: 620ms;
   }
   @include journey(product, product-return) {
-    --journey-duration: 650ms;
+    --journey-duration: 320ms;
     --atmosphere-strength: 0.5;
   }
   @include journey(chapter-forward) {
@@ -238,7 +238,7 @@
       width: 35%;
       height: 2px;
       background: linear-gradient(90deg, transparent, #e8c261, transparent);
-      animation: caldera-route-pending 900ms linear 160ms infinite both;
+      animation: caldera-route-pending 900ms linear infinite both;
     }
   }
   :root[data-caldera-motion='live'] .caldera-veil__mineral {
@@ -252,7 +252,7 @@
       --journey-duration: 496ms;
     }
     @include journey(product, product-return) {
-      --journey-duration: 520ms;
+      --journey-duration: 256ms;
     }
   }
 }

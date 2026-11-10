@@ -21,8 +21,10 @@ import { RelatedProducts } from '@/components/product/RelatedProducts/RelatedPro
 import {
   getProductPageRoute,
   loadProductPage,
+  loadProductDiscovery,
   productPageMetadata,
 } from '@/lib/product/page';
+import type { ProductDetail } from '@/lib/catalog/queries';
 import { productTypeLabels } from '@/lib/product/purchase';
 import { isSealedProduct } from '@/lib/product/services';
 import { productPath } from '@/lib/product/seo';
@@ -51,7 +53,6 @@ async function ProductContent({
     ? product.images
     : [{ url: product.image, alt: product.imageAlt }];
   const salesEnabled = process.env.CATALOG_DEMO_MODE !== '1';
-  const purchasable = product.availability !== 'OUT_OF_STOCK';
   // Back-in-stock alerts go to a signed-in customer's address.
   const alertEmail =
     salesEnabled &&
@@ -59,18 +60,6 @@ async function ProductContent({
     product.variants.some((variant) => variant.availability === 'OUT_OF_STOCK')
       ? ((await currentCustomer())?.email ?? null)
       : null;
-  const alternatives = purchasable
-    ? []
-    : page.related.filter((item) => item.availability !== 'OUT_OF_STOCK');
-  const suggestions = [
-    ...page.complementary,
-    ...page.related.filter(
-      (item) =>
-        item.availability !== 'OUT_OF_STOCK' &&
-        item.availability !== 'PREORDER' &&
-        !page.complementary.some((accessory) => accessory.id === item.id),
-    ),
-  ].slice(0, 4);
   return (
     <main id="contenu" tabIndex={-1} className={styles.main} data-product-world>
       <Container>
@@ -137,28 +126,11 @@ async function ProductContent({
                 {(product.isDemonstration || !salesEnabled) && (
                   <PurchaseAssurance commerce={false} />
                 )}
-                {salesEnabled &&
-                  !product.isDemonstration &&
-                  !purchasable &&
-                  (product.variants.length > 0 || alternatives.length > 0) && (
-                    <div className={styles.notice}>
-                      {product.variants.length > 0 && (
-                        <p>
-                          <strong>Produit épuisé.</strong>{' '}
-                          {product.variants.length > 1
-                            ? 'Toutes les versions de ce produit sont en rupture de stock.'
-                            : 'Ce produit est en rupture de stock.'}
-                        </p>
-                      )}
-                      {alternatives.length > 0 && (
-                        <a href="#alternatives-title">
-                          {alternatives.length > 1
-                            ? `Voir les ${alternatives.length} produits similaires disponibles`
-                            : 'Voir un produit similaire disponible'}
-                        </a>
-                      )}
-                    </div>
-                  )}
+                {salesEnabled && !product.isDemonstration && (
+                  <Suspense fallback={null}>
+                    <UnavailableNotice product={product} />
+                  </Suspense>
+                )}
               </div>
               {product.shortDescription && (
                 <p className={styles.summary}>{product.shortDescription}</p>
@@ -170,17 +142,9 @@ async function ProductContent({
             </ArrivalLayers>
           </div>
         </div>
-        {alternatives.length > 0 && (
-          <RelatedProducts
-            tone="night"
-            products={alternatives}
-            id="alternatives-title"
-            eyebrow={
-              product.variants.length ? 'Produit épuisé' : 'Indisponible'
-            }
-            title="Alternatives disponibles"
-          />
-        )}
+        <Suspense fallback={null}>
+          <ProductAlternatives product={product} />
+        </Suspense>
         {salesEnabled && !product.isDemonstration && (
           <ProductSpecifications
             variants={product.variants}
@@ -192,32 +156,107 @@ async function ProductContent({
         {product.tcgSet && (
           <ProductSetSection set={product.tcgSet} href={page.setHref} />
         )}
-        <ProductExplore
-          links={page.links}
-          glossary={page.glossary}
-          guides={page.guides}
-        />
-        {!alternatives.length && (
-          <RelatedProducts
-            products={suggestions}
-            tone="night"
-            title="Vous pourriez aussi aimer"
-            eyebrow={
-              page.complementary.length
-                ? 'Pour compléter votre sélection'
-                : 'Poursuivre l’exploration'
-            }
-            description={
-              page.complementary.length
-                ? 'Des accessoires de protection et des produits à découvrir. Vérifiez le format et les dimensions sur chaque fiche avant de choisir.'
-                : undefined
-            }
-          />
-        )}
+        <Suspense fallback={null}>
+          <ProductDiscovery product={product} />
+        </Suspense>
       </Container>
     </main>
   );
 }
+function alternativesFor(
+  product: ProductDetail,
+  page: Awaited<ReturnType<typeof loadProductDiscovery>>,
+) {
+  return product.availability === 'OUT_OF_STOCK'
+    ? page.related.filter((item) => item.availability !== 'OUT_OF_STOCK')
+    : [];
+}
+
+async function UnavailableNotice({ product }: { product: ProductDetail }) {
+  if (product.availability !== 'OUT_OF_STOCK') return null;
+  const alternatives = alternativesFor(
+    product,
+    await loadProductDiscovery(product),
+  );
+  if (!product.variants.length && !alternatives.length) return null;
+  return (
+    <div className={styles.notice}>
+      {product.variants.length > 0 && (
+        <p>
+          <strong>Produit épuisé.</strong>{' '}
+          {product.variants.length > 1
+            ? 'Toutes les versions de ce produit sont en rupture de stock.'
+            : 'Ce produit est en rupture de stock.'}
+        </p>
+      )}
+      {alternatives.length > 0 && (
+        <a href="#alternatives-title">
+          {alternatives.length > 1
+            ? `Voir les ${alternatives.length} produits similaires disponibles`
+            : 'Voir un produit similaire disponible'}
+        </a>
+      )}
+    </div>
+  );
+}
+
+async function ProductAlternatives({ product }: { product: ProductDetail }) {
+  if (product.availability !== 'OUT_OF_STOCK') return null;
+  const alternatives = alternativesFor(
+    product,
+    await loadProductDiscovery(product),
+  );
+  return alternatives.length > 0 ? (
+    <RelatedProducts
+      tone="night"
+      products={alternatives}
+      id="alternatives-title"
+      eyebrow={product.variants.length ? 'Produit épuisé' : 'Indisponible'}
+      title="Alternatives disponibles"
+    />
+  ) : null;
+}
+
+async function ProductDiscovery({ product }: { product: ProductDetail }) {
+  const page = await loadProductDiscovery(product);
+  const alternatives = alternativesFor(product, page);
+  const suggestions = [
+    ...page.complementary,
+    ...page.related.filter(
+      (item) =>
+        item.availability !== 'OUT_OF_STOCK' &&
+        item.availability !== 'PREORDER' &&
+        !page.complementary.some((accessory) => accessory.id === item.id),
+    ),
+  ].slice(0, 4);
+  return (
+    <>
+      <ProductExplore
+        links={page.links}
+        glossary={page.glossary}
+        guides={page.guides}
+      />
+      {!alternatives.length && (
+        <RelatedProducts
+          products={suggestions}
+          tone="night"
+          title="Vous pourriez aussi aimer"
+          eyebrow={
+            page.complementary.length
+              ? 'Pour compléter votre sélection'
+              : 'Poursuivre l’exploration'
+          }
+          description={
+            page.complementary.length
+              ? 'Des accessoires de protection et des produits à découvrir. Vérifiez le format et les dimensions sur chaque fiche avant de choisir.'
+              : undefined
+          }
+        />
+      )}
+    </>
+  );
+}
+
 export default async function ProductPage({ params }: Props) {
   // Decide 404/410/308 before opening a streaming boundary so HTTP semantics
   // remain exact. The heavier product view can then reveal progressively.

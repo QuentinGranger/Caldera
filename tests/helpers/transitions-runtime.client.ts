@@ -212,9 +212,13 @@ test('real scenery is independent of native captures and remains disposable', as
         prepare();
         assert.equal(arrivalDuration('shop'), 700);
         assert.equal(arrivalDuration('enter-world'), 900);
+        assert.ok(arrivalDuration('product') <= 350);
+        assert.ok(arrivalDuration('product-return') <= 350);
         mobile = true;
         assert.equal(arrivalDuration('shop'), 560);
         assert.equal(arrivalDuration('enter-world'), 720);
+        assert.ok(arrivalDuration('product') <= 280);
+        assert.ok(arrivalDuration('product-return') <= 280);
         beginNavigation('/univers', 'push');
         presentArrival('/univers');
         assert.equal(dataset.calderaArrival, 'enter-world');

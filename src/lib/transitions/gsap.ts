@@ -82,7 +82,7 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
               repeat: -1,
               ease: 'none',
             },
-            0.16,
+            0,
           );
       });
     },
@@ -116,6 +116,23 @@ export function createJourneyAnimator(stage: HTMLElement): JourneyAnimator {
           onComplete: complete,
           defaults: { ease: 'power3.out' },
         });
+        // Product facts remain readable immediately; the shared image carries
+        // the movement. No title splitting or staged hiding of purchase controls.
+        if (name === 'product' || name === 'product-return') {
+          timeline.to(
+            [fog, near, light, vignette, previous, progress].filter(Boolean),
+            { opacity: 0, duration: duration * 0.6 },
+            0,
+          );
+          if (main)
+            timeline.fromTo(
+              main,
+              { opacity: 0.96 },
+              { opacity: 1, duration },
+              0,
+            );
+          return;
+        }
         if (progress)
           timeline.to(progress, { autoAlpha: 0, duration: 0.08 }, 0);
         if (main)
