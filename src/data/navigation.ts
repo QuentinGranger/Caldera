@@ -3,6 +3,12 @@
 // listings only while indexable, then pages that always answer 200.
 import 'server-only';
 import { getAllContent } from '@/lib/content';
+import { universeChapters } from '@/data/universe';
+import type { ProductType } from '@/generated/prisma/client';
+import { getPrisma } from '@/lib/db/prisma';
+import { visibleProductWhere } from '@/lib/catalog/queries';
+import { shopProductWhere } from '@/lib/catalog/shopGame';
+import { typeLabels } from '@/lib/catalog/params';
 import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 import {
@@ -63,6 +69,8 @@ export interface SiteNavigation {
   /** The catalogue target; only offered while it has visible products. */
   catalogue: NavLink;
   catalogueAvailable: boolean;
+  /** Available product formats: indexed landings or filters of /catalogue. */
+  shopCategories: NavLink[];
   /** Nouveautés, Précommandes, En stock while indexable. */
   listings: NavLink[];
   extensions: NavLink | null;
@@ -72,7 +80,7 @@ export interface SiteNavigation {
   /** Only once the section has published entries. */
   questions: NavLink | null;
   news: NavLink | null;
-  universe: NavLink;
+  universe: NavItem;
   delivery: NavLink;
   contact: NavLink;
   account: NavLink;
@@ -117,6 +125,7 @@ export function buildSiteNavigation(
     questions: false,
     news: false,
   },
+  availableTypes: readonly ProductType[] = [],
 ): SiteNavigation {
   const listing = (kind: ListingKind): NavLink => ({
     href: LISTING_HUBS[kind].path,
@@ -146,6 +155,13 @@ export function buildSiteNavigation(
       ...games.flatMap((game) => game.families),
       ...navigation.categoryHubs.filter(({ slug }) => !covered.has(slug)),
     ]),
+    shopCategories: [...new Set(availableTypes)]
+      .filter((type) => type !== 'OTHER')
+      .map((type) => ({
+        href: `/catalogue?type=${type}#catalogue-resultats`,
+        label: type === 'ETB' ? 'ETB' : typeLabels[type],
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'fr')),
     catalogueAvailable: listings.has('catalogue'),
     catalogue: {
       href: LISTING_HUBS.catalogue.path,
@@ -170,7 +186,17 @@ export function buildSiteNavigation(
       ? { href: '/questions', label: 'Questions fréquentes' }
       : null,
     news: content.news ? { href: '/actualites', label: 'Actualités' } : null,
-    universe: { href: '/univers', label: 'Univers' },
+    universe: {
+      href: '/univers',
+      label: 'Univers',
+      children: [
+        { href: '/univers', label: 'Découvrir l’univers' },
+        ...universeChapters.map((chapter) => ({
+          href: `/univers/${chapter.slug}`,
+          label: chapter.title,
+        })),
+      ],
+    },
     delivery: { href: '/livraison', label: 'Livraison' },
     contact: { href: '/contact', label: 'Contact' },
     // Signed-in visitors are sent on to /compte: no redirect for crawlers.
@@ -202,21 +228,40 @@ const cachedReleaseSections = unstable_cache(
   { tags: [CATALOG_CACHE_TAG], revalidate: 300 },
 );
 
+// Cache only the available format names, using the same visibility rules as
+// the catalogue. Filter links remain valid even before a landing is indexable.
+const cachedShopTypes = unstable_cache(
+  async (): Promise<ProductType[]> => {
+    const groups = await getPrisma().product.groupBy({
+      by: ['productType'],
+      where: { AND: [visibleProductWhere, shopProductWhere] },
+    });
+    return groups.map(({ productType }) => productType);
+  },
+  ['site-navigation-product-formats', PREORDER_CACHE_KEY],
+  { tags: [CATALOG_CACHE_TAG], revalidate: 300 },
+);
+
 /** Menus of the current request; without the database, only fixed pages. */
 export const getSiteNavigation = cache(async (): Promise<SiteNavigation> => {
   try {
-    const [navigation, listings, content, releases] = await Promise.all([
+    const [navigation, listings, content, releases, types] = await Promise.all([
       getNavigation(),
       cachedListings(),
       getAllContent(),
       cachedReleaseSections(),
+      cachedShopTypes(),
     ]);
-    return buildSiteNavigation(navigation, new Set(listings), {
-      // The shop's FAQ is always there, card questions or not.
-      questions: true,
-      news: content.some((entry) => entry.kind === 'actualite'),
-      ...releases,
-    });
+    return buildSiteNavigation(
+      navigation,
+      new Set(listings),
+      {
+        questions: true,
+        news: content.some((entry) => entry.kind === 'actualite'),
+        ...releases,
+      },
+      types,
+    );
   } catch {
     return buildSiteNavigation({ games: [], categoryHubs: [] }, new Set(), {
       questions: true,
@@ -245,35 +290,46 @@ export function shopGroups(site: SiteNavigation): NavGroup[] {
   ];
 }
 
-/**
- * Desktop header: the compact storefront navigation from the original design,
- * under the rule of every other menu. A game, a product family or a listing
- * shows only once its page exists and is indexable, so an empty catalogue
- * (production before opening) never links to a 404.
- */
-export function headerItems(site: SiteNavigation): NavItem[] {
-  const pokemon = site.games.find((game) =>
-    game.label.toLocaleLowerCase('fr').includes('pokémon'),
-  );
-  const shown = (links: readonly NavLink[], href: string, label: string) =>
-    links.some((link) => link.href === href)
-      ? [{ href, label, children: [] }]
-      : [];
-
+/** Direct shopping formats, with indexed leaf families as the fallback. */
+export function shopCategoryLinks(site: SiteNavigation): NavLink[] {
+  if (site.shopCategories.length) return site.shopCategories;
+  const families = [
+    ...site.games.flatMap((game) =>
+      game.children.filter((link) => link.href !== game.href),
+    ),
+    ...site.productTypes,
+  ];
   return [
-    // The catalogue leads only while there are products to explore.
-    ...(pokemon
-      ? [pokemon]
-      : site.catalogueAvailable
-        ? [{ href: site.catalogue.href, label: 'Catalogue', children: [] }]
-        : []),
-    ...shown(site.listings, '/nouveautes', 'Nouveautés'),
-    ...shown(site.productTypes, '/categorie/scelles', 'Scellés'),
-    ...shown(site.productTypes, '/categorie/cartes', 'Cartes'),
-    ...shown(site.productTypes, '/categorie/accessoires', 'Accessoires'),
-    ...(site.extensions
-      ? [{ href: site.extensions.href, label: 'Collections', children: [] }]
+    ...new Map(
+      families.map((link) => [
+        link.href,
+        {
+          href: link.href,
+          label: link.shortLabel ?? link.label,
+        },
+      ]),
+    ).values(),
+  ];
+}
+
+/** One shop entry, useful formats below it, then reading and the world. */
+export function headerItems(site: SiteNavigation): NavItem[] {
+  return [
+    ...(site.catalogueAvailable
+      ? [
+          {
+            href: site.catalogue.href,
+            label: 'Boutique',
+            children: [
+              { ...site.catalogue, label: 'Tous les produits' },
+              ...shopCategoryLinks(site),
+              ...site.listings,
+              ...(site.extensions ? [site.extensions] : []),
+            ],
+          },
+        ]
       : []),
-    { ...site.universe, children: [] },
+    { ...site.guides, children: [] },
+    site.universe,
   ];
 }

@@ -6,7 +6,11 @@ import { Container } from '@/components/ui/Container/Container';
 import { IconLink } from '@/components/ui/IconButton/IconButton';
 import { Navigation } from '@/components/layout/Navigation/Navigation';
 import { MobileNavigation } from '@/components/layout/MobileNavigation/MobileNavigation';
-import { getSiteNavigation, headerItems } from '@/data/navigation';
+import {
+  getSiteNavigation,
+  headerItems,
+  shopCategoryLinks,
+} from '@/data/navigation';
 import { currentCustomer } from '@/lib/account/auth';
 import styles from './Header.module.scss';
 import { HeaderSearch } from '@/components/layout/HeaderSearch/HeaderSearch';
@@ -22,6 +26,7 @@ export async function Header() {
         <div className={styles.mobileActions}>
           <MobileNavigation
             navigation={navigation}
+            categories={shopCategoryLinks(navigation)}
             signedIn={Boolean(customer)}
           />
           <HeaderWishlistLink />

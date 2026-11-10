@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildSiteNavigation, headerItems } from '../src/data/navigation';
+import {
+  buildSiteNavigation,
+  headerItems,
+  shopCategoryLinks,
+} from '../src/data/navigation';
 import type { NavigationFamily } from '../src/lib/seo/links';
 
 const family = (slug: string, name: string): NavigationFamily => ({
@@ -18,7 +22,10 @@ const menu = (items: ReturnType<typeof headerItems>) =>
 test('menu principal : aucun lien vers une page absente quand le catalogue est vide', () => {
   // Production before opening, or the database unreachable.
   const empty = buildSiteNavigation({ games: [], categoryHubs: [] }, new Set());
-  assert.deepEqual(menu(headerItems(empty)), ['Univers /univers']);
+  assert.deepEqual(menu(headerItems(empty)), [
+    'Guides /guides',
+    'Univers /univers',
+  ]);
 });
 
 test('menu principal : Collections reste masqué quand le catalogue existe sans extension', () => {
@@ -28,7 +35,9 @@ test('menu principal : Collections reste masqué quand le catalogue existe sans 
     { questions: true, news: false, extensions: false, calendar: false },
   );
   assert.equal(site.extensions, null);
-  assert.ok(!menu(headerItems(site)).some((item) => item.includes('/extensions')));
+  assert.ok(
+    !menu(headerItems(site)).some((item) => item.includes('/extensions')),
+  );
 });
 
 test('menu principal : jeux, familles et listes indexables seulement', () => {
@@ -55,23 +64,23 @@ test('menu principal : jeux, familles et listes indexables seulement', () => {
         family('accessoires', 'Accessoires'),
       ],
     },
-    new Set(['nouveautes', 'en-stock'] as const),
+    new Set(['catalogue', 'nouveautes', 'en-stock'] as const),
     { questions: true, news: false, extensions: true, calendar: true },
   );
   const items = headerItems(site);
   assert.deepEqual(menu(items), [
-    'Pokémon /pokemon',
-    'Nouveautés /nouveautes',
-    'Scellés /categorie/scelles',
-    'Accessoires /categorie/accessoires',
-    'Collections /extensions',
+    'Boutique /catalogue',
+    'Guides /guides',
     'Univers /univers',
   ]);
-  // The game keeps its families as a submenu.
-  assert.deepEqual(
-    items[0]!.children.map((link) => link.href),
-    ['/pokemon', '/pokemon/boosters'],
+  const shop = items[0]!;
+  assert.equal(shop.children[0]?.href, '/catalogue');
+  assert.ok(shop.children.some((link) => link.href === '/pokemon/boosters'));
+  assert.ok(
+    shop.children.some((link) => link.href === '/categorie/accessoires'),
   );
+  assert.ok(shop.children.some((link) => link.href === '/nouveautes'));
+  assert.ok(!shop.children.some((link) => link.href === '/pokemon'));
 });
 
 test('menus : les autres jeux du catalogue restent hors des menus', () => {
@@ -141,4 +150,42 @@ test('menus : une famille couverte par Pokémon passe par son menu, pas par la p
     site.games[0]!.children.map((link) => link.shortLabel ?? link.label),
     ['Tout Pokémon', 'Produits scellés', 'Boosters'],
   );
+});
+
+test('boutique : les formats présents mènent directement aux produits sans doubler les hubs', () => {
+  const site = buildSiteNavigation(
+    { games: [], categoryHubs: [] },
+    new Set(['catalogue']),
+    { questions: true, news: false },
+    ['BOOSTER', 'ETB', 'COLLECTION_BOX', 'BOOSTER', 'OTHER'],
+  );
+  assert.deepEqual(shopCategoryLinks(site), [
+    { href: '/catalogue?type=BOOSTER#catalogue-resultats', label: 'Boosters' },
+    {
+      href: '/catalogue?type=COLLECTION_BOX#catalogue-resultats',
+      label: 'Coffrets',
+    },
+    { href: '/catalogue?type=ETB#catalogue-resultats', label: 'ETB' },
+  ]);
+  assert.deepEqual(
+    headerItems(site)[0]?.children.map((link) => link.label),
+    ['Tous les produits', 'Boosters', 'Coffrets', 'ETB'],
+  );
+});
+
+test('chroniques : une entrée commune avec l’index et chaque chapitre une seule fois', () => {
+  const site = buildSiteNavigation({ games: [], categoryHubs: [] }, new Set());
+  const universe = headerItems(site).find((item) => item.href === '/univers')!;
+  assert.deepEqual(
+    universe.children.map((link) => link.href),
+    [
+      '/univers',
+      '/univers/origines',
+      '/univers/archives',
+      '/univers/territoires',
+      '/univers/route-des-cinq',
+      '/univers/horizons',
+    ],
+  );
+  assert.equal(new Set(universe.children.map((link) => link.href)).size, 6);
 });

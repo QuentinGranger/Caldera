@@ -4,12 +4,9 @@ import Link from '@/components/transitions/PrefetchLink';
 import { usePathname } from 'next/navigation';
 import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import type { NavItem, NavLink, SiteNavigation } from '@/data/navigation';
-import { universeChapters } from '@/data/universe';
 import { IconButton } from '@/components/ui/IconButton/IconButton';
 import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import styles from './MobileNavigation.module.scss';
-
-const NEW_ARRIVALS = '/nouveautes';
 
 /** A main entry: the brand's serif, an arrow for a page of the site. */
 function MainLink({
@@ -90,9 +87,11 @@ function Accordion({
 export function MobileNavigation({
   navigation,
   signedIn,
+  categories,
 }: {
   navigation: SiteNavigation;
   signedIn: boolean;
+  categories: NavLink[];
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -127,6 +126,28 @@ export function MobileNavigation({
     if (!open) return;
 
     function onKey(event: KeyboardEvent) {
+      if (event.key === 'Tab') {
+        const controls = [
+          trigger.current,
+          ...Array.from(
+            panel.current?.querySelectorAll<HTMLElement>('a[href], button') ??
+              [],
+          ),
+        ].filter((node): node is HTMLElement =>
+          Boolean(
+            node && !node.closest('[inert]') && node.getClientRects().length,
+          ),
+        );
+        const first = controls[0],
+          last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
       if (event.key === 'Escape') {
         setOpen(false);
         trigger.current?.focus();
@@ -166,12 +187,6 @@ export function MobileNavigation({
   }, [open]);
 
   const close = () => setOpen(false);
-  const newArrivals = navigation.listings.filter(
-    ({ href }) => href === NEW_ARRIVALS,
-  );
-  const otherListings = navigation.listings.filter(
-    ({ href }) => href !== NEW_ARRIVALS,
-  );
   const reading: NavLink[] = [
     ...(navigation.extensions ? [navigation.extensions] : []),
     ...(navigation.calendar ? [navigation.calendar] : []),
@@ -217,48 +232,32 @@ export function MobileNavigation({
               <p id="mobile-shop" className={styles.eyebrow}>
                 Boutique
               </p>
-              <ul className={styles.mainLinks}>
+              <ul className={`${styles.mainLinks} ${styles.shopEntry}`}>
                 <li>
                   <MainLink
-                    link={navigation.catalogue}
+                    link={{ ...navigation.catalogue, label: 'Boutique' }}
                     pathname={pathname}
                     onNavigate={close}
                   />
                 </li>
-                {navigation.games.map((game) => (
-                  <li key={game.href}>
-                    {game.children.length > 0 ? (
-                      <Accordion
-                        item={game}
-                        open={expanded === game.href}
-                        onToggle={() =>
-                          setExpanded(expanded === game.href ? null : game.href)
-                        }
-                        pathname={pathname}
-                        onNavigate={close}
-                      />
-                    ) : (
-                      <MainLink
-                        link={game}
-                        pathname={pathname}
-                        onNavigate={close}
-                      />
-                    )}
-                  </li>
-                ))}
-                {[...navigation.families, ...newArrivals].map((link) => (
-                  <li key={link.href}>
-                    <MainLink
-                      link={link}
-                      pathname={pathname}
-                      onNavigate={close}
-                    />
-                  </li>
-                ))}
               </ul>
-              {otherListings.length > 0 && (
+              {categories.length > 0 && (
+                <ul
+                  className={styles.categoryLinks}
+                  aria-label="Catégories de la boutique"
+                >
+                  {categories.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} prefetch onClick={close}>
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {navigation.listings.length > 0 && (
                 <ul className={styles.minorLinks}>
-                  {otherListings.map(({ href, label }) => (
+                  {navigation.listings.map(({ href, label }) => (
                     <li key={href}>
                       <Link
                         href={href}
@@ -277,7 +276,7 @@ export function MobileNavigation({
 
           <section className={styles.group} aria-labelledby="mobile-reading">
             <p id="mobile-reading" className={styles.eyebrow}>
-              Extensions et guides
+              Guides et repères
             </p>
             <ul className={styles.gridLinks}>
               {reading.map(({ href, label }) => (
@@ -295,37 +294,20 @@ export function MobileNavigation({
             </ul>
           </section>
 
-          <section className={styles.group} aria-labelledby="mobile-universe">
-            <p id="mobile-universe" className={styles.eyebrow}>
-              Explorer Caldera
-            </p>
-            <ul className={styles.mainLinks}>
-              <li>
-                <MainLink
-                  link={navigation.universe}
-                  pathname={pathname}
-                  onNavigate={close}
-                />
-              </li>
-            </ul>
-            <ol className={styles.chapters}>
-              {universeChapters.map((chapter) => {
-                const href = `/univers/${chapter.slug}`;
-                return (
-                  <li key={chapter.slug}>
-                    <Link
-                      href={href}
-                      prefetch
-                      onClick={close}
-                      aria-current={pathname === href ? 'page' : undefined}
-                    >
-                      <span aria-hidden="true">{chapter.number}</span>
-                      {chapter.title}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
+          <section className={styles.group} aria-label="L’univers de Caldera">
+            <Accordion
+              item={{ ...navigation.universe, label: 'Chroniques de Caldera' }}
+              open={expanded === navigation.universe.href}
+              onToggle={() =>
+                setExpanded(
+                  expanded === navigation.universe.href
+                    ? null
+                    : navigation.universe.href,
+                )
+              }
+              pathname={pathname}
+              onNavigate={close}
+            />
           </section>
 
           <section className={styles.group} aria-labelledby="mobile-community">

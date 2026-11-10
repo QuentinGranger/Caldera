@@ -7,7 +7,11 @@ import {
   DELIVERY_ZONE,
   handlingLabel,
 } from '@/components/editorial/delivery';
-import { getSiteNavigation, type NavLink } from '@/data/navigation';
+import {
+  getSiteNavigation,
+  shopCategoryLinks,
+  type NavLink,
+} from '@/data/navigation';
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { ORGANIZATION } from '@/lib/seo/policies';
 import { FooterSocialLinks } from './FooterSocialLinks';
@@ -27,8 +31,7 @@ export async function Footer() {
       title: 'Boutique',
       links: [
         ...(navigation.catalogueAvailable ? [navigation.catalogue] : []),
-        ...navigation.games.map(({ href, label }) => ({ href, label })),
-        ...navigation.productTypes,
+        ...shopCategoryLinks(navigation),
         ...navigation.listings,
       ],
     },
