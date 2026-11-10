@@ -41,7 +41,7 @@ export function HomeJourney({ chapters }: { chapters: HomeChapter[] }) {
       >
         <div className={styles.body}>{chapter.content}</div>
       </div>
-      {index < chapters.length - 1 && (
+      {index < chapters.length - 1 && !chapter.bridge && (
         <div className={styles.handoff} aria-hidden="true">
           <span />
         </div>

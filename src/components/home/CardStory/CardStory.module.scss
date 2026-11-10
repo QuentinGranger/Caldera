@@ -16,6 +16,14 @@
 .atmosphere {
   position: absolute;
   inset: 0;
+  // Let the chapter's exact night colour meet its neighbour at both edges.
+  -webkit-mask-image: linear-gradient(
+    transparent,
+    #000 18%,
+    #000 75%,
+    transparent
+  );
+  mask-image: linear-gradient(transparent, #000 18%, #000 75%, transparent);
   background:
     radial-gradient(ellipse at 70% 48%, #1e4430, transparent 60%),
     radial-gradient(ellipse at 80% 90%, #6b542328, transparent 60%);

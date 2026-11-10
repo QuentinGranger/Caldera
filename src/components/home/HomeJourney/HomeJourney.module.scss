@@ -25,6 +25,11 @@
     var(--chapter-next)
   );
 }
+// Start the dissolve in the section's existing bottom padding. The bridge
+// keeps its height, while the colour change has room to breathe below the copy.
+.chapter[data-home-bridge] {
+  --fade: calc(var(--chapter-bridge) + clamp(2rem, 5vw, 4rem));
+}
 // A chapter starts a pixel above its end of the previous one: at a fractional
 // position the page's own background would otherwise show as a hairline. The
 // colour it covers is the one it starts with (--chapter-next).
@@ -69,25 +74,8 @@
           scale(calc(0.8 + var(--journey-departure, 0) * 0.5));
       }
     }
-    // The reserved bridge carries a soft colour dissolve below the content.
-    // The chapter gradient remains visible even with motion disabled.
-    &[data-home-bridge] .handoff {
-      bottom: 0;
-      height: var(--chapter-bridge);
-      opacity: 1;
-      span {
-        background:
-          radial-gradient(
-            ellipse 55% 80% at 28% 70%,
-            #e8c2611a,
-            transparent 75%
-          ),
-          linear-gradient(180deg, transparent, var(--chapter-next));
-        filter: blur(12px);
-        transform: translateX(calc((var(--journey-departure, 0) - 0.5) * 5%))
-          scaleX(1.1);
-      }
-    }
+    // Dark/light bridges are painted only by the chapter gradient. A blurred
+    // overlay clipped to this short band creates a visible edge at both ends.
     [data-journey-item] {
       --journey-side: -1;
       perspective: 1400px;
@@ -215,7 +203,10 @@
       transform: none;
     }
   }
-  .chapter [data-depth-landscape][data-depth-ready] {
+  // Keep masked landscape edges fixed at the section boundary. Their images
+  // already move with journey progress; moving the mask exposes a hard edge.
+  .chapter
+    [data-depth-landscape][data-depth-ready]:not([data-journey-landscape]) {
     transform: translate3d(
         calc(var(--depth-x, 0) * -0.8%),
         calc(var(--depth-y, 0) * -0.5%),
