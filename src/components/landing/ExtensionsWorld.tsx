@@ -1,107 +1,24 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import { PageHero } from '@/components/catalog/PageHero';
 import { ArrowDown, ArrowUpRight, CalendarDays } from 'lucide-react';
-import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
-import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
-import buttonStyles from '@/components/ui/Button/Button.module.scss';
 import styles from './ExtensionsWorld.module.scss';
 
-const illustrations = [
-  '/assets/images/experience/lugia-9-111.webp',
-  '/assets/images/experience/mewtwo-gx-78-73.webp',
-  '/assets/images/experience/ectoplasma-vmax-271-264.webp',
-];
-
-/** Real card artwork illustrates collecting; the release index below stays authoritative. */
+/** The release index starts with the facts, then actual extension visuals. */
 export function ExtensionsHero({ calendar }: { calendar: boolean }) {
   return (
-    <section className={styles.hero} aria-labelledby="page-title">
-      <div
-        className={styles.landscape}
-        data-depth-landscape
-        data-caldera-landscape
-        aria-hidden="true"
-      >
-        <Image
-          src="/assets/images/editorial/foret.png"
-          alt=""
-          fill
-          sizes="100vw"
-          loading="eager"
-        />
-      </div>
-      <div className={styles.inner}>
-        <Breadcrumb
-          items={[{ label: 'Accueil', href: '/' }, { label: 'Extensions' }]}
-          currentPath="/extensions"
-        />
-        <div className={styles.composition}>
-          <div className={styles.copy}>
-            <ArrivalLayers>
-              <p className={styles.eyebrow}>L’atlas des collections</p>
-              <h1 id="page-title">
-                Extensions.
-                <br />
-                <em>De nouveaux horizons.</em>
-              </h1>
-              <p className={styles.lead}>
-                Chaque extension ouvre un nouvel univers. Retrouvez les sorties
-                annoncées, les dernières parutions et les collections déjà
-                sorties.
-              </p>
-              <div className={styles.actions}>
-                <a
-                  href="#chronologie"
-                  className={`${buttonStyles.button} ${buttonStyles.gold}`}
-                >
-                  Parcourir les extensions{' '}
-                  <ArrowDown size={18} aria-hidden="true" />
-                </a>
-                {calendar ? (
-                  <Link href="/calendrier-des-sorties">
-                    Le calendrier <ArrowUpRight size={17} aria-hidden="true" />
-                  </Link>
-                ) : (
-                  <Link href="/pokemon">
-                    Explorer Pokémon{' '}
-                    <ArrowUpRight size={17} aria-hidden="true" />
-                  </Link>
-                )}
-              </div>
-            </ArrivalLayers>
-          </div>
-          <div
-            className={styles.scene}
-            data-depth-stage="extensions-hero"
-            data-caldera-visual
-            aria-hidden="true"
-          >
-            <span className={styles.aura} />
-            <div className={styles.fan}>
-              {illustrations.map((src, index) => (
-                <div className={styles.card} key={src}>
-                  <Image
-                    src={src}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1200px) 240px, (min-width: 768px) 230px, 42vw"
-                    loading={index === 2 ? 'eager' : 'lazy'}
-                  />
-                  <span />
-                </div>
-              ))}
-            </div>
-            <p className={styles.caption}>
-              Illustrations du JCC Pokémon · hors catalogue
-            </p>
-          </div>
-        </div>
-        <div className={styles.footnote}>
-          <span>LES TERRES DE CALDERA</span>
-          <span>Découvrir. Suivre. Collectionner.</span>
-        </div>
-      </div>
-    </section>
+    <PageHero
+      breadcrumb={[{ label: 'Accueil', href: '/' }, { label: 'Extensions' }]}
+      path="/extensions"
+      eyebrow="Par date de sortie"
+      title="Les extensions Pokémon"
+      lead="Sorties annoncées, dernières parutions et collections déjà sorties."
+      up={
+        calendar
+          ? { href: '/calendrier-des-sorties', label: 'Calendrier des sorties' }
+          : undefined
+      }
+      view={{ src: '/assets/images/editorial/foret.png', frame: 'backdrop' }}
+    />
   );
 }
 
@@ -144,11 +61,7 @@ export function ExtensionsGuide() {
     <aside className={styles.guide} aria-labelledby="extensions-guide-title">
       <div>
         <p className={styles.eyebrow}>Les repères du collectionneur</p>
-        <h2 id="extensions-guide-title">
-          Une extension,
-          <br />
-          <em>tout un univers.</em>
-        </h2>
+        <h2 id="extensions-guide-title">Comprendre les extensions</h2>
       </div>
       <div>
         <p>

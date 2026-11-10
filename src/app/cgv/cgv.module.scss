@@ -6,50 +6,35 @@
 }
 
 .hero {
-  position: relative;
-  overflow: hidden;
-  color: v.$color-text-on-dark;
-  background:
-    radial-gradient(circle at 80% 12%, rgb(232 194 97 / 17%), transparent 28rem),
-    linear-gradient(135deg, v.$color-ink, v.$color-green-dark);
-  border-bottom: 1px solid v.$color-border-on-dark;
-}
-
-.hero::after {
-  position: absolute;
-  inset: auto -8% -9rem 42%;
-  height: 18rem;
-  content: '';
-  border: 1px solid rgb(232 194 97 / 18%);
-  border-radius: 50%;
-  transform: rotate(-8deg);
-  pointer-events: none;
+  color: v.$color-text;
+  background: v.$color-background;
+  border-bottom: 1px solid v.$color-border;
 }
 
 .heroInner {
   position: relative;
   z-index: 1;
-  padding-block: clamp(4.5rem, 8vw, 7.5rem);
+  padding-block: v.$space-practical-header;
 }
 
 .eyebrow {
   @include m.eyebrow;
-  color: v.$color-gold;
+  color: v.$color-green-secondary;
 }
 
 .hero h1 {
   max-width: 58rem;
   margin: 0.8rem 0 0;
   font-family: v.$font-heading;
-  font-size: clamp(2.8rem, 7vw, 5.8rem);
+  font-size: v.$heading-practical;
   font-weight: 500;
-  line-height: 0.95;
+  line-height: 1.1;
   letter-spacing: -0.035em;
 }
 
 .brand {
   margin-top: 1.5rem;
-  color: v.$color-muted-on-dark;
+  color: v.$color-text-muted;
   font-size: clamp(1rem, 2vw, 1.1rem);
 }
 
@@ -57,9 +42,9 @@
   display: inline-flex;
   margin-top: 1rem;
   padding: 0.48rem 0.7rem;
-  color: v.$color-gold-light;
+  color: v.$color-green-secondary;
   background: rgb(255 255 255 / 5%);
-  border: 1px solid v.$color-border-on-dark;
+  border: 1px solid v.$color-border;
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -245,7 +230,6 @@
     font-size: 0.84rem;
   }
 }
-
 
 .tableScroll {
   margin-top: 1rem;

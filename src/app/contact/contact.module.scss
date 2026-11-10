@@ -6,55 +6,36 @@
 }
 
 .hero {
-  position: relative;
-  overflow: hidden;
-  color: v.$color-text-on-dark;
-  background:
-    radial-gradient(
-      circle at 82% 18%,
-      rgb(232 194 97 / 18%),
-      transparent 24rem
-    ),
-    linear-gradient(135deg, v.$color-ink, v.$color-green-dark);
-  border-bottom: 1px solid v.$color-border-on-dark;
-}
-
-.hero::after {
-  position: absolute;
-  inset: auto -10% -8rem 35%;
-  height: 15rem;
-  content: '';
-  border: 1px solid rgb(232 194 97 / 20%);
-  border-radius: 50%;
-  transform: rotate(-7deg);
-  pointer-events: none;
+  color: v.$color-text;
+  background: v.$color-background;
+  border-bottom: 1px solid v.$color-border;
 }
 
 .heroInner {
   position: relative;
   z-index: 1;
-  padding-block: clamp(4.5rem, 8vw, 8rem);
+  padding-block: v.$space-practical-header;
 }
 
 .eyebrow {
   @include m.eyebrow;
-  color: v.$color-gold;
+  color: v.$color-green-secondary;
 }
 
 .hero h1 {
   max-width: 54rem;
   margin: 0.8rem 0 0;
   font-family: v.$font-heading;
-  font-size: clamp(2.7rem, 7vw, 5.8rem);
+  font-size: v.$heading-practical;
   font-weight: 500;
-  line-height: 0.95;
+  line-height: 1.1;
   letter-spacing: -0.035em;
 }
 
 .intro {
   max-width: 44rem;
-  margin-top: 1.5rem;
-  color: v.$color-muted-on-dark;
+  margin-top: 0.75rem;
+  color: v.$color-text-muted;
   font-size: clamp(0.95rem, 2vw, 1.05rem);
   line-height: 1.75;
 }
@@ -75,16 +56,16 @@
 }
 
 .content {
-  @include m.section;
+  padding-block: 1.5rem clamp(3rem, 6vw, 4rem);
 }
 
 .grid {
   display: grid;
-  gap: 3rem;
+  gap: 1.5rem;
 
   @include m.from(v.$breakpoint-desktop) {
-    grid-template-columns: minmax(0, 0.82fr) minmax(36rem, 1.18fr);
-    gap: 5rem;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    gap: 2.5rem;
     align-items: start;
   }
 }
@@ -93,7 +74,7 @@
 .formPanel h2 {
   margin: 0.55rem 0 0;
   font-family: v.$font-heading;
-  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
   font-weight: 500;
   line-height: 1;
 }
@@ -101,7 +82,7 @@
 .cards {
   display: grid;
   gap: 0.85rem;
-  margin-top: 2rem;
+  margin-top: 1.25rem;
 }
 
 .card {
@@ -168,7 +149,7 @@
 .form {
   display: grid;
   gap: 1.1rem;
-  margin-top: 2rem;
+  margin-top: 1.25rem;
 }
 
 .twoColumns {

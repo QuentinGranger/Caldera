@@ -165,7 +165,7 @@
   color: #b7c4b5;
 }
 .navigation {
-  padding-block: clamp(2.5rem, 5vw, 4.5rem);
+  padding-block: clamp(1.75rem, 3vw, 2.5rem);
   scroll-margin-top: calc(var(--header-height, 84px) + 1rem);
   > p {
     margin-bottom: 1.3rem;
@@ -221,7 +221,7 @@
 .chapter {
   display: grid;
   gap: 1.7rem;
-  padding-block: clamp(2.5rem, 5vw, 4.5rem);
+  padding-block: clamp(1.75rem, 3vw, 2.5rem);
   scroll-margin-top: calc(var(--header-height, 84px) + 1.5rem);
   position: relative;
   border-top: 1px solid #e8c26120;
@@ -238,7 +238,7 @@
   }
   h2 {
     margin-top: 1rem;
-    font: 500 clamp(2.5rem, 4vw, 3.7rem)/1.04 v.$font-heading;
+    font: 500 clamp(1.8rem, 3vw, 2.5rem)/1.04 v.$font-heading;
     letter-spacing: -0.025em;
   }
   > p:last-child {

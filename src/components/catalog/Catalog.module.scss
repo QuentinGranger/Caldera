@@ -562,38 +562,22 @@ $hairline: rgb(23 62 50 / 14%);
   margin-top: v.$rhythm-section-inner;
 }
 .interlude {
-  position: relative;
-  isolation: isolate;
   display: flex;
-  align-items: flex-end;
-  min-height: clamp(17rem, 34vw, 25rem);
-  overflow: hidden;
+  align-items: center;
+  min-height: 0;
+  border: 1px solid v.$color-border-on-dark;
   border-radius: 0.6rem;
-  background: v.$color-night;
+  background: v.$color-green-dark;
   color: v.$color-text-on-dark;
-  img {
-    z-index: -2;
-    object-fit: cover;
-    object-position: center 60%;
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background:
-      linear-gradient(0deg, rgb(3 20 14 / 85%) 0%, transparent 60%),
-      linear-gradient(90deg, rgb(3 20 14 / 70%) 0%, transparent 65%);
-  }
 }
 .interludeText {
   display: grid;
   justify-items: start;
   gap: 0.6rem;
   max-width: 30rem;
-  padding: clamp(1.5rem, 4vw, 2.75rem);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
   h3 {
-    font-size: clamp(1.9rem, 1.4rem + 2vw, 3rem);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
     font-weight: 500;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -1103,15 +1087,15 @@ $hairline: rgb(23 62 50 / 14%);
     color: #173e32;
   }
   .interlude {
-    min-height: clamp(22rem, 42vw, 33rem);
+    min-height: 0;
     border: 1px solid #e8c26125;
     border-radius: 1.5rem;
   }
   .interludeText {
-    padding: clamp(2rem, 5vw, 4rem);
-    max-width: 40rem;
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    max-width: 46rem;
     h3 {
-      font-size: clamp(2.3rem, 4.2vw, 4rem);
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
     }
   }
   .grid {
@@ -1133,8 +1117,8 @@ $hairline: rgb(23 62 50 / 14%);
 }
 .worldTitle {
   max-width: 50rem;
-  margin-bottom: 1.8rem;
-  font: 500 clamp(2.5rem, 4.5vw, 4.5rem)/1.05 v.$font-heading;
+  margin-bottom: 1.25rem;
+  font: 500 clamp(1.5rem, 2.5vw, 2rem)/1.1 v.$font-heading;
   letter-spacing: -0.025em;
 }
 @media (prefers-reduced-motion: no-preference) {

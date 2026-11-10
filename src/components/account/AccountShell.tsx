@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { History, MapPin, Package, ShieldCheck } from 'lucide-react';
@@ -77,13 +76,6 @@ export function AccountShell({
           </section>
 
           <aside className={styles.brandPanel} aria-label="Pourquoi un compte">
-            <Image
-              src="/assets/images/ArchiveExplorateurs.png"
-              alt=""
-              fill
-              sizes="(min-width: 75rem) 40vw, 1px"
-              className={styles.brandImage}
-            />
             <div className={styles.brandContent}>
               <p className={styles.brandEyebrow}>Les Terres de Caldera</p>
               <p className={styles.brandTitle}>Votre carnet d’explorateur</p>

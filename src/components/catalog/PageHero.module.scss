@@ -381,39 +381,74 @@ $gold-line: rgb(232 194 97 / 60%);
   }
 }
 
-// The main catalogue gets a short introduction; the product grid is the destination.
+// Practical listings share a short, unillustrated header. The images of
+// products and extensions remain in the results, where they help choosing.
 .hero[data-compact] {
-  padding-bottom: 1.5rem;
+  color: v.$color-text;
+  background: v.$color-background;
+  border-bottom: 1px solid v.$color-border;
+  &::after {
+    content: none;
+  }
   .inner {
+    display: flex;
+    height: auto;
     min-height: 0;
     gap: 1rem;
-    padding-block: 1rem 1.5rem;
+    padding-block: 1rem v.$space-practical-header;
+    > nav {
+      color: v.$color-text-muted;
+      a:hover,
+      [aria-current] {
+        color: v.$color-green-dark;
+      }
+    }
   }
   .content {
-    max-width: 50rem;
+    grid-area: auto;
+    align-self: auto;
+    min-height: 0;
+    max-width: 56rem;
     gap: 0.65rem;
     padding-block: 0;
     h1 {
-      font-size: clamp(2.2rem, 4vw, 3.75rem);
-      line-height: 1.05;
+      font-size: v.$heading-practical;
+      line-height: 1.1;
+      color: v.$color-green-dark;
+      text-shadow: none;
     }
   }
   .eyebrow {
     display: none;
   }
   .lead {
-    max-width: 42rem;
+    max-width: 46rem;
+    color: v.$color-text-muted;
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: 1.6;
   }
-  &::after {
-    height: 1.5rem;
-    background: linear-gradient(transparent, #{v.$color-background});
-    pointer-events: none;
+  .note {
+    color: v.$color-text-muted;
   }
-  @include m.from($split) {
-    .inner {
-      padding-block: 1.25rem 2rem;
-    }
+  .up {
+    color: v.$color-green-secondary;
+  }
+}
+:global([data-pokemon-world]) .hero[data-compact] {
+  background: v.$color-night;
+  color: v.$color-text-on-dark;
+  border-bottom-color: v.$color-border-on-dark;
+  .content h1 {
+    color: v.$color-text-on-dark;
+  }
+  .lead,
+  .note,
+  .inner > nav {
+    color: v.$color-muted-on-night;
+  }
+  .up,
+  .inner > nav a:hover,
+  .inner > nav [aria-current] {
+    color: v.$color-gold-light;
   }
 }

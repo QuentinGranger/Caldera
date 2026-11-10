@@ -2,7 +2,7 @@
 @use '../../styles/abstracts/mixins' as m;
 
 .main {
-  padding-block: clamp(2rem, 5vw, 4.5rem);
+  padding-block: v.$space-practical-header;
 }
 
 .header {
@@ -12,7 +12,7 @@
   margin-bottom: clamp(1.75rem, 4vw, 3rem);
 
   h1 {
-    font: 500 clamp(2.5rem, 7vw, 4.4rem) / 1 v.$font-heading;
+    font: 500 v.$heading-practical / 1.1 v.$font-heading;
   }
 
   > p:last-child {

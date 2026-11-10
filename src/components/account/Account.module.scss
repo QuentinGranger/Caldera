@@ -39,7 +39,7 @@
 // Sign-in, sign-up, password and e-mail link pages
 
 .authMain {
-  padding-block: clamp(2rem, 5vw, 4.5rem);
+  padding-block: v.$space-practical-header;
 }
 
 .authGrid {
@@ -49,7 +49,7 @@
   margin-inline: auto;
   @media (min-width: 60rem) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
-    gap: 2rem;
+    gap: 1.5rem;
   }
 }
 
@@ -106,37 +106,12 @@
 }
 
 .brandPanel {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
   min-width: 0;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
+  padding: clamp(1.5rem, 3vw, 2rem);
   background: v.$color-green-dark;
   border-radius: v.$radius-medium;
   color: v.$color-text-on-dark;
-  @media (min-width: 60rem) {
-    min-height: 32rem;
-    &::after {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        180deg,
-        rgb(0 47 34 / 20%) 0%,
-        rgb(0 47 34 / 70%) 45%,
-        rgb(0 47 34 / 96%) 100%
-      );
-      content: '';
-    }
-  }
-}
-
-.brandImage {
-  display: none;
-  object-fit: cover;
-  @media (min-width: 60rem) {
-    display: block;
-  }
+  align-self: start;
 }
 
 .brandContent {
@@ -153,7 +128,7 @@
 
 .brandTitle {
   color: v.$color-cream;
-  font: 500 clamp(1.8rem, 4vw, 2.3rem) / 1.1 v.$font-heading;
+  font: 500 clamp(1.5rem, 2.5vw, 1.8rem) / 1.1 v.$font-heading;
 }
 
 .benefits {

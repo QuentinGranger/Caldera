@@ -47,7 +47,7 @@ export function PageHero({
   action,
   view,
   children,
-  compact = false,
+  compact = true,
 }: {
   /** A short entrance when shopping is the main task. */
   compact?: boolean;
@@ -90,7 +90,7 @@ export function PageHero({
     >
       {/* Wide screens, framed views: the same view, blurred, colours the
           night around the frame. Never requested on phones (not shown). */}
-      {framed && (
+      {!compact && framed && (
         <div className={styles.atmosphere} aria-hidden="true">
           <Image src={view.src} alt="" fill sizes="128px" loading="lazy" />
         </div>
@@ -113,7 +113,7 @@ export function PageHero({
               </Link>
             )}
             {children}
-            {action && (
+            {action && (!compact || !action.href.startsWith('#')) && (
               <Button
                 href={action.href}
                 variant="gold"
@@ -129,32 +129,34 @@ export function PageHero({
             )}
           </ArrivalLayers>
         </div>
-        <ViewTransition
-          enter={LANDSCAPE_REVEAL}
-          update={LANDSCAPE_REVEAL}
-          default="none"
-        >
-          <div
-            className={styles.view}
-            aria-hidden="true"
-            data-caldera-landscape
+        {!compact && (
+          <ViewTransition
+            enter={LANDSCAPE_REVEAL}
+            update={LANDSCAPE_REVEAL}
+            default="none"
           >
-            <Image
-              src={view.src}
-              alt=""
-              fill
-              sizes={
-                view.frame === 'arch'
-                  ? '(min-width: 60rem) 23rem, 100vw'
-                  : view.frame === 'window'
-                    ? '(min-width: 60rem) 30rem, 100vw'
-                    : '100vw'
-              }
-              loading="eager"
-              fetchPriority="high"
-            />
-          </div>
-        </ViewTransition>
+            <div
+              className={styles.view}
+              aria-hidden="true"
+              data-caldera-landscape
+            >
+              <Image
+                src={view.src}
+                alt=""
+                fill
+                sizes={
+                  view.frame === 'arch'
+                    ? '(min-width: 60rem) 23rem, 100vw'
+                    : view.frame === 'window'
+                      ? '(min-width: 60rem) 30rem, 100vw'
+                      : '100vw'
+                }
+                loading="eager"
+                fetchPriority="high"
+              />
+            </div>
+          </ViewTransition>
+        )}
       </div>
     </section>
   );

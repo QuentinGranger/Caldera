@@ -1,6 +1,5 @@
 import { ArrivalLayers } from '@/components/transitions/ArrivalLayers';
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { connection } from 'next/server';
@@ -74,14 +73,6 @@ async function ProductContent({
   ].slice(0, 4);
   return (
     <main id="contenu" tabIndex={-1} className={styles.main} data-product-world>
-      <div className={styles.landscape} aria-hidden="true">
-        <Image
-          src="/assets/images/editorial/foret.png"
-          alt=""
-          fill
-          sizes="100vw"
-        />
-      </div>
       <Container>
         <JsonLd data={page.structuredData} />
         <Breadcrumb

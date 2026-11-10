@@ -12,7 +12,7 @@
   max-width: 64rem;
   margin-bottom: 2rem;
   h1 {
-    font: 500 clamp(2.5rem, 7vw, 4.5rem)/1.05 v.$font-heading;
+    font: 500 v.$heading-practical/1.1 v.$font-heading;
   }
   > p:first-child {
     color: v.$color-gold-light;

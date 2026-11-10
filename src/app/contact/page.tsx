@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Globe2, PackageSearch, Sparkles } from 'lucide-react';
 
 import { Container } from '@/components/ui/Container/Container';
@@ -6,7 +5,6 @@ import {
   editorialDecision,
   editorialMetadata,
 } from '@/components/editorial/editorial';
-import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from '@/lib/site';
 import { INSTAGRAM_PROFILE_URL } from '@/lib/social';
 import { ContactForm } from './ContactForm';
 import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
@@ -43,21 +41,17 @@ export default function ContactPage() {
       <section className={styles.hero}>
         <Container className={styles.heroInner}>
           <p className={styles.eyebrow}>Aide & contact</p>
-          <h1>Une question sur votre commande ou sur Caldera&nbsp;?</h1>
+          <h1>Contactez Caldera.</h1>
           <p className={styles.intro}>
-            Utilisez le formulaire ci-dessous en donnant le maximum
-            d’informations utiles. Nous évitons ainsi les échanges inutiles et
-            pouvons identifier plus facilement votre demande.
+            Une question sur une commande ou un produit ? Précisez votre demande
+            dans le formulaire.
           </p>
-          <Link className={styles.domain} href={PRODUCTION_SITE_URL}>
-            <Globe2 size={16} aria-hidden="true" />
-            {PRODUCTION_HOST}
-          </Link>
         </Container>
       </section>
 
       <section className={styles.content}>
         <Container className={styles.grid}>
+          <ContactForm />
           <aside
             className={styles.help}
             aria-label="Conseils avant de nous écrire"
@@ -98,8 +92,6 @@ export default function ContactPage() {
               </p>
             </section>
           </aside>
-
-          <ContactForm />
         </Container>
       </section>
     </main>

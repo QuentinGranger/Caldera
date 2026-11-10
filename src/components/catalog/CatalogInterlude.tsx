@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import styles from './Catalog.module.scss';
@@ -32,12 +31,6 @@ export function CatalogInterlude({
 }) {
   return (
     <aside className={styles.interlude} aria-labelledby="interlude-title">
-      <Image
-        src={content.image}
-        alt=""
-        fill
-        sizes="(min-width: 1312px) 1312px, 100vw"
-      />
       <div className={styles.interludeText}>
         <p className={styles.interludeEyebrow}>{content.eyebrow}</p>
         <h3 id="interlude-title">{content.title}</h3>

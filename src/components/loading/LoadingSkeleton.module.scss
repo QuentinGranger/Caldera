@@ -43,72 +43,32 @@ $hairline: rgb(23 62 50 / 14%);
 }
 
 .hero {
-  position: relative;
-  overflow: hidden;
-  min-height: clamp(21rem, 52svh, 29rem);
-  background:
-    radial-gradient(
-      ellipse 55% 85% at 80% 50%,
-      rgb(232 194 97 / 10%),
-      transparent 65%
-    ),
-    linear-gradient(165deg, v.$color-night-soft 0%, v.$color-night 75%);
-
-  @include m.from(60rem) {
-    min-height: 31rem;
-  }
+  background: v.$color-night;
+  border-bottom: 1px solid v.$color-border-on-dark;
 }
 
 .heroInner {
   @include m.container;
   display: grid;
-  align-content: space-between;
-  min-height: inherit;
-  gap: 2rem;
-  padding-block: 1.25rem 1.75rem;
-
-  @include m.from(60rem) {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'crumb visual'
-      'copy visual';
-    column-gap: clamp(3rem, 7vw, 7rem);
-    padding-block: 1.5rem 3rem;
-  }
+  gap: 1rem;
+  padding-block: 1rem v.$space-practical-header;
 }
 
 .heroCrumb {
   width: min(13rem, 48vw);
   height: 0.8rem;
-
-  @include m.from(60rem) {
-    grid-area: crumb;
-  }
 }
 
 .heroCopy {
   display: grid;
-  align-self: end;
   justify-items: start;
-  gap: 0.9rem;
-  width: min(100%, 40rem);
-
-  @include m.from(60rem) {
-    grid-area: copy;
-    align-self: center;
-  }
-}
-
-.heroEyebrow {
-  width: 9rem;
-  height: 0.7rem;
+  gap: 0.65rem;
+  width: min(100%, 46rem);
 }
 
 .heroTitle {
   width: min(100%, 31rem);
-  height: clamp(2.8rem, 8vw, 5.4rem);
-  border-radius: 0.5rem;
+  height: calc(v.$heading-practical * 1.1);
 }
 
 .heroLead {
@@ -118,13 +78,6 @@ $hairline: rgb(23 62 50 / 14%);
 
 .heroLeadShort {
   width: min(65%, 18rem);
-}
-
-.heroButton {
-  width: 10.5rem;
-  height: 3rem;
-  margin-top: 0.75rem;
-  border-radius: 999px;
 }
 
 .heroStats {
@@ -139,21 +92,6 @@ $hairline: rgb(23 62 50 / 14%);
   min-height: 4.5rem;
   border: 1px solid rgb(232 194 97 / 18%);
   border-radius: 0.55rem;
-}
-
-.heroVisual {
-  display: none;
-
-  @include m.from(60rem) {
-    display: block;
-    grid-area: visual;
-    align-self: center;
-    width: clamp(24rem, 30vw, 30rem);
-    aspect-ratio: 1.4;
-    border-radius: 0.6rem;
-    outline: 1px solid rgb(232 194 97 / 35%);
-    outline-offset: 10px;
-  }
 }
 
 .catalogBody {
@@ -460,7 +398,7 @@ $hairline: rgb(23 62 50 / 14%);
 
 .productPageTitle {
   width: min(100%, 31rem);
-  height: clamp(4.5rem, 10vw, 7rem);
+  height: calc(v.$heading-practical * 2.2);
 }
 
 .productSet {
@@ -631,7 +569,7 @@ $hairline: rgb(23 62 50 / 14%);
 
 .wishlistTitle {
   width: min(24rem, 76%);
-  height: clamp(3rem, 8vw, 4.4rem);
+  height: calc(v.$heading-practical * 1.1);
 }
 
 .checkoutPage {

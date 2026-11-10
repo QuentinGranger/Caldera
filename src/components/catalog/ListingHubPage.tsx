@@ -94,7 +94,6 @@ export async function ListingHubPage({
     <CatalogShell
       hero={
         <PageHero
-          compact={listing === 'catalogue'}
           breadcrumb={breadcrumb}
           path={config.path}
           eyebrow={copy.eyebrow}

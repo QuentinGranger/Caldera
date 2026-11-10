@@ -22,21 +22,12 @@ function Block({
   );
 }
 
-function HeroSkeleton({
-  framed = false,
-  action = true,
-  stats = false,
-}: {
-  framed?: boolean;
-  action?: boolean;
-  stats?: boolean;
-}) {
+function HeroSkeleton({ stats = false }: { stats?: boolean }) {
   return (
     <section className={styles.hero} aria-hidden="true">
       <div className={styles.heroInner}>
         <Block className={styles.heroCrumb} dark />
         <div className={styles.heroCopy}>
-          <Block className={styles.heroEyebrow} dark />
           <Block className={styles.heroTitle} dark />
           <Block className={styles.heroLead} dark />
           <Block
@@ -50,9 +41,7 @@ function HeroSkeleton({
               ))}
             </div>
           )}
-          {action && <Block className={styles.heroButton} dark />}
         </div>
-        {framed && <Block className={styles.heroVisual} dark />}
       </div>
     </section>
   );
@@ -93,7 +82,7 @@ export function CatalogGridSkeleton({
   );
 }
 
-export function CatalogPageSkeleton({ framed = false }: { framed?: boolean }) {
+export function CatalogPageSkeleton() {
   return (
     <main
       id="contenu"
@@ -102,7 +91,7 @@ export function CatalogPageSkeleton({ framed = false }: { framed?: boolean }) {
       aria-label="Chargement du catalogue"
     >
       <span className={styles.srOnly}>Chargement du catalogue…</span>
-      <HeroSkeleton framed={framed} />
+      <HeroSkeleton />
       <Container>
         <section className={styles.catalogBody} aria-hidden="true">
           <div className={styles.chips}>
@@ -155,7 +144,7 @@ export function ExtensionsPageSkeleton() {
       aria-label="Chargement des extensions"
     >
       <span className={styles.srOnly}>Chargement des extensions…</span>
-      <HeroSkeleton framed />
+      <HeroSkeleton />
       <Container>
         <div className={styles.catalogBody} aria-hidden="true">
           <div className={styles.chips}>
@@ -274,7 +263,7 @@ export function CalendarPageSkeleton() {
       aria-label="Chargement du calendrier des sorties"
     >
       <span className={styles.srOnly}>Chargement du calendrier…</span>
-      <HeroSkeleton action={false} stats />
+      <HeroSkeleton stats />
       <Container>
         <div className={styles.catalogBody} aria-hidden="true">
           {Array.from({ length: 2 }, (_, section) => (
