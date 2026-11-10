@@ -46,3 +46,25 @@ test('newsletter : e-mail de confirmation échappé et version texte', () => {
   assert.match(email.text, /valable 24 heures/);
   assert.doesNotMatch(email.html, /<script/i);
 });
+
+test('newsletter : la confirmation annonce l’ouverture avant les nouvelles, puis adapte sa promesse après ouverture', () => {
+  const urls = {
+    confirmation:
+      'https://lesterresdecaldera.fr/newsletter/confirmation?token=test',
+    logo: 'https://lesterresdecaldera.fr/logo.png',
+  };
+  const opening = renderNewsletterConfirmationEmail({
+    ...urls,
+    preparing: true,
+  });
+  const live = renderNewsletterConfirmationEmail({ ...urls, preparing: false });
+  assert.match(
+    opening.text,
+    /l’annonce d’ouverture, puis les sorties, réassorts et sélections/,
+  );
+  assert.match(opening.html, /l’annonce d’ouverture/);
+  assert.doesNotMatch(live.text, /annonce d’ouverture/);
+  assert.match(live.text, /sorties, réassorts et sélections/);
+  assert.match(opening.text, /ne sera pas activée/);
+  assert.match(live.text, /valable 24 heures/);
+});

@@ -9,4 +9,4 @@ export const initialNewsletterState: NewsletterActionState = {
   message: '',
 };
 
-export const NEWSLETTER_CONSENT_VERSION = '2026-09-28';
+export const NEWSLETTER_CONSENT_VERSION = '2026-11-10';

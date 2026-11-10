@@ -29,6 +29,8 @@ export async function sendNewsletterConfirmation(to: string, token: string) {
     const action = newsletterConfirmationUrl(token);
     const rendered = renderNewsletterConfirmationEmail({
       confirmation: action,
+      preparing:
+        process.env.CATALOG_DEMO_MODE === '1' || process.env.STORE_OPEN !== '1',
       logo: `${origin}/assets/brand/logo-header-no-bg.png`,
     });
     if (testMailer) {

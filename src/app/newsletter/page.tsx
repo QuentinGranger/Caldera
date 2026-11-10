@@ -5,11 +5,15 @@ import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import { Container } from '@/components/ui/Container/Container';
 import { getUpdateLinks } from '@/lib/community/updates';
 import styles from './updates.module.scss';
+import { newsletterCopy } from '@/lib/newsletter/copy';
+
+const preparing =
+  process.env.CATALOG_DEMO_MODE === '1' || process.env.STORE_OPEN !== '1';
+const copy = newsletterCopy(preparing);
 
 export const metadata: Metadata = {
-  title: 'Les nouvelles utiles de Caldera',
-  description:
-    'Newsletter, Discord, nouveautés, réassorts et prochaines sorties : choisissez comment suivre Caldera.',
+  title: copy.title,
+  description: copy.lead,
 };
 
 export default async function UpdatesPage() {
@@ -19,26 +23,13 @@ export default async function UpdatesPage() {
       <Container>
         <header className={styles.header}>
           <p>RESTER INFORMÉ</p>
-          <h1>Les nouvelles qui comptent.</h1>
-          <p>
-            Une sortie à découvrir, un produit de retour, un repère pour choisir
-            : suivez Caldera à votre rythme.
-          </p>
+          <h1>{copy.title}</h1>
+          <p>{copy.lead}</p>
         </header>
         <div className={styles.grid}>
           <section className={styles.panel} aria-labelledby="letter-title">
             <h2 id="letter-title">La lettre de Caldera</h2>
-            <p>
-              Des extensions et leurs dates confirmées, des réassorts réellement
-              disponibles et des sélections expliquées, avec des liens directs
-              pour en savoir plus.
-            </p>
-            <p>
-              Pas de rendez-vous artificiel : une lettre doit apporter une
-              information utile. Vous pouvez vous désinscrire depuis chaque
-              e-mail.
-            </p>
-            <NewsletterForm />
+            <NewsletterForm preparing={preparing} />
           </section>
           <div className={styles.channels}>
             <section className={styles.panel} aria-labelledby="discord-title">
@@ -66,14 +57,16 @@ export default async function UpdatesPage() {
                 </p>
               </section>
             )}
-            <section className={styles.panel} aria-labelledby="alert-title">
-              <h2 id="alert-title">Vous attendez un produit précis ?</h2>
-              <p>
-                Sur la fiche d’une version épuisée, choisissez « M’avertir du
-                retour en stock ». Un seul e-mail vous prévient de son retour,
-                sans inscription à la newsletter.
-              </p>
-            </section>
+            {!preparing && (
+              <section className={styles.panel} aria-labelledby="alert-title">
+                <h2 id="alert-title">Vous attendez un produit précis ?</h2>
+                <p>
+                  Sur la fiche d’une version épuisée, choisissez « M’avertir du
+                  retour en stock ». Un seul e-mail vous prévient de son retour,
+                  sans inscription à la newsletter.
+                </p>
+              </section>
+            )}
           </div>
         </div>
       </Container>

@@ -17,6 +17,7 @@ import { ORGANIZATION } from '@/lib/seo/policies';
 import { FooterSocialLinks } from './FooterSocialLinks';
 import { CookiePreferencesButton } from '@/components/monitoring/CookiePreferencesButton';
 import styles from './Footer.module.scss';
+import { newsletterCopy } from '@/lib/newsletter/copy';
 
 /**
  * The end of every page: the brand, community and ways to stay in touch,
@@ -25,6 +26,7 @@ import styles from './Footer.module.scss';
  */
 export async function Footer() {
   const demonstration = process.env.CATALOG_DEMO_MODE === '1';
+  const copy = newsletterCopy(demonstration || process.env.STORE_OPEN !== '1');
   const navigation = await getSiteNavigation();
   const groups: { title: string; links: NavLink[] }[] = [
     {
@@ -87,7 +89,7 @@ export async function Footer() {
           <div className={styles.contact}>
             <div className={styles.letter}>
               <p className={styles.label}>La lettre de Caldera</p>
-              <p>Réassorts, nouvelles extensions et sélections, par e-mail.</p>
+              <p>{copy.shortLead}</p>
               <Link href="/newsletter" className={styles.link}>
                 S’inscrire <ArrowRight size={16} aria-hidden="true" />
               </Link>

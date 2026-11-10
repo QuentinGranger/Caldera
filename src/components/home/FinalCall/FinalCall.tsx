@@ -6,6 +6,7 @@ import { ALL_PRODUCTS_LABEL } from '@/lib/ux/copy';
 import { DiscordInviteLink } from '@/components/discord/DiscordInviteLink';
 import { getUpdateLinks } from '@/lib/community/updates';
 import styles from './FinalCall.module.scss';
+import { newsletterCopy } from '@/lib/newsletter/copy';
 
 /**
  * The last word of the page, over the Route des Cinq at dusk: the letter
@@ -13,6 +14,9 @@ import styles from './FinalCall.module.scss';
  */
 export async function FinalCall({ catalogue }: { catalogue?: string }) {
   const links = await getUpdateLinks();
+  const preparing =
+    process.env.CATALOG_DEMO_MODE === '1' || process.env.STORE_OPEN !== '1';
+  const copy = newsletterCopy(preparing);
   return (
     <section
       id="newsletter"
@@ -32,12 +36,9 @@ export async function FinalCall({ catalogue }: { catalogue?: string }) {
         <div className={styles.copy}>
           <p className={styles.eyebrow}>La lettre de Caldera</p>
           <h2 id="newsletter-title">
-            Les sorties Pokémon, <em>sans avoir à les guetter.</em>
+            {copy.headingStart} <em>{copy.headingEnd}</em>
           </h2>
-          <p className={styles.lead}>
-            Dates de sorties confirmées, réassorts disponibles et sélections
-            expliquées, avec des liens directs vers les produits concernés.
-          </p>
+          <p className={styles.lead}>{copy.lead}</p>
           {links.length > 0 && (
             <nav
               className={styles.updates}
@@ -65,7 +66,7 @@ export async function FinalCall({ catalogue }: { catalogue?: string }) {
           </div>
         </div>
         <div className={styles.form}>
-          <NewsletterForm />
+          <NewsletterForm preparing={preparing} />
         </div>
       </div>
     </section>

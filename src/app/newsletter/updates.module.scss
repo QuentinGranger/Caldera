@@ -2,14 +2,14 @@
 @use '@/styles/abstracts/mixins' as m;
 
 .main {
-  padding-block: clamp(2rem, 6vw, 5rem);
+  padding-block: clamp(2rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
   background: v.$color-night;
   color: v.$color-text-on-dark;
 }
 .header {
   display: grid;
   gap: 1rem;
-  max-width: 48rem;
+  max-width: 64rem;
   margin-bottom: 2rem;
   h1 {
     font: 500 clamp(2.5rem, 7vw, 4.5rem)/1.05 v.$font-heading;
