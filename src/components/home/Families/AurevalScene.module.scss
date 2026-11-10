@@ -1,0 +1,54 @@
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.32;
+  -webkit-mask-image: linear-gradient(
+    transparent,
+    #000 18%,
+    #000 50%,
+    transparent 95%
+  );
+  mask-image: linear-gradient(transparent, #000 18%, #000 50%, transparent 95%);
+}
+
+.poster {
+  object-fit: cover;
+  object-position: center;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.effects {
+  visibility: hidden;
+}
+.scene[data-aureval-motion='running'] .effects {
+  visibility: visible;
+}
+.ripples {
+  fill: none;
+  stroke: #f5d894;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+@media (max-width: 47.99rem) {
+  .scene {
+    opacity: 0.3;
+  }
+  .lamps > :nth-child(n + 5),
+  .ripples > :nth-child(even) {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .effects {
+    display: none;
+  }
+}

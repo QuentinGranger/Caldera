@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import type { HomeFamily } from '@/components/home/homeData';
 import { listFr } from '@/lib/seo/metadata';
+import { AurevalScene } from './AurevalScene';
 import styles from './Families.module.scss';
 
 /** « Produits scellés » → « produits scellés »; keeps « ETB ». */
@@ -31,19 +32,7 @@ export function Families({ families }: { families: HomeFamily[] }) {
       className={styles.section}
       aria-labelledby="families-title"
     >
-      <div
-        className={styles.landscape}
-        aria-hidden="true"
-        data-journey-landscape
-        data-depth-landscape
-      >
-        <Image
-          src="/assets/images/editorial/aureval.webp"
-          alt=""
-          fill
-          sizes="100vw"
-        />
-      </div>
+      <AurevalScene />
       <div className={styles.inner}>
         <header className={styles.head}>
           <p className={styles.eyebrow}>Le Pokémon TCG à Caldera</p>
