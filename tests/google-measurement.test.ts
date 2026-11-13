@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
-import { CONSENT_KEY } from '../src/lib/analytics/client';
+import {
+  CONSENT_KEY,
+  analyticsPageContext,
+  trackNewsletterLead,
+} from '../src/lib/analytics/client';
 import { startGoogleMeasurement } from '../src/lib/analytics/google';
 
 test('GTM container: consent required, automatic collection disabled, no private fields', () => {
@@ -220,6 +224,54 @@ test('GTM: one loader, consent first, isolated event payloads, withdrawal and re
       'page_view',
     );
     second.stop();
+  } finally {
+    ui.restore();
+  }
+});
+
+test('GTM: newsletter lead uses public page context after consent', () => {
+  const ui = browser();
+  try {
+    const events: CustomEvent[] = [];
+    ui.window.dispatchEvent = (event: CustomEvent) => events.push(event);
+    trackNewsletterLead();
+    assert.equal(events.length, 0);
+
+    ui.consent(true);
+    trackNewsletterLead();
+    assert.equal(events.length, 1);
+    const [event] = events;
+    assert.equal(event?.type, 'caldera:measurement');
+    assert.deepEqual(event?.detail, { name: 'generate_lead', data: {} });
+
+    const google = startGoogleMeasurement({
+      measurementId: 'G-TEST123',
+      containerId: 'GTM-TEST123',
+    })!;
+    const page = analyticsPageContext(
+      'https://lesterresdecaldera.fr/newsletter?token=private',
+      '',
+      'https://lesterresdecaldera.fr/guides/proteger-ses-cartes',
+    )!;
+    google.send(event?.detail.name, { ...event?.detail.data, ...page });
+    assert.deepEqual(ui.window.dataLayer?.at(-1), {
+      event: 'caldera_measurement',
+      caldera_event_name: 'generate_lead',
+      caldera_parameters: {
+        page_location: 'https://lesterresdecaldera.fr/newsletter',
+        page_title: '/newsletter',
+        page_referrer:
+          'https://lesterresdecaldera.fr/guides/proteger-ses-cartes',
+      },
+    });
+    for (const path of [
+      '/newsletter/confirmation',
+      '/newsletter/desinscription',
+    ])
+      assert.equal(
+        analyticsPageContext('https://lesterresdecaldera.fr' + path),
+        null,
+      );
   } finally {
     ui.restore();
   }

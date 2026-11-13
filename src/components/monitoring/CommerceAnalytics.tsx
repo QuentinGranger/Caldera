@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import {
   analyticsAllowed,
   measureLocal,
+  MEASUREMENT_EVENT,
+  NEWSLETTER_LEAD_EVENT,
   analyticsPageContext,
   CONSENT_KEY,
   safeAnalyticsPath,
@@ -73,6 +75,7 @@ export function CommerceAnalytics({
         document.referrer,
         previousPage.current,
       );
+      if (detail?.name === NEWSLETTER_LEAD_EVENT && !page) return;
       if (detail?.name)
         google.send(detail.name, {
           ...detail.data,
@@ -81,13 +84,13 @@ export function CommerceAnalytics({
           page_referrer: page?.page_referrer ?? '',
         });
     };
-    window.addEventListener('caldera:commerce', send);
+    window.addEventListener(MEASUREMENT_EVENT, send);
     window.dispatchEvent(new Event('caldera:analytics-ready'));
     return () => {
       google.stop();
       transport.current = undefined;
       previousPage.current = null;
-      window.removeEventListener('caldera:commerce', send);
+      window.removeEventListener(MEASUREMENT_EVENT, send);
     };
   }, [choice, configured, measurementId, containerId, nonce]);
   useEffect(() => {
@@ -160,8 +163,9 @@ export function CommerceAnalytics({
         <strong>Mesurer pour améliorer Caldera</strong>
         <p>
           Avec votre accord, Google Analytics et les mesures internes de Caldera
-          suivent les visites, les lectures des Carnets et le parcours d’achat.
-          Les cookies nécessaires au panier restent indépendants.{' '}
+          suivent les visites, les lectures des Carnets, les demandes
+          d’inscription à la lettre et le parcours d’achat. Les cookies
+          nécessaires au panier restent indépendants.{' '}
           <Link href="/confidentialite">En savoir plus</Link>
         </p>
       </div>

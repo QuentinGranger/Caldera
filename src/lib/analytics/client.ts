@@ -13,6 +13,9 @@ export type CommerceEvent =
   | 'add_shipping_info'
   | 'add_payment_info'
   | 'purchase';
+export const NEWSLETTER_LEAD_EVENT = 'generate_lead';
+type GoogleEvent = CommerceEvent | typeof NEWSLETTER_LEAD_EVENT;
+export const MEASUREMENT_EVENT = 'caldera:measurement';
 export const CONSENT_KEY = 'caldera-analytics-consent-v1';
 export function analyticsAllowed() {
   try {
@@ -27,7 +30,8 @@ export function analyticsAllowed() {
   }
 }
 export function safeAnalyticsPath(path: string) {
-  return /^\/(admin|compte|commande|paiement|panier\/reprendre|newsletter|checkout\/paiement|api)(\/|$)/.test(
+  if (path.startsWith('/newsletter/')) return null;
+  return /^\/(admin|compte|commande|paiement|panier\/reprendre|alertes|retractation|checkout\/paiement|api)(\/|$)/.test(
     path,
   )
     ? null
@@ -99,6 +103,17 @@ export function analyticsPageContext(
     return null;
   }
 }
+export function trackNewsletterLead() {
+  dispatchGoogleEvent(NEWSLETTER_LEAD_EVENT, {});
+}
+
+function dispatchGoogleEvent(name: GoogleEvent, data: Record<string, unknown>) {
+  if (typeof window === 'undefined' || !analyticsAllowed()) return;
+  window.dispatchEvent(
+    new CustomEvent(MEASUREMENT_EVENT, { detail: { name, data } }),
+  );
+}
+
 export function trackCommerce(
   name: CommerceEvent,
   data: {
@@ -116,11 +131,7 @@ export function trackCommerce(
       name,
       name === 'view_item' ? { variantId: data.items[0]?.item_id } : {},
     );
-  window.dispatchEvent(
-    new CustomEvent('caldera:commerce', {
-      detail: { name, data: { ...data, currency: 'EUR' } },
-    }),
-  );
+  dispatchGoogleEvent(name, { ...data, currency: 'EUR' });
 }
 
 let measurementQueue = Promise.resolve();

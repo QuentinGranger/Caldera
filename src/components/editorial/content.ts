@@ -18,15 +18,13 @@ import {
 } from '@/lib/content/glossaryDocument';
 import { isShopGame } from '@/lib/catalog/shopGame';
 import { getContentLinks, type ContentLinks } from '@/lib/seo/links';
-import { formatDateFr, listFr, type MetadataText } from '@/lib/seo/metadata';
+import { listFr, type MetadataText } from '@/lib/seo/metadata';
 import type { IndexDecision } from '@/lib/seo/types';
 import {
   GLOSSARY_PATH,
   GUIDES_PATH,
   GUIDE_KINDS_IN_TEXT,
   editorialDecision,
-  fitSentences,
-  fittingTitle,
   groupGuides,
   guideCountsLabel,
   isGuideKind,
@@ -48,7 +46,7 @@ export interface GuidesIndex {
   heading: string;
   /** « 5 guides, 2 comparatifs et 1 dossier » */
   counts: string;
-  /** « 5 guides, 2 comparatifs et 1 dossier sur les cartes à collectionner. » */
+  /** Counts and topics for the guide index. */
   summary: string;
   updated: Date | null;
   glossaryCount: number;
@@ -74,7 +72,7 @@ export const getGuidesIndex = cache(async (): Promise<GuidesIndex> => {
     : 'Guides';
   const counts = guideCountsLabel(groups);
   const summary = groups.length
-    ? `${upperFirst(counts)} sur les cartes à collectionner.`
+    ? `${upperFirst(counts)} pour choisir, collectionner et protéger vos cartes Pokémon.`
     : 'Aucun guide publié pour le moment.';
   const updated = latestUpdate(guides);
   const glossaryCount = all.filter(
@@ -88,17 +86,12 @@ export const getGuidesIndex = cache(async (): Promise<GuidesIndex> => {
     updated,
     glossaryCount,
     text: {
-      title: fittingTitle(
-        `${heading} sur les cartes à collectionner`,
-        `${heading} : cartes à collectionner`,
-        heading,
-      ),
-      description: fitSentences([
-        summary,
-        updated && `Mis à jour le ${formatDateFr(updated)}.`,
-        glossaryCount > 0 &&
-          `Glossaire de ${kindCount('glossaire', glossaryCount)}.`,
-      ]),
+      title: guides.length
+        ? 'Guides Pokémon TCG : choisir et protéger ses cartes'
+        : heading,
+      description: guides.length
+        ? 'Apprenez à collectionner les cartes Pokémon, comparer boosters, ETB et displays, reconnaître les contrefaçons et protéger vos cartes.'
+        : summary,
     },
     decision: editorialDecision(GUIDES_PATH, guides.length > 0),
   };

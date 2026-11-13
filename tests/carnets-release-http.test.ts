@@ -84,6 +84,7 @@ test('HTTP Carnets : accès serveur HTML/RSC, metadata, archives, sitemap et bas
     assert.match(html, new RegExp(marker));
     assert.match(html, /<meta name="robots" content="noindex/);
     assert.doesNotMatch(html, /<link rel="canonical"[^>]*access=/);
+    assert.doesNotMatch(html, /"@type":"Article"/);
     const other = await db.carnetChapter.create({
       data: {
         number: 678904,
@@ -151,6 +152,10 @@ test('HTTP Carnets : accès serveur HTML/RSC, metadata, archives, sitemap et bas
     );
     assert.doesNotMatch(marketingHtml, /<link rel="canonical"[^>]*utm_/);
 
+    assert.match(publicHtml, /"@type":"Article"/);
+    const canonical = `https://lesterresdecaldera.fr${path}`;
+    assert.ok(publicHtml.includes(`"url":"${canonical}"`));
+    assert.ok(publicHtml.includes(`property="og:url" content="${canonical}"`));
     assert.ok(
       (await (await fetch(`${base}/univers/carnets`)).text()).includes(path),
     );

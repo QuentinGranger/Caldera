@@ -875,12 +875,12 @@ export default function ConfidentialitePage() {
               </h3>
               <p>
                 Lorsque GA4 est configuré, un choix Accepter / Refuser permet de
-                mesurer les pages publiques, les produits vus, les ajouts au
-                panier et les étapes d’achat. Aucun script Google Analytics
-                n’est chargé avant votre accord. Vous pouvez retirer cet accord
-                depuis « Cookies · préférences ». Le choix est conservé 180
-                jours, comme les cookies de mesure Google configurés sur ce
-                site.
+                mesurer les pages publiques, les demandes d’inscription à la
+                lettre, les produits vus, les ajouts au panier et les étapes
+                d’achat. Aucun script Google Analytics n’est chargé avant votre
+                accord. Vous pouvez retirer cet accord depuis « Cookies ·
+                préférences ». Le choix est conservé 180 jours, comme les
+                cookies de mesure Google configurés sur ce site.
               </p>
               <p>
                 Caldera conserve aussi, pendant 90 jours, des sessions

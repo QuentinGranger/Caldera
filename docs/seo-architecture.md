@@ -118,7 +118,7 @@ Un noindex n’est jamais combiné à un canonical vers une autre URL. Les pages
 
 Deux blocs au plus par page : le `BreadcrumbList`, émis par le composant `Breadcrumb` à partir des items visibles (ils ne peuvent donc pas diverger), et un `@graph` pour le reste de la page :
 
-- layout (accueil) : `Organization` (nom, URL, logo, email de contact s’il est public ; ni adresse ni SIREN tant que la société n’est pas immatriculée) + `WebSite` (+ `SearchAction` vers `/catalogue?search=`) ;
+- layout (accueil) : `Organization` (nom, URL, logo, email de contact s’il est public ; ni adresse ni SIREN tant que la société n’est pas immatriculée) + `WebSite` (nom complet et nom court) ;
 - listes : `CollectionPage` + `ItemList` (URLs des produits affichés) ;
 - produit : `Product` (name, description, image hors placeholders, sku, gtin13/gtin selon `barcode`, brand = jeu, category, offers : une `Offer` par variante active avec price, priceCurrency EUR, availability réelle, `availabilityStarts` = date de sortie en précommande, itemCondition, url, seller = Organization, `shippingDetails` depuis ShippingMethod, `hasMerchantReturnPolicy` depuis les CGV) ;
 - guides : `Article` ; glossaire : `DefinedTerm` (+ `DefinedTermSet` sur l’index) ;

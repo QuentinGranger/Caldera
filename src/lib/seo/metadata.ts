@@ -57,6 +57,8 @@ export interface BuildMetadataInput {
   type?: 'website' | 'article';
   /** Bypass the layout title template. */
   absoluteTitle?: boolean;
+  publishedTime?: string;
+  modifiedTime?: string;
 }
 
 export function buildMetadata({
@@ -68,6 +70,8 @@ export function buildMetadata({
   image,
   type = 'website',
   absoluteTitle = false,
+  publishedTime,
+  modifiedTime,
 }: BuildMetadataInput): Metadata {
   const canonical = absoluteUrl(canonicalPath);
   const shareImage = image ?? DEFAULT_OG_IMAGE;
@@ -79,6 +83,7 @@ export function buildMetadata({
     robots: { index: index || canonicalPath !== path, follow: true },
     openGraph: {
       type,
+      ...(type === 'article' ? { publishedTime, modifiedTime } : {}),
       locale: 'fr_FR',
       siteName: SITE_NAME,
       title,

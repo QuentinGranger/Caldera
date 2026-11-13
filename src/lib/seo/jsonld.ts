@@ -96,16 +96,9 @@ export function websiteNode(): JsonLdNode {
     '@id': websiteId(),
     url: absoluteUrl('/'),
     name: ORGANIZATION.name,
+    alternateName: 'Caldera',
     inLanguage: 'fr-FR',
     publisher: { '@id': organizationId() },
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${absoluteUrl('/catalogue')}?search={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
   });
 }
 
@@ -226,6 +219,7 @@ export function articleNode({
     description: description || undefined,
     url,
     mainEntityOfPage: url,
+    isPartOf: { '@id': websiteId() },
     inLanguage: 'fr-FR',
     dateModified: isoDate(dateModified),
     datePublished: datePublished ? isoDate(datePublished) : undefined,

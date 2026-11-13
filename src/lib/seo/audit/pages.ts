@@ -198,6 +198,17 @@ export function auditPage(fetched: FetchedPage): PageAudit {
       issues.push(issue('canonical-not-self', subject, `canonical : ${href}`));
   }
 
+  if (canonicals.length === 1) {
+    const canonical = parseAbsoluteUrl(canonicals[0] ?? '');
+    for (const value of new Set(facts.openGraphUrls)) {
+      const share = parseAbsoluteUrl(value);
+      if (canonical && share?.href !== canonical.href)
+        issues.push(
+          issue('og-url-mismatch', subject, `og:url : ${value || 'vide'}`),
+        );
+    }
+  }
+
   if (!facts.h1.length) issues.push(issue('h1-missing', subject));
   else if (facts.h1.length > 1)
     issues.push(
@@ -221,19 +232,12 @@ export function auditPage(fetched: FetchedPage): PageAudit {
       ),
     );
 
-  const structured = checkStructuredData(facts.jsonLd);
+  const structured = checkStructuredData(
+    facts.jsonLd,
+    canonicals.length === 1 ? canonicals[0] : undefined,
+  );
   for (const problem of structured.problems)
-    issues.push(
-      issue(
-        problem.kind === 'invalid'
-          ? 'jsonld-invalid'
-          : problem.kind === 'no-context'
-            ? 'jsonld-no-context'
-            : 'jsonld-product-offer',
-        subject,
-        problem.detail,
-      ),
-    );
+    issues.push(issue(`jsonld-${problem.kind}`, subject, problem.detail));
 
   return {
     issues,

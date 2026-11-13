@@ -7,7 +7,7 @@
 - Search Console `sc-domain:lesterresdecaldera.fr`, associé au flux Web le
   13 novembre 2026. Les rapports Search Console sont visibles dans GA4.
 - L'administration `/admin/mesures` donne accès au rapport commun par page
-  d'entrée, ainsi qu'aux deux outils et au suivi commercial existant.
+  d'entrée, aux requêtes, aux sitemaps et au conteneur GTM.
 
 ## Rapports utiles
 
@@ -54,7 +54,22 @@ privé, lien d'accès personnel, terme de recherche Google ou donnée de formula
 n'est utilisé comme référent. Le consentement et la suppression des cookies
 restent gérés par le composant de mesure existant. GTM demeure le seul chargeur.
 
+## Demandes d’inscription à la lettre
+
+Le formulaire public, accessible depuis les guides et la page de liens, envoie
+`generate_lead` via la balise GA4 de GTM lorsqu’il affiche un résultat de succès
+et que la mesure d’audience est acceptée. Le payload contient le contexte public
+de la page. L’adresse, les préférences et le jeton de confirmation restent dans
+le parcours d’inscription. GA4 compte l’événement clé une fois par session,
+sans valeur monétaire. Le total des inscriptions confirmées se consulte dans
+l’administration Newsletter.
+
 ## Contrôles
+
+L’audit compare aussi l’URL du sitemap avec la canonical, l’URL de partage et
+celle du contenu principal déclaré en JSON-LD. Les Carnets utilisent leur date
+de publication publique et la même date de modification dans les métadonnées,
+le JSON-LD et le sitemap.
 
 ```sh
 node --conditions=react-server --import tsx --test tests/seo-demo.test.ts tests/measurement.test.ts tests/google-measurement.test.ts tests/sitemap.test.ts tests/construction.test.ts tests/construction-security.test.ts

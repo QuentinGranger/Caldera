@@ -6,13 +6,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { notFound, redirect } from 'next/navigation';
-import { readCarnet, listPublicCarnets } from '@/lib/carnets/public';
+import {
+  readCarnet,
+  listPublicCarnets,
+  carnetLastModified,
+} from '@/lib/carnets/public';
 import {
   parseCarnetContent,
   deriveCarnet,
   carnetUrl,
 } from '@/lib/carnets/content';
-import { siteOrigin } from '@/lib/site';
+import { UpdatedOn } from '@/components/editorial/UpdatedOn';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { articleNode, breadcrumbListNode, graph } from '@/lib/seo/jsonld';
+import { buildMetadata } from '@/lib/seo/metadata';
 import { DeadlineRefresh } from '../DeadlineRefresh';
 import styles from '../page.module.scss';
 export const dynamic = 'force-dynamic';
@@ -52,6 +59,10 @@ async function data(props: Props) {
     ),
   };
 }
+function carnetDescription(chapter: { number: number; title: string }) {
+  return `Carnet #${String(chapter.number).padStart(3, '0')} — ${chapter.title}. Un récit des Terres de Caldera.`;
+}
+
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { result } = await data(props);
   if (!result)
@@ -60,19 +71,26 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       robots: { index: false, follow: false },
     };
   const { chapter, state } = result;
-  const canonical = `${siteOrigin()}${carnetUrl(chapter.slug)}`;
-  const description = `Carnet #${String(chapter.number).padStart(3, '0')} — ${chapter.title}. Un récit des Terres de Caldera.`;
+  const isPublic = state === 'public';
+  const modifiedAt = isPublic ? carnetLastModified(chapter) : undefined;
   return {
-    title: `${chapter.title} · Les Carnets`,
-    description,
-    alternates: { canonical },
-    robots: { index: state === 'public', follow: state === 'public' },
-    openGraph: {
-      title: chapter.title,
-      description,
-      url: canonical,
+    ...buildMetadata({
+      title: `${chapter.title} · Les Carnets`,
+      description: carnetDescription(chapter),
+      path: carnetUrl(chapter.slug),
+      index: isPublic,
       type: 'article',
-    },
+      image:
+        isPublic && chapter.illustrationUrl
+          ? {
+              url: chapter.illustrationUrl,
+              alt: chapter.illustrationAlt ?? chapter.title,
+            }
+          : null,
+      publishedTime: isPublic ? chapter.publicAt?.toISOString() : undefined,
+      modifiedTime: modifiedAt?.toISOString(),
+    }),
+    robots: { index: isPublic, follow: isPublic },
   };
 }
 const date = (value: Date) =>
@@ -114,6 +132,9 @@ export default async function CarnetPage(props: Props) {
             </p>
           )}
           <h1>{chapter.title}</h1>
+          {state === 'public' && chapter.publicAt && (
+            <UpdatedOn date={chapter.publicAt} prefix="Publié le" />
+          )}
           {state === 'early' && content && <p>Avant-première abonnés</p>}
           {content && chapter.location && <p>{chapter.location}</p>}
         </header>
@@ -168,6 +189,25 @@ export default async function CarnetPage(props: Props) {
               S’abonner à La Lettre
             </Link>
           </section>
+        )}
+        {state === 'public' && content && (
+          <JsonLd
+            data={graph(
+              breadcrumbListNode([
+                { name: 'L’univers Caldera', path: '/univers' },
+                { name: 'Les Carnets', path: '/univers/carnets' },
+                { name: chapter.title, path: carnetUrl(chapter.slug) },
+              ]),
+              articleNode({
+                path: carnetUrl(chapter.slug),
+                headline: chapter.title,
+                description: carnetDescription(chapter),
+                datePublished: chapter.publicAt,
+                dateModified: carnetLastModified(chapter),
+                image: chapter.illustrationUrl,
+              }),
+            )}
+          />
         )}
         <DeadlineRefresh
           at={

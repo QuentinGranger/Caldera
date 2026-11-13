@@ -4,6 +4,7 @@ import { Container } from '@/components/ui/Container/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb/Breadcrumb';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getGuidesIndex } from '@/components/editorial/content';
+import { QUESTIONS_PATH } from '@/components/editorial/sections';
 import {
   GLOSSARY_PATH,
   GUIDES_PATH,
@@ -47,6 +48,13 @@ export default async function GuidesPage() {
               ({kindCount('glossaire', index.glossaryCount)}).
             </p>
           )}
+          <p>
+            Pour une réponse rapide, parcourez les{' '}
+            <Link href={QUESTIONS_PATH}>
+              questions fréquentes sur les cartes Pokémon
+            </Link>
+            .
+          </p>
         </EditorialHeader>
 
         {index.groups.map((group) => (

@@ -1,7 +1,7 @@
 // Indexable URLs of each child sitemap (docs/seo-architecture.md §8): the pages'
 // own indexation decisions, real modification dates only.
 import 'server-only';
-import { listPublicCarnets } from '@/lib/carnets/public';
+import { listPublicCarnets, carnetLastModified } from '@/lib/carnets/public';
 import { carnetUrl } from '@/lib/carnets/content';
 import type { Prisma } from '@/generated/prisma/client';
 import {
@@ -30,7 +30,7 @@ import {
   universeChapters,
   universeIndex,
 } from '@/data/universe';
-import { visibleProductWhere } from '@/lib/catalog/queries';
+import { indexableProductWhere } from '@/lib/catalog/queries';
 import { getAllContent } from '@/lib/content';
 import { getPrisma } from '@/lib/db/prisma';
 import { isPlaceholderImage } from '@/lib/seo/jsonld';
@@ -174,16 +174,13 @@ export async function getContentUrls(): Promise<SitemapUrl[]> {
       ? [
           {
             loc: absoluteUrl('/univers/carnets'),
-            lastModified: carnets[0]!.publicAt,
+            lastModified: latestDate(carnets.map(carnetLastModified)),
           },
         ]
       : []),
     ...carnets.map((chapter) => ({
       loc: absoluteUrl(carnetUrl(chapter.slug)),
-      lastModified:
-        chapter.updatedAt > chapter.publicAt!
-          ? chapter.updatedAt
-          : chapter.publicAt,
+      lastModified: carnetLastModified(chapter),
     })),
     ...decided(guides.decision, guides.updated),
     ...decided(glossary.decision, glossary.updated),
@@ -210,17 +207,17 @@ const imageOrder = [
   { id: 'asc' },
 ] satisfies Prisma.ProductImageOrderByWithRelationInput[];
 
-/** Same rule as the product page: published, active parents, ≥ 1 active variant. */
+/** Same visibility and demonstration criteria as the product metadata. */
 export function countIndexableProducts(): Promise<number> {
   if (process.env.CATALOG_DEMO_MODE === '1') return Promise.resolve(0);
-  return getPrisma().product.count({ where: visibleProductWhere });
+  return getPrisma().product.count({ where: indexableProductWhere });
 }
 
 /** URLs of products-{page}.xml, with the product's real images. */
 export async function getProductUrls(page: number): Promise<SitemapUrl[]> {
   if (process.env.CATALOG_DEMO_MODE === '1') return [];
   const products = await getPrisma().product.findMany({
-    where: visibleProductWhere,
+    where: indexableProductWhere,
     select: {
       slug: true,
       updatedAt: true,

@@ -2,7 +2,7 @@
 // @context, and every Product carries complete offers.
 
 export interface StructuredDataProblem {
-  kind: 'invalid' | 'no-context' | 'product-offer';
+  kind: 'invalid' | 'no-context' | 'product-offer' | 'page-url';
   detail: string;
 }
 
@@ -92,8 +92,16 @@ function productLabel(product: JsonObject): string {
     : 'Product';
 }
 
+const PAGE_TYPES = new Set([
+  'Article',
+  'BlogPosting',
+  'CollectionPage',
+  'Product',
+]);
+
 export function checkStructuredData(
   blocks: readonly string[],
+  canonical?: string,
 ): StructuredDataResult {
   let productCount = 0;
   const problems: StructuredDataProblem[] = [];
@@ -118,6 +126,15 @@ export function checkStructuredData(
       return;
     }
     for (const root of roots as JsonObject[]) {
+      const entities = [root, ...asArray(root['@graph']).filter(isObject)];
+      for (const entity of entities) {
+        const type = typesOf(entity).find((value) => PAGE_TYPES.has(value));
+        if (canonical && type && entity.url !== canonical)
+          problems.push({
+            kind: 'page-url',
+            detail: `${type} : ${typeof entity.url === 'string' ? entity.url : 'url absente'} (attendue : ${canonical})`,
+          });
+      }
       if (!hasContext(root['@context']))
         problems.push({ kind: 'no-context', detail: `${block} sans @context` });
       walk(root, (node) => {

@@ -4,19 +4,25 @@ import Link from 'next/link';
 import { getPrisma } from '@/lib/db/prisma';
 import { listPublicCarnets } from '@/lib/carnets/public';
 import { carnetUrl } from '@/lib/carnets/content';
-import { siteOrigin } from '@/lib/site';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { collectionPageNode, graph, itemListNode } from '@/lib/seo/jsonld';
+import { buildMetadata } from '@/lib/seo/metadata';
 import { DeadlineRefresh } from './DeadlineRefresh';
 import styles from './page.module.scss';
 export const dynamic = 'force-dynamic';
+const path = '/univers/carnets';
+const title = 'Les Carnets de Caldera';
+const description =
+  'Les récits des Terres de Caldera, chapitre après chapitre.';
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
   const chapters = await listPublicCarnets();
-  return {
-    title: 'Les Carnets de Caldera',
-    description: 'Les récits des Terres de Caldera, chapitre après chapitre.',
-    alternates: { canonical: `${siteOrigin()}/univers/carnets` },
-    robots: { index: chapters.length > 0, follow: true },
-  };
+  return buildMetadata({
+    title,
+    description,
+    path,
+    index: chapters.length > 0,
+  });
 }
 export default async function CarnetsPage() {
   await connection();
@@ -44,7 +50,7 @@ export default async function CarnetsPage() {
         </nav>
         <header className={styles.header}>
           <p className={styles.eyebrow}>LES TERRES DE CALDERA</p>
-          <h1>Les Carnets de Caldera</h1>
+          <h1>{title}</h1>
           <p>
             Des récits à découvrir, chapitre après chapitre. Les abonnés de La
             Lettre les lisent quatorze jours en avant-première.
@@ -73,6 +79,23 @@ export default async function CarnetsPage() {
               Découvrir La Lettre
             </Link>
           </section>
+        )}
+        {chapters.length > 0 && (
+          <JsonLd
+            data={graph(
+              collectionPageNode({
+                path,
+                name: title,
+                description,
+                mainEntity: itemListNode(
+                  chapters.map((chapter) => ({
+                    path: carnetUrl(chapter.slug),
+                    name: chapter.title,
+                  })),
+                ),
+              }),
+            )}
+          />
         )}
         <DeadlineRefresh at={next?.publicAt?.toISOString() ?? null} />
       </div>

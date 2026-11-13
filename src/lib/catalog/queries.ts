@@ -36,6 +36,11 @@ export const visibleProductWhere: Prisma.ProductWhereInput = {
   ...publishedProductWhere,
   variants: { some: { isActive: true } },
 };
+/** Public product URLs eligible for indexing after the demo period. */
+export const indexableProductWhere: Prisma.ProductWhereInput = {
+  ...visibleProductWhere,
+  isDemonstration: false,
+};
 /** Purchasable now: in stock (outside preorder) or open for preorder. */
 export const availableProductWhere: Prisma.ProductWhereInput = {
   OR: [

@@ -83,6 +83,7 @@ const productGraph = JSON.stringify({
     {
       '@type': 'Product',
       name: 'ETB Flammes Obsidiennes',
+      url: `${SITE}/produit/etb`,
       offers: {
         '@type': 'Offer',
         price: '54.90',
@@ -374,6 +375,29 @@ test('règles de page : éléments manquants, doublons de balises et noindex', (
     fetched({ path: '/entete' }, { xRobotsTag: 'noindex' }),
   );
   assert.deepEqual(codes(header.issues), ['noindex-in-sitemap']);
+});
+
+test('règles de page : sitemap, partage et JSON-LD suivent la même URL', () => {
+  const page = fetched({ path: '/guides/protection' });
+  const other = `${SITE}/guides/autre`;
+  const body = page.body ?? '';
+  const mismatch = body.replace(
+    '</head>',
+    `
+    <meta property="og:url" content="${other}">
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"Article","url":"${other}"}
+    </script>
+  </head>`,
+  );
+  assert.deepEqual(codes(auditPage({ ...page, body: mismatch }).issues), [
+    'jsonld-page-url',
+    'og-url-mismatch',
+  ]);
+  assert.deepEqual(
+    auditPage({ ...page, body: mismatch.replaceAll(other, page.loc) }).issues,
+    [],
+  );
 });
 
 test('règles de page : canonical vers soi, doublon déclaré, autre origine', () => {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button/Button';
 import { subscribeNewsletterAction } from '@/lib/newsletter/actions';
 import { initialNewsletterState } from '@/lib/newsletter/validation';
 import styles from './Newsletter.module.scss';
+import { trackNewsletterLead } from '@/lib/analytics/client';
 import { newsletterCopy } from '@/lib/newsletter/copy';
 export function NewsletterForm({ preparing }: { preparing: boolean }) {
   const copy = newsletterCopy(preparing);
@@ -15,7 +16,12 @@ export function NewsletterForm({ preparing }: { preparing: boolean }) {
   );
   const form = useRef<HTMLFormElement>(null);
   const feedback = useRef<HTMLParagraphElement>(null);
+  const measuredState = useRef<typeof state>(null);
   useEffect(() => {
+    if (state.success && measuredState.current !== state) {
+      measuredState.current = state;
+      trackNewsletterLead();
+    }
     if (state.success) form.current?.reset();
     if (state.message) feedback.current?.focus();
   }, [state]);

@@ -205,6 +205,11 @@ export const AUDIT_RULES = {
     severity: 'error',
     label: 'URL du sitemap déclarée doublon d’une autre URL (canonical)',
   },
+  'og-url-mismatch': {
+    section: 'crawl',
+    severity: 'warning',
+    label: 'URL de partage différente de la canonical',
+  },
   'h1-missing': {
     section: 'crawl',
     severity: 'error',
@@ -229,6 +234,12 @@ export const AUDIT_RULES = {
     section: 'crawl',
     severity: 'error',
     label: 'Product sans offre complète (offers.price et availability)',
+  },
+  'jsonld-page-url': {
+    section: 'crawl',
+    severity: 'warning',
+    label:
+      'URL d’un article, d’une collection ou d’un produit différente de la canonical',
   },
   'broken-link': {
     section: 'crawl',

@@ -61,6 +61,56 @@ export default async function MeasurementPage() {
         </Link>
       </p>
       <AdminReportSection
+        title="Référencement Google"
+        description="Visibilité, pages d’entrée et demandes d’inscription"
+      >
+        <ul className={styles.reportResources}>
+          <li>
+            <a
+              href="https://analytics.google.com/analytics/web/#/a411500978p558382032/reports/explorer?params=_u..nav%3Dmaui&ruid=search-traffic,search-console,search-console-topic&collectionId=search-console&r=search-traffic"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Pages d’entrée et engagement dans GA4
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Alesterresdecaldera.fr"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Requêtes, clics et impressions dans Search Console
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://search.google.com/search-console/sitemaps?resource_id=sc-domain%3Alesterresdecaldera.fr"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Sitemaps et état de lecture par Google
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://tagmanager.google.com/#/container/accounts/6404904546/containers/286777994/workspaces"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Balises du site dans Google Tag Manager
+            </a>
+          </li>
+        </ul>
+        <p>
+          Le rapport par page d’entrée rapproche clics et impressions Google des
+          visites avec consentement. L’événement <code>generate_lead</code>{' '}
+          compte les demandes d’inscription acceptées par le formulaire. Les
+          inscriptions confirmées par e-mail se consultent dans{' '}
+          <Link href="/admin/newsletter">Newsletter</Link>.
+        </p>
+      </AdminReportSection>
+      <AdminReportSection
         title="Acquisition & parcours"
         description="Origine des visites, étapes d’achat et conversion sur 30 jours"
       >
@@ -76,29 +126,11 @@ export default async function MeasurementPage() {
         <ul className={styles.reportResources}>
           <li>
             <a
-              href="https://analytics.google.com/analytics/web/#/a411500978p558382032/reports/explorer?params=_u..nav%3Dmaui&ruid=search-traffic,search-console,search-console-topic&collectionId=search-console&r=search-traffic"
-              target="_blank"
-              rel="noreferrer"
-            >
-              SEO : pages d’entrée, clics Google, engagement et événements clés
-            </a>
-          </li>
-          <li>
-            <a
               href="https://analytics.google.com/analytics/web/#/a411500978p558382032/reports/intelligenthome"
               target="_blank"
               rel="noreferrer"
             >
               Google Analytics : visiteurs, canaux, parcours et conversions
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Alesterresdecaldera.fr"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Search Console : requêtes, clics, impressions et positions
             </a>
           </li>
           <li>
@@ -111,13 +143,6 @@ export default async function MeasurementPage() {
             </a>
           </li>
         </ul>
-        <p>
-          Le rapport SEO réunit les données Search Console et GA4 par page
-          d’entrée. Comparez impressions, clics et positions avec l’engagement
-          et les événements clés. Les clics Google et les visiteurs Analytics ne
-          sont pas des totaux identiques : GA4 dépend du consentement, et les
-          données Search Console arrivent avec un décalage.
-        </p>
         <p>
           Funnel instrumenté : produit vu → ajout panier → début checkout →
           accès paiement → achat confirmé. Le taux de conversion visiteurs est

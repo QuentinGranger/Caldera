@@ -1,3 +1,4 @@
+import { NewsletterCta } from '@/components/newsletter/NewsletterCta';
 import { Button } from '@/components/ui/Button/Button';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -96,6 +97,10 @@ export default async function GuidePage({ params }: Props) {
           title="À lire aussi"
           entries={related}
         />
+        <NewsletterCta title="Suivez les nouveautés Pokémon">
+          Les sorties, réassorts et sélections des Terres de Caldera, par
+          e-mail.
+        </NewsletterCta>
       </Container>
       <JsonLd
         data={graph(

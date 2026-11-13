@@ -43,6 +43,14 @@ function apexRedirect(request: NextRequest) {
 }
 
 const CONSTRUCTION_PATH = '/en-construction';
+
+function isLocalDevelopment(host: string) {
+  return (
+    !process.env.VERCEL &&
+    !process.env.VERCEL_ENV &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(host)
+  );
+}
 // A server-controlled switch opens the whole shop, including checkout.
 
 // Temporary launch curtain: every public hostname serving this deployment is
@@ -56,10 +64,7 @@ function shouldShowConstruction(request: NextRequest) {
   const host = request.headers.get('host')?.toLowerCase().replace(/:\d+$/, '');
   const { pathname } = request.nextUrl;
 
-  const isLocalHost =
-    host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
-  if (isLocalHost && !process.env.VERCEL && !process.env.VERCEL_ENV)
-    return false;
+  if (isLocalDevelopment(host ?? '')) return false;
   if (pathname === CONSTRUCTION_PATH) return false;
 
   // The Instagram landing and newsletter remain usable before sales open.
@@ -242,7 +247,9 @@ export async function proxy(request: NextRequest) {
   response.headers.set('Content-Security-Policy', policy);
   response.headers.set('Referrer-Policy', 'no-referrer');
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  if (!isIndexableHost(request.nextUrl.hostname))
+  const { hostname } = request.nextUrl;
+  // Local builds can exercise the real page directives in the SEO audit.
+  if (!isIndexableHost(hostname) && !isLocalDevelopment(hostname))
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
   if (showConstruction) {

@@ -21,6 +21,15 @@ export const carnetSummarySelect = {
   releaseCampaignId: true,
   updatedAt: true,
 } satisfies Prisma.CarnetChapterSelect;
+/** The public chapter cannot have changed before it first appeared. */
+export function carnetLastModified(chapter: {
+  publicAt: Date | null;
+  updatedAt: Date;
+}) {
+  return chapter.publicAt && chapter.publicAt > chapter.updatedAt
+    ? chapter.publicAt
+    : chapter.updatedAt;
+}
 export function publicCarnetWhere(
   now = new Date(),
 ): Prisma.CarnetChapterWhereInput {

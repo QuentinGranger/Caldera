@@ -40,7 +40,7 @@ test('calendrier : le skeleton réserve le Hero et ses trois KPI', async () => {
     text('src/components/loading/LoadingSkeleton.module.scss'),
   ]);
 
-  assert.match(component, /<HeroSkeleton action=\{false\} stats \/>/);
+  assert.match(component, /<HeroSkeleton stats \/>/);
   assert.match(component, /className=\{styles\.heroStats\}/);
   assert.match(component, /Array\.from\(\{ length: 3 \}/);
   assert.match(styles, /\.heroStats/);

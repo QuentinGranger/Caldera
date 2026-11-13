@@ -265,6 +265,8 @@ export interface PageFacts {
   descriptions: string[];
   /** href of each <link rel="canonical">, as written. */
   canonicals: string[];
+  /** content of each Open Graph URL. */
+  openGraphUrls: string[];
   /** content of each <meta name="robots"> or <meta name="googlebot">. */
   robots: string[];
   /** Text of each <h1>. */
@@ -288,6 +290,7 @@ export function extractPageFacts(html: string): PageFacts {
     titles: [],
     descriptions: [],
     canonicals: [],
+    openGraphUrls: [],
     robots: [],
     h1: [],
     jsonLd: [],
@@ -316,6 +319,8 @@ export function extractPageFacts(html: string): PageFacts {
         break;
       case 'meta': {
         const name = (attrs.name ?? '').trim().toLowerCase();
+        if (attrs.property?.trim().toLowerCase() === 'og:url')
+          facts.openGraphUrls.push((attrs.content ?? '').trim());
         if (name === 'description')
           facts.descriptions.push(collapseWhitespace(attrs.content ?? ''));
         else if (name === 'robots' || name === 'googlebot')
