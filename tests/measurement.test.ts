@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   analyticsLocation,
+  analyticsPageContext,
   safeAnalyticsPath,
 } from '../src/lib/analytics/client';
 import {
@@ -11,6 +12,57 @@ import {
 } from '../src/lib/analytics/attribution';
 import { campaignUrl } from '../src/lib/analytics/campaign';
 import { measurementId, measurementToken } from '../src/lib/analytics/server';
+
+test('SEO attribution: preserve public product URLs and internal navigation without private referrers', () => {
+  const landing = analyticsPageContext(
+    'https://lesterresdecaldera.fr/guides/proteger-ses-cartes?access=secret',
+    'https://www.google.fr/search?q=private',
+  );
+  assert.deepEqual(landing, {
+    page_location: 'https://lesterresdecaldera.fr/guides/proteger-ses-cartes',
+    page_title: '/guides/proteger-ses-cartes',
+    page_referrer: 'https://www.google.fr',
+  });
+  const product = analyticsPageContext(
+    'https://lesterresdecaldera.fr/produit/etb?email=private#token',
+    '',
+    landing!.page_location,
+  );
+  assert.equal(
+    product?.page_location,
+    'https://lesterresdecaldera.fr/produit/etb',
+  );
+  assert.equal(product?.page_referrer, landing!.page_location);
+  assert.equal(
+    analyticsPageContext(product!.page_location, '', product)?.page_referrer,
+    landing!.page_location,
+    'Later product/cart events keep the page referrer instead of referring to themselves',
+  );
+  const directProduct = analyticsPageContext(
+    'https://lesterresdecaldera.fr/produit/etb',
+    'https://www.google.fr/search?q=private',
+  );
+  assert.equal(
+    directProduct?.page_referrer,
+    'https://www.google.fr',
+    'The first product hit retains organic attribution even before page_view',
+  );
+  assert.equal(
+    analyticsPageContext(
+      'https://lesterresdecaldera.fr/commande/private-token',
+    ),
+    null,
+  );
+  assert.equal(
+    analyticsPageContext(
+      'https://lesterresdecaldera.fr/catalogue',
+      '',
+      'https://lesterresdecaldera.fr/compte/private',
+    )?.page_referrer,
+    '',
+  );
+  assert.equal(analyticsPageContext('invalid'), null);
+});
 test('mesure : aucun jeton, recherche, espace privé ou fragment transmis', () => {
   assert.equal(
     analyticsLocation(

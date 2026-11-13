@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   analyticsAllowed,
   measureLocal,
-  analyticsLocation,
+  analyticsPageContext,
   CONSENT_KEY,
   safeAnalyticsPath,
 } from '@/lib/analytics/client';
@@ -26,6 +26,7 @@ export function CommerceAnalytics({
   const configured = /^G-[A-Z0-9]+$/.test(measurementId ?? '');
   const transport =
     useRef<ReturnType<typeof startGoogleMeasurement>>(undefined);
+  const previousPage = useRef<ReturnType<typeof analyticsPageContext>>(null);
   const [choice, setChoice] = useState<'unknown' | 'yes' | 'no'>('no');
   useEffect(() => {
     if (!configured) return;
@@ -67,11 +68,17 @@ export function CommerceAnalytics({
     const send = (event: Event) => {
       if (!analyticsAllowed()) return;
       const detail = (event as CustomEvent).detail;
+      const page = analyticsPageContext(
+        location.href,
+        document.referrer,
+        previousPage.current,
+      );
       if (detail?.name)
         google.send(detail.name, {
           ...detail.data,
-          page_location: location.origin + '/catalogue',
-          page_referrer: '',
+          page_location: page?.page_location ?? location.origin + '/catalogue',
+          page_title: page?.page_title ?? 'Caldera',
+          page_referrer: page?.page_referrer ?? '',
         });
     };
     window.addEventListener('caldera:commerce', send);
@@ -79,23 +86,24 @@ export function CommerceAnalytics({
     return () => {
       google.stop();
       transport.current = undefined;
+      previousPage.current = null;
       window.removeEventListener('caldera:commerce', send);
     };
   }, [choice, configured, measurementId, containerId, nonce]);
   useEffect(() => {
     if (choice !== 'yes' || !configured) return;
-    const page = analyticsLocation(location.href);
-    if (!page) return;
+    const page = analyticsPageContext(
+      location.href,
+      document.referrer,
+      previousPage.current,
+    );
+    if (!page) {
+      previousPage.current = null;
+      return;
+    }
     measureLocal('page_view');
-    let referrer = '';
-    try {
-      referrer = new URL(document.referrer).origin;
-    } catch {}
-    transport.current?.send('page_view', {
-      page_location: page,
-      page_title: path === '/' ? 'Caldera' : path,
-      page_referrer: referrer,
-    });
+    transport.current?.send('page_view', page);
+    previousPage.current = page;
   }, [path, choice, configured, measurementId, containerId]);
   if (!configured || !safeAnalyticsPath(path)) return null;
   function choose(accepted: boolean) {

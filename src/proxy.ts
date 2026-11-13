@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { REMOVED_CONTENT } from '@/lib/content/removed';
-import { PRODUCTION_HOST, PRODUCTION_SITE_URL, siteOrigin } from '@/lib/site';
+import {
+  PRODUCTION_HOST,
+  PRODUCTION_SITE_URL,
+  siteOrigin,
+  isIndexableHost,
+} from '@/lib/site';
+import { isDemoIndexablePath } from '@/lib/seo/demo';
 
 // Older e-mail links sometimes placed one-time credentials in the query.
 // Drop them before rendering so they never enter HTML or navigation data.
@@ -236,6 +242,8 @@ export async function proxy(request: NextRequest) {
   response.headers.set('Content-Security-Policy', policy);
   response.headers.set('Referrer-Policy', 'no-referrer');
   response.headers.set('X-Content-Type-Options', 'nosniff');
+  if (!isIndexableHost(request.nextUrl.hostname))
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
   if (showConstruction) {
     response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60');
@@ -253,13 +261,9 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isCarnet =
     pathname === '/univers/carnets' || pathname.startsWith('/univers/carnets/');
-  // The demo catalogue is not indexable. Real editorial Carnets determine
-  // their own robots metadata from the release date, independently of stock.
-  if (
-    process.env.CATALOG_DEMO_MODE === '1' &&
-    !isCarnet &&
-    pathname !== '/liens'
-  )
+  // Keep example stock out of Google without suppressing the brand and its
+  // real editorial content. Pages still apply their own publication decisions.
+  if (process.env.CATALOG_DEMO_MODE === '1' && !isDemoIndexablePath(pathname))
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   if (isCarnet)
     response.headers.set('Cache-Control', 'private, no-store, max-age=0');

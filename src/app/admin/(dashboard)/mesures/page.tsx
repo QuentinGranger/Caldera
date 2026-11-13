@@ -76,6 +76,15 @@ export default async function MeasurementPage() {
         <ul className={styles.reportResources}>
           <li>
             <a
+              href="https://analytics.google.com/analytics/web/#/a411500978p558382032/reports/explorer?params=_u..nav%3Dmaui&ruid=search-traffic,search-console,search-console-topic&collectionId=search-console&r=search-traffic"
+              target="_blank"
+              rel="noreferrer"
+            >
+              SEO : pages d’entrée, clics Google, engagement et événements clés
+            </a>
+          </li>
+          <li>
+            <a
               href="https://analytics.google.com/analytics/web/#/a411500978p558382032/reports/intelligenthome"
               target="_blank"
               rel="noreferrer"
@@ -102,6 +111,13 @@ export default async function MeasurementPage() {
             </a>
           </li>
         </ul>
+        <p>
+          Le rapport SEO réunit les données Search Console et GA4 par page
+          d’entrée. Comparez impressions, clics et positions avec l’engagement
+          et les événements clés. Les clics Google et les visiteurs Analytics ne
+          sont pas des totaux identiques : GA4 dépend du consentement, et les
+          données Search Console arrivent avec un décalage.
+        </p>
         <p>
           Funnel instrumenté : produit vu → ajout panier → début checkout →
           accès paiement → achat confirmé. Le taux de conversion visiteurs est

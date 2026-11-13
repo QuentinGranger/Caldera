@@ -42,6 +42,7 @@ import {
 } from '@/lib/seo/registry';
 import type { IndexDecision } from '@/lib/seo/types';
 import { absoluteUrl } from '@/lib/site';
+import { isDemoIndexablePath } from '@/lib/seo/demo';
 import {
   latestDate,
   productSitemapCount,
@@ -81,6 +82,16 @@ function decided(
 
 /** Home, static pages, /livraison and the indexable transverse listings. */
 export async function getPageUrls(): Promise<SitemapUrl[]> {
+  if (process.env.CATALOG_DEMO_MODE === '1')
+    return [
+      { loc: absoluteUrl('/') },
+      ...STATIC_PAGES.filter(({ path }) => isDemoIndexablePath(path)).map(
+        ({ path, updated }) => ({
+          loc: absoluteUrl(path),
+          lastModified: updated ? day(updated) : null,
+        }),
+      ),
+    ];
   const [listings, delivery, catalogue] = await Promise.all([
     getIndexableListings(),
     getDeliveryPage(),
@@ -117,6 +128,7 @@ const fromEntry = ({ path, lastModified }: SitemapEntry): SitemapUrl => ({
  * the pages of sets without game (/extensions/{slug}) as their pages decide.
  */
 export async function getLandingUrls(): Promise<SitemapUrl[]> {
+  if (process.env.CATALOG_DEMO_MODE === '1') return [];
   const [landings, categoryHubs, extensions, calendar, years] =
     await Promise.all([
       listIndexableLandings(),
@@ -157,7 +169,7 @@ export async function getContentUrls(): Promise<SitemapUrl[]> {
       getNewsIndex(),
       listPublicCarnets(),
     ]);
-  return [
+  const urls: SitemapUrl[] = [
     ...(carnets.length
       ? [
           {
@@ -182,6 +194,9 @@ export async function getContentUrls(): Promise<SitemapUrl[]> {
       lastModified: entry.updated,
     })),
   ];
+  return process.env.CATALOG_DEMO_MODE === '1'
+    ? urls.filter(({ loc }) => isDemoIndexablePath(new URL(loc).pathname))
+    : urls;
 }
 
 // Creation order keeps each product in the same file as the catalogue grows.
@@ -197,11 +212,13 @@ const imageOrder = [
 
 /** Same rule as the product page: published, active parents, ≥ 1 active variant. */
 export function countIndexableProducts(): Promise<number> {
+  if (process.env.CATALOG_DEMO_MODE === '1') return Promise.resolve(0);
   return getPrisma().product.count({ where: visibleProductWhere });
 }
 
 /** URLs of products-{page}.xml, with the product's real images. */
 export async function getProductUrls(page: number): Promise<SitemapUrl[]> {
+  if (process.env.CATALOG_DEMO_MODE === '1') return [];
   const products = await getPrisma().product.findMany({
     where: visibleProductWhere,
     select: {

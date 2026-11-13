@@ -58,6 +58,47 @@ export function analyticsLocation(input: string) {
   }
   return output.href;
 }
+
+/** Match Search Console's public landing URLs without leaking private paths. */
+export type AnalyticsPage = {
+  page_location: string;
+  page_title: string;
+  page_referrer: string;
+};
+
+export function analyticsPageContext(
+  href: string,
+  initialReferrer = '',
+  previousPage: string | AnalyticsPage | null = null,
+): AnalyticsPage | null {
+  try {
+    const page = analyticsLocation(href);
+    if (!page) return null;
+    const url = new URL(page);
+    let referrer = '';
+    const incoming =
+      typeof previousPage === 'object' && previousPage
+        ? previousPage.page_location === page
+          ? previousPage.page_referrer
+          : previousPage.page_location
+        : (previousPage ?? initialReferrer);
+    if (incoming) {
+      const previous = new URL(incoming);
+      if (['https:', 'http:'].includes(previous.protocol))
+        referrer =
+          previous.origin === url.origin
+            ? (analyticsLocation(previous.href) ?? '')
+            : previous.origin;
+    }
+    return {
+      page_location: page,
+      page_title: url.pathname === '/' ? 'Caldera' : url.pathname,
+      page_referrer: referrer,
+    };
+  } catch {
+    return null;
+  }
+}
 export function trackCommerce(
   name: CommerceEvent,
   data: {
