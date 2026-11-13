@@ -63,7 +63,7 @@ export default function ConfidentialitePage() {
           <h1>Politique de confidentialité</h1>
           <p className={styles.brand}>Les Terres de Caldera — CALDERA</p>
           <p className={styles.version}>
-            Dernière mise à jour : 15 octobre 2026
+            Dernière mise à jour : 13 novembre 2026
           </p>
         </Container>
       </section>
