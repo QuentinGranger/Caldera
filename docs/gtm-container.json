@@ -1,0 +1,714 @@
+{
+  "exportFormatVersion": 2,
+  "exportTime": "2026-11-13 16:20:45",
+  "containerVersion": {
+    "path": "accounts/6404904546/containers/286777994/versions/0",
+    "accountId": "6404904546",
+    "containerId": "286777994",
+    "containerVersionId": "0",
+    "container": {
+      "path": "accounts/6404904546/containers/286777994",
+      "accountId": "6404904546",
+      "containerId": "286777994",
+      "name": "lesterresdecaldera.fr",
+      "publicId": "GTM-W2T9CD27",
+      "usageContext": ["WEB"],
+      "fingerprint": "1794586531467",
+      "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6404904546/containers/286777994/workspaces?apiLink=container",
+      "features": {
+        "supportUserPermissions": true,
+        "supportEnvironments": true,
+        "supportWorkspaces": true,
+        "supportGtagConfigs": false,
+        "supportBuiltInVariables": true,
+        "supportClients": false,
+        "supportFolders": true,
+        "supportTags": true,
+        "supportTemplates": true,
+        "supportTriggers": true,
+        "supportVariables": true,
+        "supportVersions": true,
+        "supportZones": true,
+        "supportTransformations": false
+      },
+      "tagIds": ["GTM-W2T9CD27"]
+    },
+    "tag": [
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "tagId": "3",
+        "name": "GA4 — Configuration Caldera",
+        "type": "dest_ga",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "destinationId",
+            "value": "G-RRTGBQ5CP1"
+          },
+          {
+            "type": "LIST",
+            "key": "configSettingsTable",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "send_page_view"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "false"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "cookie_expires"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "15552000"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "cookie_update"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "false"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "allow_google_signals"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "false"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "allow_ad_personalization_signals"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "false"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "page_location"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "https://lesterresdecaldera.fr/"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "page_title"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "Caldera"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "page_referrer"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["2147479573"],
+        "tagFiringOption": "ONCE_PER_EVENT",
+        "monitoringMetadata": {
+          "type": "MAP"
+        },
+        "consentSettings": {
+          "consentStatus": "NEEDED",
+          "consentType": {
+            "type": "LIST",
+            "list": [
+              {
+                "type": "TEMPLATE",
+                "value": "analytics_storage"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "tagId": "20",
+        "name": "GA4 — Événements Caldera",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "measurementIdOverride",
+            "value": "G-RRTGBQ5CP1"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "{{DLV — caldera_event_name}}"
+          },
+          {
+            "type": "LIST",
+            "key": "eventSettingsTable",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "page_location"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.page_location}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "page_title"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.page_title}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "page_referrer"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.page_referrer}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "items"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.items}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "currency"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.currency}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "value"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.value}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "transaction_id"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.transaction_id}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "shipping"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.shipping}}"
+                  }
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameter",
+                    "value": "tax"
+                  },
+                  {
+                    "type": "TEMPLATE",
+                    "key": "parameterValue",
+                    "value": "{{DLV — caldera_parameters.tax}}"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["20"],
+        "tagFiringOption": "ONCE_PER_EVENT",
+        "consentSettings": {
+          "consentStatus": "NEEDED",
+          "consentType": {
+            "type": "LIST",
+            "list": [
+              {
+                "type": "TEMPLATE",
+                "value": "analytics_storage"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "builtInVariable": [
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "type": "PAGE_URL",
+        "name": "Page URL"
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "type": "PAGE_HOSTNAME",
+        "name": "Page Hostname"
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "type": "PAGE_PATH",
+        "name": "Page Path"
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "type": "REFERRER",
+        "name": "Referrer"
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "type": "EVENT",
+        "name": "Event"
+      }
+    ],
+    "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6404904546/containers/286777994/versions/0?apiLink=version",
+    "gtagConfig": [
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "gtagConfigId": "4",
+        "type": "ogt_auto_events",
+        "parameter": [
+          {
+            "type": "BOOLEAN",
+            "key": "enableOutboundClick",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "enableScroll",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "enableDownload",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "enableHistoryEvents",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "enableForm",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "enableVideo",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "gtagConfigId": "5",
+        "type": "ogt_1p_data_v2",
+        "parameter": [
+          {
+            "type": "BOOLEAN",
+            "key": "isAutoEnabled",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "isManualEnabled",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "autoPhoneEnabled",
+            "value": "false"
+          },
+          {
+            "type": "LIST",
+            "key": "autoCollectExclusionSelectors",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {
+                    "type": "TEMPLATE",
+                    "key": "exclusionSelector"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "isEnabled",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "autoAddressEnabled",
+            "value": "false"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "autoEmailEnabled",
+            "value": "false"
+          }
+        ]
+      }
+    ],
+    "variable": [
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "20",
+        "name": "DLV — caldera_event_name",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_event_name"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "21",
+        "name": "DLV — caldera_parameters.page_location",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.page_location"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "22",
+        "name": "DLV — caldera_parameters.page_title",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.page_title"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "23",
+        "name": "DLV — caldera_parameters.page_referrer",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.page_referrer"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "24",
+        "name": "DLV — caldera_parameters.items",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.items"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "25",
+        "name": "DLV — caldera_parameters.currency",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.currency"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "26",
+        "name": "DLV — caldera_parameters.value",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.value"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "27",
+        "name": "DLV — caldera_parameters.transaction_id",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.transaction_id"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "28",
+        "name": "DLV — caldera_parameters.shipping",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.shipping"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "variableId": "29",
+        "name": "DLV — caldera_parameters.tax",
+        "type": "v",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "name",
+            "value": "caldera_parameters.tax"
+          },
+          {
+            "type": "INTEGER",
+            "key": "dataLayerVersion",
+            "value": "2"
+          }
+        ]
+      }
+    ],
+    "trigger": [
+      {
+        "accountId": "6404904546",
+        "containerId": "286777994",
+        "triggerId": "20",
+        "name": "Caldera — mesure consentie",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {
+                "type": "TEMPLATE",
+                "key": "arg0",
+                "value": "{{_event}}"
+              },
+              {
+                "type": "TEMPLATE",
+                "key": "arg1",
+                "value": "caldera_measurement"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

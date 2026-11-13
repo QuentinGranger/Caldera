@@ -3,6 +3,8 @@
 ## Services réels
 
 - GA4 : propriété 558382032, flux web 16106085269, identifiant public G-RRTGBQ5CP1.
+- Google Tag Manager : conteneur Web GTM-W2T9CD27. Voir `docs/tag-manager.md` et
+  l'export versionné `docs/gtm-container.json` pour la configuration.
 - Search Console : propriété de domaine `sc-domain:lesterresdecaldera.fr`, déjà vérifiée. Sitemap déclaré et lu avec succès.
 - Stripe : paiements et remboursements confirmés par les webhooks existants ; les tableaux ne simulent ni chiffre d’affaires ni solde bancaire.
 - Administration : `/admin/mesures` (acquisition, conversion, produits, emails) et `/admin/pilotage` (coûts, marge, charges, stock, trésorerie).
@@ -10,6 +12,10 @@
 ## Configuration
 
 `NEXT_PUBLIC_GA4_MEASUREMENT_ID` configure le flux public, `MEASUREMENT_ENABLED=true` active la mesure interne après application de la migration `20261011150000_add_measurement`. La signature utilise le secret d’authentification existant avec séparation de domaine HMAC ; aucune nouvelle clé publique ne permet d’attribuer une commande.
+
+`NEXT_PUBLIC_GTM_CONTAINER_ID` sélectionne le conteneur publié. Lorsqu'il est
+configuré, il remplace le chargement direct GA4. Les pages vues et événements
+e-commerce utilisent l'événement de couche de données `caldera_measurement`.
 
 ## Consentement et sécurité
 

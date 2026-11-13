@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   analyticsAllowed,
@@ -11,17 +11,21 @@ import {
 } from '@/lib/analytics/client';
 import styles from './CommerceAnalytics.module.scss';
 import { OPEN_COOKIE_PREFERENCES_EVENT } from './CookiePreferencesButton';
+import { startGoogleMeasurement } from '@/lib/analytics/google';
 
-type Gtag = (...args: unknown[]) => void;
 export function CommerceAnalytics({
   measurementId,
+  containerId,
   nonce,
 }: {
   measurementId?: string;
+  containerId?: string;
   nonce?: string;
 }) {
   const path = usePathname();
   const configured = /^G-[A-Z0-9]+$/.test(measurementId ?? '');
+  const transport =
+    useRef<ReturnType<typeof startGoogleMeasurement>>(undefined);
   const [choice, setChoice] = useState<'unknown' | 'yes' | 'no'>('no');
   useEffect(() => {
     if (!configured) return;
@@ -52,51 +56,20 @@ export function CommerceAnalytics({
     };
   }, [configured]);
   useEffect(() => {
-    if (!configured || choice !== 'yes') return;
-    const target = window as unknown as {
-      dataLayer: unknown[];
-      gtag?: Gtag;
-      [key: string]: unknown;
-    };
-    target[`ga-disable-${measurementId}`] = false;
-    target.dataLayer ??= [];
-    const gtag: Gtag =
-      target.gtag ??
-      function () {
-        // Google’s command queue expects an Arguments object.
-        // eslint-disable-next-line prefer-rest-params
-        target.dataLayer.push(arguments);
-      };
-    target.gtag = gtag;
-    gtag('consent', 'default', {
-      analytics_storage: 'granted',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
+    if (!configured || choice !== 'yes' || !measurementId) return;
+    const google = startGoogleMeasurement({
+      measurementId,
+      containerId,
+      nonce,
     });
-    gtag('js', new Date());
-    gtag('config', measurementId, {
-      send_page_view: false,
-      cookie_expires: 180 * 86400,
-      cookie_update: false,
-      allow_google_signals: false,
-      allow_ad_personalization_signals: false,
-      page_location: location.origin + '/',
-      page_title: 'Caldera',
-      page_referrer: '',
-    });
-    const script = document.createElement('script');
-    script.async = true;
-    script.nonce = nonce ?? '';
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-    document.head.appendChild(script);
+    if (!google) return;
+    transport.current = google;
     const send = (event: Event) => {
       if (!analyticsAllowed()) return;
       const detail = (event as CustomEvent).detail;
       if (detail?.name)
-        gtag('event', detail.name, {
+        google.send(detail.name, {
           ...detail.data,
-          send_to: measurementId,
           page_location: location.origin + '/catalogue',
           page_referrer: '',
         });
@@ -104,14 +77,13 @@ export function CommerceAnalytics({
     window.addEventListener('caldera:commerce', send);
     window.dispatchEvent(new Event('caldera:analytics-ready'));
     return () => {
-      target[`ga-disable-${measurementId}`] = true;
+      google.stop();
+      transport.current = undefined;
       window.removeEventListener('caldera:commerce', send);
-      script.remove();
     };
-  }, [choice, configured, measurementId, nonce]);
+  }, [choice, configured, measurementId, containerId, nonce]);
   useEffect(() => {
     if (choice !== 'yes' || !configured) return;
-    const target = window as unknown as { gtag?: Gtag };
     const page = analyticsLocation(location.href);
     if (!page) return;
     measureLocal('page_view');
@@ -119,13 +91,12 @@ export function CommerceAnalytics({
     try {
       referrer = new URL(document.referrer).origin;
     } catch {}
-    target.gtag?.('event', 'page_view', {
+    transport.current?.send('page_view', {
       page_location: page,
       page_title: path === '/' ? 'Caldera' : path,
       page_referrer: referrer,
-      send_to: measurementId,
     });
-  }, [path, choice, configured, measurementId]);
+  }, [path, choice, configured, measurementId, containerId]);
   if (!configured || !safeAnalyticsPath(path)) return null;
   function choose(accepted: boolean) {
     try {

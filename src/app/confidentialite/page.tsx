@@ -817,6 +817,13 @@ export default function ConfidentialitePage() {
 
             <Section id="section-8" title="8. Mesure d’audience">
               <p>
+                Google Tag Manager gère le chargement des balises Google
+                Analytics. Il est chargé uniquement après votre accord de mesure
+                d’audience. Les fonctions publicitaires et la collecte
+                automatique de données saisies dans les formulaires sont
+                désactivées.
+              </p>
+              <p>
                 Avec votre accord de mesure d’audience, Caldera utilise aussi
                 Google Analytics et des mesures internes pour compter les
                 visites, les lectures des Carnets, les retours vers les fiches

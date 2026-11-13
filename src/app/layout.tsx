@@ -85,6 +85,7 @@ export default async function RootLayout({
         </CartProvider>
         <CommerceAnalytics
           measurementId={process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID}
+          containerId={process.env.NEXT_PUBLIC_GTM_CONTAINER_ID}
           nonce={(await headers()).get('x-nonce') ?? undefined}
         />
         <TransitionStage />

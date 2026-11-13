@@ -213,7 +213,7 @@ export async function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com https://*.js.stripe.com https://www.googletagmanager.com${dev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://*.stripe.com https://*.link.com",
+    "img-src 'self' data: blob: https://*.stripe.com https://*.link.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com",
     "font-src 'self'",
     `connect-src 'self' https://api.stripe.com https://*.js.stripe.com https://link.com https://*.link.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com${sentryOrigin()}${dev ? ' ws://localhost:* ws://127.0.0.1:*' : ''}`,
     `frame-src ${request.nextUrl.pathname.startsWith('/admin/') ? "'self' " : ''}https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://link.com https://*.link.com`,
