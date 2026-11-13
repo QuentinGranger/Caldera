@@ -45,6 +45,10 @@ l'origine externe, y compris lorsque `view_item` précède `page_view`. Les
 navigations suivantes conservent la page publique précédente comme référent.
 Les événements suivants d'une même page réutilisent ce contexte.
 
+Une mise à jour `update=true`, avec `send_page_view=false`, maintient aussi le
+contexte des événements automatiques d'engagement sur la bonne page virtuelle.
+Elle ne réinitialise pas GA4 et ne génère pas de page vue supplémentaire.
+
 Les confirmations de commande utilisent une URL publique neutre. Aucun chemin
 privé, lien d'accès personnel, terme de recherche Google ou donnée de formulaire
 n'est utilisé comme référent. Le consentement et la suppression des cookies
@@ -69,3 +73,4 @@ sur des périodes comparables. L'engagement et les événements clés servent à
 vérifier que le trafic obtenu est utile au projet.
 
 Référence : [intégration officielle GA4/Search Console](https://support.google.com/analytics/answer/10737381?hl=fr).
+Voir aussi la [configuration Google Analytics pour les applications monopages](https://developers.google.com/analytics/devguides/collection/ga4/reference/config).

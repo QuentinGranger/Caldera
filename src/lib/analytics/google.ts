@@ -69,9 +69,28 @@ export function startGoogleMeasurement({
     document.head.appendChild(script);
   }
   let active = true;
+  let pageContext = '';
   return {
     send(name: string, parameters: Record<string, unknown>) {
       if (!active || !analyticsAllowed()) return;
+      if (typeof parameters.page_location === 'string') {
+        const page = {
+          page_location: parameters.page_location,
+          page_title: parameters.page_title ?? 'Caldera',
+          page_referrer: parameters.page_referrer ?? '',
+        };
+        const key = JSON.stringify(page);
+        if (key !== pageContext) {
+          // Keep automatic engagement on the current virtual page. `update`
+          // merges the context without reinitialising GA4 or adding a view.
+          gtag('config', measurementId, {
+            ...page,
+            update: true,
+            send_page_view: false,
+          });
+          pageContext = key;
+        }
+      }
       if (containerId) {
         // Clear the previous payload: GTM v2 variables otherwise merge objects.
         target.dataLayer!.push({ caldera_parameters: null });

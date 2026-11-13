@@ -149,13 +149,33 @@ test('GTM: one loader, consent first, isolated event payloads, withdrawal and re
     assert.equal(
       commands.some((command) => command[0] === 'config'),
       false,
-      'Only GTM configures GA4',
+      'Only GTM initialises GA4',
     );
     first.send('purchase', {
       transaction_id: 'order_1',
       items: [{ item_id: 'a' }],
       value: 12,
     });
+    first.send('page_view', {
+      page_location: 'https://lesterresdecaldera.fr/catalogue',
+    });
+    const update = ui.commands().find((command) => command[0] === 'config');
+    assert.equal((update?.[2] as Record<string, unknown>).update, true);
+    assert.equal(
+      (update?.[2] as Record<string, unknown>).send_page_view,
+      false,
+    );
+    const updates = ui
+      .commands()
+      .filter((command) => command[0] === 'config').length;
+    first.send('add_to_cart', {
+      page_location: 'https://lesterresdecaldera.fr/catalogue',
+    });
+    assert.equal(
+      ui.commands().filter((command) => command[0] === 'config').length,
+      updates,
+      'Repeated actions on a page do not initialise another context',
+    );
     first.send('page_view', {
       page_location: 'https://lesterresdecaldera.fr/catalogue',
     });
