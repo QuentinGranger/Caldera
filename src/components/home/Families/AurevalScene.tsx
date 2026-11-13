@@ -6,22 +6,30 @@ import { observeAureval } from '@/lib/motion/aureval';
 import styles from './AurevalScene.module.scss';
 
 const lamps = [
-  [1060, 300],
-  [980, 360],
-  [1190, 277],
-  [1278, 218],
-  [1405, 113],
-  [1454, 141],
-];
+  [1044, 292],
+  [1061, 293],
+  [1253, 388],
+  [1292, 389],
+] as const;
+const lanterns = [
+  [96, 307],
+  [41, 374],
+  [75, 407],
+] as const;
+// Short, uneven glints follow open water, away from the quays and boats.
 const ripples = [
-  'M 1118 399 Q 1134 396 1151 399',
-  'M 1125 408 Q 1140 405 1158 408',
-  'M 490 548 Q 520 545 550 548 T 598 548',
-  'M 642 603 Q 676 599 710 603 T 755 603',
-  'M 707 651 Q 750 647 792 651 T 850 651',
-  'M 810 709 Q 852 705 900 709 T 971 709',
-  'M 862 775 Q 916 771 969 775 T 1045 775',
-  'M 923 837 Q 978 833 1036 837 T 1122 837',
+  'M 1119 401 Q 1128 399 1136 401',
+  'M 1133 408 Q 1142 406 1151 408',
+  'M 636 582 Q 645 580 655 582',
+  'M 670 600 Q 683 598 695 600',
+  'M 614 618 Q 624 616 635 618',
+  'M 701 633 Q 719 631 736 633',
+  'M 745 658 Q 758 656 771 658',
+  'M 799 682 Q 815 680 832 682',
+  'M 861 708 Q 882 706 901 708',
+  'M 953 730 Q 965 728 979 730',
+  'M 1023 754 Q 1045 751 1069 754',
+  'M 1131 782 Q 1149 779 1168 782',
 ];
 
 function Photo({ source }: { source: string | undefined }) {
@@ -83,9 +91,14 @@ export function AurevalScene() {
             />
           </mask>
           <clipPath id={`${id}-river`}>
-            <path d="M390 500Q560 490 790 564L1280 775 1160 941H480L610 740Z" />
+            <path d="M601 562L766 565 796 612 937 649 983 687 1182 741 1228 803 1134 815 1050 776 926 752 789 699 721 650 617 634Z" />
             <ellipse cx="1138" cy="404" rx="31" ry="13" />
           </clipPath>
+          <linearGradient id={`${id}-glint`}>
+            <stop stopColor="#ffe9b7" stopOpacity="0" />
+            <stop offset="0.45" stopColor="#fff0cb" />
+            <stop offset="1" stopColor="#ffe9b7" stopOpacity="0" />
+          </linearGradient>
           <radialGradient id={`${id}-glow`}>
             <stop stopColor="#ffe3a0" stopOpacity="0.75" />
             <stop offset="1" stopColor="#ffd075" stopOpacity="0" />
@@ -96,7 +109,11 @@ export function AurevalScene() {
           <g data-aureval-far>
             <Photo source={source} />
             <g className={styles.effects}>
-              <g clipPath={`url(#${id}-river)`} className={styles.ripples}>
+              <g
+                clipPath={`url(#${id}-river)`}
+                className={styles.ripples}
+                stroke={`url(#${id}-glint)`}
+              >
                 {ripples.map((d) => (
                   <path key={d} d={d} data-aureval-ripple />
                 ))}
@@ -104,8 +121,15 @@ export function AurevalScene() {
               <g className={styles.lamps}>
                 {lamps.map(([x, y], index) => (
                   <g key={index} data-aureval-lamp>
-                    <circle cx={x} cy={y} r="12" fill={`url(#${id}-glow)`} />
-                    <circle cx={x} cy={y} r="2.2" fill="#ffe9b7" />
+                    <circle cx={x} cy={y} r="9" fill={`url(#${id}-glow)`} />
+                    <rect
+                      x={x - 1}
+                      y={y - 2}
+                      width="2"
+                      height="4"
+                      rx="0.7"
+                      fill="#ffe9b7"
+                    />
                   </g>
                 ))}
               </g>
@@ -113,6 +137,14 @@ export function AurevalScene() {
           </g>
           <g data-aureval-near mask={`url(#${id}-terrace)`}>
             <Photo source={source} />
+            <g className={`${styles.effects} ${styles.lanterns}`}>
+              {lanterns.map(([x, y]) => (
+                <g key={`${x}-${y}`} data-aureval-lamp>
+                  <circle cx={x} cy={y} r="22" fill={`url(#${id}-glow)`} />
+                  <ellipse cx={x} cy={y} rx="3" ry="7" fill="#ffe4a4" />
+                </g>
+              ))}
+            </g>
           </g>
         </g>
       </svg>

@@ -112,12 +112,18 @@ test('Aureval pauses outside the viewport and in hidden tabs, and releases motio
     document.hidden = true;
     document.dispatchEvent(new Event('visibilitychange'));
     assert.equal(paused.at(-1), true);
+    assert.equal(
+      frames.size,
+      0,
+      'Pending scroll frame is cancelled when hidden',
+    );
     document.hidden = false;
     document.dispatchEvent(new Event('visibilitychange'));
     assert.equal(paused.at(-1), false);
     onIntersection([{ isIntersecting: false }]);
     assert.equal(root.dataset.aurevalMotion, 'paused');
     assert.equal(paused.at(-1), true);
+    assert.equal(frames.size, 0, 'Pending scroll frame is cancelled offscreen');
     reduced.matches = true;
     reduced.dispatchEvent(new Event('change'));
     assert.equal(root.dataset.aurevalMotion, 'still');

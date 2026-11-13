@@ -33,8 +33,7 @@
 }
 .ripples {
   fill: none;
-  stroke: #f5d894;
-  stroke-width: 2;
+  stroke-width: 1.4;
   stroke-linecap: round;
 }
 
@@ -42,7 +41,8 @@
   .scene {
     opacity: 0.3;
   }
-  .lamps > :nth-child(n + 5),
+  .lamps > :nth-child(even),
+  .lanterns > :nth-child(n + 2),
   .ripples > :nth-child(even) {
     display: none;
   }
