@@ -1004,6 +1004,7 @@ model NewsletterSubscriber {
   status                NewsletterStatus             @default(PENDING)
   consentAt             DateTime
   consentSource         String                       @default("homepage")
+  pendingAcquisitionChannel String?
   consentVersion        String
   confirmationTokenHash String?                      @unique @db.Char(64)
   confirmationExpiresAt DateTime?
@@ -1023,6 +1024,15 @@ model NewsletterSubscriber {
 
   @@index([status, createdAt])
   @@index([confirmationExpiresAt])
+}
+
+/// Anonymous daily confirmation counts used by the weekly opening report.
+model NewsletterConfirmationDaily {
+  day     DateTime @db.Date
+  channel String
+  count   Int
+
+  @@id([day, channel])
 }
 
 /// Newsletter copy is kept locally so the admin can prepare and preview a

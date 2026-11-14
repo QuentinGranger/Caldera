@@ -16,6 +16,7 @@ export async function unsubscribeNewsletter(id: string) {
       unsubscribedAt: new Date(),
       confirmationTokenHash: null,
       confirmationExpiresAt: null,
+      pendingAcquisitionChannel: null,
     },
   });
   await clearSubscriberEngagement(id);

@@ -828,10 +828,17 @@ export default function ConfidentialitePage() {
                 Google Analytics et des mesures internes pour compter les
                 visites, les lectures des Carnets, les retours vers les fiches
                 produit dans les 24 heures et les consultations d’épisodes
-                suivants. Les mesures internes utilisent un identifiant
-                aléatoire de navigateur pseudonymisé, sans adresse IP, email,
-                compte client ou URL privée enregistrée. Elles sont conservées
-                au maximum 90 jours. Une fin de lecture est une estimation de
+                suivants. Avec ce même accord, le canal d’arrivée de votre
+                demande de newsletter peut être conservé jusqu’à la
+                confirmation, puis compté dans des statistiques globales. Le
+                bilan transmis à Make et Discord contient uniquement des
+                chiffres agrégés par canal.
+              </p>
+              <p>
+                Les autres mesures internes utilisent un identifiant aléatoire
+                de navigateur pseudonymisé, sans adresse IP, email, compte
+                client ou URL privée enregistrée. Elles sont conservées au
+                maximum 90 jours. Une fin de lecture est une estimation de
                 présence et de défilement.
               </p>
               <p>

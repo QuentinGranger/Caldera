@@ -16,6 +16,8 @@ import {
   NEWSLETTER_CONSENT_VERSION,
   type NewsletterActionState,
 } from './validation';
+import { validNewsletterChannel } from './acquisition';
+import { confirmNewsletterToken } from './confirm';
 import { unsubscribeNewsletter } from './unsubscribe';
 
 const GENERIC_SUCCESS =
@@ -87,6 +89,9 @@ export async function subscribeNewsletterAction(
       consentVersion: NEWSLETTER_CONSENT_VERSION,
       confirmationTokenHash: newsletterTokenHash(token),
       confirmationExpiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+      pendingAcquisitionChannel: validNewsletterChannel(
+        form.get('acquisitionChannel'),
+      ),
       confirmedAt: null,
       unsubscribedAt: null,
       lastInterestAt: now,
@@ -114,21 +119,8 @@ export async function confirmNewsletterAction(
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{40,100}$/.test(token))
     return failure('Ce lien de confirmation n’est pas valable.');
   try {
-    const result = await getPrisma().newsletterSubscriber.updateMany({
-      where: {
-        confirmationTokenHash: newsletterTokenHash(token),
-        status: 'PENDING',
-        confirmationExpiresAt: { gt: new Date() },
-      },
-      data: {
-        status: 'ACTIVE',
-        confirmedAt: new Date(),
-        lastInterestAt: new Date(),
-        confirmationTokenHash: null,
-        confirmationExpiresAt: null,
-      },
-    });
-    if (result.count !== 1)
+    const confirmed = await confirmNewsletterToken(newsletterTokenHash(token));
+    if (!confirmed)
       return failure(
         'Ce lien a expiré ou a déjà servi. Vous pouvez vous réinscrire depuis la page d’accueil.',
       );

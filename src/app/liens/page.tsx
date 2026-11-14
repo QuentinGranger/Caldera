@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { DISCORD_INVITE_URL } from '@/data/community';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { openingCampaignParamKeys } from '@/lib/newsletter/acquisition';
+import { publicCampaign } from '@/lib/analytics/attribution';
 import { INSTAGRAM_PROFILE_URL } from '@/lib/social';
 import styles from './page.module.scss';
 
@@ -21,13 +23,20 @@ export const metadata = buildMetadata({
   index: true,
 });
 
-export default function LinksPage() {
+export default async function LinksPage({ searchParams }: PageProps<'/liens'>) {
+  const query = await searchParams;
+  const newsletterCampaign = new URLSearchParams();
+  for (const key of openingCampaignParamKeys) {
+    const value = publicCampaign(query[key]);
+    if (value) newsletterCampaign.set(key, value);
+  }
+  const campaignQuery = newsletterCampaign.toString();
   const preparing =
     process.env.CATALOG_DEMO_MODE === '1' || process.env.STORE_OPEN !== '1';
 
   const destinations = [
     {
-      href: '/newsletter',
+      href: campaignQuery ? `/newsletter?${campaignQuery}` : '/newsletter',
       icon: Mail,
       eyebrow: 'La lettre de Caldera',
       title: preparing

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/Button/Button';
 import { subscribeNewsletterAction } from '@/lib/newsletter/actions';
 import { initialNewsletterState } from '@/lib/newsletter/validation';
 import styles from './Newsletter.module.scss';
-import { trackNewsletterLead } from '@/lib/analytics/client';
+import { newsletterChannelFromUrl } from '@/lib/newsletter/acquisition';
+import { analyticsAllowed, trackNewsletterLead } from '@/lib/analytics/client';
 import { newsletterCopy } from '@/lib/newsletter/copy';
 export function NewsletterForm({ preparing }: { preparing: boolean }) {
   const copy = newsletterCopy(preparing);
@@ -34,6 +35,16 @@ export function NewsletterForm({ preparing }: { preparing: boolean }) {
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
+        if (analyticsAllowed()) {
+          data.set(
+            'acquisitionChannel',
+            newsletterChannelFromUrl(
+              new URLSearchParams(location.search),
+              document.referrer,
+              location.origin,
+            ),
+          );
+        }
         startTransition(() => formAction(data));
       }}
       aria-describedby="newsletter-note newsletter-feedback"

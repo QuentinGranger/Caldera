@@ -133,6 +133,7 @@ export async function recordEmailDeliveryFeedback(payload: unknown) {
           emailTrackingConsentVersion: null,
           confirmationTokenHash: null,
           confirmationExpiresAt: null,
+          pendingAcquisitionChannel: null,
         },
       });
       if (updated.count) {
