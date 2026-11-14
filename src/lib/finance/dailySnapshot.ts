@@ -52,7 +52,7 @@ export async function getDailyFinancialSnapshot(day: string) {
       select: {
         totalAmount: true,
         items: { select: {
-          lineTotal: true, discountAmount: true, taxAmount: true,
+          lineTotal: true, discountAmount: true, taxAmount: true, taxRate: true,
           unitCost: true, quantity: true,
         } },
       },
@@ -87,9 +87,18 @@ export async function getDailyFinancialSnapshot(day: string) {
   let costMissing = 0;
   for (const order of orders) {
     for (const item of order.items) {
-      // Item taxAmount is the order-time VAT snapshot, after discounts.
-      gross += number(item.lineTotal) - number(item.taxAmount);
-      discounts += number(item.discountAmount);
+      // VAT is recorded on the discounted amount. Convert both the gross
+      // product sale and the promotion discount to HT using the same factor.
+      const lineTtcAfterDiscount = number(item.lineTotal) - number(item.discountAmount);
+      const lineHtAfterDiscount = lineTtcAfterDiscount - number(item.taxAmount);
+      const htFactor = lineTtcAfterDiscount > 0
+        ? Math.max(0, lineHtAfterDiscount / lineTtcAfterDiscount)
+        : item.taxRate == null
+          ? 1
+          : 1 / (1 + number(item.taxRate) / 100);
+      const discountHt = number(item.discountAmount) * htFactor;
+      gross += lineHtAfterDiscount + discountHt;
+      discounts += discountHt;
       if (item.unitCost == null) costMissing++;
       else cost += number(item.unitCost) * item.quantity;
     }
