@@ -7,8 +7,10 @@ const number = (value: { toString(): string } | null | undefined) =>
   value == null ? 0 : Number(value.toString());
 
 export function validDay(value: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    new Date(value + 'T00:00:00.000Z').toISOString().slice(0, 10) === value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const candidate = new Date(value + 'T00:00:00.000Z');
+  return !Number.isNaN(candidate.getTime()) &&
+    candidate.toISOString().slice(0, 10) === value;
 }
 
 export function previousParisDay(reference = new Date()) {
@@ -139,11 +141,11 @@ export async function getDailyFinancialSnapshot(day: string) {
     paid_orders: orders.length,
     gross_sales_ht: round(gross),
     discounts_ht: round(discounts),
-    refunds_ht: round(refundedProducts),
+    refunds_ht: unknownRefundTax ? null : round(refundedProducts),
     cogs_ht: marginAvailable ? round(cost) : null,
     margin_available: marginAvailable && (orders.length > 0 || refunds.length > 0),
     margin_coverage_complete: marginAvailable,
-    product_revenue_net_ht: revenue,
+    product_revenue_net_ht: unknownRefundTax ? null : revenue,
     gross_margin_ht: marginAvailable ? round(revenue - cost) : null,
     collected_orders_ttc: round(paidGrossTtc),
     refunded_total_ttc: round(refundedTotalTtc),
