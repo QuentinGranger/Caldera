@@ -6,6 +6,24 @@ const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 10
 const number = (value: { toString(): string } | null | undefined) =>
   value == null ? 0 : Number(value.toString());
 
+/** Reconcile gross sales and discounts to the same VAT basis (HT). */
+export function splitProductLineHt(input: {
+  lineTotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  taxRate: number | null;
+}) {
+  const netTtc = input.lineTotal - input.discountAmount;
+  const netHt = netTtc - input.taxAmount;
+  const htFactor = netTtc > 0
+    ? Math.max(0, netHt / netTtc)
+    : input.taxRate == null
+      ? 1
+      : 1 / (1 + input.taxRate / 100);
+  const discountHt = input.discountAmount * htFactor;
+  return { grossHt: netHt + discountHt, discountHt, netHt };
+}
+
 export function validDay(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const candidate = new Date(value + 'T00:00:00.000Z');
@@ -87,18 +105,14 @@ export async function getDailyFinancialSnapshot(day: string) {
   let costMissing = 0;
   for (const order of orders) {
     for (const item of order.items) {
-      // VAT is recorded on the discounted amount. Convert both the gross
-      // product sale and the promotion discount to HT using the same factor.
-      const lineTtcAfterDiscount = number(item.lineTotal) - number(item.discountAmount);
-      const lineHtAfterDiscount = lineTtcAfterDiscount - number(item.taxAmount);
-      const htFactor = lineTtcAfterDiscount > 0
-        ? Math.max(0, lineHtAfterDiscount / lineTtcAfterDiscount)
-        : item.taxRate == null
-          ? 1
-          : 1 / (1 + number(item.taxRate) / 100);
-      const discountHt = number(item.discountAmount) * htFactor;
-      gross += lineHtAfterDiscount + discountHt;
-      discounts += discountHt;
+      const split = splitProductLineHt({
+        lineTotal: number(item.lineTotal),
+        discountAmount: number(item.discountAmount),
+        taxAmount: number(item.taxAmount),
+        taxRate: item.taxRate == null ? null : number(item.taxRate),
+      });
+      gross += split.grossHt;
+      discounts += split.discountHt;
       if (item.unitCost == null) costMissing++;
       else cost += number(item.unitCost) * item.quantity;
     }
