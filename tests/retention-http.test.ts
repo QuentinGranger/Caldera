@@ -13,8 +13,8 @@ test('fidélisation : inscription explicite, Discord public et liens utiles acce
   assert.doesNotMatch(html, /<input[^>]*name="consent"[^>]*checked/);
   assert.equal((html.match(/id="newsletter-email"/g) ?? []).length, 1);
   assert.match(html, /https:\/\/discord\.gg\/RQ8AMYaGVq/);
-  assert.match(html, /M’avertir du retour en stock/);
-  assert.match(html, /sans inscription à la newsletter/);
+  assert.match(html, /Me prévenir de l’ouverture/);
+  assert.doesNotMatch(html, /id="alert-title"/);
   assert.doesNotMatch(html, /discord(?:app)?\.com\/api\/webhooks/);
   for (const path of [
     '/nouveautes',
