@@ -24,20 +24,24 @@ const read = async (path: string) => {
   };
 };
 test('HTTP merchandising : parcours réels, sélection persistée et aucune coquille vide', async () => {
-  const { html: home, response } = await read('/');
+  const { html: catalogue, response } = await read('/catalogue');
   assert.equal(response.status, 200);
+  assert.match(
+    catalogue,
+    /<details[^>]*>\s*<summary>Besoin d’aide pour choisir/,
+  );
   for (const text of [
     'Pour commencer',
     'Pour collectionner',
     'À garder scellé',
   ])
-    assert.ok(home.includes(text));
+    assert.ok(catalogue.includes(text));
   for (const guide of [
     'etb-display-ou-booster',
     'debuter-collection-cartes-pokemon',
     'conserver-produits-scelles',
   ]) {
-    assert.ok(home.includes(`/guides/${guide}`));
+    assert.ok(catalogue.includes(`/guides/${guide}`));
     assert.equal((await read(`/guides/${guide}`)).response.status, 200);
   }
   assert.equal((await read('/selections/inconnue')).response.status, 404);
@@ -71,8 +75,10 @@ test('HTTP merchandising : parcours réels, sélection persistée et aucune coqu
       '/selections/pour-commencer',
     );
     assert.equal(selected.status, 200);
+    const { html: curatedCatalogue } = await read('/catalogue');
+    assert.ok(curatedCatalogue.includes('href="/selections/pour-commencer"'));
     const { html: curatedHome } = await read('/');
-    assert.ok(curatedHome.includes('href="/selections/pour-commencer"'));
+    assert.ok(curatedHome.includes('href="/selections/du-moment"'));
     const cards =
       curatedHome.match(/<article\b[^>]*>[\s\S]*?<\/article>/g) ?? [];
     assert.equal(

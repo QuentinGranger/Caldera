@@ -246,7 +246,7 @@ test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () =
       'Cartes, boosters, displays et coffrets Pokémon sélectionnés pour jouer, collectionner et ouvrir.',
     ),
   );
-  assert.ok(html.includes('href="#catalogue-resultats"'));
+  assert.match(html, /<section[^>]+id="catalogue-resultats"/);
   assert.doesNotMatch(text, /produits au catalogue|Disponibilité : \d/);
   const at = (marker: string, from = 0) => {
     const index = html.indexOf(marker, from);
@@ -255,11 +255,11 @@ test('HTTP : hub de jeu, la boutique d’abord puis l’exploration', async () =
   };
   // The products come before every secondary block, in this order.
   const blocks = [
-    '<article',
+    'data-product-card=',
     'id="explorer"',
     'id="guides"',
     'id="questions"',
-    'aria-label="Réassorts et nouveautés"',
+    'aria-label="La lettre de Caldera"',
   ].map((marker) => at(marker));
   assert.deepEqual(
     blocks,
@@ -320,16 +320,14 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
         /<main[^>]+data-pokemon-world="(pokemon|sealed)"/,
         path,
       );
-      assert.match(html, /<section[^>]+data-kind="(pokemon|sealed)"/, path);
       assert.ok(html.includes('aria-labelledby="page-title"'), path);
-    } else {
-      assert.match(
-        html,
-        /<section[^>]+data-frame="(backdrop|arch|window)"/,
-        path,
-      );
     }
-    assert.ok(html.includes('href="#catalogue-resultats"'), path);
+    assert.match(
+      html,
+      /<section[^>]+data-frame="(backdrop|arch|window)"[^>]+data-compact="true"/,
+      path,
+    );
+    assert.match(html, /<section[^>]+id="catalogue-resultats"/, path);
     assert.doesNotMatch(
       strip(html),
       /produits au catalogue|Disponibilité : \d|Langues? : /,
@@ -337,8 +335,8 @@ test('HTTP : un seul système de pages catalogue, des rayons reliés', async () 
     );
     // The products first, every secondary block after them, the newsletter
     // last.
-    const products = html.indexOf('<article');
-    const newsletter = html.indexOf('aria-label="Réassorts et nouveautés"');
+    const products = html.indexOf('data-product-card=');
+    const newsletter = html.indexOf('aria-label="La lettre de Caldera"');
     assert.ok(products > 0 && newsletter > products, path);
     for (const id of ['id="explorer"', 'id="guides"', 'id="questions"']) {
       const index = html.indexOf(id);
