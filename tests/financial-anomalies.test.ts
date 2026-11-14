@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { forecastCash, type ForecastMovement } from '../src/lib/finance/cashForecast';
-import { detectFinancialAnomalies } from '../src/lib/finance/anomalyDetector';
+import { detectFinancialAnomalies, type DailyRiskMetrics } from '../src/lib/finance/anomalyDetector';
 
-const daily = {
+const daily: DailyRiskMetrics = {
   date: '2026-11-13', paid_orders: 0,
   product_revenue_net_ht: 0, gross_margin_ht: 0,
   margin_available: false, missing_unit_cost_lines: 0,
@@ -15,7 +15,7 @@ const settings = {
   payment_fixed_fee_eur: 0.25,
 };
 function model(opts: {
-  daily?: Partial<typeof daily>;
+  daily?: Partial<DailyRiskMetrics>;
   cash?: number | null;
   reserve?: number | null;
   monthly?: number | null;
