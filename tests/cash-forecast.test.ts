@@ -22,20 +22,20 @@ test('30 60 90: committed invoices, stock acquisitions and optional purchases', 
     ],
   });
   assert.deepEqual(r.horizons.map(h=>h.days), [30,60,90]);
-  assert.equal(r.horizons[0].committed_receipts_eur, 500);
-  assert.equal(r.horizons[0].committed_payments_eur, 400);
-  assert.equal(r.horizons[0].proposed_purchases_and_expenses_eur, 200);
-  assert.equal(r.horizons[0].proposed_receipts_excluded_eur, 999);
-  assert.equal(r.horizons[1].committed_payments_eur, 550);
-  assert.equal(r.horizons[2].committed_payments_eur, 550);
-  assert.equal(r.horizons[0].cash_with_proposals_eur, r.horizons[0].cash_budgeted_eur! - 200);
-  assert.ok(r.horizons[2].cash_budgeted_eur! < r.horizons[1].cash_budgeted_eur!);
+  assert.equal(r.horizons[0]!.committed_receipts_eur, 500);
+  assert.equal(r.horizons[0]!.committed_payments_eur, 400);
+  assert.equal(r.horizons[0]!.proposed_purchases_and_expenses_eur, 200);
+  assert.equal(r.horizons[0]!.proposed_receipts_excluded_eur, 999);
+  assert.equal(r.horizons[1]!.committed_payments_eur, 550);
+  assert.equal(r.horizons[2]!.committed_payments_eur, 550);
+  assert.equal(r.horizons[0]!.cash_with_proposals_eur, r.horizons[0]!.cash_budgeted_eur! - 200);
+  assert.ok(r.horizons[2]!.cash_budgeted_eur! < r.horizons[1]!.cash_budgeted_eur!);
 });
 
 test('Unentered cash is NOT silently treated as 0', () => {
   const r = forecastCash({asOf:'2026-11-14',openingCash:null,reserveTarget:null,monthlyExpenseBudget:null,movements:[]});
-  assert.equal(r.horizons[0].cash_budgeted_eur,null);
-  assert.equal(r.horizons[2].cash_with_proposals_eur,null);
+  assert.equal(r.horizons[0]!.cash_budgeted_eur,null);
+  assert.equal(r.horizons[2]!.cash_with_proposals_eur,null);
 });
 
 test('Overdue unpaid invoices are due immediately, settled excluded', () => {
@@ -43,8 +43,8 @@ test('Overdue unpaid invoices are due immediately, settled excluded', () => {
     {kind:'supplier_invoice',status:'committed',date:'2026-11-01',amount_eur:160,reference:'late'},
     {kind:'supplier_invoice',status:'settled',date:'2026-11-01',amount_eur:120,reference:'paid'}
   ]});
-  assert.equal(r.horizons[0].cash_budgeted_eur,90);
-  assert.equal(r.horizons[0].gap_to_reserve_eur,10);
+  assert.equal(r.horizons[0]!.cash_budgeted_eur,90);
+  assert.equal(r.horizons[0]!.gap_to_reserve_eur,10);
 });
 
 test('Reject invalid dates, statuses and quantities', () => {
