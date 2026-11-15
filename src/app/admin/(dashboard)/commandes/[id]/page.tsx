@@ -24,7 +24,7 @@ import { notFound } from 'next/navigation';
 import { getAdminOrder } from '@/lib/admin/queries';
 import { cancelOrderAction, orderNoteAction } from '@/lib/admin/actions';
 import { euros, formatDate, label } from '@/lib/admin/format';
-import { inventoryControls } from '@/lib/inventory/controls';
+import { getPickList } from '@/lib/inventory/picking';
 import {
   PageHeader,
   AdminTable,
@@ -64,40 +64,7 @@ export default async function OrderAdminPage({
     ['UNFULFILLED', 'PREPARING', 'READY_TO_SHIP'].includes(
       order.fulfillmentStatus,
     );
-  const refundedQuantities = new Map<string, number>();
-  for (const refund of order.refunds) {
-    if (refund.status !== 'SUCCEEDED') continue;
-    for (const row of refund.items)
-      refundedQuantities.set(
-        row.orderItemId,
-        (refundedQuantities.get(row.orderItemId) ?? 0) + row.quantity,
-      );
-  }
-  const pickItems = pendingPick
-    ? order.items.flatMap((item) => {
-        const quantity = item.quantity - (refundedQuantities.get(item.id) ?? 0);
-        return quantity > 0 ? [{ ...item, quantity }] : [];
-      })
-    : [];
-  const { profiles } = await inventoryControls(
-    pickItems.flatMap((row) => (row.variantId ? [row.variantId] : [])),
-  );
-  const pickList = pickItems
-    .map((item) => ({
-      ...item,
-      location: item.variantId
-        ? (profiles.get(item.variantId)?.location ?? null)
-        : null,
-    }))
-    .sort((a, b) => {
-      if (a.location === null && b.location !== null) return 1;
-      if (b.location === null && a.location !== null) return -1;
-      return (
-        (a.location ?? '').localeCompare(b.location ?? '', 'fr', {
-          numeric: true,
-        }) || a.sku.localeCompare(b.sku, 'fr')
-      );
-    });
+  const pickList = pendingPick ? await getPickList(order) : [];
   const refundable = Boolean(
     order.status === 'PAID' &&
     payment?.status === 'SUCCEEDED' &&

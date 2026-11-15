@@ -173,9 +173,14 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
             : [{ success: false, message: '' }, '$K1'],
       ),
     );
-    const route =
-      name === 'verifyMfaEnrollmentAction' ||
-      name === 'replaceAuthenticatorAction'
+    const route = [
+      'saveInventoryProfileAction',
+      'recordPhysicalCountAction',
+      'approvePhysicalCountAction',
+    ].includes(name)
+      ? '/admin/stocks/inventaire'
+      : name === 'verifyMfaEnrollmentAction' ||
+          name === 'replaceAuthenticatorAction'
         ? '/admin/securite'
         : name === 'verifyAdminBackupCodeAction'
           ? '/admin/second-facteur'
@@ -221,6 +226,7 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/produits/nouveau',
           `/admin/produits/${product.id}`,
           '/admin/stocks',
+          '/admin/stocks/inventaire',
           '/admin/mesures',
           '/admin/commandes',
           `/admin/commandes/${order.id}`,
@@ -425,6 +431,8 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
           '/admin/produits/nouveau',
           `/admin/produits/${product.id}`,
           '/admin/stocks',
+          '/admin/stocks/inventaire',
+          '/admin/stocks/inventaire?vue=alertes',
           '/admin/mesures',
           '/admin/categories',
           '/admin/extensions',
@@ -476,6 +484,66 @@ test('administration : authentification et Server Actions HTTP', async (t) => {
         }
         const search = await page(`/admin/produits?search=${variant.sku}`);
         assert.ok(search.html.includes(product.name));
+      },
+    );
+    await t.test(
+      'comptage physique à valider et prélèvement par emplacement',
+      async () => {
+        const stock = () =>
+          db.productVariant.findUniqueOrThrow({ where: { id: variant.id } });
+        const profile = await action('saveInventoryProfileAction', {
+          variantId: variant.id,
+          location: 'gar-a03-b02',
+          leadTimeDays: '14',
+        });
+        assert.match(profile.body, /"success":true/);
+
+        const detail = await page(`/admin/commandes/${order.id}`);
+        assert.match(detail.html, /Liste de prélèvement/);
+        assert.match(detail.html, /GAR-A03-B02/);
+        const slip = await page(`/admin/commandes/${order.id}/bon-preparation`);
+        assert.match(slip.html, /GAR-A03-B02/);
+
+        // A separate fixture stock balance leaves the existing tests at five units
+        // after the correction, as if an unentered unit were found in the garage.
+        const before = await db.productVariant.update({
+          where: { id: variant.id },
+          data: { stockQuantity: 4 },
+        });
+        const recorded = await action('recordPhysicalCountAction', {
+          variantId: variant.id,
+          expectedVersion: before.updatedAt.toISOString(),
+          quantity: '5',
+        });
+        assert.match(recorded.body, /"success":true/);
+        assert.equal((await stock()).stockQuantity, 4);
+        const count = await db.adminAuditLog.findFirstOrThrow({
+          where: { entityId: variant.id, action: 'INVENTORY_COUNT_RECORDED' },
+        });
+        const approved = await action('approvePhysicalCountAction', {
+          variantId: variant.id,
+          countId: count.id,
+          reason: 'Correction HTTP',
+        });
+        assert.match(approved.body, /"success":true/);
+        assert.equal((await stock()).stockQuantity, 5);
+        assert.equal(
+          await db.inventoryAdjustment.count({
+            where: {
+              variantId: variant.id,
+              type: 'CORRECTION',
+              quantityDelta: 1,
+            },
+          }),
+          1,
+        );
+        const stale = await action('approvePhysicalCountAction', {
+          variantId: variant.id,
+          countId: count.id,
+          reason: 'Validation périmée',
+        });
+        assert.match(stale.body, /"success":false/);
+        assert.equal((await stock()).stockQuantity, 5);
       },
     );
     await t.test(
