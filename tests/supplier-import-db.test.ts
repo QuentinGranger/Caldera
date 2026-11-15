@@ -82,6 +82,10 @@ const OPTIONS: ImportOptions = {
 
 test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
   const key = randomUUID().slice(0, 8);
+  const releaseDate = new Date(Date.now() + 30 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const releaseDateCsv = releaseDate.split('-').reverse().join('/');
   const code = `T${key.slice(0, 6).toUpperCase()}`;
   const [eanA, eanB, eanNew] = [ean(), ean(), ean()];
   const admin = await db.adminUser.create({
@@ -202,7 +206,7 @@ test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
           supplier.id,
           'tarif-septembre.csv',
           csv([
-            `ETB-1;Coffret Dresseur Elite Flammes ${key};${eanA};39,90;54,90;24;15/11/2026`,
+            `ETB-1;Coffret Dresseur Elite Flammes ${key};${eanA};39,90;54,90;24;${releaseDateCsv}`,
             `DIS-1;Display 36 boosters Flammes ${key};${eanB};129,00;;0;`,
             `TRI-1;${tripackName} VF;;14,50;;8;`,
             `NEW-1;Classeur Portfolio Zzyzx ${key};${eanNew};26,40;32,90;5;`,
@@ -276,7 +280,7 @@ test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
         assert.equal(bySku('TRI-1')[0]!.variantId, tripack.variants[0]!.id);
         assert.deepEqual(
           (bySku('ETB-1')[0]!.values as Record<string, unknown>).releaseDate,
-          '2026-11-15',
+          releaseDate,
         );
         const summary = analysed.summary as Record<string, number>;
         assert.equal(summary.rows, 7);
@@ -424,7 +428,7 @@ test('import fournisseur de bout en bout, PostgreSQL', async (t) => {
       'catalogue suivant : profil reconnu, veille des changements',
       async () => {
         const lines = [
-          `ETB-1;Coffret Dresseur Elite Flammes ${key};${eanA};37,90;54,90;0;15/11/2026`,
+          `ETB-1;Coffret Dresseur Elite Flammes ${key};${eanA};37,90;54,90;0;${releaseDateCsv}`,
           `DIS-1;Display 36 boosters Flammes ${key};${eanB};129,00;;12;`,
           `NEW-1;Classeur Portfolio Zzyzx ${key};${eanNew};26,40;32,90;5;`,
         ];

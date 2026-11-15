@@ -5,6 +5,12 @@ const OFFER_LIMIT = 1000;
 const CHANGE_LIMIT = 20;
 const LOOKBACK_DAYS = 7;
 
+function historicalPrice(value: unknown) {
+  return typeof value === 'string' && /^\d{1,8}\.\d{2}$/.test(value)
+    ? Number(value)
+    : null;
+}
+
 export async function getProcurementSnapshot(now = new Date()) {
   const db = getPrisma();
   const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000);
@@ -44,6 +50,7 @@ export async function getProcurementSnapshot(now = new Date()) {
             packSize: true,
             stock: true,
             availability: true,
+            releaseDate: true,
             lastSeenAt: true,
           },
         }),
@@ -57,6 +64,8 @@ export async function getProcurementSnapshot(now = new Date()) {
           take: CHANGE_LIMIT,
           select: {
             kind: true,
+            before: true,
+            after: true,
             createdAt: true,
             offer: {
               select: {
@@ -94,23 +103,30 @@ export async function getProcurementSnapshot(now = new Date()) {
     })),
     offers: offers
       .slice(0, OFFER_LIMIT)
-      .map(({ supplier, purchasePrice, lastSeenAt, ...offer }) => ({
-        ...offer,
-        supplierCode: supplier.code,
-        unitHt: purchasePrice?.toNumber() ?? null,
-        lastSeenAt: lastSeenAt.toISOString(),
-      })),
+      .map(
+        ({ supplier, purchasePrice, releaseDate, lastSeenAt, ...offer }) => ({
+          ...offer,
+          supplierCode: supplier.code,
+          unitHt: purchasePrice?.toNumber() ?? null,
+          releaseDate: releaseDate?.toISOString().slice(0, 10) ?? null,
+          lastSeenAt: lastSeenAt.toISOString(),
+        }),
+      ),
     offersTruncated: offers.length > OFFER_LIMIT,
     availability: Object.fromEntries(
       availability.map((row) => [row.availability, row._count._all]),
     ),
     changeCount,
-    changes: changes.map(({ offer, kind, createdAt }) => ({
+    changes: changes.map(({ offer, kind, createdAt, before, after }) => ({
       kind,
       at: createdAt.toISOString(),
       name: offer.name,
       supplierCode: offer.supplier.code,
       supplierSku: offer.supplierSku,
+      ...((kind === 'PRICE_DOWN' || kind === 'PRICE_UP') && {
+        beforeHt: historicalPrice(before),
+        afterHt: historicalPrice(after),
+      }),
     })),
   };
 }
