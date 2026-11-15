@@ -24,6 +24,7 @@ import { notFound } from 'next/navigation';
 import { getAdminOrder } from '@/lib/admin/queries';
 import { cancelOrderAction, orderNoteAction } from '@/lib/admin/actions';
 import { euros, formatDate, label } from '@/lib/admin/format';
+import { getPickList } from '@/lib/inventory/picking';
 import {
   PageHeader,
   AdminTable,
@@ -56,6 +57,14 @@ export default async function OrderAdminPage({
         order.refunds,
       )
     : null;
+  const pendingPick =
+    !inconsistent &&
+    !refunds?.full &&
+    order.status === 'PAID' &&
+    ['UNFULFILLED', 'PREPARING', 'READY_TO_SHIP'].includes(
+      order.fulfillmentStatus,
+    );
+  const pickList = pendingPick ? await getPickList(order) : [];
   const refundable = Boolean(
     order.status === 'PAID' &&
     payment?.status === 'SUCCEEDED' &&
@@ -133,6 +142,7 @@ export default async function OrderAdminPage({
         className={styles.orderShortcuts}
         aria-label="Accès rapides de la commande"
       >
+        {pickList.length > 0 && <a href="#prelevement">Prélèvement</a>}
         <a href="#paiement">Paiement</a>
         <a href="#factures">Factures</a>
         <a href="#client">Client et adresses</a>
@@ -148,6 +158,48 @@ export default async function OrderAdminPage({
       <div className={styles.orderLayout}>
         <div>
           <FulfillmentPanel order={order} />
+          {pickList.length > 0 && (
+            <section
+              className={styles.card}
+              id="prelevement"
+              aria-labelledby="prelevement-title"
+            >
+              <div className={styles.panelHeader}>
+                <h2 id="prelevement-title">Liste de prélèvement</h2>
+                {pickList.some((row) => !row.location) && (
+                  <Link href="/admin/stocks/inventaire">
+                    Renseigner les emplacements
+                  </Link>
+                )}
+              </div>
+              <AdminTable
+                caption="Articles à prélever par emplacement"
+                headings={[
+                  'Emplacement',
+                  'Article',
+                  'SKU / langue',
+                  'Quantité',
+                ]}
+              >
+                {pickList.map((row) => (
+                  <tr key={row.id}>
+                    <td>
+                      {row.location ? (
+                        <code>{row.location}</code>
+                      ) : (
+                        'À localiser'
+                      )}
+                    </td>
+                    <td>{row.productName}</td>
+                    <td>
+                      {row.sku} · {row.language}
+                    </td>
+                    <td>{row.quantity}</td>
+                  </tr>
+                ))}
+              </AdminTable>
+            </section>
+          )}
           <section className={styles.card}>
             <h2>Articles commandés</h2>
             <AdminTable

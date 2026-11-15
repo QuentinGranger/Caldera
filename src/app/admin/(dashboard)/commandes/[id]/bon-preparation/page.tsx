@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAdminOrder } from '@/lib/admin/queries';
 import { formatDate, label } from '@/lib/admin/format';
+import { getPickList } from '@/lib/inventory/picking';
+import { refundState } from '@/lib/refunds/amounts';
 import { PrintButton } from '@/components/admin/PrintButton';
 import styles from '@/components/admin/PackingSlip.module.scss';
 
@@ -19,6 +21,19 @@ export default async function PackingSlipPage({
   )
     notFound();
   const address = order.addresses.find((row) => row.role === 'SHIPPING');
+  const refunded = refundState(
+    {
+      amount: order.payment.amount.toFixed(2),
+      shipping: order.shippingAmount.toFixed(2),
+    },
+    order.refunds,
+  );
+  const pickList =
+    refunded.full ||
+    !order.reservations.length ||
+    order.reservations.some(({ status }) => status !== 'CONSUMED')
+      ? []
+      : await getPickList(order);
   return (
     <article className={styles.sheet}>
       <div className={styles.actions}>
@@ -66,6 +81,7 @@ export default async function PackingSlipPage({
           <caption>Articles à préparer</caption>
           <thead>
             <tr>
+              <th>Emplacement</th>
               <th>Article</th>
               <th>SKU / langue</th>
               <th>Quantité</th>
@@ -73,8 +89,9 @@ export default async function PackingSlipPage({
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item) => (
+            {pickList.map((item) => (
               <tr key={item.id}>
+                <td>{item.location ?? 'À localiser'}</td>
                 <td>
                   <Image src={item.imageUrl} alt="" width={50} height={60} />
                   <span>{item.productName}</span>
@@ -95,6 +112,11 @@ export default async function PackingSlipPage({
                 </td>
               </tr>
             ))}
+            {!pickList.length && (
+              <tr>
+                <td colSpan={5}>Aucun article à prélever.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

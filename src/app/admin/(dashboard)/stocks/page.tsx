@@ -107,6 +107,9 @@ export default async function StocksPage({
         >
           Gérer les produits
         </Link>
+        <Link className={styles.button} href="/admin/stocks/inventaire">
+          Inventaire physique
+        </Link>
       </PageHeader>
       <nav className={styles.stockViews} aria-label="Vues stocks">
         {views.map(({ icon: Icon, ...item }) => (
