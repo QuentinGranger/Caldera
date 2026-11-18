@@ -97,6 +97,11 @@ function buildCeoBrief(input, now = new Date()) {
       ? ops
       : null;
 
+  if (!orders && !finance)
+    urgencies.push(
+      'Données Caldera indisponibles pour les commandes et les ventes. Vérifier l’accès à la base de la boutique.',
+    );
+
   if (orders) {
     if (
       orders.paymentReview ||
@@ -184,14 +189,19 @@ function buildCeoBrief(input, now = new Date()) {
         ? ' · marge brute HT ' + money(finance.gross_margin_ht)
         : '')
     : 'données de vente indisponibles';
+  const manualCash =
+    number(forecast?.cash_start_eur) ??
+    number(finance?.cash_balance_manual_eur);
   const cash =
-    number(forecast?.cash_start_eur) === null
+    manualCash === null
       ? 'Trésorerie bancaire non connectée ; base manuelle indisponible.'
       : 'Trésorerie manuelle ' +
-        money(forecast.cash_start_eur) +
-        ' · projection prudente J+30 ' +
-        money(forecast.conservative_30_eur) +
-        '.';
+        money(manualCash) +
+        (number(forecast?.conservative_30_eur) === null
+          ? '.'
+          : ' · projection prudente J+30 ' +
+            money(forecast.conservative_30_eur) +
+            '.');
   const alertLine =
     n(anomaly?.alert_count) && !n(anomaly?.critical_count)
       ? ' · ' + n(anomaly.alert_count) + ' signal(aux) financier(s) à examiner'
