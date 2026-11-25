@@ -11,6 +11,6 @@ import { getShippingFacts } from '@/lib/seo/shipping';
  */
 export const getShippingOptions = sharedCache(
   async () => shippingOptionViews(await getShippingFacts()),
-  ['shipping-options'],
+  ['shipping-options-with-country-codes'],
   300,
 );

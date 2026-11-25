@@ -22,7 +22,22 @@ export function CartSummary({
   const { shipping, pending } = useCart();
   const [promotion, setPromotion] = useState(initialPromotionState);
   const discount = promotion?.promotion?.discount ?? '0.00';
-  const estimate = estimateCartTotal(shipping, cart.subtotal, discount);
+  const [selectedCountry, setSelectedCountry] = useState('FR');
+  const countries = new Map(
+    shipping.flatMap((offer) =>
+      offer.destinations.map(
+        ({ code, name }) =>
+          [code, code === 'FR' ? DELIVERY_ZONE_LABEL : name] as const,
+      ),
+    ),
+  );
+  const country = countries.has(selectedCountry)
+    ? selectedCountry
+    : countries.keys().next().value;
+  const offers = shipping.filter((offer) =>
+    offer.destinations.some(({ code }) => code === country),
+  );
+  const estimate = estimateCartTotal(offers, cart.subtotal, discount);
   return (
     <section
       id="cart-summary"
@@ -30,6 +45,27 @@ export function CartSummary({
       aria-label="Récapitulatif du panier"
     >
       <h2>Récapitulatif</h2>
+      {country && (
+        <div className={styles.destination}>
+          {countries.size > 1 ? (
+            <label>
+              Pays de livraison
+              <select
+                value={country}
+                onChange={(event) => setSelectedCountry(event.target.value)}
+              >
+                {Array.from(countries, ([code, name]) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p>Livraison prévue · {countries.get(country)}</p>
+          )}
+        </div>
+      )}
       <dl className={styles.amounts} aria-live="polite" aria-atomic="true">
         <div className={styles.subtotal}>
           <dt>Sous-total</dt>
@@ -49,8 +85,10 @@ export function CartSummary({
             {estimate.shipping === null
               ? 'À confirmer'
               : Number(estimate.shipping) === 0
-                ? 'Offerte selon le mode choisi'
-                : `Dès ${formatPrice(estimate.shipping)}`}
+                ? offers.length > 1
+                  ? 'Offerte selon le mode choisi'
+                  : 'Offerte'
+                : `${offers.length > 1 ? 'Dès ' : ''}${formatPrice(estimate.shipping)}`}
           </dd>
         </div>
         <div className={styles.total}>
@@ -60,15 +98,15 @@ export function CartSummary({
               : 'Total estimé'}
           </dt>
           <dd>
-            {estimate.shipping !== null && shipping.length > 1 ? 'Dès ' : ''}
+            {estimate.shipping !== null && offers.length > 1 ? 'Dès ' : ''}
             {formatPrice(estimate.total)}
           </dd>
         </div>
       </dl>
       <p className={styles.estimateNote}>
         {estimate.shipping === null
-          ? 'Frais de livraison confirmés à l’étape suivante.'
-          : `${DELIVERY_ZONE_LABEL}. Montant confirmé selon votre adresse et le mode de livraison choisi.`}
+          ? 'Frais calculés après saisie de l’adresse.'
+          : 'Montant confirmé après saisie de l’adresse et choix du mode de livraison.'}
       </p>
       {cart.hasUnavailableItems && (
         <p className={styles.warning} role="alert">
@@ -91,10 +129,10 @@ export function CartSummary({
         initialState={initialPromotionState}
         onStateChange={setPromotion}
       />
-      {shipping.length > 0 && (
+      {offers.length > 0 && (
         <details className={styles.deliveryDetails}>
           <summary>Modes et délais de livraison</summary>
-          <CartShipping offers={shipping} itemsTotal={estimate.itemsTotal} />
+          <CartShipping offers={offers} itemsTotal={estimate.itemsTotal} />
         </details>
       )}
       <p className={styles.note}>
