@@ -146,7 +146,9 @@ function SelectedVariant({
                               Number(option.price) > 0 &&
                               `offerte dès ${formatPrice(option.freeFromAmount)} d’achat`,
                             option.destinations.length > 0 &&
-                              option.destinations.join(', '),
+                              option.destinations
+                                .map((country) => country.name)
+                                .join(', '),
                           ]
                             .filter(Boolean)
                             .join(' · ')}

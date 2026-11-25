@@ -17,7 +17,7 @@ export interface ShippingOptionView {
   transit: string | null;
   /** « 5,90 € », « offerte dès 150,00 € d’achat », « 2 à 4 jours ouvrés ». */
   details: string[];
-  destinations: string[];
+  destinations: ShippingFact['destinations'];
 }
 
 /** « 1 jour ouvré », « 2 à 4 jours ouvrés », « 3 jours ouvrés ». */
@@ -51,7 +51,7 @@ export function shippingOptionViews(
           : []),
         ...(transit ? [`livraison en ${transit}`] : []),
       ],
-      destinations: fact.destinations.map((destination) => destination.name),
+      destinations: fact.destinations,
     };
   });
 }

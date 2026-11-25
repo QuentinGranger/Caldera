@@ -507,7 +507,7 @@ test('livraison et retours affichés : mêmes faits que les offres', () => {
   ]);
   assert.ok(view);
   assert.equal(view.name, 'Point Relais');
-  assert.deepEqual(view.destinations, ['France']);
+  assert.deepEqual(view.destinations, [{ code: 'FR', name: 'France' }]);
   assert.match(view.details[0] ?? '', /^4,50\s€$/u);
   assert.match(view.details[1] ?? '', /^offerte dès 100,00\s€ d’achat$/u);
   assert.equal(view.details[2], 'livraison en 3 à 5 jours ouvrés');
