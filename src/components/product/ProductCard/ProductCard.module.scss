@@ -23,7 +23,8 @@
 .visual {
   position: relative;
   isolation: isolate;
-  aspect-ratio: 0.95;
+  aspect-ratio: var(--product-image-ratio, 0.95);
+  max-height: var(--product-image-max-height, none);
   overflow: hidden;
   border-radius: v.$radius-card;
   background:

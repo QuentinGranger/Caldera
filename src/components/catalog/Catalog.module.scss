@@ -464,6 +464,18 @@ $hairline: rgb(23 62 50 / 14%);
     }
   }
 }
+// Reserve the second row for the guide at every column count.
+.firstRowGuide {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.explorer[data-full-catalogue] .grid {
+  reading-flow: grid-rows;
+  @include m.from(v.$breakpoint-tablet) {
+    --product-image-ratio: 1.5;
+    --product-image-max-height: 14rem;
+  }
+}
 .pendingGridSkeleton {
   display: none;
 }
