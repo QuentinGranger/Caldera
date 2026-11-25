@@ -127,6 +127,17 @@
     }
   }
 }
+.addressExtras {
+  grid-column: 1 / -1;
+  > summary {
+    width: fit-content;
+    min-height: 44px;
+    padding-block: 0.75rem;
+    font-weight: 600;
+    color: v.$color-green-dark;
+    cursor: pointer;
+  }
+}
 .full {
   grid-column: 1 / -1;
 }
