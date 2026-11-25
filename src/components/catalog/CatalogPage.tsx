@@ -90,6 +90,7 @@ export function CatalogResults({
   nav,
   browse,
   above,
+  afterFirstRow,
   card,
   emptyState,
   interlude,
@@ -104,6 +105,7 @@ export function CatalogResults({
   nav?: ReactNode;
   browse?: 'set';
   above?: ReactNode;
+  afterFirstRow?: ReactNode;
   /** The cards' layout, for aisles where the edition decides. */
   card?: 'edition';
   emptyState: ReactNode;
@@ -117,6 +119,7 @@ export function CatalogResults({
   return (
     <section
       className={styles.explorer}
+      data-full-catalogue={path === '/catalogue' || undefined}
       id="catalogue-resultats"
       aria-labelledby="catalogue-produits"
     >
@@ -175,6 +178,7 @@ export function CatalogResults({
               products={result.products}
               world={world}
               card={card}
+              afterFirstRow={afterFirstRow}
               interlude={load.hasRefinements ? undefined : interlude}
             />
           ) : (

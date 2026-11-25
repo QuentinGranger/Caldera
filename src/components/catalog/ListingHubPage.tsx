@@ -118,7 +118,7 @@ export async function ListingHubPage({
       )}
     >
       <CatalogResults
-        above={
+        afterFirstRow={
           listing === 'catalogue' && !load.hasRefinements && load.page === 1 ? (
             <ShoppingGuide intents={intents} compact />
           ) : undefined

@@ -14,11 +14,13 @@ const FEW = 3;
  */
 export function CatalogGrid({
   products,
+  afterFirstRow,
   interlude,
   card,
   world = false,
 }: {
   products: CatalogProduct[];
+  afterFirstRow?: ReactNode;
   world?: boolean;
   interlude?: ReactNode;
   /** The cards' layout (`edition`: set and language first). */
@@ -45,6 +47,9 @@ export function CatalogGrid({
                 returnTarget
               />
             </div>
+            {afterFirstRow && index === Math.min(2, products.length) - 1 && (
+              <div className={styles.firstRowGuide}>{afterFirstRow}</div>
+            )}
           </Fragment>
         ))}
       </div>
