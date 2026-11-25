@@ -123,7 +123,6 @@ export function ProductCard({
           </p>
         ) : null}
         <div className={styles.bottom}>
-          {/* The amount always ends the block: amounts align along a row. */}
           <div className={styles.price}>
             {product.price === null ? (
               <span
@@ -137,19 +136,17 @@ export function ProductCard({
               </span>
             ) : (
               <>
-                {(product.priceFrom || product.compareAtPrice) && (
+                <span>
+                  {product.priceFrom && (
+                    <span className={styles.priceNote}>À partir de </span>
+                  )}
+                  {formatPrice(product.price)}
+                </span>
+                {product.compareAtPrice && (
                   <span className={styles.priceNote}>
-                    {product.priceFrom && 'À partir de '}
-                    {product.compareAtPrice && (
-                      <del
-                        aria-label={`Ancien prix : ${formatPrice(product.compareAtPrice)}`}
-                      >
-                        {formatPrice(product.compareAtPrice)}
-                      </del>
-                    )}
+                    Ancien prix <del>{formatPrice(product.compareAtPrice)}</del>
                   </span>
                 )}
-                <span>{formatPrice(product.price)}</span>
               </>
             )}
           </div>

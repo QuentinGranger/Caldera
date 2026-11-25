@@ -175,6 +175,7 @@
 }
 .bottom {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-end;
   margin-top: auto;
@@ -184,14 +185,14 @@
 .price {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  row-gap: 0.15rem;
   font-size: 1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.3;
   white-space: nowrap;
 }
-// « À partir de », the former price: small, above the amount.
+// Keep the qualifier and the old price quieter than the current amount.
 .priceNote {
   color: v.$color-text-muted;
   font-size: 0.72rem;
