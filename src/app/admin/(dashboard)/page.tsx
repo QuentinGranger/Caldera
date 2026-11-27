@@ -113,9 +113,53 @@ export default async function DashboardPage() {
   // The day starts with the parcels: paid orders not shipped yet.
   const toHandle =
     fulfillment.unfulfilled + fulfillment.preparing + fulfillment.ready;
-  const alerts = attention.length
-    ? `${attention.length} point${attention.length > 1 ? 's' : ''} à surveiller. Retrouvez les détails ci-dessous.`
-    : 'Aucune action urgente. Vous pouvez vous concentrer sur la suite.';
+  const alertsOnly = toHandle === 0 && attention.length > 0;
+  const alertCountLabel = `${attention.length} alerte${attention.length > 1 ? 's' : ''}`;
+  const alertPanel = (
+    <section
+      id="alertes"
+      aria-labelledby="titre-alertes"
+      tabIndex={-1}
+      className={styles.card}
+    >
+      <div className={styles.panelHeader}>
+        <h2 id="titre-alertes">À surveiller</h2>
+        <span className={styles.badge}>{alertCountLabel}</span>
+      </div>
+      {attention.length ? (
+        <div className={styles.attentionList}>
+          {attention.map((item) => (
+            <Link key={item.label} href={item.href}>
+              <span>{item.label}</span>
+              <strong>{item.count}</strong>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.allClear}>
+          <CheckCheck size={21} aria-hidden="true" />
+          <div>
+            <strong>Aucun point bloquant</strong>
+            <p>
+              Les paiements à vérifier, les emails et le stock ne nécessitent
+              aucune action.
+            </p>
+          </div>
+        </div>
+      )}
+      {data.failed > 0 && (
+        <p className={styles.warning}>
+          {data.failed > 1
+            ? `${data.failed} paiements échoués`
+            : '1 paiement échoué'}{' '}
+          sur les 7 derniers jours.{' '}
+          <Link href="/admin/commandes?payment=FAILED">
+            Consulter les échecs
+          </Link>
+        </p>
+      )}
+    </section>
+  );
   return (
     <>
       <span className={styles.dashboardDate}>
@@ -132,7 +176,10 @@ export default async function DashboardPage() {
         title="Tableau de bord"
         description="Un point clair sur votre activité et les prochaines actions."
       >
-        <Link className={styles.button} href="/admin/produits/nouveau">
+        <Link
+          className={`${styles.button} ${styles.secondaryButton}`}
+          href="/admin/produits/nouveau"
+        >
           <Plus size={17} aria-hidden="true" /> Créer un produit
         </Link>
       </PageHeader>
@@ -150,20 +197,31 @@ export default async function DashboardPage() {
             <h2>
               {toHandle
                 ? `${toHandle} commande${toHandle > 1 ? 's' : ''} à traiter`
-                : attention.length
-                  ? 'Aucune commande à traiter'
+                : alertsOnly
+                  ? `${alertCountLabel} à examiner`
                   : 'Tout est à jour'}
             </h2>
-            <p>{alerts}</p>
+            {alertsOnly ? (
+              <p>Aucune commande en attente de préparation.</p>
+            ) : attention.length > 0 ? (
+              <p>{alertCountLabel} à examiner.</p>
+            ) : null}
           </div>
         </div>
-        <Link
-          href={toHandle ? '/admin/commandes?view=todo' : '/admin/commandes'}
-        >
-          {toHandle ? 'Traiter les commandes' : 'Voir les commandes'}
-          <ArrowUpRight size={17} aria-hidden="true" />
-        </Link>
+        {toHandle > 0 ? (
+          <Link href="/admin/commandes?view=todo">
+            Préparer les commandes <ArrowUpRight size={17} aria-hidden="true" />
+          </Link>
+        ) : alertsOnly ? (
+          <a href="#alertes">
+            {attention.length === 1
+              ? 'Examiner l’alerte'
+              : `Examiner les ${alertCountLabel}`}
+            <ArrowRight size={17} aria-hidden="true" />
+          </a>
+        ) : null}
       </section>
+      {alertsOnly && alertPanel}
       <div className={styles.sectionHeading}>
         <h2>Préparation & expédition</h2>
         <Link href="/admin/commandes">
@@ -324,46 +382,7 @@ export default async function DashboardPage() {
           </details>
         </div>
         <div>
-          <section className={styles.card}>
-            <div className={styles.panelHeader}>
-              <h2>À surveiller</h2>
-              <span className={styles.badge}>
-                {attention.length} alerte{attention.length > 1 ? 's' : ''}
-              </span>
-            </div>
-            {attention.length ? (
-              <div className={styles.attentionList}>
-                {attention.map((item) => (
-                  <Link key={item.label} href={item.href}>
-                    <span>{item.label}</span>
-                    <strong>{item.count}</strong>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.allClear}>
-                <CheckCheck size={21} aria-hidden="true" />
-                <div>
-                  <strong>Aucun point bloquant</strong>
-                  <p>
-                    Les paiements à vérifier, les emails et le stock ne
-                    nécessitent aucune action.
-                  </p>
-                </div>
-              </div>
-            )}
-            {data.failed > 0 && (
-              <p className={styles.warning}>
-                {data.failed > 1
-                  ? `${data.failed} paiements échoués`
-                  : '1 paiement échoué'}{' '}
-                sur les 7 derniers jours.{' '}
-                <Link href="/admin/commandes?payment=FAILED">
-                  Consulter les échecs
-                </Link>
-              </p>
-            )}
-          </section>
+          {!alertsOnly && alertPanel}
           <section className={styles.card}>
             <h2>La boutique en chiffres</h2>
             <dl className={styles.metricList}>
