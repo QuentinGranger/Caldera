@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { adminListHref } from '@/lib/admin/list-url';
 import {
   ArrowUpRight,
   ArrowRight,
@@ -57,7 +58,9 @@ export default async function DashboardPage() {
     {
       title: 'Expédiées aujourd’hui',
       value: fulfillment.shippedToday,
-      href: '/admin/commandes?sort=shipped',
+      href: adminListHref('/admin/commandes', fulfillment.shippedTodayFilters, {
+        sort: 'shipped',
+      }),
       caption: 'Journée de Paris',
       icon: Truck,
       tone: styles.lime,

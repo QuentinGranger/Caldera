@@ -494,12 +494,24 @@ export const ORDERS_TO_HANDLE = [
   FulfillmentStatus.PREPARING,
   FulfillmentStatus.READY_TO_SHIP,
 ];
+// The dashboard tile and its destination use the same status and Paris day.
+function orderStatusAndShipmentFilters(
+  params: SearchParams,
+): Prisma.OrderWhereInput {
+  const status = enumValue(param(params, 'status'), Object.values(OrderStatus));
+  const day = param(params, 'shippedOn');
+  const start = parisDate(day);
+  return {
+    ...(status && { status }),
+    ...(start && { shippedAt: { gte: start, lt: parisDate(day, true) } }),
+  };
+}
+
 export async function getAdminOrders(params: SearchParams) {
   await requireAdmin();
   const db = getPrisma();
   const page = pageNumber(params);
   const search = param(params, 'search');
-  const status = enumValue(param(params, 'status'), Object.values(OrderStatus));
   const payment = enumValue(
     param(params, 'payment'),
     Object.values(PaymentStatus),
@@ -546,7 +558,7 @@ export async function getAdminOrders(params: SearchParams) {
           ],
         }
       : {}),
-    ...(status ? { status } : {}),
+    ...orderStatusAndShipmentFilters(params),
     ...(payment ? { payment: { status: payment } } : {}),
     ...(param(params, 'shipping')
       ? { shippingMethodCode: param(params, 'shipping') }
@@ -577,6 +589,7 @@ export async function getAdminOrders(params: SearchParams) {
         id: true,
         orderNumber: true,
         createdAt: true,
+        shippedAt: true,
         email: true,
         status: true,
         totalAmount: true,
@@ -862,6 +875,7 @@ export async function getFulfillmentDashboard() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date());
+  const shippedTodayFilters = { status: OrderStatus.PAID, shippedOn: today };
   const [unfulfilled, preparing, ready, shippedToday, failedEmails] =
     await Promise.all([
       db.order.count({
@@ -874,12 +888,16 @@ export async function getFulfillmentDashboard() {
         where: { status: 'PAID', fulfillmentStatus: 'READY_TO_SHIP' },
       }),
       db.order.count({
-        where: {
-          status: 'PAID',
-          shippedAt: { gte: parisDate(today), lt: parisDate(today, true) },
-        },
+        where: orderStatusAndShipmentFilters(shippedTodayFilters),
       }),
       db.emailDelivery.count({ where: { status: 'FAILED' } }),
     ]);
-  return { unfulfilled, preparing, ready, shippedToday, failedEmails };
+  return {
+    unfulfilled,
+    preparing,
+    ready,
+    shippedToday,
+    shippedTodayFilters,
+    failedEmails,
+  };
 }
