@@ -69,7 +69,16 @@ export default async function OrdersPage({
   const fromTab = currentTab && 'fulfillment' in currentTab;
   const sort = param(params, 'sort');
   const activeCount =
-    ['emails', 'fulfillment', 'status', 'payment', 'from', 'to', 'shipping']
+    [
+      'emails',
+      'fulfillment',
+      'status',
+      'payment',
+      'from',
+      'to',
+      'shippedOn',
+      'shipping',
+    ]
       .filter((key) => !(fromTab && key === 'fulfillment'))
       .filter((key) => param(params, key)).length +
     (sort && sort !== 'newest' ? 1 : 0);
@@ -79,8 +88,9 @@ export default async function OrdersPage({
     ['emails', 'Emails'],
     ['status', 'Commande'],
     ['payment', 'Paiement'],
-    ['from', 'Du'],
-    ['to', 'Au'],
+    ['from', 'Créée du'],
+    ['to', 'Créée au'],
+    ['shippedOn', 'Expédiée le'],
     ['shipping', 'Livraison'],
     ['fulfillment', 'Préparation'],
     ['sort', 'Tri'],
@@ -164,12 +174,20 @@ export default async function OrdersPage({
           options={options(Object.values(PaymentStatus))}
         />
         <label>
-          Du (Paris)
+          Créée du (Paris)
           <input name="from" type="date" defaultValue={param(params, 'from')} />
         </label>
         <label>
-          Au (inclus)
+          Créée au (inclus)
           <input name="to" type="date" defaultValue={param(params, 'to')} />
+        </label>
+        <label>
+          Expédiée le (Paris)
+          <input
+            name="shippedOn"
+            type="date"
+            defaultValue={param(params, 'shippedOn')}
+          />
         </label>
         <FilterSelect
           name="shipping"
@@ -210,7 +228,11 @@ export default async function OrdersPage({
                 <Link href={`/admin/commandes/${order.id}`}>
                   {order.orderNumber}
                 </Link>
-                <small>{formatDate(order.createdAt)}</small>
+                <small>
+                  {param(params, 'shippedOn') && order.shippedAt
+                    ? `Expédiée le ${formatDate(order.shippedAt)}`
+                    : formatDate(order.createdAt)}
+                </small>
               </td>
               <td>{order.email}</td>
               <td>
