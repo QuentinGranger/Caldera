@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { LocationCountList } from '@/components/admin/LocationCountList';
+import { adminListHref } from '@/lib/admin/list-url';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { Field, Hidden } from '@/components/admin/AdminFields';
 import {
@@ -23,6 +25,7 @@ import {
 import {
   blankProfile,
   currentCount,
+  countsByLocation,
   inventoryControls,
 } from '@/lib/inventory/controls';
 import { getPrisma } from '@/lib/db/prisma';
@@ -137,6 +140,94 @@ async function InventoryAlerts() {
   );
 }
 
+function CountingInstructions() {
+  return (
+    <p>
+      Comptez les articles en rayon, y compris les unités réservées dont la
+      commande est encore impayée. Mettez à part les articles des commandes déjà
+      payées en attente de préparation.
+    </p>
+  );
+}
+
+async function LocationCounting({ params }: { params: SearchParams }) {
+  const page = pageNumber(params);
+  const search = param(params, 'search').trim();
+  const variants = await countsByLocation(
+    search,
+    (page - 1) * pageSize,
+    pageSize,
+  );
+  const total = variants[0]?.total ?? 0;
+  const { counts } = await inventoryControls(
+    variants.map((variant) => variant.id),
+  );
+  const rows = variants.map((variant) => {
+    const count = counts.get(variant.id);
+    return {
+      id: variant.id,
+      sku: variant.sku,
+      location: variant.location,
+      version: variant.updatedAt.toISOString(),
+      expected: variant.stockQuantity,
+      counted: count && currentCount(count, variant) ? count.quantity : null,
+      detailHref:
+        adminListHref(path, {}, { sku: variant.sku }) +
+        '#inventory-' +
+        variant.id,
+    };
+  });
+  return (
+    <>
+      <PageHeader
+        title="Comptage par emplacement"
+        description="Suivez les emplacements dans l’ordre du rayon. Les écarts se valident dans la fiche d’inventaire."
+      >
+        <Link
+          className={`${styles.button} ${styles.secondaryButton}`}
+          href={path}
+        >
+          Inventaire détaillé
+        </Link>
+      </PageHeader>
+      <details>
+        <summary>Quelles unités compter en rayon ?</summary>
+        <CountingInstructions />
+      </details>
+      <form action={path} className={styles.inline}>
+        <Hidden name="vue" value="comptage" />
+        <Field
+          label="Emplacement, SKU ou produit"
+          name="search"
+          type="search"
+          maxLength={200}
+          defaultValue={search}
+        />
+        <button type="submit">Rechercher</button>
+      </form>
+      {rows.length ? (
+        <LocationCountList
+          key={JSON.stringify([page, search])}
+          rows={rows}
+          nextPage={
+            page * pageSize < total
+              ? adminListHref(path, params, { page: String(page + 1) })
+              : undefined
+          }
+        />
+      ) : (
+        <EmptyState>
+          Aucune référence à compter.{' '}
+          <Link href={path + '?vue=comptage'}>Revenir à toute la tournée</Link>
+        </EmptyState>
+      )}
+      {total > 0 && (
+        <Pagination page={page} total={total} params={params} path={path} />
+      )}
+    </>
+  );
+}
+
 export default async function InventoryPage({
   searchParams,
 }: {
@@ -144,10 +235,14 @@ export default async function InventoryPage({
 }) {
   await requireAdmin();
   const params = await searchParams;
+  if (param(params, 'vue') === 'comptage')
+    return <LocationCounting params={params} />;
   if (param(params, 'vue') === 'alertes') return <InventoryAlerts />;
   const page = pageNumber(params);
   const search = param(params, 'search').trim();
+  const exactSku = param(params, 'sku');
   const where = {
+    ...(exactSku && { sku: exactSku }),
     isActive: true,
     product: { isDemonstration: false, status: { not: 'ARCHIVED' as const } },
     ...(search && {
@@ -186,6 +281,16 @@ export default async function InventoryPage({
         title="Inventaire physique"
         description="Enregistrez les comptages, les emplacements du garage et les délais confirmés."
       >
+        <Link
+          className={styles.button}
+          href={adminListHref(
+            path,
+            {},
+            { vue: 'comptage', search: search || exactSku },
+          )}
+        >
+          Comptage par emplacement
+        </Link>
         <Link className={styles.secondaryButton} href={`${path}?vue=alertes`}>
           Voir les alertes
         </Link>
@@ -193,18 +298,14 @@ export default async function InventoryPage({
           Retour aux stocks
         </Link>
       </PageHeader>
-      <p>
-        Comptez les articles en rayon, y compris les unités réservées dont la
-        commande est encore impayée. Mettez à part les articles des commandes
-        déjà payées en attente de préparation.
-      </p>
+      <CountingInstructions />
       <form action={path} className={styles.inline}>
         <Field
           label="Chercher un produit ou un SKU"
           name="search"
           type="search"
           maxLength={200}
-          defaultValue={search}
+          defaultValue={search || exactSku}
         />
         <button className={styles.button} type="submit">
           Rechercher
@@ -212,7 +313,7 @@ export default async function InventoryPage({
       </form>
       {variants.length === 0 && (
         <EmptyState>
-          {search ? (
+          {search || exactSku ? (
             'Aucun résultat.'
           ) : (
             <>

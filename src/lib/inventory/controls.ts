@@ -89,3 +89,44 @@ export function currentCount(
     count.expected === variant.stockQuantity
   );
 }
+
+/** Order the full inventory by its latest shelf assignment before paging. */
+export async function countsByLocation(
+  search: string,
+  offset: number,
+  limit: number,
+) {
+  return getPrisma().$queryRaw<
+    {
+      id: string;
+      sku: string;
+      stockQuantity: number;
+      updatedAt: Date;
+      location: string | null;
+      total: number;
+    }[]
+  >`
+    SELECT v.id, v.sku, v."stockQuantity", v."updatedAt", shelf.location,
+           COUNT(*) OVER ()::int AS total
+    FROM "ProductVariant" v
+    JOIN "Product" p ON p.id = v."productId"
+    LEFT JOIN LATERAL (
+      SELECT CASE WHEN metadata->>'location' ~ ${locationPattern.source}
+                  THEN metadata->>'location' END AS location
+      FROM "AdminAuditLog"
+      WHERE "entityType" = 'ProductVariant' AND "entityId" = v.id AND action = ${PROFILE_EVENT}
+      ORDER BY "createdAt" DESC, id DESC
+      LIMIT 1
+    ) shelf ON TRUE
+    WHERE v."isActive" AND NOT p."isDemonstration" AND p.status <> 'ARCHIVED'
+    ${
+      search
+        ? Prisma.sql`AND (strpos(lower(v.sku), lower(${search})) > 0
+                    OR strpos(lower(p.name), lower(${search})) > 0
+                    OR strpos(lower(shelf.location), lower(${search})) > 0)`
+        : Prisma.empty
+    }
+    ORDER BY shelf.location COLLATE "C" ASC NULLS LAST, v.sku, v.id
+    LIMIT ${limit} OFFSET ${offset}
+  `;
+}
