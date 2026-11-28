@@ -8,7 +8,13 @@ const SAMPLE = 28;
 const LIMIT = 1500;
 const ROWS = 60;
 
-export async function getInventoryReport(now = new Date()) {
+// The replenishment feed pages by immutable variant ID and includes healthy observations.
+export async function getInventoryReport(
+  now = new Date(),
+  restockAfter?: string,
+) {
+  const restock = restockAfter !== undefined;
+  const limit = restock ? 250 : LIMIT;
   const generatedAt = now.toISOString();
   const empty = {
     lowStock: [],
@@ -21,11 +27,17 @@ export async function getInventoryReport(now = new Date()) {
     async (db) => {
       const variants = await db.productVariant.findMany({
         where: {
+          ...(restockAfter && { id: { gt: restockAfter } }),
           isActive: true,
-          product: { isDemonstration: false, status: { not: 'ARCHIVED' } },
+          product: {
+            isDemonstration: false,
+            ...(restock
+              ? { status: 'ACTIVE' as const, preorder: false }
+              : { status: { not: 'ARCHIVED' as const } }),
+          },
         },
-        orderBy: [{ sku: 'asc' }, { id: 'asc' }],
-        take: LIMIT + 1,
+        orderBy: restock ? [{ id: 'asc' }] : [{ sku: 'asc' }, { id: 'asc' }],
+        take: limit + 1,
         select: {
           id: true,
           sku: true,
@@ -45,8 +57,8 @@ export async function getInventoryReport(now = new Date()) {
           },
         },
       });
-      const limited = variants.length > LIMIT;
-      const rows = variants.slice(0, LIMIT);
+      const limited = variants.length > limit;
+      const rows = variants.slice(0, limit);
       const base = {
         schema: 1,
         generatedAt,
@@ -54,7 +66,26 @@ export async function getInventoryReport(now = new Date()) {
         productsAnalyzed: rows.length,
         limited,
       };
-      if (!rows.length) return { ...base, ...empty };
+      const observations: {
+        id: string;
+        sku: string;
+        name: string;
+        available: number;
+        reserved: number;
+        threshold: number;
+        unitsSold28d: number;
+        leadTimeDays: number | null;
+        discrepancy: boolean;
+      }[] = [];
+      const feed = {
+        schema: 1,
+        scope: 'reassort',
+        generatedAt,
+        after: restockAfter ?? '',
+        next: limited ? rows.at(-1)!.id : '',
+        variants: observations,
+      };
+      if (!rows.length) return { ...base, ...empty, ...(restock && { feed }) };
       const ids = rows.map((row) => row.id);
       const inVariants = Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`));
       const from = new Date(now.getTime() - SAMPLE * DAY);
@@ -78,16 +109,18 @@ export async function getInventoryReport(now = new Date()) {
         AND sale."paidAt" <= ${now} AND line.quantity > 0
       GROUP BY item."variantId"
     `;
-      const receipts = await db.inventoryAdjustment.groupBy({
-        by: ['variantId'],
-        where: {
-          variantId: { in: ids },
-          previousQuantity: 0,
-          newQuantity: { gt: 0 },
-          createdAt: { lte: now },
-        },
-        _max: { createdAt: true },
-      });
+      const receipts = restock
+        ? []
+        : await db.inventoryAdjustment.groupBy({
+            by: ['variantId'],
+            where: {
+              variantId: { in: ids },
+              previousQuantity: 0,
+              newQuantity: { gt: 0 },
+              createdAt: { lte: now },
+            },
+            _max: { createdAt: true },
+          });
       const sold = new Map(sales.map((row) => [row.variantId, row]));
       const stocked = new Map(
         receipts.map((row) => [row.variantId, row._max.createdAt]),
@@ -135,6 +168,24 @@ export async function getInventoryReport(now = new Date()) {
           variant.lowStockThreshold,
           expectedDemand ?? 0,
         );
+        if (restock) {
+          observations.push({
+            id: variant.id,
+            sku: variant.sku,
+            name: variant.product.name,
+            available: variant.availableQuantity,
+            reserved: variant.reservedQuantity,
+            threshold,
+            unitsSold28d: units,
+            leadTimeDays,
+            discrepancy: Boolean(
+              count &&
+              currentCount(count, variant) &&
+              count.quantity !== variant.stockQuantity,
+            ),
+          });
+          continue;
+        }
         if (variant.availableQuantity <= threshold)
           lowStock.push({
             ...common,
@@ -188,6 +239,7 @@ export async function getInventoryReport(now = new Date()) {
       dormant.sort((a, b) => b.days - a.days);
       return {
         ...base,
+        ...(restock && { feed }),
         countCoverage,
         totals: {
           lowStock: lowStock.length,

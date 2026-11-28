@@ -10,7 +10,7 @@ const headers = {
 };
 
 export async function GET(request: Request) {
-  const secret = cronSecret(process.env.FINANCE_REPORT_SECRET);
+  const secret = cronSecret(process.env.FINANCE_REPORT_SECRET ?? '');
   if (!secret)
     return Response.json(
       { error: 'Rapport stock indisponible' },
@@ -19,6 +19,20 @@ export async function GET(request: Request) {
   if (!isCronAuthorized(request.headers.get('authorization'), secret))
     return Response.json({ error: 'Non autorisé' }, { headers, status: 401 });
   try {
+    const params = new URL(request.url).searchParams;
+    if (params.get('vue') === 'reassort') {
+      const after = params.get('after') ?? '';
+      if (
+        after &&
+        !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(after)
+      )
+        return Response.json(
+          { error: 'Curseur de stock invalide' },
+          { status: 400, headers },
+        );
+      const report = await getInventoryReport(new Date(), after);
+      return Response.json(report.feed, { headers });
+    }
     return Response.json(await getInventoryReport(), { headers });
   } catch {
     console.error('[inventory] report_failed');
