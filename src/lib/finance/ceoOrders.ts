@@ -1,4 +1,5 @@
 import 'server-only';
+import { Prisma } from '@/generated/prisma/client';
 import { getPrisma } from '@/lib/db/prisma';
 import { parisToday } from './cashForecast';
 
@@ -15,12 +16,22 @@ type Counts = {
   refundPending24h: number;
 };
 
-export async function getCeoOrderSummary(now = new Date()) {
+type Priorities = {
+  total: number;
+  orders: { id: string; reference: string; level: number; reasons: string[] }[];
+};
+
+export async function getCeoOrderSummary(
+  now = new Date(),
+  includePriorities = false,
+) {
   const ago = (hours: number) => new Date(now.getTime() - hours * 3_600_000);
   const today = parisToday(now);
-  const [counts] = await getPrisma().$queryRaw<Counts[]>`
+  const [counts] = await getPrisma().$queryRaw<
+    (Counts & { priorities?: Priorities })[]
+  >`
     WITH open_paid AS (
-      SELECT o."fulfillmentStatus", o."paidAt",
+      SELECT o.id, o."fulfillmentStatus", o."paidAt", o."updatedAt",
              (p.status IS NOT DISTINCT FROM 'SUCCEEDED'
                AND p.amount = o."totalAmount" AND p.currency = o.currency
                AND o."paidAt" IS NOT NULL
@@ -48,30 +59,45 @@ export async function getCeoOrderSummary(now = new Date()) {
         )
     ), orders_to_ship AS (
       SELECT * FROM open_paid WHERE verified AND NOT awaiting_preorder
-    ), payments AS (
-      SELECT COUNT(*) FILTER (WHERE o.status = 'PAYMENT_REVIEW')::int AS review,
-             COUNT(*) FILTER (
-               WHERE o.status = 'PAYMENT_PROCESSING'
-                 AND o."updatedAt" <= ${ago(1)}
-             )::int AS processing
-      FROM "Order" o WHERE o.status IN ('PAYMENT_REVIEW', 'PAYMENT_PROCESSING')
-    ), refunds AS (
-      SELECT COUNT(*) FILTER (WHERE status = 'REQUIRES_ACTION')::int AS action,
-             COUNT(*) FILTER (WHERE status = 'PENDING' AND "createdAt" <= ${ago(24)})::int AS pending
-      FROM "Refund" WHERE status IN ('PENDING', 'REQUIRES_ACTION')
+    ), signals (id, reason, level, since) AS (
+      SELECT id, 'awaitingShipment48h', 2, "paidAt" FROM orders_to_ship WHERE "paidAt" <= ${ago(48)}
+      UNION ALL SELECT id, 'inconsistentPaidOrders', 1, COALESCE("paidAt", "updatedAt") FROM open_paid WHERE NOT verified
+      UNION ALL SELECT id, 'paymentReview', 1, "updatedAt" FROM "Order" WHERE status = 'PAYMENT_REVIEW'
+      UNION ALL SELECT id, 'paymentProcessing1h', 2, "updatedAt" FROM "Order" WHERE status = 'PAYMENT_PROCESSING' AND "updatedAt" <= ${ago(1)}
+      UNION ALL SELECT "orderId", 'refundActionRequired', 1, "createdAt" FROM "Refund" WHERE status = 'REQUIRES_ACTION'
+      UNION ALL SELECT "orderId", 'refundPending24h', 2, "createdAt" FROM "Refund" WHERE status = 'PENDING' AND "createdAt" <= ${ago(24)}
     )
+    ${
+      includePriorities
+        ? Prisma.sql`, dossiers AS (
+      SELECT id, min(level) AS level, min(since) AS since, array_agg(DISTINCT reason ORDER BY reason) AS reasons
+      FROM signals GROUP BY id
+    ), shortlist AS (
+      SELECT d.*, o."orderNumber" AS reference FROM dossiers d JOIN "Order" o ON o.id = d.id
+      ORDER BY d.level, d.since, d.id LIMIT 50
+    )`
+        : Prisma.empty
+    }
     SELECT
       (SELECT COUNT(*)::int FROM orders_to_ship WHERE "fulfillmentStatus" = 'UNFULFILLED') AS "toPrepare",
       (SELECT COUNT(*)::int FROM orders_to_ship WHERE "fulfillmentStatus" = 'PREPARING') AS "preparing",
       (SELECT COUNT(*)::int FROM orders_to_ship WHERE "fulfillmentStatus" = 'READY_TO_SHIP') AS "readyToShip",
       (SELECT COUNT(*)::int FROM open_paid WHERE verified AND awaiting_preorder) AS "waitingPreorder",
-      (SELECT COUNT(*)::int FROM orders_to_ship WHERE "paidAt" <= ${ago(48)}) AS "awaitingShipment48h",
-      (SELECT COUNT(*)::int FROM open_paid WHERE NOT verified) AS "inconsistentPaidOrders",
-      payments.review AS "paymentReview",
-      payments.processing AS "paymentProcessing1h",
-      refunds.action AS "refundActionRequired",
-      refunds.pending AS "refundPending24h"
-    FROM payments, refunds
+      COUNT(*) FILTER (WHERE reason = 'awaitingShipment48h')::int AS "awaitingShipment48h",
+      COUNT(*) FILTER (WHERE reason = 'inconsistentPaidOrders')::int AS "inconsistentPaidOrders",
+      COUNT(*) FILTER (WHERE reason = 'paymentReview')::int AS "paymentReview",
+      COUNT(*) FILTER (WHERE reason = 'paymentProcessing1h')::int AS "paymentProcessing1h",
+      COUNT(*) FILTER (WHERE reason = 'refundActionRequired')::int AS "refundActionRequired",
+      COUNT(*) FILTER (WHERE reason = 'refundPending24h')::int AS "refundPending24h"
+      ${
+        includePriorities
+          ? Prisma.sql`, jsonb_build_object(
+        'total', (SELECT count(*) FROM dossiers),
+        'orders', COALESCE((SELECT jsonb_agg((to_jsonb(s) - 'since') ORDER BY s.level, s.since, s.id) FROM shortlist s), '[]'::jsonb)
+      ) AS priorities`
+          : Prisma.empty
+      }
+    FROM signals
   `;
   if (!counts) throw new Error('Le relevé des commandes est incomplet.');
   return { schema: 1, asOf: now.toISOString(), ...counts };

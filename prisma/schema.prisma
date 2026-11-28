@@ -1965,3 +1965,18 @@ model CarnetEmailClick {
   @@id([deliveryId,linkKey])
   @@index([clickedAt])
 }
+
+// Read through the reporting feed. PostgreSQL writes events with the order transaction.
+model OrderTrackingEvent {
+  id                   BigInt @id @default(autoincrement())
+  writer               Unsupported("xid8") @default(dbgenerated("pg_current_xact_id()"))
+  reference            String
+  kind                 String
+  status               OrderStatus
+  fulfillment          FulfillmentStatus
+  previous_status      OrderStatus?
+  previous_fulfillment FulfillmentStatus?
+  occurred_at          DateTime @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+
+  @@index([writer, id], map: "OrderTrackingEvent_writer_id_idx")
+}

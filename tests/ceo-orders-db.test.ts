@@ -147,9 +147,51 @@ test('le brief des commandes compte les dossiers à traiter sans exposer les cli
     assert.equal(after.paymentProcessing1h, before.paymentProcessing1h + 1);
     assert.equal(after.paymentReview, before.paymentReview + 1);
 
+    const readyId = orderIds[0]!;
+    const payment = await db.payment.findUniqueOrThrow({
+      where: { orderId: readyId },
+    });
+    await db.refund.create({
+      data: {
+        orderId: readyId,
+        paymentId: payment.id,
+        status: 'REQUIRES_ACTION',
+        reason: 'OTHER',
+        amount: 1,
+        currency: 'EUR',
+        idempotencyKey: fixture,
+      },
+    });
+    const priorities = (await getCeoOrderSummary(now, true)).priorities!;
+    const ours = priorities.orders.filter((x) => orderIds.includes(x.id));
+    assert.equal(ours.length, 4);
+    assert.deepEqual(ours.find((x) => x.id === readyId)?.reasons, [
+      'awaitingShipment48h',
+      'refundActionRequired',
+    ]);
+    assert.equal(ours[0]?.level, 1);
+    assert.equal(ours.at(-1)?.level, 2);
+    await db.order.update({
+      where: { id: orderIds[4] },
+      data: { status: 'CANCELLED' },
+    });
+    const refreshed = (await getCeoOrderSummary(now, true)).priorities!;
+    assert.equal(refreshed.total, priorities.total - 1);
+    assert.ok(!refreshed.orders.some((x) => x.id === orderIds[4]));
     process.env.FINANCE_REPORT_SECRET = 'test-only-ceo-report-secret';
     const url = 'http://localhost/api/finance/orders';
     assert.equal((await GET(new Request(url))).status, 401);
+    const detail = await GET(
+      new Request(url + '?detail=priorites', {
+        headers: {
+          authorization: `Bearer ${process.env.FINANCE_REPORT_SECRET}`,
+        },
+      }),
+    );
+    assert.equal(detail.status, 200);
+    const payload = await detail.json();
+    assert.equal(payload.priorities.total, refreshed.total);
+    assert.doesNotMatch(JSON.stringify(payload), /ceo-fixture@example/);
     const response = await GET(
       new Request(url, {
         headers: {
