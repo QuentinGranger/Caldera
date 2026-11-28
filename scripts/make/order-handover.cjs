@@ -94,6 +94,90 @@ function buildOrderHandover(input) {
       tasks.join(' ') || 'Aucune intervention requise.',
     ]),
   ];
+  const issues = {
+    inconsistentPaidOrders: [
+      'Commande payée incohérente',
+      'Contrôler le paiement et les réservations avant préparation.',
+    ],
+    paymentReview: [
+      'Paiement à vérifier',
+      'Ouvrir le détail du paiement dans Caldera.',
+    ],
+    refundActionRequired: [
+      'Remboursement bloqué',
+      'Examiner le motif du blocage.',
+    ],
+    paymentProcessing1h: [
+      'Paiement en cours depuis 1 h',
+      'Vérifier la confirmation du paiement.',
+    ],
+    refundPending24h: [
+      'Remboursement en attente depuis 24 h',
+      'Vérifier son état auprès du prestataire.',
+    ],
+    awaitingShipment48h: [
+      'Expédition en attente depuis 48 h',
+      'Contrôler la préparation et la remise au transporteur.',
+    ],
+  };
+  const { orders, total } = r.priorities ?? {};
+  if (
+    !Number.isSafeInteger(total) ||
+    total < 0 ||
+    !Array.isArray(orders) ||
+    orders.length !== Math.min(total, 50)
+  )
+    throw Error('Liste des commandes à traiter incomplète');
+  const refs = new Set();
+  const detail = orders.map((order) => {
+    if (
+      !order ||
+      !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(order.id) ||
+      !order.reference ||
+      refs.has(order.id) ||
+      ![1, 2].includes(order.level) ||
+      !Array.isArray(order.reasons) ||
+      !order.reasons.length ||
+      order.reasons.some((k) => !Object.hasOwn(issues, k))
+    )
+      throw Error('Commande à traiter invalide');
+    refs.add(order.id);
+    const link = 'https://lesterresdecaldera.fr/admin/commandes/' + order.id;
+    const values = [
+      order.level === 1 ? 'Prioritaire' : 'À surveiller',
+      order.reference,
+      order.reasons.map((k) => issues[k][0]).join(' · '),
+      order.reasons.map((k) => issues[k][1]).join(' '),
+    ].map((stringValue) => ({ userEnteredValue: { stringValue } }));
+    values[1].textFormatRuns = [
+      { startIndex: 0, format: { link: { uri: link } } },
+    ];
+    return { values };
+  });
+  const asOf = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(r.asOf));
+  requests.push(
+    write(15, 0, [
+      `Relevé du ${asOf} (Paris) · ${total ? `${orders.length} sur ${total} commande(s) à examiner` : 'Aucune commande à examiner'}`,
+    ]),
+  );
+  // Sheets clears the part of this explicit range not covered by the new rows.
+  requests.push({
+    updateCells: {
+      range: {
+        sheetId: 15,
+        startRowIndex: 2,
+        endRowIndex: 52,
+        startColumnIndex: 0,
+        endColumnIndex: 4,
+      },
+      rows: detail,
+      fields: 'userEnteredValue,textFormatRuns',
+    },
+  });
   if (row >= 1000 && row % 1000 === 0 && existing < 0)
     requests.unshift({
       appendDimension: { sheetId: 13, dimension: 'ROWS', length: 1000 },

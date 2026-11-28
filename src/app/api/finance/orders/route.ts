@@ -10,7 +10,7 @@ const headers = {
 };
 
 export async function GET(request: Request) {
-  const secret = cronSecret(process.env.FINANCE_REPORT_SECRET);
+  const secret = cronSecret(process.env.FINANCE_REPORT_SECRET ?? '');
   if (!secret)
     return Response.json(
       { error: 'Rapport indisponible' },
@@ -19,7 +19,13 @@ export async function GET(request: Request) {
   if (!isCronAuthorized(request.headers.get('authorization'), secret))
     return Response.json({ error: 'Non autorisé' }, { headers, status: 401 });
   try {
-    return Response.json(await getCeoOrderSummary(), { headers });
+    return Response.json(
+      await getCeoOrderSummary(
+        new Date(),
+        new URL(request.url).searchParams.get('detail') === 'priorites',
+      ),
+      { headers },
+    );
   } catch {
     console.error('[ceo] operational_order_report_failed');
     return Response.json(

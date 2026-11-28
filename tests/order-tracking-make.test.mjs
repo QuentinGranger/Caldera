@@ -67,6 +67,7 @@ test('Une transaction ancienne validée tardivement laisse la fiche la plus réc
 test('Une relève par jour de Paris, alerte de registre périmé et précommandes distinctes', () => {
   const report = {
     schema: 1,
+    priorities: { total: 0, orders: [] },
     asOf: at,
     toPrepare: 0,
     preparing: 0,
@@ -96,6 +97,35 @@ test('Une relève par jour de Paris, alerte de registre périmé et précommande
     4,
     0,
   ]);
+  assert.deepEqual(rows.at(-1).updateCells.rows, []);
+  const order = {
+    id: '00000000-0000-4000-8000-000000000001',
+    reference: 'CAL-12',
+    level: 1,
+    reasons: ['refundActionRequired', 'awaitingShipment48h'],
+  };
+  const priorityRequest = (data) =>
+    buildOrderHandover({
+      book: book([]),
+      report: { ...report, priorities: data },
+    });
+  const list = JSON.parse(
+    priorityRequest({ total: 1, orders: [order] }).body,
+  ).requests.at(-1).updateCells;
+  assert.equal(list.range.endRowIndex, 52);
+  assert.equal(list.rows.length, 1);
+  assert.equal(
+    list.rows[0].values[1].textFormatRuns[0].format.link.uri,
+    'https://lesterresdecaldera.fr/admin/commandes/' + order.id,
+  );
+  assert.match(
+    list.rows[0].values[2].userEnteredValue.stringValue,
+    /Remboursement bloqué.*48 h/,
+  );
+  assert.throws(
+    () => priorityRequest({ total: 2, orders: [order] }),
+    /incomplète/,
+  );
   assert.match(row[12], /retard/);
   assert.throws(
     () => buildOrderHandover({ book: book([]), report: {} }),
