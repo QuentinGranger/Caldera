@@ -141,6 +141,7 @@ function manageRestock(input, now = new Date()) {
           c.unseen;
         const verifiedLater =
           c.stage === 'Réception à vérifier' &&
+          !v.discrepancy &&
           Date.parse(page.generatedAt) > Date.parse(c.lastReceiptAt);
         Object.assign(c, v, {
           signal,
@@ -160,6 +161,7 @@ function manageRestock(input, now = new Date()) {
         else if (changed) c.version++;
         if (
           signal === 'Normal' &&
+          !v.discrepancy &&
           (['À étudier', 'Validé'].includes(c.stage) || verifiedLater)
         )
           close(c, page.generatedAt);
@@ -278,7 +280,13 @@ function manageRestock(input, now = new Date()) {
             .join(' · '),
         );
         open(c, iso);
-        if (c.signal === 'Normal' && !c.unseen) close(c, iso);
+        if (
+          c.signal === 'Normal' &&
+          !c.unseen &&
+          !c.discrepancy &&
+          now.getTime() - Date.parse(c.observedAt) <= 86400000
+        )
+          close(c, iso);
       } else throw Error('Action incompatible avec l’étape du dossier.');
       c.lastCommand = signature;
       message = c.sku + ' · ' + c.stage;

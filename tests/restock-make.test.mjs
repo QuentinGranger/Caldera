@@ -86,6 +86,7 @@ test('Une réception partielle garde le solde et une relance ne le décrémente 
   w.sync([w.observation({ available: 20 })]);
   assert.equal(w.ledger().cases[0].stage, 'Partiellement reçu');
   w.cmd('recevoir', 12);
+  w.sync([w.observation({ available: 20, discrepancy: true })]);
   assert.equal(w.ledger().cases[0].stage, 'Réception à vérifier');
   w.sync([w.observation({ available: 20 })]);
   assert.equal(w.ledger().cases[0].stage, 'Clos');
